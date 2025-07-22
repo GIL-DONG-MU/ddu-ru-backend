@@ -5,6 +5,7 @@ import com.dduru.gildongmu.auth.enums.AgeGroup;
 import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.enums.Destination;
+import com.dduru.gildongmu.post.enums.PostStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -76,6 +77,11 @@ public class Post extends BaseTimeEntity {
     @Column(name = "view_count", nullable = false)
     @ColumnDefault("0")
     private Integer viewCount = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @ColumnDefault("'OPEN'")
+    private PostStatus status = PostStatus.OPEN;
 
     @Builder
     public Post(User user, Destination destination, String title, String content,
