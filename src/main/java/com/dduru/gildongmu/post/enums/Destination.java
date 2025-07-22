@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.post.enums;
 
-import com.dduru.gildongmu.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
