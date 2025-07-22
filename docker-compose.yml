@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: ddu-ru-db
+    restart: always
+    ports:
+      - "3311:3306"
+    volumes:
+      - ddu-ru-db-data:/var/lib/mysql
+      - ./db/mysql/init:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: dduru
+      TZ: Asia/Seoul
+
+volumes:
+  ddu-ru-db-data:
