@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.post.domain;
 
 import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeGroup;
+import com.dduru.gildongmu.auth.enums.AgeRange;
 import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.enums.Destination;
@@ -60,7 +60,7 @@ public class Post extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_age", nullable = false)
     @ColumnDefault("'UNKNOWN'")
-    private AgeGroup preferredAge = AgeGroup.UNKNOWN;
+    private AgeRange preferredAge = AgeRange.UNKNOWN;
 
     @Column(name = "budget_min")
     private Integer budgetMin;
@@ -86,7 +86,7 @@ public class Post extends BaseTimeEntity {
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender, AgeGroup preferredAge,
+                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAge,
                 Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
         this.user = user;
         this.destination = destination;
@@ -97,7 +97,7 @@ public class Post extends BaseTimeEntity {
         this.recruitCapacity = recruitCapacity != null ? recruitCapacity : 1;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
-        this.preferredAge = preferredAge != null ? preferredAge : AgeGroup.UNKNOWN;
+        this.preferredAge = preferredAge != null ? preferredAge : AgeRange.UNKNOWN;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.photoUrls = photoUrls;

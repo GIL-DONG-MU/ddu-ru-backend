@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.domain;
 
-import com.dduru.gildongmu.auth.enums.AgeGroup;
+import com.dduru.gildongmu.auth.enums.AgeRange;
 import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.auth.enums.OauthType;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
@@ -40,22 +40,22 @@ public class User extends BaseTimeEntity {
     private Gender gender;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "age_group", nullable = false)
-    private AgeGroup ageGroup;
+    @Column(name = "age_range", nullable = false)
+    private AgeRange ageRange;
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
     @Builder
     public User(String email, String name, String profileImage, String oauthId,
-                OauthType oauthType, Gender gender, AgeGroup ageGroup, String phoneNumber) {
+                OauthType oauthType, Gender gender, AgeRange ageRange, String phoneNumber) {
         this.email = email;
         this.name = name;
         this.profileImage = profileImage;
         this.oauthId = oauthId;
         this.oauthType = oauthType;
         this.gender = gender;
-        this.ageGroup = ageGroup;
+        this.ageRange = ageRange;
         this.phoneNumber = phoneNumber;
     }
 }
