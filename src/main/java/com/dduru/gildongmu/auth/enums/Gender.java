@@ -12,4 +12,19 @@ public enum Gender {
 
     private final String englishName;
     private final String koreanName;
+
+    public static Gender from(String gender) {
+        if (gender == null || gender.trim().isEmpty()) {
+            return U;
+        }
+
+        switch (gender.toLowerCase()) {
+            case "male":
+                return M;
+            case "female":
+                return F;
+            default:
+                return U;
+        }
+    }
 }
