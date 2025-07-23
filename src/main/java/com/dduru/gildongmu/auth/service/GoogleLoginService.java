@@ -28,13 +28,18 @@ public class GoogleLoginService implements OauthService {
     @Value("${oauth.google.redirect-uri}")
     private String googleRedirectUri;
 
-    private static final String GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-    private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-    private static final String GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
+    @Value("${oauth.google.auth-url}")
+    private String googleAuthUrl;
+
+    @Value("${oauth.google.token-url}")
+    private String googleTokenUrl;
+
+    @Value("${oauth.google.user-info-url}")
+    private String googleUserInfoUrl;
 
     @Override
     public String getAuthorizationUrl() {
-        return GOOGLE_AUTH_URL + "?" +
+        return googleAuthUrl  + "?" +
                 "client_id=" + googleClientId +
                 "&redirect_uri=" + googleRedirectUri +
                 "&response_type=code" +
@@ -46,7 +51,7 @@ public class GoogleLoginService implements OauthService {
     public String getAccessToken(String code) {
         try {
             GoogleTokenResponse response = webClient.post()
-                    .uri(GOOGLE_TOKEN_URL)
+                    .uri(googleTokenUrl)
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .bodyValue("grant_type=authorization_code" +
                             "&client_id=" + googleClientId +
@@ -58,13 +63,14 @@ public class GoogleLoginService implements OauthService {
                     .block();
 
             if (response == null || response.getAccessToken() == null) {
-                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "구글 액세스 토큰 응답이 null입니다.");
+                log.error("구글 액세스 토큰 응답이 null입니다. code: {}", code);
+                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
             }
 
             return response.getAccessToken();
         } catch (Exception e) {
-            log.error("구글 액세스 토큰 획득 실패", e);
-            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "구글 액세스 토큰 획득 중 예외 발생");
+            log.error("구글 액세스 토큰 획득 실패. code: {}", code, e);
+            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
         }
     }
 
@@ -72,14 +78,15 @@ public class GoogleLoginService implements OauthService {
     public OauthUserInfo getUserInfo(String accessToken) {
         try {
             GoogleUserResponse response = webClient.get()
-                    .uri(GOOGLE_USER_INFO_URL)
+                    .uri(googleUserInfoUrl)
                     .header("Authorization", "Bearer " + accessToken)
                     .retrieve()
                     .bodyToMono(GoogleUserResponse.class)
                     .block();
 
             if (response == null) {
-                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "구글 사용자 정보가 null입니다.");
+                log.error("구글 사용자 정보 응답이 null입니다. accessToken: {}", accessToken);
+                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다.");
             }
 
             return OauthUserInfo.builder()
