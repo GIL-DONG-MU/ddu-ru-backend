@@ -104,4 +104,16 @@ public class Post extends BaseTimeEntity {
         this.tags = tags;
         this.viewCount = 0;
     }
+
+    public boolean isRecruitmentClosed() {
+        return LocalDate.now().isAfter(recruitDeadline);
+    }
+
+    public boolean isTravelStarted() {
+        return LocalDate.now().isAfter(startDate);
+    }
+
+    public boolean isTravelEnded() {
+        return LocalDate.now().isAfter(endDate);
+    }
 }
