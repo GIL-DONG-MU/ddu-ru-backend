@@ -23,7 +23,7 @@ public class PostController {
     public ResponseEntity<PostCreateResponse> createPost(
             @CurrentUser Long userId,
             @Valid @RequestBody PostCreateRequest request) {
-        PostCreateResponse response = postService.createPost(userId, request);
+        PostCreateResponse response = postService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
