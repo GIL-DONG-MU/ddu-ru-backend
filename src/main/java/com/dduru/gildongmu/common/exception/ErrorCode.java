@@ -17,11 +17,15 @@ public enum ErrorCode {
     // 사용자 관련
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "사용자를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_002", "이미 사용 중인 이메일입니다."),
+    INVALID_USER_INFO(HttpStatus.BAD_REQUEST, "USER_003", "잘못된 사용자 정보입니다."),
 
     // 게시글 관련
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_001", "게시글을 찾을 수 없습니다"),
-    DUPLICATE_POST(HttpStatus.CONFLICT, "POST_002", "해당 여행지에 대한 게시글이 이미 존재합니다"),
     INVALID_POST_DATE(HttpStatus.BAD_REQUEST, "POST_003", "잘못된 날짜 설정입니다"),
+    RECRUITMENT_FULL(HttpStatus.BAD_REQUEST, "POST_004", "모집 인원이 가득 찼습니다."),
+    RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "POST_005", "모집이 마감되었습니다."),
+    INVALID_RECRUIT_CAPACITY(HttpStatus.BAD_REQUEST, "POST_006", "잘못된 모집 인원 설정입니다."),
+    TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "POST_007", "이미 시작된 여행입니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
