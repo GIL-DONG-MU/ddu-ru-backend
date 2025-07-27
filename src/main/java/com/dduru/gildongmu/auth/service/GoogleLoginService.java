@@ -62,12 +62,12 @@ public class GoogleLoginService implements OauthService {
                     .bodyToMono(GoogleTokenResponse.class)
                     .block();
 
-            if (response == null || response.accessToken() == null) {
+            if (response == null || response.getAccessToken() == null) {
                 log.error("구글 액세스 토큰 응답이 null입니다. code: {}", code);
                 throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
             }
 
-            return response.accessToken();
+            return response.getAccessToken();
         } catch (Exception e) {
             log.error("구글 액세스 토큰 획득 실패. code: {}", code, e);
             throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
@@ -90,10 +90,10 @@ public class GoogleLoginService implements OauthService {
             }
 
             return OauthUserInfo.builder()
-                    .oauthId(response.id())
-                    .email(response.email())
-                    .name(response.name())
-                    .profileImage(response.picture())
+                    .oauthId(response.getId())
+                    .email(response.getEmail())
+                    .name(response.getName())
+                    .profileImage(response.getPicture())
                     .loginType(OauthType.GOOGLE)
                     .gender(null)
                     .ageRange(null)

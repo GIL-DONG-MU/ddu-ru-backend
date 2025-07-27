@@ -6,8 +6,6 @@ import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.enums.PostStatus;
-import com.dduru.gildongmu.post.exception.RecruitmentEmptyException;
-import com.dduru.gildongmu.post.exception.RecruitmentFullException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -51,10 +49,6 @@ public class Post extends BaseTimeEntity {
     @ColumnDefault("1")
     private Integer recruitCapacity = 1;
 
-    @Column(name = "recruit_count", nullable = false)
-    @ColumnDefault("0")
-    private Integer recruitCount = 0;
-
     @Column(name = "recruit_deadline", nullable = false)
     private LocalDate recruitDeadline;
 
@@ -64,12 +58,9 @@ public class Post extends BaseTimeEntity {
     private Gender preferredGender = Gender.U;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_min")
-    private AgeRange preferredAgeMin;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_max")
-    private AgeRange preferredAgeMax;
+    @Column(name = "preferred_age", nullable = false)
+    @ColumnDefault("'UNKNOWN'")
+    private AgeRange preferredAge = AgeRange.UNKNOWN;
 
     @Column(name = "budget_min")
     private Integer budgetMin;
@@ -95,7 +86,7 @@ public class Post extends BaseTimeEntity {
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAge,
                 Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
         this.user = user;
         this.destination = destination;
@@ -104,69 +95,13 @@ public class Post extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.recruitCapacity = recruitCapacity != null ? recruitCapacity : 1;
-        this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
-        this.preferredAgeMin = preferredAgeMin;
-        this.preferredAgeMax = preferredAgeMax;
+        this.preferredAge = preferredAge != null ? preferredAge : AgeRange.UNKNOWN;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
-    }
-
-    public static Post createPost(User user, Destination destination, String title, String content,
-                                  LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
-
-        return Post.builder()
-                .user(user)
-                .destination(destination)
-                .title(title)
-                .content(content)
-                .startDate(startDate)
-                .endDate(endDate)
-                .recruitCapacity(recruitCapacity)
-                .recruitDeadline(recruitDeadline)
-                .preferredGender(preferredGender)
-                .preferredAgeMin(preferredAgeMin)
-                .preferredAgeMax(preferredAgeMax)
-                .budgetMin(budgetMin)
-                .budgetMax(budgetMax)
-                .photoUrls(photoUrls)
-                .tags(tags)
-                .build();
-    }
-
-    public boolean isRecruitmentClosed() {
-        return LocalDate.now().isAfter(recruitDeadline);
-    }
-
-    public boolean isTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
-    }
-
-    public boolean isTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
-    }
-
-    public void increaseRecruitCount() {
-        if (this.recruitCount >= this.recruitCapacity) {
-            throw new RecruitmentFullException(this.getId());
-        }
-        this.recruitCount++;
-    }
-
-    public void decreaseRecruitCount() {
-        if (this.recruitCount <= 0) {
-            throw new RecruitmentEmptyException(this.getId());
-        }
-        this.recruitCount--;
-    }
-
-    public boolean isRecruitmentFull() {
-        return this.recruitCount >= this.recruitCapacity;
     }
 }

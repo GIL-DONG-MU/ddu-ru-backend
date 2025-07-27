@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.config;
 
-import com.dduru.gildongmu.common.jwt.JwtAuthenticationEntryPoint;
 import com.dduru.gildongmu.common.jwt.JwtAuthenticationFilter;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,10 +34,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
-                        UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                );
+                        UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
