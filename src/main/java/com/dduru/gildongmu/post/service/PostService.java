@@ -37,31 +37,31 @@ public class PostService {
                     return new UserNotFoundException(userId);
                 });
 
-        Destination destination = destinationRepository.findById(request.getDestinationId())
+        Destination destination = destinationRepository.findById(request.destinationId())
                 .orElseThrow(() -> {
-                    log.error("여행지를 찾을 수 없습니다. destinationId: {}", request.getDestinationId());
-                    return new DestinationNotFoundException(request.getDestinationId());
+                    log.error("여행지를 찾을 수 없습니다. destinationId: {}", request.destinationId());
+                    return new DestinationNotFoundException(request.destinationId());
                 });
 
-        Gender preferredGender = request.getPreferredGender() != null
-                ? Gender.from(request.getPreferredGender())
+        Gender preferredGender = request.preferredGender() != null
+                ? Gender.from(request.preferredGender())
                 : Gender.U;
 
-        AgeRange preferredAgeMin = request.getPreferredAgeMin() != null
-                ? AgeRange.from(request.getPreferredAgeMin())
+        AgeRange preferredAgeMin = request.preferredAgeMin() != null
+                ? AgeRange.from(request.preferredAgeMin())
                 : null;
 
-        AgeRange preferredAgeMax = request.getPreferredAgeMax() != null
-                ? AgeRange.from(request.getPreferredAgeMax())
+        AgeRange preferredAgeMax = request.preferredAgeMax() != null
+                ? AgeRange.from(request.preferredAgeMax())
                 : null;
 
-        String photoUrlsJson = jsonConverter.convertListToJson(request.getPhotoUrls());
-        String tagsJson = jsonConverter.convertListToJson(request.getTags());
+        String photoUrlsJson = jsonConverter.convertListToJson(request.photoUrls());
+        String tagsJson = jsonConverter.convertListToJson(request.tags());
 
-        Post post = Post.createPost(user, destination, request.getTitle(), request.getContent(),
-                request.getStartDate(), request.getEndDate(), request.getRecruitCapacity(), request.getRecruitDeadline(),
+        Post post = Post.createPost(user, destination, request.title(), request.content(),
+                request.startDate(), request.endDate(), request.recruitCapacity(), request.recruitDeadline(),
                 preferredGender, preferredAgeMin, preferredAgeMax,
-                request.getBudgetMin(), request.getBudgetMax(), photoUrlsJson, tagsJson);
+                request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
 
         Post savedPost = postRepository.save(post);
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}",
@@ -71,8 +71,8 @@ public class PostService {
                 savedPost,
                 user,
                 destination,
-                request.getPhotoUrls(),
-                request.getTags()
+                request.photoUrls(),
+                request.tags()
         );
     }
 }

@@ -1,17 +1,13 @@
 package com.dduru.gildongmu.auth.dto.kakao;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-public class KakaoProfile {
-    private String nickname;
+public record KakaoProfile(
+        String nickname,
 
-    @JsonProperty("profile_image_url")
-    private String profileImageUrl;
+        @JsonProperty("profile_image_url")
+        String profileImageUrl,
 
-    @JsonProperty("thumbnail_image_url")
-    private String thumbnailImageUrl;
-}
+        @JsonProperty("thumbnail_image_url")
+        String thumbnailImageUrl
+) {}

@@ -51,21 +51,21 @@ public class OauthAuthService {
 
     private User findOrCreateUser(OauthUserInfo oauthUserInfo) {
         return userRepository.findByOauthIdAndOauthType(
-                oauthUserInfo.getOauthId(),
-                oauthUserInfo.getLoginType()
+                oauthUserInfo.oauthId(),
+                oauthUserInfo.loginType()
         ).orElseGet(() -> {
-            Gender gender = Gender.from(oauthUserInfo.getGender());
-            AgeRange ageRange = AgeRange.from(oauthUserInfo.getAgeRange());
+            Gender gender = Gender.from(oauthUserInfo.gender());
+            AgeRange ageRange = AgeRange.from(oauthUserInfo.ageRange());
 
             User newUser = User.builder()
-                    .email(oauthUserInfo.getEmail())
-                    .name(oauthUserInfo.getName())
-                    .profileImage(oauthUserInfo.getProfileImage())
-                    .oauthId(oauthUserInfo.getOauthId())
-                    .oauthType(oauthUserInfo.getLoginType())
+                    .email(oauthUserInfo.email())
+                    .name(oauthUserInfo.name())
+                    .profileImage(oauthUserInfo.profileImage())
+                    .oauthId(oauthUserInfo.oauthId())
+                    .oauthType(oauthUserInfo.loginType())
                     .gender(gender)
                     .ageRange(ageRange)
-                    .phoneNumber(oauthUserInfo.getPhoneNumber())
+                    .phoneNumber(oauthUserInfo.phoneNumber())
                     .build();
 
             return userRepository.save(newUser);
