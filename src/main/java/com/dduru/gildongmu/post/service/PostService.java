@@ -5,8 +5,6 @@ import com.dduru.gildongmu.auth.enums.AgeRange;
 import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.auth.repository.UserRepository;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostCreateRequest;

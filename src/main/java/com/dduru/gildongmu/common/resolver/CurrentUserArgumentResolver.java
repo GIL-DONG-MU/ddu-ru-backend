@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.common.resolver;
 
+import com.dduru.gildongmu.auth.exception.InvalidTokenException;
+import com.dduru.gildongmu.auth.exception.UnauthorizedException;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
@@ -31,13 +31,15 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "인증되지 않은 사용자입니다");
+            log.warn("인증 실패: 인증 정보 없음 또는 비활성 사용자. [principal: {}]", authentication);
+            throw new UnauthorizedException();
         }
 
         try {
             return Long.parseLong(authentication.getPrincipal().toString());
         } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않은 사용자 ID입니다");
+            log.warn("토큰 파싱 실패: principal 값({}) → NumberFormatException, details: {}", authentication.getPrincipal(), e.getMessage());
+            throw new InvalidTokenException();
         }
     }
 }
