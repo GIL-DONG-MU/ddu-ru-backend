@@ -58,11 +58,11 @@ public class KakaoLoginService implements OauthService {
                     .bodyToMono(KakaoTokenResponse.class)
                     .block();
 
-            if (response == null || response.getAccessToken() == null) {
+            if (response == null || response.accessToken() == null) {
                 throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "카카오 액세스 토큰 응답이 null입니다.");
             }
 
-            return response.getAccessToken();
+            return response.accessToken();
         } catch (Exception e) {
             log.error("카카오 액세스 토큰 획득 실패", e);
             throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "카카오 액세스 토큰 획득 중 예외 발생");
@@ -83,31 +83,31 @@ public class KakaoLoginService implements OauthService {
                 throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "카카오 사용자 정보가 null입니다.");
             }
 
-            KakaoAccount account = response.getKakaoAccount();
+            KakaoAccount account = response.kakaoAccount();
 
             String gender = null;
-            if (account.getGender() != null &&
-                    (account.getGenderNeedsAgreement() == null || !account.getGenderNeedsAgreement())) {
-                gender = account.getGender();
+            if (account.gender() != null &&
+                    (account.genderNeedsAgreement() == null || !account.genderNeedsAgreement())) {
+                gender = account.gender();
             }
 
             String ageRange = null;
-            if (account.getAgeRange() != null &&
-                    (account.getAgeRangeNeedsAgreement() == null || !account.getAgeRangeNeedsAgreement())) {
-                ageRange = account.getAgeRange();
+            if (account.ageRange() != null &&
+                    (account.ageRangeNeedsAgreement() == null || !account.ageRangeNeedsAgreement())) {
+                ageRange = account.ageRange();
             }
 
             String phoneNumber = null;
-            if (account.getPhoneNumber() != null &&
-                    (account.getPhoneNumberNeedsAgreement() == null || !account.getPhoneNumberNeedsAgreement())) {
-                phoneNumber = account.getPhoneNumber();
+            if (account.phoneNumber() != null &&
+                    (account.phoneNumberNeedsAgreement() == null || !account.phoneNumberNeedsAgreement())) {
+                phoneNumber = account.phoneNumber();
             }
 
             return OauthUserInfo.builder()
-                    .oauthId(String.valueOf(response.getId()))
-                    .email(account.getEmail())
-                    .name(account.getProfile().getNickname())
-                    .profileImage(account.getProfile().getProfileImageUrl())
+                    .oauthId(String.valueOf(response.id()))
+                    .email(account.email())
+                    .name(account.profile().nickname())
+                    .profileImage(account.profile().profileImageUrl())
                     .loginType(OauthType.KAKAO)
                     .gender(gender)
                     .ageRange(ageRange)

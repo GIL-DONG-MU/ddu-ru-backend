@@ -1,15 +1,13 @@
 package com.dduru.gildongmu.auth.dto.google;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Getter
-@NoArgsConstructor
-public class GoogleUserResponse {
-    private String id;
-    private String email;
-    private String name;
-    private String picture;
-    private String locale;
-    private boolean verified_email;
-}
+public record GoogleUserResponse(
+        String id,
+        String email,
+        String name,
+        String picture,
+        String locale,
+        @JsonProperty("verified_email")
+        boolean verifiedEmail
+) {}

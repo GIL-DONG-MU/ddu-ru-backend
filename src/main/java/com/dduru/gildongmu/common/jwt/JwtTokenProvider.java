@@ -1,14 +1,13 @@
 package com.dduru.gildongmu.common.jwt;
 
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
+import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import io.jsonwebtoken.*;
 
 import java.util.Collections;
 import java.util.Date;
@@ -60,10 +59,10 @@ public class JwtTokenProvider {
             return true;
         } catch (ExpiredJwtException e) {
             log.error("JWT 토큰이 만료되었습니다");
-            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
+            throw new AuthenticationException("Expired JWT token") {};
         } catch (JwtException | IllegalArgumentException e) {
             log.error("JWT 토큰이 유효하지 않습니다");
-            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            throw new AuthenticationException("Expired JWT token") {};
         }
     }
 

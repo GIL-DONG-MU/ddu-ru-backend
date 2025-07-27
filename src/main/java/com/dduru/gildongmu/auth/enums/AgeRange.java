@@ -37,6 +37,12 @@ public enum AgeRange {
             case "60~69":
                 return AGE_60s;
             default:
+                for (AgeRange range : values()) {
+                    if (range.name().equalsIgnoreCase(ageRange) ||
+                            range.value.equalsIgnoreCase(ageRange)) {
+                        return range;
+                    }
+                }
                 return UNKNOWN;
         }
     }
