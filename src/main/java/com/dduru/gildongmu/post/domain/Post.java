@@ -116,6 +116,30 @@ public class Post extends BaseTimeEntity {
         this.viewCount = 0;
     }
 
+    public static Post createPost(User user, Destination destination, String title, String content,
+                                  LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
+                                  LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
+
+        return Post.builder()
+                .user(user)
+                .destination(destination)
+                .title(title)
+                .content(content)
+                .startDate(startDate)
+                .endDate(endDate)
+                .recruitCapacity(recruitCapacity)
+                .recruitDeadline(recruitDeadline)
+                .preferredGender(preferredGender)
+                .preferredAgeMin(preferredAgeMin)
+                .preferredAgeMax(preferredAgeMax)
+                .budgetMin(budgetMin)
+                .budgetMax(budgetMax)
+                .photoUrls(photoUrls)
+                .tags(tags)
+                .build();
+    }
+
     public boolean isRecruitmentClosed() {
         return LocalDate.now().isAfter(recruitDeadline);
     }

@@ -1,6 +1,8 @@
 package com.dduru.gildongmu.post.dto;
 
+import com.dduru.gildongmu.auth.domain.User;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.enums.Destination;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,23 +39,11 @@ public class PostCreateResponse {
     private boolean isTravelStarted;
     private boolean isTravelEnded;
 
-    public static PostCreateResponse from(Post post, List<String> photoUrls, List<String> tags) {
+    public static PostCreateResponse of(Post post, User user, Destination destination, List<String> photoUrls, List<String> tags) {
         return PostCreateResponse.builder()
                 .id(post.getId())
-                .user(UserInfo.builder()
-                        .id(post.getUser().getId())
-                        .name(post.getUser().getName())
-                        .profileImage(post.getUser().getProfileImage())
-                        .gender(post.getUser().getGender().name())
-                        .ageRange(post.getUser().getAgeRange().name())
-                        .build())
-                .destination(DestinationInfo.builder()
-                        .id(post.getDestination().getId())
-                        .countryCode(post.getDestination().getCountryCode())
-                        .countryName(post.getDestination().getCountryName())
-                        .city(post.getDestination().getCity())
-                        .region(post.getDestination().getRegion())
-                        .build())
+                .user(UserInfo.from(user))
+                .destination(DestinationInfo.from(destination))
                 .title(post.getTitle())
                 .content(post.getContent())
                 .startDate(post.getStartDate())

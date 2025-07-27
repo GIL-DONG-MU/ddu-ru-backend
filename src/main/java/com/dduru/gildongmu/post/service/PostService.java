@@ -58,30 +58,19 @@ public class PostService {
         String photoUrlsJson = jsonConverter.convertListToJson(request.getPhotoUrls());
         String tagsJson = jsonConverter.convertListToJson(request.getTags());
 
-        Post post = Post.builder()
-                .user(user)
-                .destination(destination)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .recruitCapacity(request.getRecruitCapacity())
-                .recruitDeadline(request.getRecruitDeadline())
-                .preferredGender(preferredGender)
-                .preferredAgeMin(preferredAgeMin)
-                .preferredAgeMax(preferredAgeMax)
-                .budgetMin(request.getBudgetMin())
-                .budgetMax(request.getBudgetMax())
-                .photoUrls(photoUrlsJson)
-                .tags(tagsJson)
-                .build();
+        Post post = Post.createPost(user, destination, request.getTitle(), request.getContent(),
+                request.getStartDate(), request.getEndDate(), request.getRecruitCapacity(), request.getRecruitDeadline(),
+                preferredGender, preferredAgeMin, preferredAgeMax,
+                request.getBudgetMin(), request.getBudgetMax(), photoUrlsJson, tagsJson);
 
         Post savedPost = postRepository.save(post);
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}",
                 savedPost.getId(), userId, savedPost.getTitle());
 
-        return PostCreateResponse.from(
+        return PostCreateResponse.of(
                 savedPost,
+                user,
+                destination,
                 request.getPhotoUrls(),
                 request.getTags()
         );
