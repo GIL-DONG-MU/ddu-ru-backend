@@ -21,9 +21,11 @@ public class PostCreateResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer recruitCapacity;
+    private Integer recruitCount;
     private LocalDate recruitDeadline;
     private String preferredGender;
-    private String preferredAge;
+    private String preferredAgeMin;
+    private String preferredAgeMax;
     private Integer budgetMin;
     private Integer budgetMax;
     private List<String> photoUrls;
@@ -57,9 +59,11 @@ public class PostCreateResponse {
                 .startDate(post.getStartDate())
                 .endDate(post.getEndDate())
                 .recruitCapacity(post.getRecruitCapacity())
+                .recruitCount(post.getRecruitCount())
                 .recruitDeadline(post.getRecruitDeadline())
                 .preferredGender(post.getPreferredGender().name())
-                .preferredAge(post.getPreferredAge().name())
+                .preferredAgeMin(post.getPreferredAgeMin() != null ? post.getPreferredAgeMin().name() : null)
+                .preferredAgeMax(post.getPreferredAgeMax() != null ? post.getPreferredAgeMax().name() : null)
                 .budgetMin(post.getBudgetMin())
                 .budgetMax(post.getBudgetMax())
                 .photoUrls(photoUrls)

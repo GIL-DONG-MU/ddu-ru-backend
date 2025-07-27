@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.dto;
 
+import com.dduru.gildongmu.auth.enums.AgeRange;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +42,10 @@ public class PostCreateRequest {
     private LocalDate recruitDeadline;
 
     private String preferredGender;
-    private String preferredAge;
+
+    private String preferredAgeMin;
+
+    private String preferredAgeMax;
 
     @Min(value = 0, message = "예산은 0원 이상이어야 합니다")
     private Integer budgetMin;
@@ -77,5 +81,19 @@ public class PostCreateRequest {
             return true;
         }
         return budgetMax >= budgetMin;
+    }
+
+    @AssertTrue(message = "최대 연령은 최소 연령보다 크거나 같아야 합니다")
+    private boolean isAgeRangeValid() {
+        if (preferredAgeMin == null || preferredAgeMax == null) {
+            return true;
+        }
+        try {
+            AgeRange minAge = AgeRange.valueOf(preferredAgeMin);
+            AgeRange maxAge = AgeRange.valueOf(preferredAgeMax);
+            return minAge.ordinal() <= maxAge.ordinal();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }
