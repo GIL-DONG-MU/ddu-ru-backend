@@ -13,24 +13,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.error("Business Exception: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(e.getErrorCode());
-        return ResponseEntity.status(e.getErrorCode().getStatus()).body(response);
+        ErrorCode errorCode = e.getErrorCode();
+        String msg = e.getMessage() != null ? e.getMessage() : errorCode.getMessage();
+        ErrorResponse response = ErrorResponse.of(errorCode, msg);
+        return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Validation Exception: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
+        String msg = ErrorCode.INVALID_INPUT_VALUE.getMessage();
+        if (!e.getBindingResult().getFieldErrors().isEmpty()) {
+            msg = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        }
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, msg);
         return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("Illegal Argument Exception: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.builder()
-                .code(ErrorCode.INVALID_INPUT_VALUE.getCode())
-                .message(e.getMessage())
-                .build();
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getMessage());
         return ResponseEntity.badRequest().body(response);
     }
 
