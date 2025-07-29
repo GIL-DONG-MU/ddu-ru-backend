@@ -26,7 +26,7 @@ public class JsonConverter {
             return objectMapper.writeValueAsString(list);
         } catch (JsonProcessingException e) {
             log.error("리스트를 JSON으로 변환 실패 - 리스트: {}", list, e);
-            throw new JsonConvertException("리스트를 JSON으로 변환하는 데 실패했습니다", e);
+            throw new JsonConvertException("리스트를 JSON으로 변환하는 데 실패했습니다");
         }
     }
 
@@ -38,7 +38,7 @@ public class JsonConverter {
             return objectMapper.readValue(json, new TypeReference<List<String>>() {});
         } catch (JsonProcessingException e) {
             log.error("JSON을 리스트로 변환 실패 - JSON: {}", json, e);
-            throw new JsonConvertException("JSON을 리스트로 변환하는 데 실패했습니다", e);
+            throw new JsonConvertException("JSON을 리스트로 변환하는 데 실패했습니다");
         }
     }
 }
