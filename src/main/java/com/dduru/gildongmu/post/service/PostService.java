@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Slf4j
@@ -43,20 +44,11 @@ public class PostService {
         User user = findUserById(userId);
         Destination destination = findDestinationById(request.destinationId());
 
-        Gender preferredGender = request.preferredGender() != null
-                ? Gender.from(request.preferredGender())
-                : Gender.U;
-
-        AgeRange preferredAgeMin = request.preferredAgeMin() != null
-                ? AgeRange.from(request.preferredAgeMin())
-                : null;
-
-        AgeRange preferredAgeMax = request.preferredAgeMax() != null
-                ? AgeRange.from(request.preferredAgeMax())
-                : null;
-
-        String photoUrlsJson = jsonConverter.convertListToJson(request.photoUrls());
-        String tagsJson = jsonConverter.convertListToJson(request.tags());
+        Gender preferredGender = parsePreferredGender(request.preferredGender());
+        AgeRange preferredAgeMin = parsePreferredAgeMin(request.preferredAgeMin());
+        AgeRange preferredAgeMax = parsePreferredAgeMax(request.preferredAgeMax());
+        String photoUrlsJson = convertPhotoUrlsToJson(request.photoUrls());
+        String tagsJson = convertTagsToJson(request.tags());
 
         Post post = Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(), request.recruitDeadline(),
@@ -88,20 +80,11 @@ public class PostService {
 
         Destination destination = findDestinationById(request.destinationId());
 
-        Gender preferredGender = request.preferredGender() != null
-                ? Gender.from(request.preferredGender())
-                : Gender.U;
-
-        AgeRange preferredAgeMin = request.preferredAgeMin() != null
-                ? AgeRange.from(request.preferredAgeMin())
-                : null;
-
-        AgeRange preferredAgeMax = request.preferredAgeMax() != null
-                ? AgeRange.from(request.preferredAgeMax())
-                : null;
-
-        String photoUrlsJson = jsonConverter.convertListToJson(request.photoUrls());
-        String tagsJson = jsonConverter.convertListToJson(request.tags());
+        Gender preferredGender = parsePreferredGender(request.preferredGender());
+        AgeRange preferredAgeMin = parsePreferredAgeMin(request.preferredAgeMin());
+        AgeRange preferredAgeMax = parsePreferredAgeMax(request.preferredAgeMax());
+        String photoUrlsJson = convertPhotoUrlsToJson(request.photoUrls());
+        String tagsJson = convertTagsToJson(request.tags());
 
         try {
             post.updatePost(destination, request.title(), request.content(),
@@ -195,5 +178,30 @@ public class PostService {
         } catch (IllegalArgumentException e) {
             throw new InvalidAgeRangeException("연령대 값이 올바르지 않습니다");
         }
+    }
+    private Gender parsePreferredGender(String preferredGender) {
+        return preferredGender != null
+                ? Gender.from(preferredGender)
+                : Gender.U;
+    }
+
+    private AgeRange parsePreferredAgeMin(String preferredAgeMin) {
+        return preferredAgeMin != null
+                ? AgeRange.from(preferredAgeMin)
+                : null;
+    }
+
+    private AgeRange parsePreferredAgeMax(String preferredAgeMax) {
+        return preferredAgeMax != null
+                ? AgeRange.from(preferredAgeMax)
+                : null;
+    }
+
+    private String convertPhotoUrlsToJson(List<String> photoUrls) {
+        return jsonConverter.convertListToJson(photoUrls);
+    }
+
+    private String convertTagsToJson(List<String> tags) {
+        return jsonConverter.convertListToJson(tags);
     }
 }
