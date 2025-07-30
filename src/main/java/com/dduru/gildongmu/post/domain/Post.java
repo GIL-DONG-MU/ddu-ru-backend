@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "posts")
@@ -92,6 +93,15 @@ public class Post extends BaseTimeEntity {
     @ColumnDefault("'OPEN'")
     private PostStatus status = PostStatus.OPEN;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
@@ -161,6 +171,12 @@ public class Post extends BaseTimeEntity {
         this.tags = tags;
 
         updateRecruitCapacity(recruitCapacity);
+    }
+
+    public void softDelete(Long userId) {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = userId;
     }
 
     public boolean isRecruitmentClosed() {
