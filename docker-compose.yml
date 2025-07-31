@@ -12,6 +12,36 @@ services:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: dduru
       TZ: Asia/Seoul
+    networks:
+      - ddu-ru-network
+
+  app:
+    build: .
+    container_name: ddu-ru-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/dduru
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+    depends_on:
+      - mysql
+    networks:
+      - ddu-ru-network
 
 volumes:
   ddu-ru-db-data:
+
+networks:
+  ddu-ru-network:
+    driver: bridge
