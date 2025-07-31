@@ -75,8 +75,8 @@ public class PostService {
                 request.budgetMin(), request.budgetMax(),
                 request.preferredAgeMin(), request.preferredAgeMax());
 
-        Post post = findPostById(postId);
-        validateUpdatePermission(post, userId);
+        Post post = findActivePostById(postId);
+        validatePermission(post, userId);
 
         Destination destination = findDestinationById(request.destinationId());
 
@@ -113,6 +113,24 @@ public class PostService {
         }
     }
 
+    public void delete(Long postId, Long userId) {
+        log.debug("게시글 삭제 시작 - postId: {}, userId: {}", postId, userId);
+
+        Post post = findActivePostById(postId);
+        validatePermission(post, userId);
+
+        try {
+            post.softDelete(userId);
+            postRepository.save(post);
+            log.info("게시글 삭제 완료 - postId: {}, userId: {}, title: {}",
+                    postId, userId, post.getTitle());
+
+        } catch (Exception e) {
+            log.error("게시글 삭제 중 오류 발생 - postId: {}, error: {}", postId, e.getMessage(), e);
+            throw new RuntimeException("게시글 삭제 중 오류가 발생했습니다", e);
+        }
+    }
+
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -137,12 +155,12 @@ public class PostService {
                 });
     }
 
-    private void validateUpdatePermission(Post post, Long userId) {
+    private void validatePermission(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
-            log.error("게시글 수정 권한이 없습니다. postId: {}, userId: {}, ownerId: {}",
+            log.error("게시글 권한이 없습니다. postId: {}, userId: {}, ownerId: {}",
                     post.getId(), userId, post.getUser().getId());
             throw new PostAccessDeniedException(
-                    String.format("게시글 수정 권한이 없습니다. postId: %d, userId: %d", post.getId(), userId)
+                    String.format("게시글 권한이 없습니다. postId: %d, userId: %d", post.getId(), userId)
             );
         }
     }
@@ -203,5 +221,13 @@ public class PostService {
 
     private String convertTagsToJson(List<String> tags) {
         return jsonConverter.convertListToJson(tags);
+    }
+
+    private Post findActivePostById(Long postId) {
+        return postRepository.findActiveById(postId)
+                .orElseThrow(() -> {
+                    log.error("활성 게시글을 찾을 수 없습니다. postId: {}", postId);
+                    return new PostNotFoundException("게시글을 찾을 수 없습니다. postId: " + postId);
+                });
     }
 }
