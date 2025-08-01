@@ -1,5 +1,5 @@
 services:
   mysql:
-    ports: ["3306:3306"]       # 로컬 접속용 포트
+    ports: ["3307:3306"]       # 로컬 접속용 포트
     environment:
       MYSQL_ROOT_PASSWORD: root
