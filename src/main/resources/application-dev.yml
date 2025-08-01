@@ -36,3 +36,11 @@ logging:
   level:
     com.dduru.gildongmu: debug
     org.springframework.security: debug
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
