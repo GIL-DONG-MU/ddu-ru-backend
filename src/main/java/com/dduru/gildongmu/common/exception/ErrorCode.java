@@ -24,7 +24,7 @@ public enum ErrorCode {
     INVALID_RECRUIT_CAPACITY(HttpStatus.BAD_REQUEST, "POST_004", "잘못된 모집 인원 설정입니다."),
     TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "POST_005", "이미 시작된 여행입니다."),
     INVALID_AGE_RANGE(HttpStatus.BAD_REQUEST, "POST_006", "최대 연령은 최소 연령보다 크거나 같아야 합니다."),
-    INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_07", "최대 예산은 최소 예산보다 커야 합니다."),
+    INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_007", "최대 예산은 최소 예산보다 커야 합니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
