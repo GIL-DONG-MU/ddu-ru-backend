@@ -4,20 +4,19 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.google.GoogleTokenResponse;
 import com.dduru.gildongmu.auth.dto.google.GoogleUserResponse;
 import com.dduru.gildongmu.auth.enums.OauthType;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class GoogleLoginService implements OauthService {
+import java.util.Collections;
 
-    private final WebClient webClient;
+@Service
+public class GoogleLoginService extends AbstractOauthService  {
+
 
     @Value("${oauth.google.client-id}")
     private String googleClientId;
@@ -37,40 +36,52 @@ public class GoogleLoginService implements OauthService {
     @Value("${oauth.google.user-info-url}")
     private String googleUserInfoUrl;
 
+    private static final String GOOGLE_SCOPE = "email profile";
+
+    public GoogleLoginService(WebClient webClient) {
+        super(webClient);
+    }
+
     @Override
     public String getAuthorizationUrl() {
-        return googleAuthUrl  + "?" +
-                "client_id=" + googleClientId +
-                "&redirect_uri=" + googleRedirectUri +
-                "&response_type=code" +
-                "&scope=email profile"+
-                "&access_type=offline";
+        return getAuthUrl() + "?" + buildUrlParams(
+                "client_id", getClientId(),
+                "redirect_uri", getRedirectUri(),
+                "response_type", "code",
+                "scope", getScope(),
+                "access_type", "offline"
+        );
     }
 
     @Override
     public String getAccessToken(String code) {
         try {
+            String body = buildUrlParams(
+                    "grant_type", "authorization_code",
+                    "client_id", getClientId(),
+                    "client_secret", getClientSecret(),
+                    "code", code,
+                    "redirect_uri", getRedirectUri()
+            );
+
             GoogleTokenResponse response = webClient.post()
-                    .uri(googleTokenUrl)
+                    .uri(getTokenUrl())
                     .header("Content-Type", "application/x-www-form-urlencoded")
-                    .bodyValue("grant_type=authorization_code" +
-                            "&client_id=" + googleClientId +
-                            "&client_secret=" + googleClientSecret +
-                            "&code=" + code +
-                            "&redirect_uri=" + googleRedirectUri)
+                    .bodyValue(body)
                     .retrieve()
                     .bodyToMono(GoogleTokenResponse.class)
                     .block();
 
-            if (response == null || response.accessToken() == null) {
-                log.error("구글 액세스 토큰 응답이 null입니다. code: {}", code);
-                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+            validateResponse(response, "구글 액세스 토큰 획득");
+
+            if (response.accessToken() == null) {
+                throw new RuntimeException("액세스 토큰이 null입니다.");
             }
 
             return response.accessToken();
         } catch (Exception e) {
-            log.error("구글 액세스 토큰 획득 실패. code: {}", code, e);
-            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+            handleOauthException(e, "구글 액세스 토큰 획득");
+            return null;
         }
     }
 
@@ -84,10 +95,7 @@ public class GoogleLoginService implements OauthService {
                     .bodyToMono(GoogleUserResponse.class)
                     .block();
 
-            if (response == null) {
-                log.error("구글 사용자 정보 응답이 null입니다. accessToken: {}", accessToken);
-                throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "소셜 로그인에 실패했습니다.");
-            }
+            validateResponse(response, "구글 사용자 정보 조회");
 
             return OauthUserInfo.builder()
                     .oauthId(response.id())
@@ -95,15 +103,62 @@ public class GoogleLoginService implements OauthService {
                     .name(response.name())
                     .profileImage(response.picture())
                     .loginType(OauthType.GOOGLE)
-                    .gender(null)
-                    .ageRange(null)
-                    .phoneNumber(null)
                     .build();
         } catch (Exception e) {
-            log.error("구글 사용자 정보 조회 실패", e);
-            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "구글 사용자 정보 조회 중 예외 발생");
+            handleOauthException(e, "구글 사용자 정보 조회");
+            return null;
         }
     }
+
+    public OauthUserInfo verifyIdToken(String idToken) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(),
+                    new GsonFactory())
+                    .setAudience(Collections.singletonList(getClientId()))
+                    .build();
+
+            GoogleIdToken token = verifier.verify(idToken);
+            if (token == null) {
+                throw new RuntimeException("유효하지 않은 ID Token입니다.");
+            }
+
+            GoogleIdToken.Payload payload = token.getPayload();
+
+            return OauthUserInfo.builder()
+                    .oauthId(payload.getSubject())
+                    .email(payload.getEmail())
+                    .name((String) payload.get("name"))
+                    .profileImage((String) payload.get("picture"))
+                    .loginType(OauthType.GOOGLE)
+                    .build();
+
+        } catch (Exception e) {
+            handleOauthException(e, "구글 ID Token 검증");
+            return null;
+        }
+    }
+
+    @Override
+    protected String getClientId() { return googleClientId; }
+
+    @Override
+    protected String getClientSecret() { return googleClientSecret; }
+
+    @Override
+    protected String getRedirectUri() { return googleRedirectUri; }
+
+    @Override
+    protected String getAuthUrl() { return googleAuthUrl; }
+
+    @Override
+    protected String getTokenUrl() { return googleTokenUrl; }
+
+    @Override
+    protected String getUserInfoUrl() { return googleUserInfoUrl; }
+
+    @Override
+    protected String getScope() { return GOOGLE_SCOPE; }
 
     @Override
     public OauthType getLoginType() {

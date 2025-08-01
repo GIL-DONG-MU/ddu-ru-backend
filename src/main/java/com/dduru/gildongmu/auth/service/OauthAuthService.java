@@ -29,13 +29,19 @@ public class OauthAuthService {
 
     public LoginResponse processLogin(String provider, String code) {
         OauthService oauthService = oauthFactory.getOauthService(provider);
-
         String accessToken = oauthService.getAccessToken(code);
-
         OauthUserInfo oauthUserInfo = oauthService.getUserInfo(accessToken);
+        return createLoginResponse(oauthUserInfo);
+    }
 
+    public LoginResponse processTokenLogin(String provider, String idToken) {
+        OauthService oauthService = oauthFactory.getOauthService(provider);
+        OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(idToken);
+        return createLoginResponse(oauthUserInfo);
+    }
+
+    private LoginResponse createLoginResponse(OauthUserInfo oauthUserInfo) {
         User user = findOrCreateUser(oauthUserInfo);
-
         String jwtToken = jwtTokenProvider.createToken(user.getId().toString(), user.getEmail());
 
         return LoginResponse.builder()
