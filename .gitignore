@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### .DS_Store ###
+.DS_Store
+
+### env 환경변수 파일 ###
+.env
