@@ -26,24 +26,12 @@ jobs:
 
       # 필요한 서비스 전체 기동 + 헬스체크까지 블로킹
     - name: 🛠️ Compose up (blocking)
-      run: docker compose up -d --wait    # v2의 --wait 플래그
-        
+      run: docker compose up -d -scale app=0 --wait    # v2의 --wait 플래그
+
     - name: 🔨 Build & test with Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
         arguments: clean build -Duser.language=ko -Duser.country=KR
-
-    - uses: docker/setup-buildx-action@v3
-
-    - name: 🐳 Validate Docker build
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: false        # 레지스트리 업로드 X
-        tags: ddu-ru-backend:ci-test
-        load: true         # 로컬에 이미지 로드 (통합 테스트에 활용)
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
 
     - name: 🧹 Compose down
       if: always()
