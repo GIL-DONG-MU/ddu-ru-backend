@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8
@@ -21,7 +19,7 @@ services:
     networks: [ ddu-ru-network ]
 
   app:
-    image: ghcr.io/GIL-DONG-MU/ddu-ru-backend:${APP_TAG:-latest}
+    image: ghcr.io/gil-dong-mu/ddu-ru-backend:${APP_TAG:-latest}
     container_name: ddu-ru-app
     restart: unless-stopped
     ports:
