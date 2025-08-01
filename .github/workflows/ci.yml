@@ -32,6 +32,25 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      # 🔍 Secrets 존재 확인
+      - name: Required secrets check
+        shell: bash
+        run: |
+          for k in GHCR_PAT MYSQL_ROOT_PASSWORD ; do
+            if [ -z "${{ secrets[$k] }}" ]; then
+              echo "::error::$k is empty"; exit 1
+            fi
+          done
+
+      # 🔑 GHCR 로그인 (fork PR이면 조건 스킵)
+      - name: Login to GHCR
+        if: secrets.GHCR_PAT != ''
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
       - name: 📝 Check final newline
         uses: qwrtln/check-final-newline@v1.0.0
 
@@ -60,14 +79,6 @@ jobs:
           envkey_SERVER_IP:            ${{ secrets.SERVER_IP }}
           file_name: .env.ci
           fail_on_empty: false         # 빈 값 허용
-
-      # GHCR 로그인
-      - name: 🔑 Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
 
       - name: 🛠️ Compose up (infra only)
         env:
