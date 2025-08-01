@@ -73,7 +73,7 @@ DDU-RU는 혼자 여행하기 부담스러운 사람들을 위한 **여행 동�
 
 #### 1. 저장소 클론
 ```bash
-git clone https://github.com/your-username/ddu-ru-backend.git
+git clone git@github.com:GIL-DONG-MU/ddu-ru-backend.git
 cd ddu-ru-backend
 ```
 
