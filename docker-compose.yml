@@ -2,21 +2,24 @@ services:
   mysql:
     image: mysql:8
     container_name: ddu-ru-db
+    ports:
+      - "${HOST_DB_PORT}:3306"
     restart: always
-    expose: ["3306"]                 # prod 외부 포트 노출 X
     volumes:
       - ddu-ru-db-data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: dduru
       TZ: Asia/Seoul
+    profiles: [infra]
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
+      timeout: 3s
       retries: 10
-      timeout: 5s
-      start_period: 30s
-    networks: [ ddu-ru-network ]
+      start_period: 20s
+    networks:
+      - ddu-ru-network
 
   app:
     image: ghcr.io/gil-dong-mu/ddu-ru-backend:${APP_TAG:-latest}
@@ -41,6 +44,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    profiles: [app]
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
