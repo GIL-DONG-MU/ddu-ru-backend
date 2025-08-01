@@ -9,53 +9,9 @@ on:
       - '**.md'  # 문서 변경은 제외
 
 jobs:
-  test:
-    name: 🧪 Run Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
-    
-    - name: ☕ Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: 📦 Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: 🔧 Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: 🧪 Run tests
-      run: ./gradlew test
-      
-    - name: 📊 Publish test results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: build/test-results/test/**/*.xml
-        
-    - name: 📋 Comment test results on PR
-      uses: mikepenz/action-junit-report@v4
-      if: success() || failure()
-      with:
-        report_paths: 'build/test-results/test/**/*.xml'
-        token: ${{ secrets.GITHUB_TOKEN }}
-
   build:
-    name: 🏗️ Build Application  
+    name: 🔍 Continuous Integration
     runs-on: ubuntu-latest
-    needs: test
     
     steps:
     - name: 📥 Checkout code
@@ -66,25 +22,32 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
+
+      # 필요한 서비스 전체 기동 + 헬스체크까지 블로킹
+    - name: 🛠️ Compose up (blocking)
+      run: docker compose up -d --wait    # v2의 --wait 플래그
         
-    - name: 📦 Cache Gradle packages
-      uses: actions/cache@v4
+    - name: 🔨 Build & test with Gradle
+      uses: gradle/actions/setup-gradle@v3
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: 🔧 Grant execute permission for gradlew
-      run: chmod +x gradlew
+        arguments: clean build -Duser.language=ko -Duser.country=KR
 
-    - name: 🏗️ Build with Gradle
-      run: ./gradlew build -x test
+    - uses: docker/setup-buildx-action@v3
 
-    - name: 🐳 Build Docker image (validation)
-      run: docker build -t ddu-ru-backend:ci-test .
-      
+    - name: 🐳 Validate Docker build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false        # 레지스트리 업로드 X
+        tags: ddu-ru-backend:ci-test
+        load: true         # 로컬에 이미지 로드 (통합 테스트에 활용)
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: 🧹 Compose down
+      if: always()
+      run: docker compose down -v
+
     - name: ✅ CI Success
       run: echo "✅ All CI checks passed! Ready for merge."
