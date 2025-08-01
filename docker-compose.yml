@@ -1,28 +1,27 @@
+version: "3.9"
+
 services:
   mysql:
     image: mysql:8
     container_name: ddu-ru-db
     restart: always
-    ports:
-      - "3311:3306"
+    expose: ["3306"]                 # prod 외부 포트 노출 X
     volumes:
       - ddu-ru-db-data:/var/lib/mysql
-      - ./db/mysql/init:/docker-entrypoint-initdb.d
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: dduru
       TZ: Asia/Seoul
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 10s
+      retries: 10
+      timeout: 5s
       start_period: 30s
-    networks:
-      - ddu-ru-network
+    networks: [ ddu-ru-network ]
 
   app:
-    build: .
+    image: ghcr.io/GIL-DONG-MU/ddu-ru-backend:${APP_TAG:-latest}
     container_name: ddu-ru-app
     restart: unless-stopped
     ports:
@@ -31,7 +30,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/dduru
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
       KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
@@ -44,10 +43,10 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health", "||", "exit", "1"]
-      timeout: 10s
-      retries: 5
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
+      retries: 5
+      timeout: 10s
       start_period: 60s
     networks:
       - ddu-ru-network

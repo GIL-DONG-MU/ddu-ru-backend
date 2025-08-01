@@ -1,0 +1,13 @@
+services:
+  mysql:
+    ports: ["3311:3306"]       # 로컬 접속용 포트
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+  app:
+    build: .                    # 개발시 로컬 빌드
+    ports: ["8080:8080"]       # 로컬 브라우저 직접 접근
+    volumes:
+      - .:/workspace
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_PASSWORD: 1234
