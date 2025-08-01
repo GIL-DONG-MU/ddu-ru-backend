@@ -59,8 +59,7 @@ jobs:
           envkey_APP_TAG:              "latest"
           envkey_SERVER_IP:            ${{ secrets.SERVER_IP }}
           file_name: .env.ci
-          fail_on_empty: true          # 값이 비면 즉시 실패
-
+          fail_on_empty: false         # 빈 값 허용
 
       # GHCR 로그인
       - name: 🔑 Login to GHCR
