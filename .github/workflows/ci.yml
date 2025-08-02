@@ -24,9 +24,6 @@ jobs:
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRATION: 3600000  # 1시간 (밀리초 단위)
-      SERVER_IP: ${{ secrets.SERVER_IP }}
-      APP_TAG: ${{ secrets.APP_TAG }}
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}
 
     steps:
       - name: 📥 Checkout code
@@ -42,21 +39,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # .env 생성
       - name: ✨ Generate .env
         uses: SpicyPizza/create-envfile@v2
         with:
           file_name: .env
           fail_on_empty: true
-
-      # GHCR 로그인 (Fork PR이 아닌 경우에만)
-      - name: 🔑 Login to GHCR
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
 
       - name: 🛠️ Compose up (infra only)
         env:
