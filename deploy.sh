@@ -15,25 +15,25 @@ if [ ! -f ".env.prod" ]; then
 fi
 
 echo "📋 현재 실행중인 컨테이너 확인..."
-docker compose ps
+docker-compose ps
 
 echo "🛑 기존 컨테이너 중지 및 제거..."
-docker compose --env-file .env.prod down
+docker-compose --env-file .env.prod down
 
 echo "🗂️ 이미지 업데이트..."
-docker compose --env-file .env.prod pull
+docker-compose --env-file .env.prod pull
 
 echo "🚀 서비스 시작..."
-docker compose --env-file .env.prod --profile app --profile infra up -d
+docker-compose --env-file .env.prod --profile app --profile infra up -d
 
 echo "⏳ 서비스 상태 확인 중..."
 sleep 10
 
 echo "📊 배포 완료 상태:"
-docker compose --env-file .env.prod ps
+docker-compose --env-file .env.prod ps
 
 echo "🏥 헬스체크 확인..."
 echo "앱: http://${SERVER_IP:-localhost}:8080/actuator/health"
 
 echo "✅ 배포 완료!"
-echo "🔍 로그 확인: docker compose --env-file .env.prod logs -f"
+echo "🔍 로그 확인: docker-compose --env-file .env.prod logs -f"
