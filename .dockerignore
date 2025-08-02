@@ -1,0 +1,40 @@
+# Gradle
+.gradle
+build
+out
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README*.md
+docs/
+*.md
+
+# Test files
+src/test/
+**/test/
+
+# Temporary files
+tmp/
+temp/
