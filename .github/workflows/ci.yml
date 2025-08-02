@@ -23,7 +23,7 @@ jobs:
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRATION: 3600000  # 1시간 (밀리초 단위)
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
 
     steps:
       - name: 📥 Checkout code
@@ -64,7 +64,7 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION: 3600000
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
         with:
           arguments: clean build -Duser.language=ko -Duser.country=KR
 
