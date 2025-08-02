@@ -8,4 +8,5 @@ public interface OauthService {
     String getAuthorizationUrl();
     String getAccessToken(String code);
     OauthType getLoginType();
+    OauthUserInfo verifyIdToken(String idToken);
 }

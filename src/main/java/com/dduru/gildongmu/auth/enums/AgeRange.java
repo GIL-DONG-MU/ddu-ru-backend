@@ -22,28 +22,22 @@ public enum AgeRange {
             return UNKNOWN;
         }
 
-        switch (ageRange) {
-            case "10~14":
-            case "15~19":
-                return AGE_10s;
-            case "20~29":
-                return AGE_20s;
-            case "30~39":
-                return AGE_30s;
-            case "40~49":
-                return AGE_40s;
-            case "50~59":
-                return AGE_50s;
-            case "60~69":
-                return AGE_60s;
-            default:
+        return switch (ageRange) {
+            case "10~14", "15~19" -> AGE_10s;
+            case "20~29" -> AGE_20s;
+            case "30~39" -> AGE_30s;
+            case "40~49" -> AGE_40s;
+            case "50~59" -> AGE_50s;
+            case "60~69" -> AGE_60s;
+            default -> {
                 for (AgeRange range : values()) {
                     if (range.name().equalsIgnoreCase(ageRange) ||
                             range.value.equalsIgnoreCase(ageRange)) {
-                        return range;
+                        yield range;
                     }
                 }
-                return UNKNOWN;
-        }
+                yield UNKNOWN;
+            }
+        };
     }
 }
