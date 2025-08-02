@@ -22,7 +22,7 @@ services:
       - ddu-ru-network
 
   app:
-    image: ghcr.io/gil-dong-mu/ddu-ru-backend:${APP_TAG:-latest}
+    build: .
     container_name: ddu-ru-app
     restart: unless-stopped
     ports:
