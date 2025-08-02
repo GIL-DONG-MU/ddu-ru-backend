@@ -13,7 +13,7 @@ public final class UrlParamBuilder {
 
     public UrlParamBuilder add(String key, String value) {
         if (value != null) {
-            if (params.length() > 0) {
+            if (!params.isEmpty()) {
                 params.append("&");
             }
             params.append(encode(key)).append("=").append(encode(value));
