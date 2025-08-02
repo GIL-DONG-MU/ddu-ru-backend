@@ -6,8 +6,8 @@
 
 #### 개발용 (권장)
 ```bash
-# .env 파일 생성(.env.prod 참고)
-cp .env.prod .env
+# .env 파일 새로 생성
+touch .env
 
 # app 컨테이너는 실행 X
 docker compose --profile infra --env-file .env up -d
