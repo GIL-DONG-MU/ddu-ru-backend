@@ -62,8 +62,9 @@ jobs:
           file_name: .env
           fail_on_empty: true
 
-      # GHCR 로그인
+      # GHCR 로그인 (Fork PR이 아닌 경우에만)
       - name: 🔑 Login to GHCR
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
