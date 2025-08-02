@@ -1,7 +1,8 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.auth.utils.OauthConstants;
+import com.dduru.gildongmu.auth.utils.OauthResponseUtils;
+import com.dduru.gildongmu.auth.utils.UrlParamBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,26 +14,29 @@ public abstract class AbstractOauthService implements OauthService {
     protected final WebClient webClient;
 
     protected void handleOauthException(Exception e, String operation) {
-        log.error("{} 중 오류 발생", operation, e);
-        throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED,
-                String.format("%s에 실패했습니다. 다시 시도해주세요.", operation));
+        OauthResponseUtils.handleException(e, operation);
     }
 
     protected void validateResponse(Object response, String operation) {
-        if (response == null) {
-            log.error("{} 응답이 null입니다.", operation);
-            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED,
-                    String.format("%s 응답을 받지 못했습니다.", operation));
-        }
+        OauthResponseUtils.validateResponse(response, operation);
     }
 
     protected String buildUrlParams(String... keyValues) {
-        StringBuilder params = new StringBuilder();
+        UrlParamBuilder builder = UrlParamBuilder.create();
         for (int i = 0; i < keyValues.length; i += 2) {
-            if (i > 0) params.append("&");
-            params.append(keyValues[i]).append("=").append(keyValues[i + 1]);
+            builder.add(keyValues[i], keyValues[i + 1]);
         }
-        return params.toString();
+        return builder.build();
+    }
+
+    protected String buildTokenRequestBody(String code) {
+        return buildUrlParams(
+                "grant_type", OauthConstants.Common.GRANT_TYPE_AUTH_CODE,
+                "client_id", getClientId(),
+                "client_secret", getClientSecret(),
+                "code", code,
+                "redirect_uri", getRedirectUri()
+        );
     }
 
     protected abstract String getClientId();

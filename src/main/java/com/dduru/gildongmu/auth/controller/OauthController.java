@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -19,59 +21,74 @@ import java.util.Map;
 public class OauthController {
 
     private final OauthAuthService oauthAuthService;
+    private static final Set<String> SUPPORTED_PROVIDERS = Set.of("kakao", "google");
 
     @GetMapping("/login/{provider}")
     public ResponseEntity<Map<String, String>> getAuthorizationUrl(@PathVariable String provider) {
-        validateProvider(provider);
-
-        String authUrl = oauthAuthService.getAuthorizationUrl(provider);
-        Map<String, String> response = new HashMap<>();
-        response.put("authUrl", authUrl);
-        return ResponseEntity.ok(response);
+        String normalized = validateAndNormalizeProvider(provider);
+        String authUrl = oauthAuthService.getAuthorizationUrl(normalized);
+        return ResponseEntity.ok(Map.of("authUrl", authUrl));
     }
 
     @PostMapping("/login/{provider}")
-    public ResponseEntity<LoginResponse> login(@PathVariable String provider,
-                                               @RequestBody(required = false) Map<String, String> request) {
-
-        validateProvider(provider);
-        validateRequest(request, "code", "OAuth 인증 코드");
-
-        String code = request.get("code");
-        LoginResponse response = oauthAuthService.processLogin(provider, code);
+    public ResponseEntity<LoginResponse> loginWithAuthCode(
+            @PathVariable String provider,
+            @RequestBody Map<String, String> request) {
+        String normalized = validateAndNormalizeProvider(provider);
+        String code = requireNonBlank(request, "code", "Authorization Code");
+        code = safeUrlDecode(code);
+        LoginResponse response = oauthAuthService.processLogin(normalized, code);
+        log.info("[{}] 로그인 성공 (authCode) - {}", normalized, response.email());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{provider}")
-    public ResponseEntity<LoginResponse> loginWithToken(
+    public ResponseEntity<LoginResponse> loginWithIdToken(
             @PathVariable String provider,
-            @RequestBody Map<String, String> request) {
-        validateProvider(provider);
-        validateRequest(request, "idToken", "ID Token");
-
-        String idToken = request.get("idToken");
-        LoginResponse response = oauthAuthService.processTokenLogin(provider, idToken);
+            @RequestParam(required = false) String idToken,
+            @RequestBody(required = false) Map<String, String> request) {
+        String normalized = validateAndNormalizeProvider(provider);
+        String token = idToken != null ? idToken : requireNonBlank(request, "idToken", "ID Token");
+        LoginResponse response = oauthAuthService.processTokenLogin(normalized, token);
+        log.info("[{}] 로그인 성공 (idToken) - {}", normalized, response.email());
         return ResponseEntity.ok(response);
     }
 
-    private void validateProvider(String provider) {
-        if (provider == null || provider.trim().isEmpty()) {
+    private String validateAndNormalizeProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "Provider가 비어있습니다.");
         }
-
-        if (!"kakao".equals(provider) && !"google".equals(provider)) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_SOCIAL_LOGIN);
+        String normalized = provider.trim().toLowerCase();
+        if (!SUPPORTED_PROVIDERS.contains(normalized)) {
+            log.warn("지원하지 않는 OAuth Provider: {}", provider);
+            throw new BusinessException(ErrorCode.UNSUPPORTED_SOCIAL_LOGIN, "지원하지 않는 소셜 로그인: " + provider);
         }
+        return normalized;
     }
 
-    private void validateRequest(Map<String, String> request, String key, String description) {
+    private String requireNonBlank(Map<String, String> request, String key, String desc) {
         if (request == null) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "요청 본문이 비어있습니다.");
+            log.error("요청 본문이 null임: {}", desc);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, desc + " 요청이 비어있습니다.");
         }
-
         String value = request.get(key);
-        if (value == null || value.trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, description + "가 비어 있습니다.");
+        if (value == null || value.isBlank()) {
+            log.error("필수 파라미터 누락: {} ({})", key, desc);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, desc + "가 비어있습니다.");
+        }
+        return value;
+    }
+
+    private String safeUrlDecode(String code) {
+        try {
+            String decoded = URLDecoder.decode(code, StandardCharsets.UTF_8);
+            if (!decoded.equals(code)) {
+                log.debug("URL 디코딩 수행됨: 원본({}) -> 디코딩({})", code, decoded);
+            }
+            return decoded;
+        } catch (Exception e) {
+            log.warn("인증 코드 URL 디코딩 실패: {}", e.getMessage());
+            return code;
         }
     }
 }
