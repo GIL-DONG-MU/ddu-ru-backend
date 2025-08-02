@@ -18,13 +18,10 @@ public enum Gender {
             return U;
         }
 
-        switch (gender.toLowerCase()) {
-            case "male":
-                return M;
-            case "female":
-                return F;
-            default:
-                return U;
-        }
+        return switch (gender.toLowerCase()) {
+            case "male", "m" -> M;
+            case "female", "f" -> F;
+            default -> U;
+        };
     }
 }
