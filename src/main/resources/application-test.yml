@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/dduru}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: create-drop  # 테스트 시작할 때 테이블 생성, 끝날 때 삭제
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:test-kakao-id}
+    client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-secret}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/oauth/kakao/callback}
+
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:test-google-id}
+    client-secret: ${GOOGLE_CLIENT_SECRET:test-google-secret}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/oauth/google/callback}
+    auth-url: https://accounts.google.com/o/oauth2/v2/auth
+    token-url: https://oauth2.googleapis.com/token
+    user-info-url: https://www.googleapis.com/oauth2/v2/userinfo
+
+jwt:
+  secret: ${JWT_SECRET:test-jwt-secret-key-for-testing-purposes-only}
+  expiration: ${JWT_EXPIRATION:3600000}
+
+logging:
+  level:
+    com.dduru.gildongmu: debug
+    org.springframework.security: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
