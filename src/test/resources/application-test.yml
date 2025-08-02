@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MYSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:test-kakao-id}
+    client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-secret}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/oauth/kakao/callback}
+
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:test-google-id}
+    client-secret: ${GOOGLE_CLIENT_SECRET:test-google-secret}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/oauth/google/callback}
+    auth-url: https://accounts.google.com/o/oauth2/v2/auth
+    token-url: https://oauth2.googleapis.com/token
+    user-info-url: https://www.googleapis.com/oauth2/v2/userinfo
+
+jwt:
+  secret: ${JWT_SECRET:test-jwt-secret-key-for-testing-purposes-only}
+  expiration: ${JWT_EXPIRATION:3600000}
+
+logging:
+  level:
+    com.dduru.gildongmu: debug
+    org.springframework.security: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main, dev ]
     paths-ignore:
-      - '**.md'  # 문서 변경은 제외
+      - '**.md'
 
 jobs:
   build:
@@ -23,10 +23,7 @@ jobs:
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRATION: 3600000  # 1시간 (밀리초 단위)
-      SERVER_IP: ${{ secrets.SERVER_IP }}
-      APP_TAG: ${{ secrets.APP_TAG }}
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
 
     steps:
       - name: 📥 Checkout code
@@ -42,34 +39,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # .env 생성
       - name: ✨ Generate .env
         uses: SpicyPizza/create-envfile@v2
         with:
-#          envkey_MYSQL_ROOT_USERNAME:  ${{ secrets.MYSQL_ROOT_USERNAME }}
-#          envkey_MYSQL_ROOT_PASSWORD:  ${{ secrets.MYSQL_ROOT_PASSWORD }}
-#          envkey_HOST_DB_PORT:         ${{ secrets.HOST_DB_PORT }}
-#          envkey_KAKAO_CLIENT_ID:      ${{ secrets.KAKAO_CLIENT_ID }}
-#          envkey_KAKAO_CLIENT_SECRET:  ${{ secrets.KAKAO_CLIENT_SECRET }}
-#          envkey_KAKAO_REDIRECT_URI:   ${{ secrets.KAKAO_REDIRECT_URI }}
-#          envkey_GOOGLE_CLIENT_ID:     ${{ secrets.GOOGLE_CLIENT_ID }}
-#          envkey_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-#          envkey_GOOGLE_REDIRECT_URI:  ${{ secrets.GOOGLE_REDIRECT_URI }}
-#          envkey_JWT_SECRET:           ${{ secrets.JWT_SECRET }}
-#          envkey_JWT_EXPIRATION:       "3600000"
-#          envkey_SERVER_IP:            ${{ secrets.SERVER_IP }}
-#          envkey_APP_TAG:              "latest"
           file_name: .env
           fail_on_empty: true
-
-      # GHCR 로그인 (Fork PR이 아닌 경우에만)
-      - name: 🔑 Login to GHCR
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
 
       - name: 🛠️ Compose up (infra only)
         env:
@@ -77,13 +51,7 @@ jobs:
         run: docker compose --env-file .env up -d --wait
 
       - name: 🔨 Build & test with Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          arguments: clean build -Duser.language=ko -Duser.country=KR
-
-      - name: 🧹 Compose down
-        if: always()
-        run: docker compose down -v
+        run: ./gradlew clean build -Duser.language=ko -Duser.country=KR
 
       - name: ✅ CI Success
         run: echo "✅ All CI checks passed! Ready for merge."
