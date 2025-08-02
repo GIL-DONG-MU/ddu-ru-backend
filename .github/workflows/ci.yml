@@ -12,18 +12,6 @@ jobs:
   build:
     name: 🔍 Continuous Integration
     runs-on: ubuntu-latest
-    env:
-      MYSQL_ROOT_USERNAME: ${{ secrets.MYSQL_ROOT_USERNAME }}
-      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-      HOST_DB_PORT: ${{ secrets.HOST_DB_PORT }}
-      KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-      KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-      KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-      GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
 
     steps:
       - name: 📥 Checkout code
@@ -39,34 +27,15 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: ✨ Generate .env
-        uses: SpicyPizza/create-envfile@v2
-        with:
-          file_name: .env
-          fail_on_empty: true
-
       - name: 🛠️ Compose up (infra only)
         env:
           COMPOSE_PROFILES: infra
-        run: docker compose --env-file .env up -d --wait
+        run: docker compose up -d --wait
 
       - name: 🔨 Build & test with Gradle
-        uses: gradle/actions/setup-gradle@v3
+        run: ./gradlew clean build -Duser.language=ko -Duser.country=KR
         env:
           SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:${{ secrets.HOST_DB_PORT }}/dduru
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.MYSQL_ROOT_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
-        with:
-          arguments: clean build -Duser.language=ko -Duser.country=KR
 
       - name: 🧹 Compose down
         if: always()
