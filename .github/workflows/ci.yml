@@ -42,23 +42,23 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # env.ci 생성
+      # .env 생성
       - name: ✨ Generate .env
         uses: SpicyPizza/create-envfile@v2
         with:
-          envkey_MYSQL_ROOT_USERNAME: ${{ secrets.MYSQL_ROOT_USERNAME }}
-          envkey_MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          envkey_HOST_DB_PORT: ${{ secrets.HOST_DB_PORT }}
-          envkey_KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-          envkey_KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-          envkey_KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-          envkey_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          envkey_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          envkey_GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          envkey_JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          envkey_JWT_EXPIRATION: "3600000"
-          envkey_APP_TAG: "latest"
-          envkey_SERVER_IP: ${{ secrets.SERVER_IP }}
+#          envkey_MYSQL_ROOT_USERNAME:  ${{ secrets.MYSQL_ROOT_USERNAME }}
+#          envkey_MYSQL_ROOT_PASSWORD:  ${{ secrets.MYSQL_ROOT_PASSWORD }}
+#          envkey_HOST_DB_PORT:         ${{ secrets.HOST_DB_PORT }}
+#          envkey_KAKAO_CLIENT_ID:      ${{ secrets.KAKAO_CLIENT_ID }}
+#          envkey_KAKAO_CLIENT_SECRET:  ${{ secrets.KAKAO_CLIENT_SECRET }}
+#          envkey_KAKAO_REDIRECT_URI:   ${{ secrets.KAKAO_REDIRECT_URI }}
+#          envkey_GOOGLE_CLIENT_ID:     ${{ secrets.GOOGLE_CLIENT_ID }}
+#          envkey_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#          envkey_GOOGLE_REDIRECT_URI:  ${{ secrets.GOOGLE_REDIRECT_URI }}
+#          envkey_JWT_SECRET:           ${{ secrets.JWT_SECRET }}
+#          envkey_JWT_EXPIRATION:       "3600000"
+#          envkey_SERVER_IP:            ${{ secrets.SERVER_IP }}
+#          envkey_APP_TAG:              "latest"
           file_name: .env
           fail_on_empty: true
 
