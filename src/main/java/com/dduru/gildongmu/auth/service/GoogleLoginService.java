@@ -17,13 +17,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Map;
 
 
 @Slf4j
 @Service
 public class GoogleLoginService extends AbstractOauthService {
+
+    @Value("${oauth.google.android-client-id}")
+    private String googleAndroidClientId;
 
     @Value("${oauth.google.client-id}")
     private String googleClientId;
@@ -106,7 +109,9 @@ public class GoogleLoginService extends AbstractOauthService {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(),
                     GsonFactory.getDefaultInstance())
-                    .setAudience(Collections.singletonList(getClientId()))
+                    .setAudience(Arrays.asList(
+                            getClientId(),
+                            googleAndroidClientId))
                     .build();
 
             GoogleIdToken token = verifier.verify(idToken);

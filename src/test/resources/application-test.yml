@@ -24,6 +24,7 @@ oauth:
     redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/oauth/kakao/callback}
 
   google:
+    android-client-id: ${GOOGLE_ANDROID_CLIENT_ID:test-google-android-id}
     client-id: ${GOOGLE_CLIENT_ID:test-google-id}
     client-secret: ${GOOGLE_CLIENT_SECRET:test-google-secret}
     redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/oauth/google/callback}
