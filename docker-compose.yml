@@ -1,7 +1,6 @@
 services:
   mysql:
     image: mysql:8
-    container_name: ddu-ru-db
     ports:
       - "${HOST_DB_PORT}:3306"
     restart: always
@@ -23,7 +22,6 @@ services:
 
   app:
     build: .
-    container_name: ddu-ru-app
     restart: unless-stopped
     ports:
       - "8080:8080"
