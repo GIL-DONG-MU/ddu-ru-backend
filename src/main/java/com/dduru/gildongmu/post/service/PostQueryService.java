@@ -1,13 +1,10 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostListRequest;
 import com.dduru.gildongmu.post.dto.PostListResponse;
-import com.dduru.gildongmu.post.dto.PostSummaryDto;
-import com.dduru.gildongmu.post.enums.PostStatus;
+import com.dduru.gildongmu.post.dto.PostSummaryResponse;
 import com.dduru.gildongmu.post.exception.PostNotFoundException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,18 +29,20 @@ public class PostQueryService {
         log.debug("게시글 목록 조회 시작 - request: {}", request);
 
         Pageable pageable = PageRequest.of(0, request.size());
-
-        Page<Post> postPage = getPostsByCondition(request, pageable);
+        Page<Post> postPage = postRepository.findPostsWithFilters(request, pageable);
 
         List<Post> posts = postPage.getContent();
         boolean hasNext = posts.size() == request.size();
 
-        List<PostSummaryDto> dtos = posts.stream()
-                .map(post -> PostSummaryDto.from(post, jsonConverter))
+        List<PostSummaryResponse> dtos = posts.stream()
+                .map(post -> PostSummaryResponse.from(post, jsonConverter))
                 .toList();
+
+        log.info("게시글 목록 조회 완료 - 결과 수: {}, hasNext: {}", dtos.size(), hasNext);
 
         return PostListResponse.of(dtos, hasNext);
     }
+
     @Transactional
     public void increaseViewCount(Long postId) {
         log.debug("조회수 증가 - postId: {}", postId);
@@ -54,53 +53,5 @@ public class PostQueryService {
 
         postRepository.incrementViewCount(postId);
         log.info("조회수 증가 완료 - postId: {}", postId);
-    }
-
-    private Page<Post> getPostsByCondition(PostListRequest request, Pageable pageable) {
-        Gender preferredGender = null;
-        if (request.preferredGender() != null) {
-            try {
-                preferredGender = Gender.valueOf(request.preferredGender().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                preferredGender = Gender.from(request.preferredGender());
-                if (preferredGender == Gender.U && !request.preferredGender().equalsIgnoreCase("U")) {
-                    log.warn("유효하지 않은 preferredGender 값: {}", request.preferredGender());
-                    preferredGender = null;
-                }
-            }
-        }
-
-        AgeRange preferredAge = null;
-        if (request.preferredAge() != null) {
-            try {
-                preferredAge = AgeRange.valueOf(request.preferredAge().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                preferredAge = AgeRange.from(request.preferredAge());
-                if (preferredAge == AgeRange.UNKNOWN) {
-                    log.warn("유효하지 않은 preferredAge 값: {}", request.preferredAge());
-                    preferredAge = null;
-                }
-            }
-        }
-
-        Boolean isRecruiting = null;
-        if (request.hasRecruitmentStatusFilter()) {
-            isRecruiting = request.recruitmentStatus().equals("RECRUITING");
-        }
-
-        return postRepository.findPostsWithFilters(
-                request.cursor(),
-                request.keyword(),
-                request.startDate(),
-                request.endDate(),
-                preferredGender,
-                preferredAge,
-                request.destinationId(),
-                isRecruiting,
-                PostStatus.OPEN,
-                PostStatus.FULL,
-                PostStatus.CLOSED,
-                pageable
-        );
     }
 }
