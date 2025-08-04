@@ -4,15 +4,18 @@ import com.dduru.gildongmu.auth.domain.User;
 import com.dduru.gildongmu.auth.enums.AgeRange;
 import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.config.QueryDslConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@Import(QueryDslConfig.class)
 class UserRepositoryTest {
 
     @Autowired
