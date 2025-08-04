@@ -3,12 +3,12 @@ package com.dduru.gildongmu.post.dto;
 import java.util.List;
 
 public record PostListResponse(
-        List<PostSummaryDto> posts,
+        List<PostSummaryResponse> posts,
         Long nextCursor,
         boolean hasNext,
         int size
 ) {
-    public static PostListResponse of(List<PostSummaryDto> posts, boolean hasNext) {
+    public static PostListResponse of(List<PostSummaryResponse> posts, boolean hasNext) {
         Long nextCursor = null;
         if (hasNext && !posts.isEmpty()) {
             nextCursor = posts.get(posts.size() - 1).id();

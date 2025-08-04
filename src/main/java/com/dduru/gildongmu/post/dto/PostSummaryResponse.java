@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-public record PostSummaryDto(
+public record PostSummaryResponse(
         Long id,
         String title,
         String content,
@@ -20,8 +20,8 @@ public record PostSummaryDto(
         List<String> photoUrls,
         Integer viewCount
 ) {
-    public static PostSummaryDto from(Post post, JsonConverter jsonConverter) {
-        long daysLeft= ChronoUnit.DAYS.between(LocalDate.now(), post.getRecruitDeadline());
+    public static PostSummaryResponse from(Post post, JsonConverter jsonConverter) {
+        long daysLeft= ChronoUnit.DAYS.between(LocalDate.now(), post.getRecruitDeadline())+ 1;
         if(daysLeft<0) daysLeft = 0;
 
         String recruitmentStatus = determineRecruitmentStatus(post, daysLeft);
@@ -35,7 +35,7 @@ public record PostSummaryDto(
 
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
 
-        return new PostSummaryDto(
+        return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
                 summaryContent,
