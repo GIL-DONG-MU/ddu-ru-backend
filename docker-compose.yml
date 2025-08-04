@@ -1,7 +1,6 @@
 services:
   mysql:
     image: mysql:8
-    container_name: ddu-ru-db
     ports:
       - "${HOST_DB_PORT}:3306"
     restart: always
@@ -23,7 +22,6 @@ services:
 
   app:
     build: .
-    container_name: ddu-ru-app
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -31,7 +29,8 @@ services:
       - ddu-ru-app-logs:/app/logs
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USERNAME:-root}
+      MYSQL_HOST: mysql
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
