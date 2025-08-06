@@ -42,6 +42,16 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDetailResponse> getPostDetail(
+            @PathVariable Long postId
+    ) {
+
+        PostDetailResponse response = postQueryService.getPostDetailWithViewCount(postId);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping
     public ResponseEntity<PostCreateResponse> createPost(
             @CurrentUser Long userId,
@@ -65,12 +75,5 @@ public class PostController {
             @CurrentUser Long userId){
         postService.delete(postId, userId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{postId}/view")
-    public ResponseEntity<Void> increaseViewCount(@PathVariable Long postId) {
-
-        postQueryService.increaseViewCount(postId);
-        return ResponseEntity.ok().build();
     }
 }
