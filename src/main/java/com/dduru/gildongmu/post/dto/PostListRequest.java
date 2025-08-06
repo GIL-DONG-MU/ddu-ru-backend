@@ -16,9 +16,4 @@ public record PostListRequest(
     public PostListRequest {
         if (size == null || size <= 0 || size > 50) size = 10;
     }
-
-    public boolean hasRecruitmentStatusFilter() {
-        return recruitmentStatus != null &&
-                (recruitmentStatus.equals("RECRUITING") || recruitmentStatus.equals("COMPLETED"));
-    }
 }
