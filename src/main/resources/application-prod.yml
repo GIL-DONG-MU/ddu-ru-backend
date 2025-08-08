@@ -16,7 +16,10 @@ spring:
       hibernate:
         format_sql: false
         use_sql_comments: false
-
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 logging:
   level:
     root: info
