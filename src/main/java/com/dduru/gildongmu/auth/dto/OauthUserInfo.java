@@ -13,4 +13,5 @@ public record OauthUserInfo(
         String gender,
         String ageRange,
         String phoneNumber
-) {}
+) {
+}

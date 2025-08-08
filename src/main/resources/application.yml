@@ -5,7 +5,15 @@ spring:
     active: dev
   application:
     name: gildongmu
-
+  data:
+    redis:
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 oauth:
   kakao:
     client-id: ${KAKAO_CLIENT_ID}
@@ -20,4 +28,5 @@ oauth:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000}
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}

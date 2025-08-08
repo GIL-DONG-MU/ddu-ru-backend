@@ -53,9 +53,20 @@ services:
     networks:
       - ddu-ru-network
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+
 volumes:
   ddu-ru-db-data:
   ddu-ru-app-logs:
+  redis-data:
 
 networks:
   ddu-ru-network:
