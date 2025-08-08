@@ -21,7 +21,8 @@ services:
       - ddu-ru-network
 
   app:
-    build: .
+    # image: ${DOCKER_IMAGE:-ddu-ru-backend:latest}
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}
     restart: unless-stopped
     ports:
       - "8080:8080"
