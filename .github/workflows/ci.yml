@@ -37,16 +37,14 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: ✨ Generate .env
+      - name: ✨ Generate .env for testing
         uses: SpicyPizza/create-envfile@v2
         with:
           file_name: .env
           fail_on_empty: true
 
-      - name: 🛠️ Compose up (infra only)
-        env:
-          COMPOSE_PROFILES: infra
-        run: docker compose --env-file .env up -d --wait
+      - name: 🛠️ Start dev infrastructure (Infra only)
+        run: docker compose -f docker-compose.dev.yml --env-file .env up -d --wait
 
       - name: 🔨 Build & test with Gradle
         run: ./gradlew clean build -Duser.language=ko -Duser.country=KR
