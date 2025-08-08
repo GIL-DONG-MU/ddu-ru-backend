@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.auth.exception.RefreshTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,34 +22,20 @@ public class RefreshTokenService {
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
 
     public void saveRefreshToken(String userId, String refreshToken) {
-        try {
-            redisTemplate.opsForValue()
-                    .set(key(userId), refreshToken,refreshTtl);
-            log.info("Refresh token 저장 - userId: {}", userId);
-        } catch (Exception e) {
-            log.error("Refresh token 저장 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 저장 실패");
-        }
+        redisTemplate.opsForValue().set(key(userId), refreshToken, refreshTtl);
+        log.info("Refresh token 저장 - userId: {}", userId);
     }
 
     public Optional<String> getRefreshToken(String userId) {
-        try {
-            return Optional.ofNullable(redisTemplate.opsForValue().get(key(userId)));
-        } catch (Exception e) {
-            log.error("Refresh token 조회 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 조회 실패");
-        }
+        String token = redisTemplate.opsForValue().get(key(userId));
+        return Optional.ofNullable(token);
     }
 
     public boolean deleteRefreshToken(String userId) {
-        try {
-            boolean deleted = Boolean.TRUE.equals(redisTemplate.delete(key(userId)));
-            log.info("Refresh token 삭제 - userId: {}, 성공: {}", userId, deleted);
-            return deleted;
-        } catch (Exception e) {
-            log.error("Refresh token 삭제 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 삭제 실패");
-        }
+        Boolean deleted = redisTemplate.delete(key(userId));
+        boolean isDeleted = Boolean.TRUE.equals(deleted);
+        log.info("Refresh token 삭제 - userId: {}, 성공: {}", userId, isDeleted);
+        return isDeleted;
     }
 
     public boolean validateRefreshToken(String userId, String refreshToken) {
@@ -60,13 +45,8 @@ public class RefreshTokenService {
     }
 
     public void refreshTokenExpiration(String userId) {
-        try {
-            redisTemplate.expire(key(userId), refreshTtl);
-            log.info("Refresh token 만료 연장 - userId: {}", userId);
-        } catch (Exception e) {
-            log.error("Refresh token 만료 연장 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 만료 연장 실패");
-        }
+        redisTemplate.expire(key(userId), refreshTtl);
+        log.info("Refresh token 만료 연장 - userId: {}", userId);
     }
 
     private String key(String userId) {
