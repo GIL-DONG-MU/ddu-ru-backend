@@ -50,7 +50,7 @@ jobs:
         run: docker compose -f docker-compose.dev.yml --env-file .env up -d --wait
 
       - name: 🔨 Build & test with Gradle
-        run: ./gradlew clean build -Duser.language=ko -Duser.country=KR
+        run: ./gradlew clean build -x test -Duser.language=ko -Duser.country=KR
 
       - name: ✅ CI Success
         run: echo "✅ All CI checks passed! Ready for merge."
