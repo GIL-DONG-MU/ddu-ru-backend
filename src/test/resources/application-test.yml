@@ -16,6 +16,17 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 
 oauth:
   kakao:
@@ -28,13 +39,11 @@ oauth:
     client-id: ${GOOGLE_CLIENT_ID:test-google-id}
     client-secret: ${GOOGLE_CLIENT_SECRET:test-google-secret}
     redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/oauth/google/callback}
-    auth-url: https://accounts.google.com/o/oauth2/v2/auth
-    token-url: https://oauth2.googleapis.com/token
-    user-info-url: https://www.googleapis.com/oauth2/v2/userinfo
 
 jwt:
   secret: ${JWT_SECRET:test-jwt-secret-key-for-testing-purposes-only}
-  expiration: ${JWT_EXPIRATION:3600000}
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
 
 logging:
   level:

@@ -13,6 +13,20 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  web:
+    resources:
+      add-mappings: false
 
 oauth:
   kakao:
@@ -25,26 +39,11 @@ oauth:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
     redirect-uri: ${GOOGLE_REDIRECT_URI}
-    auth-url: https://accounts.google.com/o/oauth2/v2/auth
-    token-url: https://oauth2.googleapis.com/token
-    user-info-url: https://www.googleapis.com/oauth2/v2/userinfo
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000}
-  refresh-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
-
-redis:
-  host: ${REDIS_HOST:localhost}
-  port: ${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
-  timeout: 2000ms
-  lettuce:
-    pool:
-      max-active: 8
-      max-idle: 8
-      min-idle: 0
-      max-wait: -1ms
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
 
 logging:
   level:
