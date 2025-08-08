@@ -56,45 +56,27 @@ public class OauthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refreshAccessToken(@RequestBody Map<String, String> request) {
-        try {
-            String refreshToken = requireNonBlank(request, "refreshToken", "Refresh Token");
-            String userId = requireNonBlank(request, "userId", "User ID");
+        String refreshToken = requireNonBlank(request, "refreshToken", "Refresh Token");
+        String userId = requireNonBlank(request, "userId", "User ID");
 
-            log.info("Access Token 재발급 요청 - userId: {}", userId);
+        log.info("Access Token 재발급 요청 - userId: {}", userId);
 
-            LoginResponse response = oauthAuthService.refreshAccessToken(refreshToken, userId);
+        LoginResponse response = oauthAuthService.refreshAccessToken(refreshToken, userId);
 
-            log.info("Access Token 재발급 성공 - userId: {}, email: {}", userId, response.email());
-            return ResponseEntity.ok(response);
-
-        } catch (BusinessException e) {
-            log.error("Access Token 재발급 실패 (Business): {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Access Token 재발급 실패 (Unexpected): {}", e.getMessage());
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "토큰 재발급 처리 중 오류가 발생했습니다.");
-        }
+        log.info("Access Token 재발급 성공 - userId: {}, email: {}", userId, response.email());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(@RequestBody Map<String, String> request) {
-        try {
-            String userId = requireNonBlank(request, "userId", "User ID");
+        String userId = requireNonBlank(request, "userId", "User ID");
 
-            log.info("로그아웃 요청 - userId: {}", userId);
+        log.info("로그아웃 요청 - userId: {}", userId);
 
-            oauthAuthService.logout(userId);
+        oauthAuthService.logout(userId);
 
-            log.info("로그아웃 성공 - userId: {}", userId);
-            return ResponseEntity.ok(Map.of("message", "로그아웃되었습니다."));
-
-        } catch (BusinessException e) {
-            log.error("로그아웃 실패 (Business): {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("로그아웃 실패 (Unexpected): {}", e.getMessage());
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "로그아웃 처리 중 오류가 발생했습니다.");
-        }
+        log.info("로그아웃 완료 - userId: {}", userId);
+        return ResponseEntity.ok(Map.of("message", "로그아웃되었습니다."));
     }
 
     private String validateAndNormalizeProvider(String provider) {

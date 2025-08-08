@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.auth.service;
 
+import com.dduru.gildongmu.auth.exception.RefreshTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,64 +17,59 @@ public class RefreshTokenService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Value("${jwt.refresh-expiration:2592000000}")
-    private long refreshTokenExpireTime;
+    @Value("${jwt.refresh-expiration}")
+    private Duration refreshTtl;
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
 
     public void saveRefreshToken(String userId, String refreshToken) {
         try {
-            String key = REFRESH_TOKEN_PREFIX + userId;
-            long expireTimeInSeconds = refreshTokenExpireTime / 1000;
-            redisTemplate.opsForValue().set(key, refreshToken, Duration.ofSeconds(expireTimeInSeconds));
-            log.info("Refresh token 저장 성공 - userId: {}", userId);
+            redisTemplate.opsForValue()
+                    .set(key(userId), refreshToken,refreshTtl);
+            log.info("Refresh token 저장 - userId: {}", userId);
         } catch (Exception e) {
-            log.error("Refresh token 저장 실패 - userId: {}, error: {}", userId, e.getMessage());
-            throw new RuntimeException("Refresh token 저장에 실패했습니다.", e);
+            log.error("Refresh token 저장 실패 - userId: {}", userId, e);
+            throw new RefreshTokenException("Refresh token 저장 실패");
         }
     }
 
     public Optional<String> getRefreshToken(String userId) {
         try {
-            String key = REFRESH_TOKEN_PREFIX + userId;
-            String refreshToken = redisTemplate.opsForValue().get(key);
-            return Optional.ofNullable(refreshToken);
+            return Optional.ofNullable(redisTemplate.opsForValue().get(key(userId)));
         } catch (Exception e) {
-            log.error("Refresh token 조회 실패 - userId: {}, error: {}", userId, e.getMessage());
-            return Optional.empty();
+            log.error("Refresh token 조회 실패 - userId: {}", userId, e);
+            throw new RefreshTokenException("Refresh token 조회 실패");
         }
     }
 
     public boolean deleteRefreshToken(String userId) {
         try {
-            String key = REFRESH_TOKEN_PREFIX + userId;
-            Boolean deleted = redisTemplate.delete(key);
+            boolean deleted = Boolean.TRUE.equals(redisTemplate.delete(key(userId)));
             log.info("Refresh token 삭제 - userId: {}, 성공: {}", userId, deleted);
-            return Boolean.TRUE.equals(deleted);
+            return deleted;
         } catch (Exception e) {
-            log.error("Refresh token 삭제 실패 - userId: {}, error: {}", userId, e.getMessage());
-            return false;
+            log.error("Refresh token 삭제 실패 - userId: {}", userId, e);
+            throw new RefreshTokenException("Refresh token 삭제 실패");
         }
     }
 
     public boolean validateRefreshToken(String userId, String refreshToken) {
-        try {
-            Optional<String> storedToken = getRefreshToken(userId);
-            return storedToken.isPresent() && storedToken.get().equals(refreshToken);
-        } catch (Exception e) {
-            log.error("Refresh token 검증 실패 - userId: {}, error: {}", userId, e.getMessage());
-            return false;
-        }
+        return getRefreshToken(userId)
+                .map(refreshToken::equals)
+                .orElse(false);
     }
 
     public void refreshTokenExpiration(String userId) {
         try {
-            String key = REFRESH_TOKEN_PREFIX + userId;
-            long expireTimeInSeconds = refreshTokenExpireTime / 1000;
-            redisTemplate.expire(key, Duration.ofSeconds(expireTimeInSeconds));
-            log.info("Refresh token 만료시간 갱신 - userId: {}", userId);
+            redisTemplate.expire(key(userId), refreshTtl);
+            log.info("Refresh token 만료 연장 - userId: {}", userId);
         } catch (Exception e) {
-            log.error("Refresh token 만료시간 갱신 실패 - userId: {}, error: {}", userId, e.getMessage());
+            log.error("Refresh token 만료 연장 실패 - userId: {}", userId, e);
+            throw new RefreshTokenException("Refresh token 만료 연장 실패");
         }
+    }
+
+    private String key(String userId) {
+        return REFRESH_TOKEN_PREFIX + userId;
     }
 }

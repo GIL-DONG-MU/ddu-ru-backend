@@ -5,6 +5,7 @@ import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.enums.AgeRange;
 import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.auth.exception.*;
 import com.dduru.gildongmu.auth.repository.UserRepository;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -47,75 +48,81 @@ public class OauthAuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
 
         refreshTokenService.saveRefreshToken(user.getId().toString(), refreshToken);
-
-        return LoginResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .name(user.getName())
-                .email(user.getEmail())
-                .profileImage(user.getProfileImage())
-                .gender(getEnumName(user.getGender()))
-                .ageRange(getEnumName(user.getAgeRange()))
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+        return LoginResponse.of(user, jwtToken, refreshToken);
     }
 
     public LoginResponse refreshAccessToken(String refreshToken, String userId) {
+        Long uid = parseUserId(userId);
+
+        final boolean matches;
         try {
-            log.info("Access Token 재발급 시작 - userId: {}", userId);
-
-            if (!refreshTokenService.validateRefreshToken(userId, refreshToken)) {
-                log.error("Redis에 저장된 refresh token과 일치하지 않음 - userId: {}", userId);
-                throw new RuntimeException("유효하지 않은 refresh token입니다.");
-            }
-
-            if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-                log.error("JWT refresh token 검증 실패 - userId: {}", userId);
-                refreshTokenService.deleteRefreshToken(userId);
-                throw new RuntimeException("만료되거나 유효하지 않은 refresh token입니다.");
-            }
-
-            User user = userRepository.findById(Long.parseLong(userId))
-                    .orElseThrow(() -> {
-                        log.error("사용자를 찾을 수 없음 - userId: {}", userId);
-                        return new RuntimeException("사용자를 찾을 수 없습니다.");
-                    });
-
-            String newAccessToken = jwtTokenProvider.createToken(user.getId().toString());
-
-            refreshTokenService.refreshTokenExpiration(userId);
-
-            log.info("Access Token 재발급 성공 - userId: {}", userId);
-
-            return LoginResponse.builder()
-                    .accessToken(newAccessToken)
-                    .refreshToken(refreshToken)
-                    .name(user.getName())
-                    .email(user.getEmail())
-                    .profileImage(user.getProfileImage())
-                    .gender(getEnumName(user.getGender()))
-                    .ageRange(getEnumName(user.getAgeRange()))
-                    .phoneNumber(user.getPhoneNumber())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Access Token 재발급 실패 - userId: {}, error: {}", userId, e.getMessage());
-            throw e;
+            matches = refreshTokenService.validateRefreshToken(userId, refreshToken);
+        } catch (RefreshTokenException infraException) {
+            log.error("Redis 접근 실패로 토큰 검증 불가 - userId: {}", userId, infraException);
+            throw new TokenRefreshFailedException("토큰 검증 중 서버 오류가 발생했습니다.");
         }
+
+        if (!matches) {
+            log.warn("저장된 refresh token과 불일치 - userId: {}", userId);
+            throw new InvalidTokenException("유효하지 않은 refresh token입니다.");
+        }
+
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+            log.warn("JWT refresh token 검증 실패 - userId: {}", userId);
+            deleteExpiredTokenSafely(userId);
+            throw new InvalidTokenException("만료되거나 유효하지 않은 refresh token입니다.");
+        }
+
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> {
+                    log.error("사용자를 찾을 수 없음 - userId: {}", userId);
+                    return new UserNotFoundException();
+                });
+
+        String newAccessToken = jwtTokenProvider.createToken(user.getId().toString());
+
+        extendTokenExpirationSafely(userId);
+
+        log.info("Access Token 재발급 성공 - userId: {}", userId);
+        return LoginResponse.of(user, newAccessToken, refreshToken);
     }
 
     public void logout(String userId) {
         try {
-            refreshTokenService.deleteRefreshToken(userId);
-            log.info("로그아웃 성공 - userId: {}", userId);
-        } catch (Exception e) {
-            log.error("로그아웃 실패 - userId: {}, error: {}", userId, e.getMessage());
-            throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
+            boolean deleted = refreshTokenService.deleteRefreshToken(userId);
+            if (deleted) {
+                log.info("로그아웃 성공 - userId: {}", userId);
+            } else {
+                log.info("로그아웃 처리 (토큰이 이미 없음) - userId: {}", userId);
+            }
+        } catch (RefreshTokenException infraException) {
+            log.warn("로그아웃 중 Redis 오류 (사용자에게는 성공 처리) - userId: {}", userId, infraException);
         }
     }
 
-    private String getEnumName(Enum<?> enumValue) {
-        return enumValue != null ? enumValue.name() : null;
+    private void deleteExpiredTokenSafely(String userId) {
+        try {
+            refreshTokenService.deleteRefreshToken(userId);
+        } catch (RefreshTokenException infraException) {
+            log.warn("만료된 refresh token 삭제 실패 - userId: {}", userId, infraException);
+        }
+    }
+
+    private void extendTokenExpirationSafely(String userId) {
+        try {
+            refreshTokenService.refreshTokenExpiration(userId);
+        } catch (RefreshTokenException infraException) {
+            log.warn("Refresh token 만료 연장 실패 - userId: {}", userId, infraException);
+        }
+    }
+
+    private Long parseUserId(String userId) {
+        try {
+            return Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            log.warn("잘못된 사용자 ID 형식 - userId: {}", userId);
+            throw new InvalidTokenException("잘못된 사용자 ID 형식입니다.");
+        }
     }
 
     private User findOrCreateUser(OauthUserInfo oauthUserInfo) {
