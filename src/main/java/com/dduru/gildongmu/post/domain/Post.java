@@ -17,6 +17,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "posts")
@@ -191,6 +192,17 @@ public class Post extends BaseTimeEntity {
         return LocalDate.now().isAfter(endDate);
     }
 
+    public boolean isRecruitOpen() {
+        return status == PostStatus.OPEN &&
+                !isRecruitmentClosed() &&
+                recruitCount < recruitCapacity;
+    }
+
+    public int getDaysLeftForRecruitment() {
+        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+        return Math.max(daysLeft, 0);
+    }
+
     private void updateRecruitCapacity(Integer newCapacity) {
         if (newCapacity < this.recruitCount) {
             throw new InvalidRecruitCapacityException(
@@ -200,6 +212,7 @@ public class Post extends BaseTimeEntity {
         }
         this.recruitCapacity = newCapacity;
     }
+
     private void validateUpdatePermission() {
         if (isTravelStarted()) {
             throw new TravelAlreadyStartedException("여행이 시작된 게시글은 수정할 수 없습니다");
