@@ -6,12 +6,9 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostListRequest;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -27,9 +24,9 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Post> findPostsWithFilters(PostListRequest request, Pageable pageable) {
+    public List<Post> findPostsWithFilters(PostListRequest request, Pageable pageable) {
 
-        List<Post> content = queryFactory
+        return queryFactory
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
                 .leftJoin(post.user).fetchJoin()
@@ -46,22 +43,6 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .orderBy(post.id.desc())
                 .limit(pageable.getPageSize())
                 .fetch();
-
-        JPAQuery<Long> countQuery = queryFactory
-                .select(post.count())
-                .from(post)
-                .where(
-                        isNotDeleted(),
-                        cursorCondition(request.cursor()),
-                        keywordCondition(request.keyword()),
-                        dateRangeCondition(request.startDate(), request.endDate()),
-                        genderCondition(request.preferredGender()),
-                        ageRangeCondition(request.preferredAge()),
-                        destinationCondition(request.destinationId()),
-                        recruitmentStatusCondition(request.recruitmentStatus())
-                );
-
-        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
     private BooleanExpression isNotDeleted() {

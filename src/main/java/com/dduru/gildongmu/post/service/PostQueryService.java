@@ -10,7 +10,6 @@ import com.dduru.gildongmu.post.exception.PostNotFoundException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,12 +27,14 @@ public class PostQueryService {
 
     public PostListResponse getPosts(PostListRequest request) {
         log.debug("게시글 목록 조회 시작 - request: {}", request);
+        Pageable pageable = PageRequest.of(0, request.size() + 1);
+        List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
 
-        Pageable pageable = PageRequest.of(0, request.size());
-        Page<Post> postPage = postRepository.findPostsWithFilters(request, pageable);
+        boolean hasNext = posts.size() > request.size();
 
-        List<Post> posts = postPage.getContent();
-        boolean hasNext = posts.size() == request.size();
+        if (hasNext) {
+            posts = posts.subList(0, request.size());
+        }
 
         List<PostSummaryResponse> dtos = posts.stream()
                 .map(post -> PostSummaryResponse.from(post, jsonConverter))
