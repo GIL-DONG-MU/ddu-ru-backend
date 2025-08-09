@@ -25,7 +25,6 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
     @Override
     public List<Post> findPostsWithFilters(PostListRequest request, Pageable pageable) {
-
         return queryFactory
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
@@ -38,7 +37,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         genderCondition(request.preferredGender()),
                         ageRangeCondition(request.preferredAge()),
                         destinationCondition(request.destinationId()),
-                        recruitmentStatusCondition(request.recruitmentStatus())
+                        recruitmentStatusCondition(request.isRecruitOpen())
                 )
                 .orderBy(post.id.desc())
                 .limit(pageable.getPageSize())
@@ -127,25 +126,22 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return post.destination.id.eq(destinationId);
     }
 
-    private BooleanExpression recruitmentStatusCondition(String recruitmentStatus) {
-        if (recruitmentStatus == null || recruitmentStatus.trim().isEmpty()) {
+    private BooleanExpression recruitmentStatusCondition(Boolean isRecruitOpen) {
+        if (isRecruitOpen == null) {
             return null;
         }
 
         LocalDate currentDate = LocalDate.now();
 
-        if ("RECRUITING".equalsIgnoreCase(recruitmentStatus)) {
+        if (isRecruitOpen) {
             return post.status.eq(PostStatus.OPEN)
                     .and(post.recruitDeadline.goe(currentDate))
                     .and(post.recruitCount.lt(post.recruitCapacity));
-
-        } else if ("COMPLETED".equalsIgnoreCase(recruitmentStatus)) {
+        } else {
             return post.status.eq(PostStatus.FULL)
                     .or(post.status.eq(PostStatus.CLOSED))
                     .or(post.recruitDeadline.lt(currentDate))
                     .or(post.recruitCount.goe(post.recruitCapacity));
         }
-
-        return null;
     }
 }

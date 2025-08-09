@@ -11,7 +11,7 @@ public record PostListRequest(
         String preferredGender,
         String preferredAge,
         Long destinationId,
-        String recruitmentStatus
+        Boolean isRecruitOpen
 ) {
     public PostListRequest {
         if (size == null || size <= 0 || size > 50) size = 10;

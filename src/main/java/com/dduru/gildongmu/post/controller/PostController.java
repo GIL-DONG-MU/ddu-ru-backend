@@ -30,11 +30,11 @@ public class PostController {
             @RequestParam(required = false) String preferredGender,
             @RequestParam(required = false) String preferredAge,
             @RequestParam(required = false) Long destinationId,
-            @RequestParam(required = false) String recruitmentStatus) {
+            @RequestParam(required = false) Boolean  isRecruitOpen) {
 
         PostListRequest request = new PostListRequest(
                 cursor, size, keyword, startDate, endDate, preferredGender,
-                preferredAge, destinationId, recruitmentStatus
+                preferredAge, destinationId, isRecruitOpen
         );
 
         PostListResponse response = postQueryService.getPosts(request);

@@ -2,7 +2,6 @@ package com.dduru.gildongmu.post.dto;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.enums.PostStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,7 +11,6 @@ public record PostDetailResponse(
         Long id,
         String title,
         String content,
-        PostStatus status,
         boolean isRecruitOpen,
         int daysLeft,
         LocalDate startDate,
@@ -30,7 +28,6 @@ public record PostDetailResponse(
         List<String> tags,
         Integer viewCount,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt,
         UserInfo author
 ) {
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter) {
@@ -42,7 +39,6 @@ public record PostDetailResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getStatus(),
                 post.isRecruitOpen(),
                 post.getDaysLeftForRecruitment(),
                 post.getStartDate(),
@@ -60,7 +56,6 @@ public record PostDetailResponse(
                 tags,
                 post.getViewCount(),
                 post.getCreatedAt(),
-                post.getModifiedAt(),
                 authorInfo
         );
     }
