@@ -27,8 +27,8 @@ public class HomeController {
         
         Map<String, String> endpoints = new HashMap<>();
         endpoints.put("health", "/actuator/health");
-        endpoints.put("kakao_login", "/api/auth/login/kakao");
-        endpoints.put("google_login", "/api/auth/login/google");
+        endpoints.put("kakao_login", "/api/v1/auth/kakao");
+        endpoints.put("google_login", "/api/v1/auth/google");
         
         response.put("endpoints", endpoints);
         response.put("message", "🎒 길동무 API 서버에 오신 것을 환영합니다!");

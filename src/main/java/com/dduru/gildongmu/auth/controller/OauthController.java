@@ -54,6 +54,31 @@ public class OauthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshAccessToken(@RequestBody Map<String, String> request) {
+        String refreshToken = requireNonBlank(request, "refreshToken", "Refresh Token");
+        String userId = requireNonBlank(request, "userId", "User ID");
+
+        log.info("Access Token 재발급 요청 - userId: {}", userId);
+
+        LoginResponse response = oauthAuthService.refreshAccessToken(refreshToken, userId);
+
+        log.info("Access Token 재발급 성공 - userId: {}, email: {}", userId, response.email());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestBody Map<String, String> request) {
+        String userId = requireNonBlank(request, "userId", "User ID");
+
+        log.info("로그아웃 요청 - userId: {}", userId);
+
+        oauthAuthService.logout(userId);
+
+        log.info("로그아웃 완료 - userId: {}", userId);
+        return ResponseEntity.ok(Map.of("message", "로그아웃되었습니다."));
+    }
+
     private String validateAndNormalizeProvider(String provider) {
         if (provider == null || provider.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "Provider가 비어있습니다.");

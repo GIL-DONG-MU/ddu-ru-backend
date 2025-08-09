@@ -10,4 +10,5 @@ public record KakaoProfile(
 
         @JsonProperty("thumbnail_image_url")
         String thumbnailImageUrl
-) {}
+) {
+}

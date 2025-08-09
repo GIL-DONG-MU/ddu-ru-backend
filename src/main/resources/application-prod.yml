@@ -1,4 +1,7 @@
 spring:
+  config:
+    activate:
+      on-profile: prod
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/dduru
     username: root
@@ -13,32 +16,17 @@ spring:
       hibernate:
         format_sql: false
         use_sql_comments: false
-
-oauth:
-  kakao:
-    client-id: ${KAKAO_CLIENT_ID}
-    client-secret: ${KAKAO_CLIENT_SECRET}
-    redirect-uri: ${KAKAO_REDIRECT_URI}
-
-  google:
-    android-client-id: ${GOOGLE_ANDROID_CLIENT_ID}
-    client-id: ${GOOGLE_CLIENT_ID}
-    client-secret: ${GOOGLE_CLIENT_SECRET}
-    redirect-uri: ${GOOGLE_REDIRECT_URI}
-    auth-url: https://accounts.google.com/o/oauth2/v2/auth
-    token-url: https://oauth2.googleapis.com/token
-    user-info-url: https://www.googleapis.com/oauth2/v2/userinfo
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:3600000}
-
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 logging:
   level:
     root: info
     com.dduru.gildongmu: info
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
 management:
   endpoints:
     web:

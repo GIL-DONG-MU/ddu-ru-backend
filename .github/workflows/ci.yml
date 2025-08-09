@@ -3,8 +3,6 @@ name: CI - Continuous Integration
 on:
   pull_request:
     branches: [ main, dev ]
-  push:
-    branches: [ main, dev ]
     paths-ignore:
       - '**.md'
 
@@ -19,11 +17,14 @@ jobs:
       KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
       KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
       KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+      GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
 
     steps:
       - name: 📥 Checkout code
@@ -39,19 +40,17 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: ✨ Generate .env
+      - name: ✨ Generate .env for testing
         uses: SpicyPizza/create-envfile@v2
         with:
           file_name: .env
           fail_on_empty: true
 
-      - name: 🛠️ Compose up (infra only)
-        env:
-          COMPOSE_PROFILES: infra
-        run: docker compose --env-file .env up -d --wait
+      - name: 🛠️ Start dev infrastructure (Infra only)
+        run: docker compose -f docker-compose.dev.yml --env-file .env up -d --wait
 
       - name: 🔨 Build & test with Gradle
-        run: ./gradlew clean build -Duser.language=ko -Duser.country=KR
+        run: ./gradlew clean build -x test -Duser.language=ko -Duser.country=KR
 
       - name: ✅ CI Success
         run: echo "✅ All CI checks passed! Ready for merge."

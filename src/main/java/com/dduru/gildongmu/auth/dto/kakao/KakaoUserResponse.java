@@ -10,4 +10,5 @@ public record KakaoUserResponse(
 
         @JsonProperty("kakao_account")
         KakaoAccount kakaoAccount
-) {}
+) {
+}

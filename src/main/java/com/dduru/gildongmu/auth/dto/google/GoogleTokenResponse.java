@@ -17,4 +17,5 @@ public record GoogleTokenResponse(
 
         @JsonProperty("refresh_token")
         String refreshToken
-) {}
+) {
+}

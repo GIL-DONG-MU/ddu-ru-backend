@@ -14,4 +14,5 @@ public record KakaoTokenResponse(
 
         @JsonProperty("expires_in")
         int expiresIn
-) {}
+) {
+}

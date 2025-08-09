@@ -1,0 +1,36 @@
+# 사용법: docker compose -f docker-compose.dev.yml up -d
+services:
+  mysql:
+    image: mysql:8
+    ports:
+      - "3308:3306"
+    restart: always
+    volumes:
+      - ddu-ru-test-db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dduru
+      TZ: Asia/Seoul
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - ddu-ru-test-network
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-test-data:/data
+
+volumes:
+  ddu-ru-test-db-data:
+  redis-test-data:
+
+networks:
+  ddu-ru-test-network:
+    driver: bridge

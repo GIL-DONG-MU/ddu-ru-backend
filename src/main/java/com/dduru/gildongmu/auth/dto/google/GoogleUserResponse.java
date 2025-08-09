@@ -10,4 +10,5 @@ public record GoogleUserResponse(
         String locale,
         @JsonProperty("verified_email")
         boolean verifiedEmail
-) {}
+) {
+}
