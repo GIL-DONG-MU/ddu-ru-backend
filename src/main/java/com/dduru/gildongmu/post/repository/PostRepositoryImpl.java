@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.post.repository;
 
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostListRequest;
 import com.dduru.gildongmu.post.enums.PostStatus;

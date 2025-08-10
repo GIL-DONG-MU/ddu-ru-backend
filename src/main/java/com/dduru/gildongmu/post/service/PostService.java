@@ -1,20 +1,19 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.auth.repository.UserRepository;
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
-import com.dduru.gildongmu.post.dto.PostUpdateResponse;
-import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.exception.*;
-import com.dduru.gildongmu.post.repository.DestinationRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

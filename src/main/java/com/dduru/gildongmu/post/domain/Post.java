@@ -1,10 +1,10 @@
 package com.dduru.gildongmu.post.domain;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;

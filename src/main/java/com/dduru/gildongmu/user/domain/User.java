@@ -1,8 +1,8 @@
-package com.dduru.gildongmu.auth.domain;
+package com.dduru.gildongmu.user.domain;
 
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
+import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

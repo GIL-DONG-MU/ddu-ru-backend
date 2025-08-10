@@ -64,9 +64,10 @@ public class PostController {
     public ResponseEntity<PostUpdateResponse> updatePost(
             @PathVariable Long postId,
             @CurrentUser Long userId,
-            @Valid @RequestBody PostUpdateRequest request){
-        PostUpdateResponse response = postService.update(postId, userId, request);
-        return ResponseEntity.ok(response);
+            @Valid @RequestBody PostUpdateRequest request
+    ){
+        postService.update(postId, userId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{postId}")

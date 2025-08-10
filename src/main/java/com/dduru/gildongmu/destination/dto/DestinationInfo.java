@@ -1,6 +1,6 @@
-package com.dduru.gildongmu.post.dto;
+package com.dduru.gildongmu.destination.dto;
 
-import com.dduru.gildongmu.post.enums.Destination;
+import com.dduru.gildongmu.destination.domain.Destination;
 import lombok.Builder;
 
 @Builder
