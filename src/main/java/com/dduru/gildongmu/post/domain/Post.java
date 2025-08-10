@@ -180,17 +180,6 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public boolean isRecruitmentClosed() {
-        return LocalDate.now().isAfter(recruitDeadline);
-    }
-
-    public boolean isTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
-    }
-
-    public boolean isTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
-    }
 
     public boolean isRecruitOpen() {
         return status == PostStatus.OPEN &&
@@ -221,5 +210,17 @@ public class Post extends BaseTimeEntity {
         if (isTravelEnded()) {
             throw new TravelAlreadyStartedException("여행이 종료된 게시글은 수정할 수 없습니다");
         }
+    }
+
+    private boolean isRecruitmentClosed() {
+        return LocalDate.now().isAfter(recruitDeadline);
+    }
+
+    private boolean isTravelStarted() {
+        return LocalDate.now().isAfter(startDate);
+    }
+
+    private boolean isTravelEnded() {
+        return LocalDate.now().isAfter(endDate);
     }
 }

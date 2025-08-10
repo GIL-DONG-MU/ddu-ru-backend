@@ -14,8 +14,8 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.dduru.gildongmu.destination.domain.QDestination.destination;
 import static com.dduru.gildongmu.post.domain.QPost.post;
-import static com.dduru.gildongmu.post.enums.QDestination.destination;
 
 @Repository
 @RequiredArgsConstructor

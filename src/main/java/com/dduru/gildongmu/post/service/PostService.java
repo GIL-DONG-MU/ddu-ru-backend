@@ -58,16 +58,10 @@ public class PostService {
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}",
                 savedPost.getId(), userId, savedPost.getTitle());
 
-        return PostCreateResponse.of(
-                savedPost,
-                user,
-                destination,
-                request.photoUrls(),
-                request.tags()
-        );
+        return new PostCreateResponse(savedPost.getId());
     }
 
-    public PostUpdateResponse update(Long postId, Long userId, PostUpdateRequest request) {
+    public void update(Long postId, Long userId, PostUpdateRequest request) {
         log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
@@ -91,17 +85,8 @@ public class PostService {
                     request.recruitDeadline(), preferredGender, preferredAgeMin, preferredAgeMax,
                     request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
 
-
             log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}",
                     post.getId(), userId, post.getTitle());
-
-            return PostUpdateResponse.of(
-                    post,
-                    post.getUser(),
-                    destination,
-                    request.photoUrls(),
-                    request.tags()
-            );
 
         } catch (InvalidRecruitCapacityException | TravelAlreadyStartedException e) {
             log.error("게시글 수정 중 비즈니스 규칙 위반 - postId: {}, error: {}", postId, e.getMessage());
