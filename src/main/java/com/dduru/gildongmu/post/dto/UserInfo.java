@@ -12,7 +12,7 @@ public record UserInfo(
     public static UserInfo from(User user) {
         return new UserInfo(
                 user.getId(),
-                user.getName(),
+                user.getDisplayName(), // Use nickname if available, otherwise name
                 user.getProfileImage(),
                 user.getGender().name(),
                 user.getAgeRange().name()
