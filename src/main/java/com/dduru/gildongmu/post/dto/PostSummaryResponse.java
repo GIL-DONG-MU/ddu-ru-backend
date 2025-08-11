@@ -21,13 +21,12 @@ public record PostSummaryResponse(
     private static final int SUMMARY_MAX_LENGTH = 100;
     public static PostSummaryResponse from(Post post, JsonConverter jsonConverter) {
 
-        String summaryContent = createSummaryContent(post.getContent());
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
 
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
-                summaryContent,
+                post.getContent(),
                 post.isRecruitOpen(),
                 post.getDaysLeftForRecruitment(),
                 post.getStartDate(),
@@ -36,12 +35,5 @@ public record PostSummaryResponse(
                 photoUrls,
                 post.getViewCount()
         );
-    }
-
-    private static String createSummaryContent(String content) {
-        if (content.length() > SUMMARY_MAX_LENGTH) {
-            return content.substring(0, SUMMARY_MAX_LENGTH) + "...";
-        }
-        return content;
     }
 }
