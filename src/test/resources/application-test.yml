@@ -24,6 +24,9 @@ spring:
       host: localhost
       port: 6379
 
+jwt:
+  expiration: -1
+
 logging:
   level:
     com.dduru.gildongmu: debug
