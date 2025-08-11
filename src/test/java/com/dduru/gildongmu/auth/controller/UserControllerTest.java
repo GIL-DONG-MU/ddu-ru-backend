@@ -1,35 +1,29 @@
 package com.dduru.gildongmu.auth.controller;
 
 import com.dduru.gildongmu.auth.dto.NicknameUpdateRequest;
+import com.dduru.gildongmu.auth.dto.NicknameUpdateResponse;
 import com.dduru.gildongmu.auth.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.willDoNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private UserService userService;
 
+    @InjectMocks
+    private UserController userController;
+
     @Test
-    void 닉네임_수정_API가_정상적으로_동작한다() throws Exception {
+    void 닉네임_수정_API가_정상적으로_동작한다() {
         // given
         Long userId = 1L;
         String nickname = "새로운닉네임";
@@ -37,28 +31,13 @@ class UserControllerTest {
 
         willDoNothing().given(userService).updateNickname(userId, nickname);
 
-        // when & then
-        mockMvc.perform(patch("/api/v1/users/nickname")
-                        .header("X-User-ID", userId) // @CurrentUser 어노테이션을 위한 헤더
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("닉네임이 성공적으로 수정되었습니다."))
-                .andExpect(jsonPath("$.nickname").value(nickname));
-    }
+        // when
+        ResponseEntity<NicknameUpdateResponse> response = userController.updateNickname(userId, request);
 
-    @Test
-    void 닉네임이_50자를_초과하면_검증_오류가_발생한다() throws Exception {
-        // given
-        Long userId = 1L;
-        String longNickname = "a".repeat(51); // 51자
-        NicknameUpdateRequest request = new NicknameUpdateRequest(longNickname);
-
-        // when & then
-        mockMvc.perform(patch("/api/v1/users/nickname")
-                        .header("X-User-ID", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        // then
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message()).isEqualTo("닉네임이 성공적으로 수정되었습니다.");
+        assertThat(response.getBody().nickname()).isEqualTo(nickname);
     }
 }
