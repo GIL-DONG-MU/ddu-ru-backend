@@ -25,7 +25,7 @@ public class PostQueryService {
     private final PostRepository postRepository;
     private final JsonConverter jsonConverter;
 
-    public PostListResponse retrieveWithFilter(PostListRequest request) {
+    public PostListResponse retrieveAllWithFilter(PostListRequest request) {
         log.debug("게시글 목록 조회 시작 - request: {}", request);
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);

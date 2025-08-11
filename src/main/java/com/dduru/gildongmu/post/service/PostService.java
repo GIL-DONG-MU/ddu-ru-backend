@@ -1,20 +1,19 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.auth.repository.UserRepository;
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
-import com.dduru.gildongmu.post.dto.PostUpdateResponse;
-import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.exception.*;
-import com.dduru.gildongmu.post.repository.DestinationRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,16 +58,10 @@ public class PostService {
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}",
                 savedPost.getId(), userId, savedPost.getTitle());
 
-        return PostCreateResponse.of(
-                savedPost,
-                user,
-                destination,
-                request.photoUrls(),
-                request.tags()
-        );
+        return new PostCreateResponse(savedPost.getId());
     }
 
-    public PostUpdateResponse update(Long postId, Long userId, PostUpdateRequest request) {
+    public void update(Long postId, Long userId, PostUpdateRequest request) {
         log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
@@ -92,17 +85,8 @@ public class PostService {
                     request.recruitDeadline(), preferredGender, preferredAgeMin, preferredAgeMax,
                     request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
 
-
             log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}",
                     post.getId(), userId, post.getTitle());
-
-            return PostUpdateResponse.of(
-                    post,
-                    post.getUser(),
-                    destination,
-                    request.photoUrls(),
-                    request.tags()
-            );
 
         } catch (InvalidRecruitCapacityException | TravelAlreadyStartedException e) {
             log.error("게시글 수정 중 비즈니스 규칙 위반 - postId: {}, error: {}", postId, e.getMessage());
