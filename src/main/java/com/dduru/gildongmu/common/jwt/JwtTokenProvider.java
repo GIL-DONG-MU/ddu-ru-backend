@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -68,16 +67,25 @@ public class JwtTokenProvider {
             Claims claims = getClaims(token);
             String tokenType = claims.get("type", String.class);
             if (!"access".equals(tokenType)) {
-                log.error("Access Token이 아닙니다");
-                throw new AuthenticationException("Invalid token type") {};
+                log.warn("Access Token이 아닙니다 - {}", tokenType);
+                return false;
             }
             return true;
         } catch (ExpiredJwtException e) {
-            log.error("JWT 토큰이 만료되었습니다");
-            throw new AuthenticationException("Expired JWT token") {};
-        } catch (JwtException | IllegalArgumentException e) {
-            log.error("JWT 토큰이 유효하지 않습니다");
-            throw new AuthenticationException("Invalid JWT token") {};
+            log.warn("JWT 토큰이 만료되었습니다");
+            return false;
+        } catch (UnsupportedJwtException e) {
+            log.warn("JWT 형식이 틀렸습니다");
+            return false;
+        } catch (MalformedJwtException e) {
+            log.warn("JWT 구조가 잘못되었습니다");
+            return false;
+        } catch (SignatureException e) {
+            log.warn("JWT 서명 검증 실패하였습니다");
+            return false;
+        } catch (IllegalArgumentException e) {
+            log.warn("부적절한 값이 들어왔습니다");
+            return false;
         }
     }
 
