@@ -2,6 +2,7 @@ package com.dduru.gildongmu.post.dto;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
