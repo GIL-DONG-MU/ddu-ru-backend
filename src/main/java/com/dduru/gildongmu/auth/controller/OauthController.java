@@ -38,7 +38,7 @@ public class OauthController {
         String code = requireNonBlank(request, "code", "Authorization Code");
         code = safeUrlDecode(code);
         LoginResponse response = oauthAuthService.processLogin(normalized, code);
-        log.info("[{}] 로그인 성공 (authCode) - {}", normalized, response.email());
+        log.info("[{}] 로그인 성공 (authCode)", normalized);
         return ResponseEntity.ok(response);
     }
 
@@ -50,7 +50,7 @@ public class OauthController {
         String normalized = validateAndNormalizeProvider(provider);
         String token = idToken != null ? idToken : requireNonBlank(request, "idToken", "ID Token");
         LoginResponse response = oauthAuthService.processTokenLogin(normalized, token);
-        log.info("[{}] 로그인 성공 (idToken) - {}", normalized, response.email());
+        log.info("[{}] 로그인 성공 (idToken)", normalized);
         return ResponseEntity.ok(response);
     }
 
@@ -63,7 +63,7 @@ public class OauthController {
 
         LoginResponse response = oauthAuthService.refreshAccessToken(refreshToken, userId);
 
-        log.info("Access Token 재발급 성공 - userId: {}, email: {}", userId, response.email());
+        log.info("Access Token 재발급 성공 - userId: {}", userId);
         return ResponseEntity.ok(response);
     }
 

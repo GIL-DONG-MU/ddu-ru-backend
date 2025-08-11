@@ -48,7 +48,7 @@ public class OauthAuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
 
         refreshTokenService.saveRefreshToken(user.getId().toString(), refreshToken);
-        return LoginResponse.of(user, jwtToken, refreshToken);
+        return LoginResponse.of(jwtToken, refreshToken);
     }
 
     public LoginResponse refreshAccessToken(String refreshToken, String userId) {
@@ -84,7 +84,7 @@ public class OauthAuthService {
         extendTokenExpirationSafely(userId);
 
         log.info("Access Token 재발급 성공 - userId: {}", userId);
-        return LoginResponse.of(user, newAccessToken, refreshToken);
+        return LoginResponse.of(newAccessToken, refreshToken);
     }
 
     public void logout(String userId) {
