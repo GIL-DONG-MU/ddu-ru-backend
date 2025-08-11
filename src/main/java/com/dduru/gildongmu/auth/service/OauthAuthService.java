@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -51,8 +53,14 @@ public class OauthAuthService {
         return LoginResponse.of(jwtToken, refreshToken);
     }
 
-    public LoginResponse refreshAccessToken(String refreshToken, String userId) {
-        Long uid = parseUserId(userId);
+    public LoginResponse refreshAccessToken(String refreshToken) {
+        String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+
+        User user = userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> {
+                    log.error("사용자를 찾을 수 없음 - userId: {}", userId);
+                    return new UserNotFoundException();
+                });
 
         final boolean matches;
         try {
@@ -73,17 +81,10 @@ public class OauthAuthService {
             throw new InvalidTokenException("만료되거나 유효하지 않은 refresh token입니다.");
         }
 
-        User user = userRepository.findById(uid)
-                .orElseThrow(() -> {
-                    log.error("사용자를 찾을 수 없음 - userId: {}", userId);
-                    return new UserNotFoundException();
-                });
-
         String newAccessToken = jwtTokenProvider.createToken(user.getId().toString());
 
-        extendTokenExpirationSafely(userId);
+        extendTokenExpirationSafely(userId);    // refresh token 만료 기간 연장
 
-        log.info("Access Token 재발급 성공 - userId: {}", userId);
         return LoginResponse.of(newAccessToken, refreshToken);
     }
 
@@ -116,20 +117,22 @@ public class OauthAuthService {
         }
     }
 
-    private Long parseUserId(String userId) {
-        try {
-            return Long.parseLong(userId);
-        } catch (NumberFormatException e) {
-            log.warn("잘못된 사용자 ID 형식 - userId: {}", userId);
-            throw new InvalidTokenException("잘못된 사용자 ID 형식입니다.");
-        }
-    }
-
     private User findOrCreateUser(OauthUserInfo oauthUserInfo) {
-        return userRepository.findByOauthIdAndOauthType(
+        Optional<User> existingUser = userRepository.findByOauthIdAndOauthType(
                 oauthUserInfo.oauthId(),
                 oauthUserInfo.loginType()
-        ).orElseGet(() -> createNewUser(oauthUserInfo));
+        );
+
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        }
+
+        if (userRepository.existsByEmail(oauthUserInfo.email())) {
+            log.error("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
+            throw new IllegalArgumentException("이미 다른 소셜 계정으로 가입된 이메일입니다: " + oauthUserInfo.email());
+        }
+
+        return createNewUser(oauthUserInfo);
     }
 
     private User createNewUser(OauthUserInfo oauthUserInfo) {
@@ -139,6 +142,7 @@ public class OauthAuthService {
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
                 .name(oauthUserInfo.name())
+                .nickname(oauthUserInfo.name())
                 .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
