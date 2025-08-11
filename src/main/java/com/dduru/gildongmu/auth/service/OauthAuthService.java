@@ -139,6 +139,7 @@ public class OauthAuthService {
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
                 .name(oauthUserInfo.name())
+                .nickname(oauthUserInfo.name())
                 .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
