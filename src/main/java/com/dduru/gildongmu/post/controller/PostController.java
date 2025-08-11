@@ -37,7 +37,7 @@ public class PostController {
                 preferredAge, destinationId, isRecruitOpen
         );
 
-        PostListResponse response = postQueryService.getPosts(request);
+        PostListResponse response = postQueryService.retrieveWithFilter(request);
 
         return ResponseEntity.ok(response);
     }
@@ -47,7 +47,7 @@ public class PostController {
             @PathVariable Long postId
     ) {
 
-        PostDetailResponse response = postQueryService.getPostDetailWithViewCount(postId);
+        PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
 
         return ResponseEntity.ok(response);
     }

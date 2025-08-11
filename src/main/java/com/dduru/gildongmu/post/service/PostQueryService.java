@@ -25,7 +25,7 @@ public class PostQueryService {
     private final PostRepository postRepository;
     private final JsonConverter jsonConverter;
 
-    public PostListResponse getPosts(PostListRequest request) {
+    public PostListResponse retrieveWithFilter(PostListRequest request) {
         log.debug("게시글 목록 조회 시작 - request: {}", request);
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
@@ -46,7 +46,7 @@ public class PostQueryService {
     }
 
     @Transactional
-    public PostDetailResponse getPostDetailWithViewCount(Long postId) {
+    public PostDetailResponse retrieveDetailWithViewCount(Long postId) {
         log.debug("게시글 상세 조회 및 조회수 증가 시작 - postId: {}", postId);
 
         Post post = postRepository.findActiveById(postId)
