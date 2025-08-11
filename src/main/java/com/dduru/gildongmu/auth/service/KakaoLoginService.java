@@ -4,7 +4,7 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.kakao.KakaoAccount;
 import com.dduru.gildongmu.auth.dto.kakao.KakaoTokenResponse;
 import com.dduru.gildongmu.auth.dto.kakao.KakaoUserResponse;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.auth.utils.OauthConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

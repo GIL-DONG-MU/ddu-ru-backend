@@ -1,10 +1,10 @@
 package com.dduru.gildongmu.post.domain;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
@@ -180,17 +180,6 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public boolean isRecruitmentClosed() {
-        return LocalDate.now().isAfter(recruitDeadline);
-    }
-
-    public boolean isTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
-    }
-
-    public boolean isTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
-    }
 
     public boolean isRecruitOpen() {
         return status == PostStatus.OPEN &&
@@ -221,5 +210,17 @@ public class Post extends BaseTimeEntity {
         if (isTravelEnded()) {
             throw new TravelAlreadyStartedException("여행이 종료된 게시글은 수정할 수 없습니다");
         }
+    }
+
+    private boolean isRecruitmentClosed() {
+        return LocalDate.now().isAfter(recruitDeadline);
+    }
+
+    private boolean isTravelStarted() {
+        return LocalDate.now().isAfter(startDate);
+    }
+
+    private boolean isTravelEnded() {
+        return LocalDate.now().isAfter(endDate);
     }
 }

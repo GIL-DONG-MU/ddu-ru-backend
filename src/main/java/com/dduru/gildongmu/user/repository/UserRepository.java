@@ -1,7 +1,7 @@
-package com.dduru.gildongmu.auth.repository;
+package com.dduru.gildongmu.user.repository;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.OauthType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

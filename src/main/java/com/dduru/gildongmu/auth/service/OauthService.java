@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.auth.service;
 
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.OauthType;
 
 public interface OauthService {
     OauthUserInfo getUserInfo(String accessToken);

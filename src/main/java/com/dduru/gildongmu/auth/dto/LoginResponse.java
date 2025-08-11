@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.dto;
 
-import com.dduru.gildongmu.auth.domain.User;
+import com.dduru.gildongmu.user.domain.User;
 import lombok.Builder;
 
 @Builder

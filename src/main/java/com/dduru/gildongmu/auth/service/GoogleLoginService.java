@@ -4,7 +4,7 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.google.GoogleTokenResponse;
 import com.dduru.gildongmu.auth.dto.google.GoogleUserResponse;
 import com.dduru.gildongmu.auth.dto.google.PersonExtendedInfo;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.auth.utils.GoogleUserInfoExtractor;
 import com.dduru.gildongmu.auth.utils.OauthConstants;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;

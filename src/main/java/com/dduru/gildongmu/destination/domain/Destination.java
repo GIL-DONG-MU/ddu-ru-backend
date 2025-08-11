@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.post.enums;
+package com.dduru.gildongmu.destination.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

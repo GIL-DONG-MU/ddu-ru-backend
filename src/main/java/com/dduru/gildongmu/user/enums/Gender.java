@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.auth.enums;
+package com.dduru.gildongmu.user.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

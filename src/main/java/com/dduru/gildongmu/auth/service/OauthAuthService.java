@@ -1,12 +1,12 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.auth.domain.User;
+import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.auth.exception.*;
-import com.dduru.gildongmu.auth.repository.UserRepository;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.post.dto;
 
-import com.dduru.gildongmu.auth.domain.User;
+import com.dduru.gildongmu.user.domain.User;
 
 public record UserInfo(
         Long id,
