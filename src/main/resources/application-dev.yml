@@ -3,7 +3,7 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:mysql://localhost:3308/dduru  # docker-compose.dev.yml 표준 포트
+    url: jdbc:mysql://localhost:3308/dduru
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
