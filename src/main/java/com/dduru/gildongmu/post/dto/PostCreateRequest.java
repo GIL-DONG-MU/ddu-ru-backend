@@ -18,11 +18,11 @@ public record PostCreateRequest(
         String content,
 
         @NotNull(message = "여행 시작일은 필수입니다")
-        @Future(message = "여행 시작일은 미래여야 합니다")
+        @FutureOrPresent(message = "여행 시작일은 오늘 이후여야 합니다")
         LocalDate startDate,
 
         @NotNull(message = "여행 종료일은 필수입니다")
-        @Future(message = "여행 종료일은 미래여야 합니다")
+        @FutureOrPresent(message = "여행 종료일은 오늘 이후여야 합니다")
         LocalDate endDate,
 
         @NotNull(message = "모집 인원은 필수입니다")
@@ -31,7 +31,7 @@ public record PostCreateRequest(
         Integer recruitCapacity,
 
         @NotNull(message = "모집 마감일은 필수입니다")
-        @Future(message = "모집 마감일은 미래여야 합니다")
+        @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
         LocalDate recruitDeadline,
 
         String preferredGender,

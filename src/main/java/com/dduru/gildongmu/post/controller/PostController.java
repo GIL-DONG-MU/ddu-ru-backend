@@ -30,14 +30,24 @@ public class PostController {
             @RequestParam(required = false) String preferredGender,
             @RequestParam(required = false) String preferredAge,
             @RequestParam(required = false) Long destinationId,
-            @RequestParam(required = false) String recruitmentStatus) {
+            @RequestParam(required = false) Boolean  isRecruitOpen) {
 
         PostListRequest request = new PostListRequest(
                 cursor, size, keyword, startDate, endDate, preferredGender,
-                preferredAge, destinationId, recruitmentStatus
+                preferredAge, destinationId, isRecruitOpen
         );
 
-        PostListResponse response = postQueryService.getPosts(request);
+        PostListResponse response = postQueryService.retrieveWithFilter(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDetailResponse> getPostDetail(
+            @PathVariable Long postId
+    ) {
+
+        PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
 
         return ResponseEntity.ok(response);
     }
@@ -65,12 +75,5 @@ public class PostController {
             @CurrentUser Long userId){
         postService.delete(postId, userId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{postId}/view")
-    public ResponseEntity<Void> increaseViewCount(@PathVariable Long postId) {
-
-        postQueryService.increaseViewCount(postId);
-        return ResponseEntity.ok().build();
     }
 }

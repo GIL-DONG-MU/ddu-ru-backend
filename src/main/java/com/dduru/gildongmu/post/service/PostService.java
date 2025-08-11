@@ -147,10 +147,10 @@ public class PostService {
                 });
     }
 
-    private Post findPostById(Long postId) {
-        return postRepository.findById(postId)
+    private Post findActivePostById(Long postId) {
+        return postRepository.findActiveById(postId)
                 .orElseThrow(() -> {
-                    log.error("게시글을 찾을 수 없습니다. postId: {}", postId);
+                    log.error("활성 게시글을 찾을 수 없습니다. postId: {}", postId);
                     return new PostNotFoundException("게시글을 찾을 수 없습니다. postId: " + postId);
                 });
     }
@@ -170,11 +170,11 @@ public class PostService {
                                        String preferredAgeMin, String preferredAgeMax) {
 
         if (endDate.isBefore(startDate)) {
-            throw new InvalidPostDateException("여행 종료일은 시작일 이후여야 합니다");
+            throw new InvalidPostDateException("여행 종료일은 시작일과 같거나 이후여야 합니다");
         }
 
-        if (!recruitDeadline.isBefore(startDate)) {
-            throw new InvalidPostDateException("모집 마감일은 여행 시작일 이전이어야 합니다");
+        if (recruitDeadline.isAfter(startDate)) {
+            throw new InvalidPostDateException("모집 마감일은 여행 시작일과 같거나 이전이어야 합니다");
         }
 
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
@@ -197,22 +197,26 @@ public class PostService {
             throw new InvalidAgeRangeException("연령대 값이 올바르지 않습니다");
         }
     }
+
     private Gender parsePreferredGender(String preferredGender) {
-        return preferredGender != null
-                ? Gender.from(preferredGender)
-                : Gender.U;
+        if (preferredGender != null) {
+            return Gender.from(preferredGender);
+        }
+        return Gender.U;
     }
 
     private AgeRange parsePreferredAgeMin(String preferredAgeMin) {
-        return preferredAgeMin != null
-                ? AgeRange.from(preferredAgeMin)
-                : null;
+        if (preferredAgeMin != null) {
+            return AgeRange.from(preferredAgeMin);
+        }
+        return null;
     }
 
     private AgeRange parsePreferredAgeMax(String preferredAgeMax) {
-        return preferredAgeMax != null
-                ? AgeRange.from(preferredAgeMax)
-                : null;
+        if (preferredAgeMax != null) {
+            return AgeRange.from(preferredAgeMax);
+        }
+        return null;
     }
 
     private String convertPhotoUrlsToJson(List<String> photoUrls) {
@@ -221,13 +225,5 @@ public class PostService {
 
     private String convertTagsToJson(List<String> tags) {
         return jsonConverter.convertListToJson(tags);
-    }
-
-    private Post findActivePostById(Long postId) {
-        return postRepository.findActiveById(postId)
-                .orElseThrow(() -> {
-                    log.error("활성 게시글을 찾을 수 없습니다. postId: {}", postId);
-                    return new PostNotFoundException("게시글을 찾을 수 없습니다. postId: " + postId);
-                });
     }
 }
