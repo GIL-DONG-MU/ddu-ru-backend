@@ -2,6 +2,7 @@ package com.dduru.gildongmu.auth.controller;
 
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.service.OauthAuthService;
+import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,12 @@ public class OauthController {
         LoginResponse response = oauthAuthService.processTokenLogin(normalized, token);
         log.info("[{}] 로그인 성공 (idToken) - {}", normalized, response.email());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@CurrentUser Long userId) {
+        log.info("로그아웃 요청 - 사용자 ID: {}", userId);
+        return ResponseEntity.ok(Map.of("message", "로그아웃이 성공적으로 처리되었습니다."));
     }
 
     private String validateAndNormalizeProvider(String provider) {
