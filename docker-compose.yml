@@ -65,6 +65,8 @@ services:
       - redis-data:/data
     environment:
       REDIS_HOST: ${REDIS_HOST}
+    networks:
+      - ddu-ru-network
 
 volumes:
   ddu-ru-db-data:
