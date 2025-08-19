@@ -7,6 +7,8 @@ import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -194,21 +196,17 @@ public class Post extends BaseTimeEntity {
 
     private void updateRecruitCapacity(Integer newCapacity) {
         if (newCapacity < this.recruitCount) {
-            throw new InvalidRecruitCapacityException(
-                    String.format("모집 인원은 현재 신청자 수(%d명)보다 적을 수 없습니다. 요청된 인원: %d명",
-                            this.recruitCount, newCapacity)
-            );
+            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
         }
         this.recruitCapacity = newCapacity;
     }
 
     private void validateUpdatePermission() {
         if (isTravelStarted()) {
-            throw new TravelAlreadyStartedException("여행이 시작된 게시글은 수정할 수 없습니다");
+            throw new TravelAlreadyStartedException();
         }
-
         if (isTravelEnded()) {
-            throw new TravelAlreadyStartedException("여행이 종료된 게시글은 수정할 수 없습니다");
+            throw new TravelAlreadyStartedException();
         }
     }
 
@@ -222,5 +220,19 @@ public class Post extends BaseTimeEntity {
 
     private boolean isTravelEnded() {
         return LocalDate.now().isAfter(endDate);
+    }
+    
+    public void incrementRecruitCount() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            throw new RecruitCountExceedCapacityException();
+        }
+        this.recruitCount++;
+    }
+    
+    public void decrementRecruitCount() {
+        if (this.recruitCount <= 0) {
+            throw new RecruitCountBelowZeroException();
+        }
+        this.recruitCount--;
     }
 }
