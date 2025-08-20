@@ -30,7 +30,7 @@ public class PostController {
             @RequestParam(required = false) String preferredGender,
             @RequestParam(required = false) String preferredAge,
             @RequestParam(required = false) Long destinationId,
-            @RequestParam(required = false) Boolean  isRecruitOpen
+            @RequestParam(required = false) Boolean isRecruitOpen
     ) {
         PostListRequest request = new PostListRequest(
                 cursor, size, keyword, startDate, endDate, preferredGender,
@@ -58,7 +58,7 @@ public class PostController {
             @Valid @RequestBody PostCreateRequest request
     ) {
         PostCreateResponse response = postService.create(userId, request);
-        return ResponseEntity.created(URI.create("/api/v1/posts")).body(response);
+        return ResponseEntity.created(URI.create("/api/v1/posts/" + response.id())).body(response);
     }
 
     @PatchMapping("/{postId}")
@@ -66,7 +66,7 @@ public class PostController {
             @PathVariable Long postId,
             @CurrentUser Long userId,
             @Valid @RequestBody PostUpdateRequest request
-    ){
+    ) {
         postService.update(postId, userId, request);
         return ResponseEntity.noContent().build();
     }
@@ -75,7 +75,7 @@ public class PostController {
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId,
             @CurrentUser Long userId
-    ){
+    ) {
         postService.delete(postId, userId);
         return ResponseEntity.noContent().build();
     }
