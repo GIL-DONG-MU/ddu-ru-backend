@@ -19,6 +19,6 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     default Participation getByIdOrThrow(Long id) {
         return findById(id)
-                .orElseThrow(() -> new ParticipationNotFoundException("참여신청을 찾을 수 없습니다. participationId=" + id));
+                .orElseThrow(() -> ParticipationNotFoundException.of(id));
     }
 }

@@ -6,7 +6,6 @@ import com.dduru.gildongmu.post.dto.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.PostListRequest;
 import com.dduru.gildongmu.post.dto.PostListResponse;
 import com.dduru.gildongmu.post.dto.PostSummaryResponse;
-import com.dduru.gildongmu.post.exception.PostNotFoundException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +26,7 @@ public class PostQueryService {
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
         log.debug("게시글 목록 조회 시작 - request: {}", request);
+
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
 
@@ -41,7 +41,6 @@ public class PostQueryService {
                 .toList();
 
         log.info("게시글 목록 조회 완료 - 결과 수: {}, hasNext: {}", dtos.size(), hasNext);
-
         return PostListResponse.of(dtos, hasNext);
     }
 
@@ -49,15 +48,12 @@ public class PostQueryService {
     public PostDetailResponse retrieveDetailWithViewCount(Long postId) {
         log.debug("게시글 상세 조회 및 조회수 증가 시작 - postId: {}", postId);
 
-        Post post = postRepository.findActiveById(postId)
-                .orElseThrow(() -> new PostNotFoundException("게시글을 찾을 수 없습니다. postId: " + postId));
+        Post post = postRepository.getActiveByIdOrThrow(postId);
 
         postRepository.incrementViewCount(postId);
 
         PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
-
         log.info("게시글 상세 조회 및 조회수 증가 완료 - postId: {}, title: {}", postId, response.title());
-
         return response;
     }
 }

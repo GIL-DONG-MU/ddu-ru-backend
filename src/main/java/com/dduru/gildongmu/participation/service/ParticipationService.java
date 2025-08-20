@@ -86,7 +86,7 @@ public class ParticipationService {
         Post post = participation.getPost();
 
         if (!participation.getUser().getId().equals(userId)) {
-            throw new PostAccessDeniedException();
+            throw PostAccessDeniedException.applicantOnly();
         }
 
         boolean wasApproved = participation.isApproved();
@@ -124,7 +124,7 @@ public class ParticipationService {
 
     private void validatePostOwner(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
-            throw new PostAccessDeniedException();
+            throw PostAccessDeniedException.ownerOnly();
         }
     }
 
