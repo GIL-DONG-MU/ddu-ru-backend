@@ -19,11 +19,12 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-public class OauthController {
+public class OauthController implements OauthApiDocs {
 
     private final OauthAuthService oauthAuthService;
     private static final Set<String> SUPPORTED_PROVIDERS = Set.of("kakao", "google");
 
+/*
     @GetMapping("/login/{provider}")
     public ResponseEntity<Map<String, String>> getAuthorizationUrl(@PathVariable String provider) {
         String normalized = validateAndNormalizeProvider(provider);
@@ -41,11 +42,9 @@ public class OauthController {
         LoginResponse response = oauthAuthService.processLogin(normalized, code);
         return ResponseEntity.ok(response);
     }
+*/
 
-    /*
-    아래부터 Mobile용 API
-     */
-
+    @Override
     @PostMapping("/{provider}")
     public ResponseEntity<LoginResponse> loginWithIdToken(
             @PathVariable String provider,
@@ -58,12 +57,14 @@ public class OauthController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request) {
         LoginResponse response = oauthAuthService.refreshAccessToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CurrentUser Long userId) {
         oauthAuthService.logout(String.valueOf(userId));
