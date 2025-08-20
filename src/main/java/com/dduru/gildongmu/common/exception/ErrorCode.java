@@ -23,10 +23,11 @@ public enum ErrorCode {
     INVALID_POST_DATE(HttpStatus.BAD_REQUEST, "POST_003", "잘못된 날짜 설정입니다"),
     INVALID_RECRUIT_CAPACITY(HttpStatus.BAD_REQUEST, "POST_004", "잘못된 모집 인원 설정입니다."),
     TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "POST_005", "이미 시작된 여행입니다."),
-    INVALID_AGE_RANGE(HttpStatus.BAD_REQUEST, "POST_006", "최대 연령은 최소 연령보다 크거나 같아야 합니다."),
-    INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_007", "최대 예산은 최소 예산보다 커야 합니다."),
-    RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "POST_008", "모집 정원을 초과할 수 없습니다."),
-    RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "POST_009", "모집 인원이 0 이하가 될 수 없습니다."),
+    TRAVEL_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "POST_006", "이미 종료된 여행입니다."),
+    INVALID_AGE_RANGE(HttpStatus.BAD_REQUEST, "POST_007", "최대 연령은 최소 연령보다 크거나 같아야 합니다."),
+    INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_008", "최대 예산은 최소 예산보다 커야 합니다."),
+    RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "POST_009", "모집 정원을 초과할 수 없습니다."),
+    RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "POST_010", "모집 인원이 0 이하가 될 수 없습니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
