@@ -7,14 +7,10 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Configuration
 public class SwaggerConfig {
@@ -28,19 +24,6 @@ public class SwaggerConfig {
                 .servers(getServers())
                 .addSecurityItem(getSecurityRequirement())
                 .components(getComponents());
-    }
-
-    @Bean
-    public OpenApiCustomizer authPathsNoSecurity() {
-        return openApi -> openApi.getPaths().forEach((path, item) -> {
-            if (path.startsWith("/api/v1/auth/")) {
-                Arrays.asList(item.getGet(), item.getPost(), item.getPut(), item.getPatch(),
-                                item.getDelete(), item.getOptions(), item.getHead())
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .forEach(op -> op.setSecurity(Collections.emptyList()));
-            }
-        });
     }
 
     private Info getInfo() {
