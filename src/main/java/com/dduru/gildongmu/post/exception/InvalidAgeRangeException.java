@@ -11,4 +11,7 @@ public class InvalidAgeRangeException extends BusinessException {
     public InvalidAgeRangeException(String message) {
         super(ErrorCode.INVALID_AGE_RANGE, message);
     }
+    public static InvalidAgeRangeException maxLessThanMin() {
+        return new InvalidAgeRangeException("최대 연령은 최소 연령보다 크거나 같아야 합니다");
+    }
 }
