@@ -29,3 +29,14 @@ oauth:
 jwt:
   secret: ${JWT_SECRET}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    disable-swagger-default-url: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

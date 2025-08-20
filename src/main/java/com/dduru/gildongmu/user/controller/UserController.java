@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @RestController
-public class UserController {
+public class UserController implements UserApiDocs {
 
     private final UserService userService;
 
+    @Override
     @PutMapping("/nickname")
     public ResponseEntity<Void> updateNickname(@CurrentUser Long id, @Valid @RequestBody UserUpdateNicknameRequest request){
         userService.updateNickname(id, request);
