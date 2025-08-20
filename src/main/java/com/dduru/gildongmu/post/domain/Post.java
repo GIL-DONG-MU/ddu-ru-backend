@@ -10,6 +10,7 @@ import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
+import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -206,7 +207,7 @@ public class Post extends BaseTimeEntity {
             throw new TravelAlreadyStartedException();
         }
         if (isTravelEnded()) {
-            throw new TravelAlreadyStartedException();
+            throw new TravelAlreadyEndedException();
         }
     }
 
