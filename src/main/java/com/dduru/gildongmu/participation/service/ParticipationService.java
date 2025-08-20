@@ -129,12 +129,7 @@ public class ParticipationService {
     }
 
     private void validateCapacity(Post post) {
-        int approved = participationRepository.countApprovedParticipationsByPostId(post.getId());
-
-        if (post.getRecruitCount() != approved) {
-            log.warn("모집인원 불일치 감지 - postId: {}, Post.recruitCount: {}, 실제 승인수: {}", post.getId(), post.getRecruitCount(), approved);
-        }
-        if (approved >= post.getRecruitCapacity()) {
+        if (post.getRecruitCount() >= post.getRecruitCapacity()) {
             throw new RecruitmentClosedException();
         }
     }
