@@ -135,7 +135,7 @@ public class PostService {
                 throw InvalidAgeRangeException.maxLessThanMin();
             }
         } catch (IllegalArgumentException e) {
-            throw InvalidAgeRangeException.maxLessThanMin();
+            throw InvalidAgeRangeException.invalidValue();
         }
     }
 
