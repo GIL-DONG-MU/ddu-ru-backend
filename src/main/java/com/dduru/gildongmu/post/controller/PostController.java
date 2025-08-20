@@ -58,7 +58,7 @@ public class PostController {
             @Valid @RequestBody PostCreateRequest request
     ) {
         PostCreateResponse response = postService.create(userId, request);
-        return ResponseEntity.created(URI.create("/api/vi/posts")).body(response);
+        return ResponseEntity.created(URI.create("/api/v1/posts")).body(response);
     }
 
     @PatchMapping("/{postId}")

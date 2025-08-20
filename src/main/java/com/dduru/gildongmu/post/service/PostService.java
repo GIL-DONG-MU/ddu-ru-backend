@@ -79,22 +79,13 @@ public class PostService {
         String photoUrlsJson = convertPhotoUrlsToJson(request.photoUrls());
         String tagsJson = convertTagsToJson(request.tags());
 
-        try {
-            post.updatePost(destination, request.title(), request.content(),
-                    request.startDate(), request.endDate(), request.recruitCapacity(),
-                    request.recruitDeadline(), preferredGender, preferredAgeMin, preferredAgeMax,
-                    request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
+        post.updatePost(destination, request.title(), request.content(),
+                request.startDate(), request.endDate(), request.recruitCapacity(),
+                request.recruitDeadline(), preferredGender, preferredAgeMin, preferredAgeMax,
+                request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
 
-            log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}",
-                    post.getId(), userId, post.getTitle());
-
-        } catch (InvalidRecruitCapacityException | TravelAlreadyStartedException e) {
-            log.error("게시글 수정 중 비즈니스 규칙 위반 - postId: {}, error: {}", postId, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("게시글 수정 중 예상치 못한 오류 발생 - postId: {}, error: {}", postId, e.getMessage(), e);
-            throw new RuntimeException("게시글 수정 중 오류가 발생했습니다", e);
-        }
+        log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}",
+                post.getId(), userId, post.getTitle());
     }
 
     public void delete(Long postId, Long userId) {

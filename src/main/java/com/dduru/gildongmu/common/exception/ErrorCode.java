@@ -25,9 +25,17 @@ public enum ErrorCode {
     TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "POST_005", "이미 시작된 여행입니다."),
     INVALID_AGE_RANGE(HttpStatus.BAD_REQUEST, "POST_006", "최대 연령은 최소 연령보다 크거나 같아야 합니다."),
     INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_007", "최대 예산은 최소 예산보다 커야 합니다."),
+    RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "POST_008", "모집 정원을 초과할 수 없습니다."),
+    RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "POST_009", "모집 인원이 0 이하가 될 수 없습니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
+
+    // 참여신청 관련
+    PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "PAR_001", "참여신청을 찾을 수 없습니다"),
+    DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "PAR_002", "이미 참여신청한 게시글입니다"),
+    RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "PAR_003", "모집이 마감되었거나 정원이 찼습니다"),
+    SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PAR_004", "자신의 게시글에는 참여신청할 수 없습니다"),
 
     // 공통
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_001", "잘못된 입력 값입니다."),
