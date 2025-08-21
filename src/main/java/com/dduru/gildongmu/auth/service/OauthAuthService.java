@@ -46,17 +46,17 @@ public class OauthAuthService {
 
     private LoginResponse createLoginResponse(OauthUserInfo oauthUserInfo) {
         User user = findOrCreateUser(oauthUserInfo);
-        String jwtToken = jwtTokenProvider.createToken(user.getId().toString());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
+        String jwtToken = jwtTokenProvider.createToken(user.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        refreshTokenService.saveRefreshToken(user.getId().toString(), refreshToken);
+        refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
         return LoginResponse.of(jwtToken, refreshToken);
     }
 
     public LoginResponse refreshAccessToken(String refreshToken) {
-        String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
-        User user = userRepository.findById(Long.valueOf(userId))
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("사용자를 찾을 수 없음 - userId: {}", userId);
                     return new UserNotFoundException();
@@ -81,14 +81,14 @@ public class OauthAuthService {
             throw new InvalidTokenException("만료되거나 유효하지 않은 refresh token입니다.");
         }
 
-        String newAccessToken = jwtTokenProvider.createToken(user.getId().toString());
+        String newAccessToken = jwtTokenProvider.createToken(user.getId());
 
         extendTokenExpirationSafely(userId);    // refresh token 만료 기간 연장
 
         return LoginResponse.of(newAccessToken, refreshToken);
     }
 
-    public void logout(String userId) {
+    public void logout(Long userId) {
         try {
             boolean deleted = refreshTokenService.deleteRefreshToken(userId);
             if (deleted) {
@@ -101,7 +101,7 @@ public class OauthAuthService {
         }
     }
 
-    private void deleteExpiredTokenSafely(String userId) {
+    private void deleteExpiredTokenSafely(Long userId) {
         try {
             refreshTokenService.deleteRefreshToken(userId);
         } catch (RefreshTokenException infraException) {
@@ -109,7 +109,7 @@ public class OauthAuthService {
         }
     }
 
-    private void extendTokenExpirationSafely(String userId) {
+    private void extendTokenExpirationSafely(Long userId) {
         try {
             refreshTokenService.refreshTokenExpiration(userId);
         } catch (RefreshTokenException infraException) {

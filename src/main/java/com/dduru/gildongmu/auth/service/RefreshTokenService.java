@@ -22,7 +22,7 @@ public class RefreshTokenService {
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
 
-    public void saveRefreshToken(String userId, String refreshToken) {
+    public void saveRefreshToken(Long userId, String refreshToken) {
         try {
             redisTemplate.opsForValue()
                     .set(key(userId), refreshToken,refreshTtl);
@@ -33,7 +33,7 @@ public class RefreshTokenService {
         }
     }
 
-    public Optional<String> getRefreshToken(String userId) {
+    public Optional<String> getRefreshToken(Long userId) {
         try {
             return Optional.ofNullable(redisTemplate.opsForValue().get(key(userId)));
         } catch (Exception e) {
@@ -42,7 +42,7 @@ public class RefreshTokenService {
         }
     }
 
-    public boolean deleteRefreshToken(String userId) {
+    public boolean deleteRefreshToken(Long userId) {
         try {
             boolean deleted = Boolean.TRUE.equals(redisTemplate.delete(key(userId)));
             log.info("Refresh token 삭제 - userId: {}, 성공: {}", userId, deleted);
@@ -53,13 +53,13 @@ public class RefreshTokenService {
         }
     }
 
-    public boolean validateRefreshToken(String userId, String refreshToken) {
+    public boolean validateRefreshToken(Long userId, String refreshToken) {
         return getRefreshToken(userId)
                 .map(refreshToken::equals)
                 .orElse(false);
     }
 
-    public void refreshTokenExpiration(String userId) {
+    public void refreshTokenExpiration(Long userId) {
         try {
             redisTemplate.expire(key(userId), refreshTtl);
             log.info("Refresh token 만료 연장 - userId: {}", userId);
@@ -69,7 +69,7 @@ public class RefreshTokenService {
         }
     }
 
-    private String key(String userId) {
+    private String key(Long userId) {
         return REFRESH_TOKEN_PREFIX + userId;
     }
 }
