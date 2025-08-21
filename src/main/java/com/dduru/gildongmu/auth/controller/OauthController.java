@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.auth.controller;
 
+import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.RefreshTokenRequest;
 import com.dduru.gildongmu.auth.service.OauthAuthService;
@@ -27,8 +28,7 @@ public class OauthController implements OauthApiDocs {
 /*
     @GetMapping("/login/{provider}")
     public ResponseEntity<Map<String, String>> getAuthorizationUrl(@PathVariable String provider) {
-        String normalized = validateAndNormalizeProvider(provider);
-        String authUrl = oauthAuthService.getAuthorizationUrl(normalized);
+        String authUrl = oauthAuthService.getAuthorizationUrl(provider);
         return ResponseEntity.ok(Map.of("authUrl", authUrl));
     }
 
@@ -36,10 +36,9 @@ public class OauthController implements OauthApiDocs {
     public ResponseEntity<LoginResponse> loginWithAuthCode(
             @PathVariable String provider,
             @RequestBody Map<String, String> request) {
-        String normalized = validateAndNormalizeProvider(provider);
         String code = requireNonBlank(request, "code", "Authorization Code");
         code = safeUrlDecode(code);
-        LoginResponse response = oauthAuthService.processLogin(normalized, code);
+        LoginResponse response = oauthAuthService.processLogin(provider, code);
         return ResponseEntity.ok(response);
     }
 */
@@ -48,12 +47,9 @@ public class OauthController implements OauthApiDocs {
     @PostMapping("/{provider}")
     public ResponseEntity<LoginResponse> loginWithIdToken(
             @PathVariable String provider,
-            @RequestParam(required = false) String idToken,
-            @RequestBody(required = false) Map<String, String> request
+            @RequestBody(required = false) LoginRequest request
     ) {
-        String normalized = validateAndNormalizeProvider(provider);
-        String token = idToken != null ? idToken : requireNonBlank(request, "idToken", "ID Token");
-        LoginResponse response = oauthAuthService.processTokenLogin(normalized, token);
+        LoginResponse response = oauthAuthService.processTokenLogin(provider, request);
         return ResponseEntity.ok(response);
     }
 
@@ -69,17 +65,6 @@ public class OauthController implements OauthApiDocs {
     public ResponseEntity<Void> logout(@CurrentUser Long userId) {
         oauthAuthService.logout(String.valueOf(userId));
         return ResponseEntity.noContent().build();
-    }
-
-    private String validateAndNormalizeProvider(String provider) {
-        if (provider == null || provider.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "Provider가 비어있습니다.");
-        }
-        String normalized = provider.trim().toLowerCase();
-        if (!SUPPORTED_PROVIDERS.contains(normalized)) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_SOCIAL_LOGIN, "지원하지 않는 소셜 로그인: " + provider);
-        }
-        return normalized;
     }
 
     private String requireNonBlank(Map<String, String> request, String key, String desc) {

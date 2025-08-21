@@ -1,13 +1,17 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
+import com.dduru.gildongmu.auth.exception.InvalidTokenException;
+import com.dduru.gildongmu.auth.exception.RefreshTokenException;
+import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
+import com.dduru.gildongmu.auth.exception.UserNotFoundException;
+import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.AgeRange;
 import com.dduru.gildongmu.user.enums.Gender;
-import com.dduru.gildongmu.auth.exception.*;
 import com.dduru.gildongmu.user.repository.UserRepository;
-import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,9 +42,9 @@ public class OauthAuthService {
         return createLoginResponse(oauthUserInfo);
     }
 
-    public LoginResponse processTokenLogin(String provider, String idToken) {
+    public LoginResponse processTokenLogin(String provider, LoginRequest request) {
         OauthService oauthService = oauthFactory.getOauthService(provider);
-        OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(idToken);
+        OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
         return createLoginResponse(oauthUserInfo);
     }
 
