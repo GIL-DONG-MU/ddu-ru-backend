@@ -16,10 +16,11 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/posts")
-public class PostController {
+public class PostController implements PostApiDocs {
     private final PostService postService;
     private final PostQueryService postQueryService;
 
+    @Override
     @GetMapping
     public ResponseEntity<PostListResponse> retrievePostsWithFilter(
             @RequestParam(required = false) Long cursor,
@@ -42,16 +43,16 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailResponse> getPostDetail(
-            @PathVariable Long postId
-    ) {
+    public ResponseEntity<PostDetailResponse> getPostDetail(@PathVariable Long postId) {
 
         PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
 
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<PostCreateResponse> createPost(
             @CurrentUser Long userId,
@@ -61,6 +62,7 @@ public class PostController {
         return ResponseEntity.created(URI.create("/api/v1/posts/" + response.id())).body(response);
     }
 
+    @Override
     @PatchMapping("/{postId}")
     public ResponseEntity<Void> updatePost(
             @PathVariable Long postId,
@@ -71,6 +73,7 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId,

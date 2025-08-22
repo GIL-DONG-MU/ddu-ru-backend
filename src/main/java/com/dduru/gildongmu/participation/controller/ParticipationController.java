@@ -15,10 +15,11 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
-public class ParticipationController {
+public class ParticipationController implements ParticipationApiDocs {
 
     private final ParticipationService participationService;
 
+    @Override
     @PostMapping("/posts/{postId}/participations")
     public ResponseEntity<ParticipationResponse> createParticipation(
             @PathVariable Long postId,
@@ -30,6 +31,7 @@ public class ParticipationController {
                 .created(URI.create("/api/v1/participations/" + response.id())).body(response);
     }
 
+    @Override
     @GetMapping("/posts/{postId}/participations")
     public ResponseEntity<List<ParticipationResponse>> getPostParticipants(
             @PathVariable Long postId,
@@ -39,6 +41,7 @@ public class ParticipationController {
         return ResponseEntity.ok(participants);
     }
 
+    @Override
     @PatchMapping("/participations/{id}/approve")
     public ResponseEntity<Void> approveParticipation(
             @PathVariable Long id,
@@ -48,6 +51,7 @@ public class ParticipationController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @PatchMapping("/participations/{id}/reject")
     public ResponseEntity<Void> rejectParticipation(
             @PathVariable Long id,
@@ -57,6 +61,7 @@ public class ParticipationController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @DeleteMapping("/participations/{id}")
     public ResponseEntity<Void> cancelParticipation(
             @PathVariable Long id,

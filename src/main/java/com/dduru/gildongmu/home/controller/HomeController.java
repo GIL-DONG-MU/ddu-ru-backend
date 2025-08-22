@@ -10,11 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-public class HomeController {
+public class HomeController implements HomeApiDocs {
 
     @Value("${spring.application.name:길동무}")
     private String applicationName;
 
+    @Override
     @GetMapping("/")
     public ResponseEntity<Map<String, Object>> welcome() {
         Map<String, Object> response = new HashMap<>();
