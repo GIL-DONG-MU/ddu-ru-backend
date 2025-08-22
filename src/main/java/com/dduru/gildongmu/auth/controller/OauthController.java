@@ -37,7 +37,7 @@ public class OauthController implements OauthApiDocs {
     @Override
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CurrentUser Long userId) {
-        oauthAuthService.logout(String.valueOf(userId));
+        oauthAuthService.logout(userId);
         return ResponseEntity.noContent().build();
     }
 }
