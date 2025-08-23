@@ -38,25 +38,15 @@ public class PostService {
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 시작 - userId: {}, request: {}", userId, request);
 
-        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(),
-                request.preferredAgeMin(), request.preferredAgeMax());
-
+        validateRequest(request.startDate(), request.endDate(), request.recruitDeadline(),
+                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
+        
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
-
-        Gender preferredGender = parsePreferredGender(request.preferredGender());
-        AgeRange preferredAgeMin = parsePreferredAgeMin(request.preferredAgeMin());
-        AgeRange preferredAgeMax = parsePreferredAgeMax(request.preferredAgeMax());
-        String photoUrlsJson = convertPhotoUrlsToJson(request.photoUrls());
-        String tagsJson = convertTagsToJson(request.tags());
-
-        Post post = Post.createPost(user, destination, request.title(), request.content(),
-                request.startDate(), request.endDate(), request.recruitCapacity(), request.recruitDeadline(),
-                preferredGender, preferredAgeMin, preferredAgeMax,
-                request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
-
+        
+        Post post = createPost(user, destination, request);
         Post savedPost = postRepository.save(post);
+
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}",
                 savedPost.getId(), userId, savedPost.getTitle());
         return new PostCreateResponse(savedPost.getId());
@@ -65,28 +55,16 @@ public class PostService {
     public void update(Long postId, Long userId, PostUpdateRequest request) {
         log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
 
-        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(),
-                request.preferredAgeMin(), request.preferredAgeMax());
-
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validatePermission(post, userId);
+        validateRequest(request.startDate(), request.endDate(), request.recruitDeadline(),
+                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
 
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
-
-        Gender preferredGender = parsePreferredGender(request.preferredGender());
-        AgeRange preferredAgeMin = parsePreferredAgeMin(request.preferredAgeMin());
-        AgeRange preferredAgeMax = parsePreferredAgeMax(request.preferredAgeMax());
-        String photoUrlsJson = convertPhotoUrlsToJson(request.photoUrls());
-        String tagsJson = convertTagsToJson(request.tags());
-
-        post.updatePost(destination, request.title(), request.content(),
-                request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), preferredGender, preferredAgeMin, preferredAgeMax,
-                request.budgetMin(), request.budgetMax(), photoUrlsJson, tagsJson);
+        updatePost(post, destination, request);
 
         log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}",
-                post.getId(), userId, post.getTitle());
+                postId, userId, post.getTitle());
     }
 
     public void delete(Long postId, Long userId) {
@@ -96,7 +74,6 @@ public class PostService {
         validatePermission(post, userId);
 
         post.softDelete(userId);
-        postRepository.save(post);
 
         log.info("게시글 삭제 완료 - postId: {}, userId: {}, title: {}",
                 postId, userId, post.getTitle());
@@ -129,8 +106,8 @@ public class PostService {
 
     private void validateAgeRange(String ageMin, String ageMax) {
         try {
-            AgeRange minAge = AgeRange.valueOf(ageMin);
-            AgeRange maxAge = AgeRange.valueOf(ageMax);
+            AgeRange minAge = AgeRange.from(ageMin);
+            AgeRange maxAge = AgeRange.from(ageMax);
             if (minAge.ordinal() > maxAge.ordinal()) {
                 throw InvalidAgeRangeException.maxLessThanMin();
             }
@@ -166,5 +143,69 @@ public class PostService {
 
     private String convertTagsToJson(List<String> tags) {
         return jsonConverter.convertListToJson(tags);
+    }
+
+    public int closeExpiredPosts() {
+        log.debug("만료된 게시글 상태 업데이트 시작");
+        
+        LocalDate today = LocalDate.now();
+        List<Post> expiredPosts = postRepository.findExpiredOpenPosts(today);
+        
+        int updatedCount = 0;
+        for (Post post : expiredPosts) {
+            post.closeByRecruitmentDeadline();
+            updatedCount++;
+            log.debug("게시글 상태 CLOSED로 변경 - postId: {}, title: {}", post.getId(), post.getTitle());
+        }
+        
+        log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
+        return updatedCount;
+    }
+
+    private void validateRequest(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
+                                Integer budgetMin, Integer budgetMax, String preferredAgeMin, String preferredAgeMax) {
+        validateBusinessRules(startDate, endDate, recruitDeadline, budgetMin, budgetMax, preferredAgeMin, preferredAgeMax);
+    }
+
+    private Post createPost(User user, Destination destination, PostCreateRequest request) {
+        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(), 
+                request.preferredAgeMax(), request.photoUrls(), request.tags());
+        
+        return Post.createPost(user, destination, request.title(), request.content(),
+                request.startDate(), request.endDate(), request.recruitCapacity(),
+                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(), 
+                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                parsed.photoUrlsJson(), parsed.tagsJson());
+    }
+
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
+        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), request.photoUrls(), request.tags());
+        
+        post.updatePost(destination, request.title(), request.content(),
+                request.startDate(), request.endDate(), request.recruitCapacity(),
+                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
+                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                parsed.photoUrlsJson(), parsed.tagsJson());
+    }
+
+    private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin, 
+                                       String preferredAgeMax, List<String> photoUrls, List<String> tags) {
+        return new ParsedPostData(
+                parsePreferredGender(preferredGender),
+                parsePreferredAgeMin(preferredAgeMin),
+                parsePreferredAgeMax(preferredAgeMax),
+                convertPhotoUrlsToJson(photoUrls),
+                convertTagsToJson(tags)
+        );
+    }
+
+    private record ParsedPostData(
+            Gender preferredGender,
+            AgeRange preferredAgeMin,
+            AgeRange preferredAgeMax,
+            String photoUrlsJson,
+            String tagsJson
+    ) {
     }
 }
