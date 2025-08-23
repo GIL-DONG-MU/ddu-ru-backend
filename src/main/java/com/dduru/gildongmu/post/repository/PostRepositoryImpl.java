@@ -84,14 +84,13 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         }
 
         try {
-            Gender preferredGender = Gender.valueOf(preferredGenderStr.toUpperCase());
-            return post.preferredGender.eq(preferredGender);
-        } catch (IllegalArgumentException e) {
             Gender preferredGender = Gender.from(preferredGenderStr);
             if (preferredGender == Gender.U && !preferredGenderStr.equalsIgnoreCase("U")) {
                 return null;
             }
             return post.preferredGender.eq(preferredGender);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -101,14 +100,13 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         }
 
         try {
-            AgeRange preferredAge = AgeRange.valueOf(preferredAgeStr.toUpperCase());
-            return buildAgeRangeExpression(preferredAge);
-        } catch (IllegalArgumentException e) {
             AgeRange preferredAge = AgeRange.from(preferredAgeStr);
             if (preferredAge == AgeRange.UNKNOWN) {
                 return null;
             }
             return buildAgeRangeExpression(preferredAge);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -131,17 +129,10 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
             return null;
         }
 
-        LocalDate currentDate = LocalDate.now();
-
         if (isRecruitOpen) {
-            return post.status.eq(PostStatus.OPEN)
-                    .and(post.recruitDeadline.goe(currentDate))
-                    .and(post.recruitCount.lt(post.recruitCapacity));
+            return post.status.eq(PostStatus.OPEN);
         } else {
-            return post.status.eq(PostStatus.FULL)
-                    .or(post.status.eq(PostStatus.CLOSED))
-                    .or(post.recruitDeadline.lt(currentDate))
-                    .or(post.recruitCount.goe(post.recruitCapacity));
+            return post.status.ne(PostStatus.OPEN);
         }
     }
 }
