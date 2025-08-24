@@ -38,7 +38,7 @@ public class PostService {
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 시작 - userId: {}, request: {}", userId, request);
 
-        validateRequest(request.startDate(), request.endDate(), request.recruitDeadline(),
+        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
         
         User user = userRepository.getByIdOrThrow(userId);
@@ -57,7 +57,7 @@ public class PostService {
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validatePermission(post, userId);
-        validateRequest(request.startDate(), request.endDate(), request.recruitDeadline(),
+        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
 
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
@@ -162,10 +162,6 @@ public class PostService {
         return updatedCount;
     }
 
-    private void validateRequest(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
-                                Integer budgetMin, Integer budgetMax, String preferredAgeMin, String preferredAgeMax) {
-        validateBusinessRules(startDate, endDate, recruitDeadline, budgetMin, budgetMax, preferredAgeMin, preferredAgeMax);
-    }
 
     private Post createPost(User user, Destination destination, PostCreateRequest request) {
         ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(), 
