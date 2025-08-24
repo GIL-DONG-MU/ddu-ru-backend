@@ -116,34 +116,6 @@ public class PostService {
         }
     }
 
-    private Gender parsePreferredGender(String preferredGender) {
-        if (preferredGender != null) {
-            return Gender.from(preferredGender);
-        }
-        return Gender.U;
-    }
-
-    private AgeRange parsePreferredAgeMin(String preferredAgeMin) {
-        if (preferredAgeMin != null) {
-            return AgeRange.from(preferredAgeMin);
-        }
-        return null;
-    }
-
-    private AgeRange parsePreferredAgeMax(String preferredAgeMax) {
-        if (preferredAgeMax != null) {
-            return AgeRange.from(preferredAgeMax);
-        }
-        return null;
-    }
-
-    private String convertPhotoUrlsToJson(List<String> photoUrls) {
-        return jsonConverter.convertListToJson(photoUrls);
-    }
-
-    private String convertTagsToJson(List<String> tags) {
-        return jsonConverter.convertListToJson(tags);
-    }
 
     public int closeExpiredPosts() {
         log.debug("만료된 게시글 상태 업데이트 시작");
@@ -188,11 +160,11 @@ public class PostService {
     private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin, 
                                        String preferredAgeMax, List<String> photoUrls, List<String> tags) {
         return new ParsedPostData(
-                parsePreferredGender(preferredGender),
-                parsePreferredAgeMin(preferredAgeMin),
-                parsePreferredAgeMax(preferredAgeMax),
-                convertPhotoUrlsToJson(photoUrls),
-                convertTagsToJson(tags)
+                preferredGender != null ? Gender.from(preferredGender) : Gender.U,
+                preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : null,
+                preferredAgeMax != null ? AgeRange.from(preferredAgeMax) : null,
+                jsonConverter.convertListToJson(photoUrls),
+                jsonConverter.convertListToJson(tags)
         );
     }
 

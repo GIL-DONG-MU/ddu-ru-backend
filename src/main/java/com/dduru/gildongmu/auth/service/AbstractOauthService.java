@@ -22,7 +22,7 @@ public abstract class AbstractOauthService implements OauthService {
     }
 
     protected String buildUrlParams(String... keyValues) {
-        UrlParamBuilder builder = UrlParamBuilder.create();
+        UrlParamBuilder builder = new UrlParamBuilder();
         for (int i = 0; i < keyValues.length; i += 2) {
             builder.add(keyValues[i], keyValues[i + 1]);
         }

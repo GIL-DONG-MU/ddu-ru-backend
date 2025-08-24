@@ -7,9 +7,6 @@ public final class UrlParamBuilder {
 
     private final StringBuilder params = new StringBuilder();
 
-    public static UrlParamBuilder create() {
-        return new UrlParamBuilder();
-    }
 
     public UrlParamBuilder add(String key, String value) {
         if (value != null) {
