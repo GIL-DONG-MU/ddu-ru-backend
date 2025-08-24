@@ -13,7 +13,7 @@ public final class UrlParamBuilder {
             if (!params.isEmpty()) {
                 params.append("&");
             }
-            params.append(encode(key)).append("=").append(encode(value));
+            params.append(URLEncoder.encode(key, StandardCharsets.UTF_8)).append("=").append(URLEncoder.encode(value, StandardCharsets.UTF_8));
         }
         return this;
     }
@@ -22,7 +22,4 @@ public final class UrlParamBuilder {
         return params.toString();
     }
 
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
 }
