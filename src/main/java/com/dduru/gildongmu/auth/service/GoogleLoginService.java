@@ -39,8 +39,8 @@ public class GoogleLoginService extends AbstractOauthService {
 
     private final GoogleUserInfoExtractor userInfoExtractor;
 
-    public GoogleLoginService(WebClient webClient, GoogleUserInfoExtractor userInfoExtractor) {
-        super(webClient);
+    public GoogleLoginService(WebClient.Builder webClientBuilder, GoogleUserInfoExtractor userInfoExtractor) {
+        super(webClientBuilder);
         this.userInfoExtractor = userInfoExtractor;
     }
 

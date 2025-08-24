@@ -28,7 +28,4 @@ public class OauthFactory {
         return service;
     }
 
-    public OauthService getOauthService(String loginType) {
-        return getOauthService(OauthType.fromValue(loginType));
-    }
 }

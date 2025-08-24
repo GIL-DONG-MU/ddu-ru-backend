@@ -30,8 +30,8 @@ public class KakaoLoginService extends AbstractOauthService {
     private final ObjectMapper objectMapper;
     private final KakaoUserInfoMapper userInfoMapper;
 
-    public KakaoLoginService(WebClient webClient) {
-        super(webClient);
+    public KakaoLoginService(WebClient.Builder webClientBuilder) {
+        super(webClientBuilder);
         this.objectMapper = new ObjectMapper();
         this.userInfoMapper = new KakaoUserInfoMapper();
     }
