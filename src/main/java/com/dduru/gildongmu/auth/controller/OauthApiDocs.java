@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.auth.controller;
 
+import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.RefreshTokenRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,8 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Authentication", description = "OAuth 인증 API")
 public interface OauthApiDocs {
@@ -24,8 +24,7 @@ public interface OauthApiDocs {
     })
     ResponseEntity<LoginResponse> loginWithIdToken(
             @Parameter(description = "OAuth Provider (kakao, google)", example = "kakao") String provider,
-            @Parameter(description = "ID Token") String idToken,
-            Map<String, String> request
+            @RequestBody(required = false) LoginRequest request
     );
 
     @Operation(summary = "Access Token 갱신", description = "Refresh Token을 사용하여 Access Token을 갱신합니다.")

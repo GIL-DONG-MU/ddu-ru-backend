@@ -24,11 +24,11 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-expiration}")
     private long jwtRefreshExpirationMs;
 
-    public String createToken(String userId) {
+    public String createToken(Long userId) {
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(userId.toString())
                 .claim("type", "access")
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
@@ -36,11 +36,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(String userId) {
+    public String createRefreshToken(Long userId) {
         Date expiryDate = new Date(System.currentTimeMillis() + jwtRefreshExpirationMs);
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(userId.toString())
                 .claim("type", "refresh")
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
@@ -48,15 +48,15 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String getUserIdFromToken(String token) {
+    public Long getUserIdFromToken(String token) {
         Claims claims = getClaims(token);
-        return claims.getSubject();
+        return Long.valueOf(claims.getSubject());
     }
 
     public Authentication getAuthentication(String token) {
-        String userId = getUserIdFromToken(token);
+        Long userId = getUserIdFromToken(token);
         return new UsernamePasswordAuthenticationToken(
-                userId,
+                userId.toString(),
                 null,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
