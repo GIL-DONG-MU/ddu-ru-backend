@@ -27,7 +27,7 @@ import java.time.temporal.ChronoUnit;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -185,9 +185,7 @@ public class Post extends BaseTimeEntity {
 
 
     public boolean isRecruitOpen() {
-        return status == PostStatus.OPEN &&
-                !isRecruitmentClosed() &&
-                recruitCount < recruitCapacity;
+        return status == PostStatus.OPEN;
     }
 
     public int getDaysLeftForRecruitment() {
@@ -211,8 +209,27 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-    private boolean isRecruitmentClosed() {
-        return LocalDate.now().isAfter(recruitDeadline);
+    public void approveParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+        participation.approve();
+        this.incrementRecruitCount();
+        
+        if (this.recruitCount >= this.recruitCapacity) {
+            this.updateStatus(PostStatus.FULL);
+        }
+    }
+
+    public void removeApprovedParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+        if (participation.isApproved()) {
+            this.decrementRecruitCount();
+            
+            if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+                this.updateStatus(PostStatus.OPEN);
+            }
+        }
+    }
+
+    public void closeByRecruitmentDeadline() {
+        this.updateStatus(PostStatus.CLOSED);
     }
 
     private boolean isTravelStarted() {
@@ -223,17 +240,21 @@ public class Post extends BaseTimeEntity {
         return LocalDate.now().isAfter(endDate);
     }
     
-    public void incrementRecruitCount() {
+    private void incrementRecruitCount() {
         if (this.recruitCount >= this.recruitCapacity) {
             throw new RecruitCountExceedCapacityException();
         }
         this.recruitCount++;
     }
     
-    public void decrementRecruitCount() {
+    private void decrementRecruitCount() {
         if (this.recruitCount <= 0) {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;
+    }
+
+    private void updateStatus(PostStatus newStatus) {
+        this.status = newStatus;
     }
 }

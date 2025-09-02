@@ -7,16 +7,13 @@ public final class UrlParamBuilder {
 
     private final StringBuilder params = new StringBuilder();
 
-    public static UrlParamBuilder create() {
-        return new UrlParamBuilder();
-    }
 
     public UrlParamBuilder add(String key, String value) {
         if (value != null) {
             if (!params.isEmpty()) {
                 params.append("&");
             }
-            params.append(encode(key)).append("=").append(encode(value));
+            params.append(URLEncoder.encode(key, StandardCharsets.UTF_8)).append("=").append(URLEncoder.encode(value, StandardCharsets.UTF_8));
         }
         return this;
     }
@@ -25,7 +22,4 @@ public final class UrlParamBuilder {
         return params.toString();
     }
 
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
 }

@@ -15,6 +15,7 @@ import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.AgeRange;
 import com.dduru.gildongmu.user.enums.Gender;
+import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class OauthAuthService {
     private final RefreshTokenService refreshTokenService;
 
     public WebOAuthUrlResponse getAuthorizationUrl(String provider) {
-        OauthService oauthService = oauthFactory.getOauthService(provider);
+        OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         String authUrl = oauthService.getAuthorizationUrl();
         return new WebOAuthUrlResponse(authUrl);
     }
@@ -46,14 +47,14 @@ public class OauthAuthService {
         requireNonBlank(request.code());
         String code = safeUrlDecode(request.code());
 
-        OauthService oauthService = oauthFactory.getOauthService(provider);
+        OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         String accessToken = oauthService.getAccessToken(code);
         OauthUserInfo oauthUserInfo = oauthService.getUserInfo(accessToken);
         return createLoginResponse(oauthUserInfo);
     }
 
     public LoginResponse processTokenLogin(String provider, LoginRequest request) {
-        OauthService oauthService = oauthFactory.getOauthService(provider);
+        OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
         return createLoginResponse(oauthUserInfo);
     }

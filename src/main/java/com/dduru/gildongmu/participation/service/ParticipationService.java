@@ -52,10 +52,8 @@ public class ParticipationService {
         Post post = participation.getPost();
 
         validatePostOwner(post, userId);
-        validateCapacity(post);
 
-        participation.approve();
-        post.incrementRecruitCount();
+        post.approveParticipation(participation);
 
         log.info("참여신청 승인 완료 - participationId: {}, postId: {}",
                 participationId, post.getId());
@@ -69,14 +67,10 @@ public class ParticipationService {
 
         validatePostOwner(post, userId);
 
-        boolean wasApproved = participation.isApproved();
+        post.removeApprovedParticipation(participation);
         participation.reject();
-        if (wasApproved) {
-            post.decrementRecruitCount();
-            log.info("승인된 신청 거절로 모집인원 감소 - postId: {}, recruitCount: {}", post.getId(), post.getRecruitCount());
-        }
 
-        log.info("참여신청 거절 완료 - participationId: {}, wasApproved: {}", participationId, wasApproved);
+        log.info("참여신청 거절 완료 - participationId: {}", participationId);
     }
 
     public void cancelParticipation(Long participationId, Long userId) {
@@ -85,18 +79,12 @@ public class ParticipationService {
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         Post post = participation.getPost();
 
-        if (!participation.getUser().getId().equals(userId)) {
-            throw PostAccessDeniedException.applicantOnly();
-        }
+        validateParticipationAccess(participation, userId);
 
-        boolean wasApproved = participation.isApproved();
+        post.removeApprovedParticipation(participation);
         participationRepository.delete(participation);
-        if (wasApproved) {
-            post.decrementRecruitCount();
-            log.info("승인된 신청 삭제로 모집인원 감소 - postId: {}, recruitCount: {}", post.getId(), post.getRecruitCount());
-        }
 
-        log.info("참여신청 삭제 완료 - participationId: {}, wasApproved: {}", participationId, wasApproved);
+        log.info("참여신청 삭제 완료 - participationId: {}", participationId);
     }
 
     @Transactional(readOnly = true)
@@ -128,9 +116,9 @@ public class ParticipationService {
         }
     }
 
-    private void validateCapacity(Post post) {
-        if (post.getRecruitCount() >= post.getRecruitCapacity()) {
-            throw new RecruitmentClosedException();
+    private void validateParticipationAccess(Participation participation, Long userId) {
+        if (!participation.getUser().getId().equals(userId)) {
+            throw PostAccessDeniedException.applicantOnly();
         }
     }
 }
