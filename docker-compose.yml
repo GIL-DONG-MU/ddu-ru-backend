@@ -1,13 +1,14 @@
+# 사용법: docker-compose up -d
 services:
   mysql:
     image: mysql:8
     ports:
-      - "${HOST_DB_PORT}:3306"
+      - "3307:3306"
     restart: always
     volumes:
-      - ddu-ru-db-data:/var/lib/mysql
+      - ddu-ru-test-db-data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: dduru
       TZ: Asia/Seoul
     healthcheck:
@@ -17,62 +18,19 @@ services:
       retries: 10
       start_period: 20s
     networks:
-      - ddu-ru-network
-
-  app:
-    # image: ${DOCKER_IMAGE:-ddu-ru-backend:latest}
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    volumes:
-      - ddu-ru-app-logs:/app/logs
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      MYSQL_HOST: mysql
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_ROOT_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
-      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
-      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
-      GOOGLE_ANDROID_CLIENT_ID: ${GOOGLE_ANDROID_CLIENT_ID}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION}
-      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      retries: 5
-      timeout: 10s
-      start_period: 60s
-    networks:
-      - ddu-ru-network
-
+      - ddu-ru-test-network
   redis:
     image: redis:7-alpine
     ports:
-      - "${REDIS_PORT}:6379"
+      - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
-      - redis-data:/data
-    environment:
-      REDIS_HOST: ${REDIS_HOST}
-    networks:
-      - ddu-ru-network
+      - redis-test-data:/data
 
 volumes:
-  ddu-ru-db-data:
-  ddu-ru-app-logs:
-  redis-data:
+  ddu-ru-test-db-data:
+  redis-test-data:
 
 networks:
-  ddu-ru-network:
+  ddu-ru-test-network:
     driver: bridge

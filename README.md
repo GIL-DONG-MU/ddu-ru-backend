@@ -86,16 +86,10 @@ cd ddu-ru-backend
 #### 3. 개발 서버 실행 (권장)
 ```bash
 # MySQL만 Docker로 실행
-docker-compose up mysql -d
+docker-compose up -d
 
 # IDE에서 실행 또는
 ./gradlew bootRun
-```
-
-#### 4. 전체 스택 테스트
-```bash
-# 전체 서비스 Docker로 실행
-docker-compose up -d
 ```
 
 ### 애플리케이션 접속
@@ -105,7 +99,7 @@ docker-compose up -d
 ## 📚 문서
 
 - **[배포 가이드](README.Docker.md)**: Docker 및 프로덕션 배포 방법
-- **API 문서**: http://localhost:8080/swagger-ui.html (개발 예정)
+- **API 문서**: http://localhost:8080/swagger-ui.html 
 
 ## 🏗 프로젝트 구조
 
@@ -157,9 +151,9 @@ src/
 
 1. 이 저장소를 Fork합니다
 2. 기능 issue를 생성합니다 (`#30`)
-3. 기능 브랜치를 생성합니다 (`git checkout -b feature/#30-amazing-feature`)
-4. 변경사항을 커밋합니다 (`git commit -m '[#30] feat(??): Add amazing feature'`)
-5. 브랜치에 Push합니다 (`git push origin feature/#30-amazing-feature`)
+3. 기능 브랜치를 생성합니다 (`git checkout -b feature/#30-feature-name`)
+4. 변경사항을 커밋합니다 (`git commit -m '[#30] feat(???): Add amazing feature'`)
+5. 브랜치에 Push합니다 (`git push origin feature/#30-feature-name`)
 6. Pull Request를 생성합니다
 
 ## 📄 라이선스

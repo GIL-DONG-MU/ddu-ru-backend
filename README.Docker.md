@@ -8,7 +8,7 @@
 
 ```bash
 # 1. 개발용 데이터베이스 시작
-docker compose -f docker-compose.dev.yml up -d
+docker compose up -d
 
 # 2. Spring Boot 애플리케이션 실행
 ./gradlew bootRun
@@ -27,18 +27,6 @@ docker compose -f docker-compose.dev.yml up -d
   - Database: dduru
 - **프로파일**: dev
 - **특징**: 환경변수 설정 불필요, 즉시 사용 가능
-
-#### 개발용 데이터베이스 관리
-```bash
-# DB 중지
-docker compose -f docker-compose.dev.yml down
-
-# DB 데이터까지 완전 삭제 (초기화)
-docker compose -f docker-compose.dev.yml down -v
-
-# DB 상태 확인
-docker compose -f docker-compose.dev.yml ps
-```
 
 ### 프로덕션 배포
 
