@@ -18,6 +18,8 @@ services:
       - ddu-ru-app-logs:/app/logs
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Seoul
       # RDS 연결 설정
       RDS_ENDPOINT: ${RDS_ENDPOINT}
       RDS_PORT: ${RDS_PORT}
