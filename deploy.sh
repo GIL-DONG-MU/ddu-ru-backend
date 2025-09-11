@@ -12,6 +12,9 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
+echo "🔐 ECR에 Docker 로그인..."
+aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
 echo "📥 ECR에서 최신 이미지 가져오는 중..."
 docker-compose pull app
 
@@ -31,7 +34,6 @@ echo "⏳ 서비스 상태 확인 중..."
 MAX_RETRIES=12
 RETRY_INTERVAL=5
 for i in $(seq 1 $MAX_RETRIES); do
-  # curl -f: HTTP 오류 시 0이 아닌 종료 코드를 반환, -s: silent 모드
   if curl -fs http://localhost:8080/actuator/health > /dev/null; then
     echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
     echo "🎉 ECR 배포 스크립트 완료!"
