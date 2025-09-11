@@ -26,8 +26,8 @@ jwt:
 
 logging:
   level:
-    com.dduru.gildongmu: debug
-    org.springframework.security: debug
+    org.hibernate.SQL: debug
+    org.springframework.cache: trace # Redis
 
 management:
   endpoints:
