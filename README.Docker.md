@@ -8,7 +8,7 @@
 
 ```bash
 # 1. 개발용 데이터베이스 시작
-docker compose up -d
+docker-compose up -d
 
 # 2. Spring Boot 애플리케이션 실행
 ./gradlew bootRun
@@ -33,7 +33,7 @@ docker compose up -d
 #### 전체 스택 배포 (프로덕션)
 ```bash
 # .env 파일 설정 필요
-docker compose --env-file .env up -d
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### GitHub Actions 자동 배포 설정

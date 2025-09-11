@@ -47,6 +47,15 @@ jobs:
           docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
           echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
+      - name: 📂 Copy deployment files to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: "deploy.sh,docker-compose.prod.yml"
+          target: "~/app"
+
       - name: 🚀 Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:

@@ -85,7 +85,7 @@ cd ddu-ru-backend
 
 #### 3. 개발 서버 실행 (권장)
 ```bash
-# MySQL만 Docker로 실행
+# MySQL, Redis만 Docker로 실행
 docker-compose up -d
 
 # IDE에서 실행 또는

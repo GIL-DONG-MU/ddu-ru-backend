@@ -16,19 +16,19 @@ echo "🔐 ECR에 Docker 로그인..."
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
 echo "📥 ECR에서 최신 이미지 가져오는 중..."
-docker-compose pull app
+docker-compose -f docker-compose.prod.yml pull app
 
 echo "📋 현재 실행중인 컨테이너 확인..."
-docker-compose ps
+docker-compose -f docker-compose.prod.yml ps
 
 echo "🛑 기존 컨테이너 중지 및 제거..."
-docker-compose down
+docker-compose -f docker-compose.prod.yml down
 
 echo "🧹 사용하지 않는 Docker 이미지 정리..."
 docker image prune -f
 
 echo "🚀 서비스 시작..."
-docker-compose up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 echo "⏳ 서비스 상태 확인 중..."
 MAX_RETRIES=12
@@ -45,5 +45,5 @@ done
 
 echo "❌ 애플리케이션이 정상적으로 실행되지 않았습니다!"
 echo "🔍 로그 확인:"
-docker-compose logs app
+docker-compose -f docker-compose.prod.yml logs app
 exit 1
