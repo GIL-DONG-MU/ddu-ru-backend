@@ -3,14 +3,14 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/dduru?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: ${MYSQL_ROOT_PASSWORD}
+    url: jdbc:mysql://${RDS_ENDPOINT}:${RDS_PORT}/${RDS_DATABASE_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database: mysql
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${DDL_AUTO}
     show-sql: false
     properties:
       hibernate:
