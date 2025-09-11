@@ -53,6 +53,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          env:
+            ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
           script: |
             set -e
             cd ~/app
