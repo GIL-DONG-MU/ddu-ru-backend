@@ -2,9 +2,12 @@ package com.dduru.gildongmu.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -42,5 +45,20 @@ public class GlobalExceptionHandler {
         log.error("Unexpected Exception: ", e);
         ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
         return ResponseEntity.internalServerError().body(response);
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ErrorResponse> handleNotFoundException(Exception e) {
+        log.warn("Endpoint Not Found: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.NOT_FOUND, "요청한 API를 찾을 수 없습니다.");
+        return ResponseEntity.status(ErrorCode.NOT_FOUND.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.warn("Method Not Supported: {}", e.getMessage());
+        String message = "지원하지 않는 HTTP 메서드입니다: " + e.getMethod();
+        ErrorResponse response = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED, message);
+        return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.getStatus()).body(response);
     }
 }

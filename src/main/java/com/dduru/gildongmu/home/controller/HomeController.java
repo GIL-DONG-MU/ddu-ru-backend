@@ -10,11 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-public class HomeController {
+public class HomeController implements HomeApiDocs {
 
     @Value("${spring.application.name:길동무}")
     private String applicationName;
 
+    @Override
     @GetMapping("/")
     public ResponseEntity<Map<String, Object>> welcome() {
         Map<String, Object> response = new HashMap<>();
@@ -27,8 +28,8 @@ public class HomeController {
         
         Map<String, String> endpoints = new HashMap<>();
         endpoints.put("health", "/actuator/health");
-        endpoints.put("kakao_login", "/api/auth/login/kakao");
-        endpoints.put("google_login", "/api/auth/login/google");
+        endpoints.put("kakao_login", "/api/v1/auth/kakao");
+        endpoints.put("google_login", "/api/v1/auth/google");
         
         response.put("endpoints", endpoints);
         response.put("message", "🎒 길동무 API 서버에 오신 것을 환영합니다!");

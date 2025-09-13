@@ -1,0 +1,98 @@
+name: CD - Continuous Deployment
+
+on:
+  workflow_run:
+    workflows: ["CI - Continuous Integration"]
+    types:
+      - completed
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      ddl_auto:
+        description: 'DDL_AUTO value (e.g., validate, update, none)'
+        required: true
+        default: 'validate'
+
+jobs:
+  build-and-deploy:
+    name: 🚀 Build & Deploy
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: 🏷️ Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🐳 Build & Push Docker image to ECR
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Building Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+                       -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+          echo "Pushing image to ECR..."
+          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
+          echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: 📂 Copy deployment files to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: "deploy.sh,docker-compose.prod.yml"
+          target: "~/app"
+
+      - name: 🚀 Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            # GitHub Secrets를 EC2 환경변수로 주입
+            export RDS_ENDPOINT=${{ secrets.RDS_ENDPOINT }}
+            export RDS_PORT=${{ secrets.RDS_PORT }}
+            export RDS_USERNAME=${{ secrets.RDS_USERNAME }}
+            export RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
+            export RDS_DATABASE_NAME=${{ secrets.RDS_DATABASE_NAME }}
+            export DDL_AUTO=${{ github.event.inputs.ddl_auto || secrets.DDL_AUTO }}
+            export KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            export KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+            export KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            export GOOGLE_ANDROID_CLIENT_ID=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}
+            export GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            export GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            export GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+            export JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            export REDIS_HOST=${{ secrets.REDIS_HOST }}
+            export REDIS_PORT=${{ secrets.REDIS_PORT }}
+
+            # 기존 환경변수들
+            export ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+            export AWS_REGION=${{ secrets.AWS_REGION }}
+
+            # 배포 스크립트 실행
+            set -e
+            cd ~/app
+            chmod +x ./deploy.sh && ./deploy.sh

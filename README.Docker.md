@@ -1,25 +1,39 @@
 # DDU-RU Backend
 
-## 🚀 배포 가이드
+## 🚀 개발 환경 가이드
 
-### 로컬 개발 환경
+### 개발자 표준 환경
 
-#### 개발용 (권장)
+모든 개발자가 동일한 DB 환경에서 작업할 수 있도록 표준화된 개발 환경입니다.
+
 ```bash
-# .env 파일 새로 생성
-touch .env
+# 1. 개발용 데이터베이스 시작
+docker-compose up -d
 
-# app 컨테이너는 실행 X
-docker compose --profile infra --env-file .env up -d
-  # docker-compose up mysql redis -d
-
-# IDE에서 앱 실행 또는
+# 2. Spring Boot 애플리케이션 실행
 ./gradlew bootRun
+# yml에 `spring.profiles.active = dev` 설정해두어서 따로 프로파일 설정 없이 실행 가능
+# [참고용] ./gradlew bootRun --args='--spring.profiles.active=dev'
+
+# 또는 IDE에서 바로 실행 (기본 프로파일: dev)
 ```
 
-#### 전체 스택 테스트
+#### 표준 개발 환경 설정
+- **데이터베이스**: MySQL 8 (포트 3308)
+- **접속 정보**: 
+  - Host: localhost:3308
+  - Username: root
+  - Password: root
+  - Database: dduru
+- **프로파일**: dev
+- **특징**: 환경변수 설정 불필요, 즉시 사용 가능
+
+### 프로덕션 배포
+
+#### 전체 스택 배포 (프로덕션)
 ```bash
-docker-compose up -d
+# .env 파일 설정 필요
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### GitHub Actions 자동 배포 설정

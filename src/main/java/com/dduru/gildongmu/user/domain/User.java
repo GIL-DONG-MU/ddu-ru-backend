@@ -1,8 +1,8 @@
-package com.dduru.gildongmu.auth.domain;
+package com.dduru.gildongmu.user.domain;
 
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
+import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -24,6 +24,9 @@ public class User extends BaseTimeEntity {
 
     @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(nullable = false, length = 12)
+    private String nickname;
 
     @Column(name = "profile_image", nullable = false, length = 500)
     private String profileImage;
@@ -47,15 +50,20 @@ public class User extends BaseTimeEntity {
     private String phoneNumber;
 
     @Builder
-    public User(String email, String name, String profileImage, String oauthId,
+    public User(String email, String name, String nickname, String profileImage, String oauthId,
                 OauthType oauthType, Gender gender, AgeRange ageRange, String phoneNumber) {
         this.email = email;
         this.name = name;
+        this.nickname = nickname;
         this.profileImage = profileImage;
         this.oauthId = oauthId;
         this.oauthType = oauthType;
         this.gender = gender;
         this.ageRange = ageRange;
         this.phoneNumber = phoneNumber;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.auth.enums.OauthType;
+import com.dduru.gildongmu.user.enums.OauthType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,7 +28,4 @@ public class OauthFactory {
         return service;
     }
 
-    public OauthService getOauthService(String loginType) {
-        return getOauthService(OauthType.fromValue(loginType));
-    }
 }

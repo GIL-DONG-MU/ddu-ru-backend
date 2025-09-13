@@ -29,4 +29,5 @@ public record KakaoAccount(
 
         @JsonProperty("phone_number_needs_agreement")
         Boolean phoneNumberNeedsAgreement
-) {}
+) {
+}

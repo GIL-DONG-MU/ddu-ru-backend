@@ -1,21 +1,22 @@
 package com.dduru.gildongmu.post.dto;
 
-import com.dduru.gildongmu.auth.domain.User;
+import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.enums.Destination;
+import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record PostUpdateResponse(
+public record PostDetailResponse(
         Long id,
-        UserInfo user,
-        DestinationInfo destination,
         String title,
         String content,
+        boolean isRecruitOpen,
+        int daysLeft,
         LocalDate startDate,
         LocalDate endDate,
+        String destination,
         Integer recruitCapacity,
         Integer recruitCount,
         LocalDate recruitDeadline,
@@ -28,25 +29,26 @@ public record PostUpdateResponse(
         List<String> tags,
         Integer viewCount,
         LocalDateTime createdAt,
-        LocalDateTime modifiedAt,
-        boolean isRecruitmentClosed,
-        boolean isTravelStarted,
-        boolean isTravelEnded
+        UserInfo author
 ) {
-    public static PostUpdateResponse of(Post post, User user, Destination destination,
-                                        List<String> photoUrls, List<String> tags) {
-        return new PostUpdateResponse(
+    public static PostDetailResponse from(Post post, JsonConverter jsonConverter) {
+        List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+        List<String> tags = jsonConverter.convertJsonToList(post.getTags());
+        UserInfo authorInfo = UserInfo.from(post.getUser());
+
+        return new PostDetailResponse(
                 post.getId(),
-                UserInfo.from(user),
-                DestinationInfo.from(destination),
                 post.getTitle(),
                 post.getContent(),
+                post.isRecruitOpen(),
+                post.getDaysLeftForRecruitment(),
                 post.getStartDate(),
                 post.getEndDate(),
+                post.getDestination().getCity(),
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
                 post.getRecruitDeadline(),
-                post.getPreferredGender().name(),
+                post.getPreferredGender() != null ? post.getPreferredGender().name() : null,
                 post.getPreferredAgeMin() != null ? post.getPreferredAgeMin().name() : null,
                 post.getPreferredAgeMax() != null ? post.getPreferredAgeMax().name() : null,
                 post.getBudgetMin(),
@@ -55,10 +57,7 @@ public record PostUpdateResponse(
                 tags,
                 post.getViewCount(),
                 post.getCreatedAt(),
-                post.getModifiedAt(),
-                post.isRecruitmentClosed(),
-                post.isTravelStarted(),
-                post.isTravelEnded()
+                authorInfo
         );
     }
 }

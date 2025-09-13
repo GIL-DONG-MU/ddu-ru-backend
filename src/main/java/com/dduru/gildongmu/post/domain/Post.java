@@ -1,13 +1,16 @@
 package com.dduru.gildongmu.post.domain;
 
-import com.dduru.gildongmu.auth.domain.User;
-import com.dduru.gildongmu.auth.enums.AgeRange;
-import com.dduru.gildongmu.auth.enums.Gender;
+import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.enums.AgeRange;
+import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.post.enums.Destination;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
+import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,13 +20,14 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -179,34 +183,78 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public boolean isRecruitmentClosed() {
-        return LocalDate.now().isAfter(recruitDeadline);
+
+    public boolean isRecruitOpen() {
+        return status == PostStatus.OPEN;
     }
 
-    public boolean isTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
-    }
-
-    public boolean isTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
+    public int getDaysLeftForRecruitment() {
+        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+        return Math.max(daysLeft, 0);
     }
 
     private void updateRecruitCapacity(Integer newCapacity) {
         if (newCapacity < this.recruitCount) {
-            throw new InvalidRecruitCapacityException(
-                    String.format("모집 인원은 현재 신청자 수(%d명)보다 적을 수 없습니다. 요청된 인원: %d명",
-                            this.recruitCount, newCapacity)
-            );
+            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
         }
         this.recruitCapacity = newCapacity;
     }
+
     private void validateUpdatePermission() {
         if (isTravelStarted()) {
-            throw new TravelAlreadyStartedException("여행이 시작된 게시글은 수정할 수 없습니다");
+            throw new TravelAlreadyStartedException();
         }
-
         if (isTravelEnded()) {
-            throw new TravelAlreadyStartedException("여행이 종료된 게시글은 수정할 수 없습니다");
+            throw new TravelAlreadyEndedException();
         }
+    }
+
+    public void approveParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+        participation.approve();
+        this.incrementRecruitCount();
+        
+        if (this.recruitCount >= this.recruitCapacity) {
+            this.updateStatus(PostStatus.FULL);
+        }
+    }
+
+    public void removeApprovedParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+        if (participation.isApproved()) {
+            this.decrementRecruitCount();
+            
+            if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+                this.updateStatus(PostStatus.OPEN);
+            }
+        }
+    }
+
+    public void closeByRecruitmentDeadline() {
+        this.updateStatus(PostStatus.CLOSED);
+    }
+
+    private boolean isTravelStarted() {
+        return LocalDate.now().isAfter(startDate);
+    }
+
+    private boolean isTravelEnded() {
+        return LocalDate.now().isAfter(endDate);
+    }
+    
+    private void incrementRecruitCount() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            throw new RecruitCountExceedCapacityException();
+        }
+        this.recruitCount++;
+    }
+    
+    private void decrementRecruitCount() {
+        if (this.recruitCount <= 0) {
+            throw new RecruitCountBelowZeroException();
+        }
+        this.recruitCount--;
+    }
+
+    private void updateStatus(PostStatus newStatus) {
+        this.status = newStatus;
     }
 }
