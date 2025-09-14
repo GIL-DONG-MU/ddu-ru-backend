@@ -6,12 +6,6 @@ set -e # 에러 발생시 스크립트 중단
 
 echo "🚀 DDU-RU Backend ECR 배포 시작..."
 
-# .env 파일 존재 확인
-if [ ! -f ".env" ]; then
-    echo "❌ .env 파일이 없습니다!"
-    exit 1
-fi
-
 echo "🔐 ECR에 Docker 로그인..."
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
