@@ -28,6 +28,7 @@ public enum ErrorCode {
     INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "POST_008", "최대 예산은 최소 예산보다 커야 합니다."),
     RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "POST_009", "모집 정원을 초과할 수 없습니다."),
     RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "POST_010", "모집 인원이 0 이하가 될 수 없습니다."),
+    IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "POST_011", "이미지는 최대 3장까지 업로드할 수 있습니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
@@ -37,6 +38,11 @@ public enum ErrorCode {
     DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "PAR_002", "이미 참여신청한 게시글입니다"),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "PAR_003", "모집이 마감되었거나 정원이 찼습니다"),
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PAR_004", "자신의 게시글에는 참여신청할 수 없습니다"),
+
+    // 파일 관련
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_001", "파일 업로드에 실패했습니다."),
+    EMPTY_FILE(HttpStatus.BAD_REQUEST, "FILE_002", "업로드할 파일이 없습니다."),
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "FILE_003", "허용되지 않는 파일 확장자입니다."),
 
     // 공통
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_001", "잘못된 입력 값입니다."),
