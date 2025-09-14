@@ -9,8 +9,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Posts", description = "여행 게시글 API")
 public interface PostApiDocs {
@@ -45,7 +47,8 @@ public interface PostApiDocs {
     })
     ResponseEntity<PostCreateResponse> createPost(
             @Parameter(hidden = true) Long userId,
-            @Valid PostCreateRequest request
+            @Valid PostCreateRequest request,
+            @Parameter(description = "업로드할 이미지 파일들 (최대 3개)") List<MultipartFile> images
     );
 
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
@@ -57,7 +60,8 @@ public interface PostApiDocs {
     ResponseEntity<Void> updatePost(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(hidden = true) Long userId,
-            @Valid PostUpdateRequest request
+            @Valid PostUpdateRequest request,
+            @Parameter(description = "업로드할 이미지 파일들 (최대 3개)") List<MultipartFile> images
     );
 
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
