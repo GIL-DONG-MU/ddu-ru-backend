@@ -93,6 +93,8 @@ jobs:
 
             # 기존 환경변수들
             export ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+            export ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}
+            export IMAGE_TAG=${{ github.sha }}
             export AWS_REGION=${{ secrets.AWS_REGION }}
 
             # 배포 스크립트 실행
