@@ -7,11 +7,14 @@ import com.dduru.gildongmu.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,23 +56,25 @@ public class PostController implements PostApiDocs {
     }
 
     @Override
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostCreateResponse> createPost(
             @CurrentUser Long userId,
-            @Valid @RequestBody PostCreateRequest request
+            @Valid @RequestPart("request") PostCreateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) {
-        PostCreateResponse response = postService.create(userId, request);
+        PostCreateResponse response = postService.create(userId, request, images);
         return ResponseEntity.created(URI.create("/api/v1/posts/" + response.id())).body(response);
     }
 
     @Override
-    @PatchMapping("/{postId}")
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updatePost(
             @PathVariable Long postId,
             @CurrentUser Long userId,
-            @Valid @RequestBody PostUpdateRequest request
+            @Valid @RequestPart("request") PostUpdateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) {
-        postService.update(postId, userId, request);
+        postService.update(postId, userId, request, images);
         return ResponseEntity.noContent().build();
     }
 
