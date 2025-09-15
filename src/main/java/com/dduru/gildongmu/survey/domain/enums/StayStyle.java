@@ -1,0 +1,22 @@
+package com.dduru.gildongmu.survey.domain.enums;
+
+import com.dduru.gildongmu.common.enums.CodedEnum;
+import com.dduru.gildongmu.common.enums.EnumUtils;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.util.Optional;
+
+@Getter
+@AllArgsConstructor
+public enum StayStyle implements CodedEnum {
+    HOTEL(1, "호텔"),
+    JUST_SLEEP(2, "잠만 자기");
+
+    private final int code;
+    private final String text;
+
+    public static Optional<StayStyle> fromCode(int code) {
+        return EnumUtils.findByCode(values(), code);
+    }
+}

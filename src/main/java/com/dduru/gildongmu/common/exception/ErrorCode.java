@@ -49,7 +49,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_002", "서버 오류가 발생했습니다."),
     JSON_CONVERT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_003", "JSON 변환 중 오류가 발생했습니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_004", "요청한 리소스를 찾을 수 없습니다."),
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_005", "지원하지 않는 HTTP 메서드입니다.");
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_005", "지원하지 않는 HTTP 메서드입니다."),
+    UNKNOWN_SURVEY_ANSWER_CODE(HttpStatus.BAD_REQUEST, "SURVEY_001", "알 수 없는 설문조사 답변 코드입니다.");
 
     private final HttpStatus status;
     private final String code;
