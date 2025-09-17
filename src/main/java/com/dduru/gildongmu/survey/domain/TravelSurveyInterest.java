@@ -21,5 +21,6 @@ public class TravelSurveyInterest extends BaseTimeEntity {
     @JoinColumn(name = "travel_survey_id", nullable = false)
     private TravelSurvey travelSurvey;
 
+    @Enumerated(EnumType.STRING)
     private Interest interest;
 }

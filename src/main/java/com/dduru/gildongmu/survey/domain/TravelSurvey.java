@@ -1,12 +1,10 @@
 package com.dduru.gildongmu.survey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.survey.converter.*;
 import com.dduru.gildongmu.survey.domain.enums.*;
+import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,6 +12,8 @@ import java.util.Set;
 @Entity
 @Table(name = "travel_surveys")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelSurvey extends BaseTimeEntity {
 
@@ -21,39 +21,35 @@ public class TravelSurvey extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @Convert(converter = PlanStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private PlanStyle planStyle;
 
-    @Convert(converter = TastingStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private TastingStyle tastingStyle;
 
-    @Convert(converter = StayStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private StayStyle stayStyle;
 
-    @Convert(converter = ExpenseStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private ExpenseStyle expenseStyle;
 
-    @Convert(converter = MoveStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private MoveStyle moveStyle;
 
-    @Convert(converter = SpendStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private SpendStyle spendStyle;
 
-    @Convert(converter = CaptureStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private CaptureStyle captureStyle;
 
-    @Convert(converter = PaceStyleConverter.class)
+    @Enumerated(EnumType.STRING)
     private PaceStyle paceStyle;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "travel_survey_interests", joinColumns = @JoinColumn(name = "travel_survey_id"))
-    @Column(name = "interest")
-    private Set<Interest> interests = new HashSet<>();
-
-    @Lob
-    private String scoreSnapshotJson;
+    @OneToMany(mappedBy = "travelSurvey", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<TravelSurveyInterest> interests = new HashSet<>();
 }
 
