@@ -4,10 +4,11 @@ import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.survey.domain.enums.*;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "travel_surveys")
@@ -48,8 +49,4 @@ public class TravelSurvey extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private PaceStyle paceStyle;
-
-    @OneToMany(mappedBy = "travelSurvey", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<TravelSurveyInterest> interests = new HashSet<>();
 }
-
