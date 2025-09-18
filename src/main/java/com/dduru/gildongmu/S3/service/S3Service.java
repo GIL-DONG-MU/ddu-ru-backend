@@ -1,74 +1,56 @@
 package com.dduru.gildongmu.S3.service;
 
-import com.dduru.gildongmu.S3.exception.EmptyFileException;
-import com.dduru.gildongmu.S3.exception.FileUploadFailedException;
+import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
+import com.dduru.gildongmu.config.S3Properties;
 import com.dduru.gildongmu.S3.exception.InvalidFileExtensionException;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3Service {
 
-    private final S3Client s3Client;
-
-    @Value("${aws.s3.bucket}")
-    private String bucketName;
+    private final S3Presigner s3Presigner;
+    private final S3Properties s3Properties;
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
     private static final String S3_POSTS_DIR = "posts/";
 
-    public String uploadFile(MultipartFile file) {
-        validateFile(file);
+    public ImageUploadResponse prepareUpload(String fileName) {
+        validateFileExtension(fileName);
 
-        try {
-            String fileName = generateFileName(file.getOriginalFilename());
-            String key = S3_POSTS_DIR + fileName;
+        String uniqueFileName = generateFileName(fileName);
+        String key = S3_POSTS_DIR + uniqueFileName;
 
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(key)
-                    .contentType(file.getContentType())
-                    .build();
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(s3Properties.getBucket())
+                .key(key)
+                .build();
 
-            s3Client.putObject(putObjectRequest,
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .putObjectRequest(putObjectRequest)
+                .build();
 
-            return getFileUrl(key);
-        } catch (IOException | SdkException e) {
-            log.error("파일 업로드 실패: {}", e.getMessage());
-            throw new FileUploadFailedException();
-        }
+        String presignedUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
+        String fileUrl = "https://%s.s3.%s.amazonaws.com/%s".formatted(s3Properties.getBucket(), s3Properties.getRegion(), key);
+
+        return new ImageUploadResponse(presignedUrl, fileUrl);
     }
 
-    public List<String> uploadFiles(List<MultipartFile> files) {
-        return files.stream()
-                .map(this::uploadFile)
-                .collect(Collectors.toList());
-    }
-
-    private void validateFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new EmptyFileException();
-        }
-
-        String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+    private void validateFileExtension(String fileName) {
+        String extension = StringUtils.getFilenameExtension(fileName);
         if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
             throw new InvalidFileExtensionException(
                 "허용되지 않는 파일 확장자입니다. 허용 확장자: " + ALLOWED_EXTENSIONS);
@@ -78,13 +60,5 @@ public class S3Service {
     private String generateFileName(String originalFilename) {
         String extension = StringUtils.getFilenameExtension(originalFilename);
         return UUID.randomUUID().toString() + "." + extension;
-    }
-
-    private String getFileUrl(String key) {
-        GetUrlRequest request = GetUrlRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-        return s3Client.utilities().getUrl(request).toString();
     }
 }
