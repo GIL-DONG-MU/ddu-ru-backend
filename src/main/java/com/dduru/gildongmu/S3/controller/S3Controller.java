@@ -19,7 +19,7 @@ public class S3Controller implements S3ApiDocs {
     @Override
     @PostMapping("/uploads")
     public ResponseEntity<ImageUploadResponse> prepareUpload(@RequestBody ImageUploadRequest request) {
-        ImageUploadResponse response = s3Service.prepareUpload(request.getFileName());
+        ImageUploadResponse response = s3Service.prepareUpload(request.fileName());
         return ResponseEntity.ok(response);
     }
 }
