@@ -7,13 +7,11 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
-import com.dduru.gildongmu.S3.exception.ImageCountExceededException;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.S3.service.S3Service;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.AgeRange;
 import com.dduru.gildongmu.user.enums.Gender;
@@ -23,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -36,33 +33,29 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class PostService {
-    private static final int MAX_IMAGE_COUNT = 3;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final JsonConverter jsonConverter;
-    private final S3Service s3Service;
 
-    public PostCreateResponse create(Long userId, PostCreateRequest request, List<MultipartFile> images) {
+    public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 시작 - userId: {}, request: {}", userId, request);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
-        
+
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
-        
-        List<String> uploadedImageUrls = uploadImages(images);
-        
-        Post post = createPost(user, destination, request, uploadedImageUrls);
+
+        Post post = createPost(user, destination, request, request.photoUrls());
         Post savedPost = postRepository.save(post);
 
         log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                savedPost.getId(), userId, savedPost.getTitle(), uploadedImageUrls.size());
+                savedPost.getId(), userId, savedPost.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
         return new PostCreateResponse(savedPost.getId());
     }
 
-    public void update(Long postId, Long userId, PostUpdateRequest request, List<MultipartFile> images) {
+    public void update(Long postId, Long userId, PostUpdateRequest request) {
         log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
@@ -71,12 +64,11 @@ public class PostService {
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
 
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
-        List<String> uploadedImageUrls = uploadImages(images);
-        
-        updatePost(post, destination, request, uploadedImageUrls);
+
+        updatePost(post, destination, request, request.photoUrls());
 
         log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                postId, userId, post.getTitle(), uploadedImageUrls.size());
+                postId, userId, post.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
     }
 
     public void delete(Long postId, Long userId) {
@@ -130,37 +122,37 @@ public class PostService {
 
     public int closeExpiredPosts() {
         log.debug("만료된 게시글 상태 업데이트 시작");
-        
+
         LocalDate today = LocalDate.now();
         List<Post> expiredPosts = postRepository.findExpiredOpenPosts(today);
-        
+
         int updatedCount = 0;
         for (Post post : expiredPosts) {
             post.closeByRecruitmentDeadline();
             updatedCount++;
             log.debug("게시글 상태 CLOSED로 변경 - postId: {}, title: {}", post.getId(), post.getTitle());
         }
-        
+
         log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
         return updatedCount;
     }
 
 
-    private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> uploadedImageUrls) {
-        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(), 
-                request.preferredAgeMax(), uploadedImageUrls, request.tags(), destination);
-        
+    private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
+        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(), 
+                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
                 parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request, List<String> uploadedImageUrls) {
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request, List<String> photoUrls) {
         ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), uploadedImageUrls, request.tags(), destination);
-        
+                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
@@ -168,11 +160,11 @@ public class PostService {
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin, 
+    private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin,
                                        String preferredAgeMax, List<String> photoUrls, List<String> tags, Destination destination) {
-        
+
         List<String> finalPhotoUrls = getFinalPhotoUrls(photoUrls, destination);
-        
+
         return new ParsedPostData(
                 preferredGender != null ? Gender.from(preferredGender) : Gender.U,
                 preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : null,
@@ -182,34 +174,20 @@ public class PostService {
         );
     }
 
-    private List<String> uploadImages(List<MultipartFile> images) {
-        if (images == null || images.isEmpty()) {
-            log.debug("업로드할 이미지 없음");
-            return Collections.emptyList();
-        }
-
-        if (images.size() > MAX_IMAGE_COUNT) {
-            throw ImageCountExceededException.withMax(MAX_IMAGE_COUNT);
-        }
-
-        log.debug("이미지 업로드 시작 - 개수: {}", images.size());
-        return s3Service.uploadFiles(images);
-    }
-    
     private List<String> getFinalPhotoUrls(List<String> photoUrls, Destination destination) {
         if (photoUrls != null && !photoUrls.isEmpty()) {
             log.debug("사용자가 업로드한 이미지 사용 - 개수: {}", photoUrls.size());
             return photoUrls;
         }
-        
+
         if (StringUtils.hasText(destination.getImage())) {
-            log.debug("목적지 기본 이미지 사용 - destination: {}, image: {}", 
+            log.debug("목적지 기본 이미지 사용 - destination: {}, image: {}",
                     destination.getCity(), destination.getImage());
             List<String> defaultImages = new ArrayList<>();
             defaultImages.add(destination.getImage());
             return defaultImages;
         }
-        
+
         log.debug("이미지 없음 - 빈 리스트 반환");
         return Collections.emptyList();
     }
