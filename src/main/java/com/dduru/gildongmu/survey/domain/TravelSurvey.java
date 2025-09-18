@@ -1,9 +1,21 @@
 package com.dduru.gildongmu.survey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.survey.domain.enums.*;
-import com.dduru.gildongmu.user.domain.User;
-import jakarta.persistence.*;
+import com.dduru.gildongmu.survey.domain.enums.CaptureStyle;
+import com.dduru.gildongmu.survey.domain.enums.ExpenseStyle;
+import com.dduru.gildongmu.survey.domain.enums.MoveStyle;
+import com.dduru.gildongmu.survey.domain.enums.PaceStyle;
+import com.dduru.gildongmu.survey.domain.enums.PlanStyle;
+import com.dduru.gildongmu.survey.domain.enums.SpendStyle;
+import com.dduru.gildongmu.survey.domain.enums.StayStyle;
+import com.dduru.gildongmu.survey.domain.enums.TastingStyle;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,4 +59,19 @@ public class TravelSurvey extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private PaceStyle paceStyle;
+
+    public void create(
+            PlanStyle planStyle, TastingStyle tastingStyle,
+            StayStyle stayStyle, ExpenseStyle expenseStyle, MoveStyle moveStyle,
+            SpendStyle spendStyle, CaptureStyle captureStyle, PaceStyle paceStyle
+    ) {
+        this.planStyle = planStyle;
+        this.tastingStyle = tastingStyle;
+        this.stayStyle = stayStyle;
+        this.expenseStyle = expenseStyle;
+        this.moveStyle = moveStyle;
+        this.spendStyle = spendStyle;
+        this.captureStyle = captureStyle;
+        this.paceStyle = paceStyle;
+    }
 }
