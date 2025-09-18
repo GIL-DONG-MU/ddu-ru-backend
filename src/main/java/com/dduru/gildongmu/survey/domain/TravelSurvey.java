@@ -22,9 +22,7 @@ public class TravelSurvey extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     private PlanStyle planStyle;
