@@ -16,6 +16,7 @@ spring:
           max-wait: -1ms
 oauth:
   kakao:
+    rest-client-id: ${KAKAO_REST_CLIENT_ID}
     client-id: ${KAKAO_CLIENT_ID}
     client-secret: ${KAKAO_CLIENT_SECRET}
     redirect-uri: ${KAKAO_REDIRECT_URI}
