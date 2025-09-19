@@ -1,3 +1,4 @@
+/*
 package com.dduru.gildongmu.auth.controller;
 
 import com.dduru.gildongmu.auth.dto.LoginResponse;
@@ -31,3 +32,4 @@ public class OAuthWebController {
         return ResponseEntity.ok(response);
     }
 }
+*/
