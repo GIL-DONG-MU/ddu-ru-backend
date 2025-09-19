@@ -8,6 +8,15 @@ import java.util.stream.Collectors;
 
 public class EnumUtils {
 
+//     결과 캐싱 로직
+//     private static final Map<Class<?>, Map<Integer, ? extends Enum<?>>> CACHE = new ConcurrentHashMap<>();
+//     @SuppressWarnings("unchecked")                                                                                                   │
+//            public static <E extends Enum<E> & CodedEnum> Map<Integer, E> codeMap(Class<E> enumClass) {                                  │
+//                return (Map<Integer, E>) CACHE.computeIfAbsent(enumClass, cls ->
+//                Arrays.stream(cls.getEnumConstants())                                                                 │
+//                        .collect(Collectors.toMap(CodedEnum::getCode, Function.identity())));
+//            }
+
     public static <E extends Enum<E> & CodedEnum> Map<Integer, E> codeMap(Class<E> enumClass) {
         // 미리 code를 key, Enum 상수를 value로 하는 Map을 만들어 반환
         return Arrays.stream(enumClass.getEnumConstants())
