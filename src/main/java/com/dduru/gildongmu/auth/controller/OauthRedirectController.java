@@ -64,7 +64,7 @@ public class OauthRedirectController {
                     .bodyToMono(LocalKakaoTokenResponse.class)
                     .block();
 
-            String idToken = (tokenResponse != null) ? tokenResponse.idToken() : KAKAO +"idToken 조회 실패.";
+            String idToken = (tokenResponse != null) ? tokenResponse.idToken() : KAKAO + " idToken 조회 실패.";
             log.info("{} idToken: {}", KAKAO, idToken);
 
             model.addAttribute("provider", KAKAO);
@@ -104,7 +104,7 @@ public class OauthRedirectController {
                     .bodyToMono(LocalGoogleTokenResponse.class)
                     .block();
 
-            String idToken = (tokenResponse != null) ? tokenResponse.idToken() : GOOGLE + "idToken 조회 실패.";
+            String idToken = (tokenResponse != null) ? tokenResponse.idToken() : GOOGLE + " idToken 조회 실패.";
             log.info("{} idToken: {}", GOOGLE, idToken);
 
             model.addAttribute("provider", GOOGLE);
