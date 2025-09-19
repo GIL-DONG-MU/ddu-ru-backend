@@ -60,7 +60,7 @@ public class TravelSurvey extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private PaceStyle paceStyle;
 
-    public void create(
+    public void updateStyles(
             PlanStyle planStyle, TastingStyle tastingStyle,
             StayStyle stayStyle, ExpenseStyle expenseStyle, MoveStyle moveStyle,
             SpendStyle spendStyle, CaptureStyle captureStyle, PaceStyle paceStyle

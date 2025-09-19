@@ -28,7 +28,7 @@ public class TravelSurveyService {
         TravelSurvey surveyRequest = travelSurveyConverter.toEntity(userId, request);
         TravelSurvey travelSurvey = travelSurveyRepository.findByUserId(userId)
                 .map(existingSurvey -> {
-                    existingSurvey.create(
+                    existingSurvey.updateStyles(
                             surveyRequest.getPlanStyle(),
                             surveyRequest.getTastingStyle(),
                             surveyRequest.getStayStyle(),
