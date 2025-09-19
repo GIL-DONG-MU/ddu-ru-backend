@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Failed</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #dc3545;
+        }
+
+        h2 {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: left;
+            font-family: monospace, sans-serif;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>❌ <span th:text="${provider}"></span> IdToken 테스트 실패!</h1>
+    <h2>Error Details:</h2>
+    <pre th:text="${error}">오류 메세지가 여기에 표시됩니다.</pre>
+    <br/>
+    <a href="/login/page"></a>
+</div>
+</body>
+</html>
