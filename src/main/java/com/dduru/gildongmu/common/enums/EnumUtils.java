@@ -14,8 +14,8 @@ public class EnumUtils {
                 .collect(Collectors.toMap(CodedEnum::getCode, Function.identity()));
     }
 
-    public static <E extends Enum<E> & CodedEnum> E fromCode(Class<E> enumClass, int code) {
-        return codeMap(enumClass).get(code);
+    public static <E extends Enum<E> & CodedEnum> Optional<E> fromCode(Class<E> enumClass, int code) {
+        return Optional.ofNullable(codeMap(enumClass).get(code));
     }
 
     public static <T extends CodedEnum> Optional<T> findByCode(T[] enumValues, int code) {
