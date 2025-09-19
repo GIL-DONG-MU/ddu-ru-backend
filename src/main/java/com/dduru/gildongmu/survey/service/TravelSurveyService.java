@@ -38,8 +38,8 @@ public class TravelSurveyService {
                             surveyRequest.getCaptureStyle(),
                             surveyRequest.getPaceStyle()
                     );
+                    travelSurveyInterestRepository.deleteAllByTravelSurvey(existingSurvey);
                     travelSurveyRepository.save(existingSurvey);
-                    travelSurveyInterestRepository.deleteAll(travelSurveyInterestRepository.findByTravelSurvey(existingSurvey));
                     return existingSurvey;
                 })
                 .orElseGet(() -> travelSurveyRepository.save(surveyRequest));
