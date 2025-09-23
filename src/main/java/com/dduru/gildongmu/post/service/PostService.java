@@ -6,7 +6,9 @@ import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
+import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
@@ -83,6 +85,28 @@ public class PostService {
                 postId, userId, post.getTitle());
     }
 
+    public int closeExpiredPosts() {
+        log.debug("만료된 게시글 상태 업데이트 시작");
+        LocalDate today = LocalDate.now();
+
+        int updatedCount = postRepository.closeExpiredPostsByDate(today);
+
+        log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
+        return updatedCount;
+    }
+
+    public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
+        log.debug("게시글 모집 상태 변경 시작 - postId: {}, userId: {}, open: {}", postId, userId, request.open());
+
+        Post post = postRepository.getActiveByIdOrThrow(postId);
+        validatePermission(post, userId);
+
+        PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
+        post.updateStatus(newStatus);
+
+        log.info("게시글 모집 상태 변경 완료 - postId: {}, userId: {}, status: {}", postId, userId, newStatus);
+    }
+
     private void validatePermission(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
             log.warn("게시글 권한 없음 - postId: {}, userId: {}, ownerId: {}", post.getId(), userId, post.getUser().getId());
@@ -119,24 +143,6 @@ public class PostService {
             throw InvalidAgeRangeException.invalidValue();
         }
     }
-
-    public int closeExpiredPosts() {
-        log.debug("만료된 게시글 상태 업데이트 시작");
-
-        LocalDate today = LocalDate.now();
-        List<Post> expiredPosts = postRepository.findExpiredOpenPosts(today);
-
-        int updatedCount = 0;
-        for (Post post : expiredPosts) {
-            post.closeByRecruitmentDeadline();
-            updatedCount++;
-            log.debug("게시글 상태 CLOSED로 변경 - postId: {}, title: {}", post.getId(), post.getTitle());
-        }
-
-        log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
-        return updatedCount;
-    }
-
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
         ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),

@@ -70,4 +70,17 @@ public interface PostApiDocs {
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(hidden = true) Long userId
     );
+
+    @Operation(summary = "게시글 모집 상태 변경", description = "게시글 모집 상태를 변경합니다. (true: 모집중, false: 모집마감)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "상태 변경 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    ResponseEntity<Void> updatePostStatus(
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(hidden = true) Long userId,
+            @Valid PostStatusUpdateRequest request
+    );
 }
