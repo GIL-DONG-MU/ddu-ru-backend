@@ -31,6 +31,10 @@ public enum ErrorCode {
     IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "POST_011", "이미지는 최대 3장까지 업로드할 수 있습니다."),
     INVALID_POST_STATUS(HttpStatus.BAD_REQUEST, "POST_012", "모집이 완료된 게시글은 모집 상태를 변경할 수 없습니다."),
 
+    // 댓글 관련
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "댓글을 찾을 수 없습니다."),
+    INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "COMMENT_002", "부모 댓글이 현재 게시글에 속해있지 않습니다."),
+
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),
 
