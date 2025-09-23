@@ -82,4 +82,15 @@ public class PostController implements PostApiDocs {
         postService.delete(postId, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @Override
+    @PatchMapping("/{postId}/status")
+    public ResponseEntity<Void> updatePostStatus(
+            @PathVariable Long postId,
+            @CurrentUser Long userId,
+            @Valid @RequestBody PostStatusUpdateRequest request
+    ) {
+        postService.updateStatus(postId, userId, request);
+        return ResponseEntity.noContent().build();
+    }
 }

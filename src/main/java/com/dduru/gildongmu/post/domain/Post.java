@@ -1,16 +1,12 @@
 package com.dduru.gildongmu.post.domain;
 
+import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.post.enums.PostStatus;
+import com.dduru.gildongmu.post.exception.*;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.AgeRange;
 import com.dduru.gildongmu.user.enums.Gender;
-import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.post.enums.PostStatus;
-import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
-import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
-import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
-import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
-import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -228,8 +224,11 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-    public void closeByRecruitmentDeadline() {
-        this.updateStatus(PostStatus.CLOSED);
+    public void updateStatus(PostStatus newStatus) {
+        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
+            throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
+        }
+        this.status = newStatus;
     }
 
     private boolean isTravelStarted() {
@@ -252,9 +251,5 @@ public class Post extends BaseTimeEntity {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;
-    }
-
-    private void updateStatus(PostStatus newStatus) {
-        this.status = newStatus;
     }
 }
