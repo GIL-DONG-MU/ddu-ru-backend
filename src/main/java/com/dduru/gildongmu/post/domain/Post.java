@@ -2,6 +2,7 @@ package com.dduru.gildongmu.post.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.*;
 import com.dduru.gildongmu.user.domain.User;
@@ -189,23 +190,7 @@ public class Post extends BaseTimeEntity {
         return Math.max(daysLeft, 0);
     }
 
-    private void updateRecruitCapacity(Integer newCapacity) {
-        if (newCapacity < this.recruitCount) {
-            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
-        }
-        this.recruitCapacity = newCapacity;
-    }
-
-    private void validateUpdatePermission() {
-        if (isTravelStarted()) {
-            throw new TravelAlreadyStartedException();
-        }
-        if (isTravelEnded()) {
-            throw new TravelAlreadyEndedException();
-        }
-    }
-
-    public void approveParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+    public void approveParticipation(Participation participation) {
         participation.approve();
         this.incrementRecruitCount();
         
@@ -214,7 +199,7 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-    public void removeApprovedParticipation(com.dduru.gildongmu.participation.domain.Participation participation) {
+    public void removeApprovedParticipation(Participation participation) {
         if (participation.isApproved()) {
             this.decrementRecruitCount();
             
@@ -251,5 +236,21 @@ public class Post extends BaseTimeEntity {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;
+    }
+
+    private void updateRecruitCapacity(Integer newCapacity) {
+        if (newCapacity < this.recruitCount) {
+            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
+        }
+        this.recruitCapacity = newCapacity;
+    }
+
+    private void validateUpdatePermission() {
+        if (isTravelStarted()) {
+            throw new TravelAlreadyStartedException();
+        }
+        if (isTravelEnded()) {
+            throw new TravelAlreadyEndedException();
+        }
     }
 }
