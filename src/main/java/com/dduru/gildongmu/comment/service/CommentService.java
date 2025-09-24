@@ -25,7 +25,7 @@ public class CommentService {
     private final UserRepository userRepository;
 
     @Transactional
-    public CommentResponse createComment(Long userId, Long postId, CommentCreateRequest request) {
+    public CommentResponse create(Long userId, Long postId, CommentCreateRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
         Comment parent = getValidParentComment(request.parentId(), postId);

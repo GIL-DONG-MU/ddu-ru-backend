@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 @Tag(name = "Comments", description = "댓글 API")
 public interface CommentApiDocs {
     @Operation(summary = "댓글 작성", description = "게시글에 새로운 댓글을 작성합니다.")
@@ -22,5 +24,14 @@ public interface CommentApiDocs {
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID") Long postId,
             @Valid CommentCreateRequest request
+    );
+
+    @Operation(summary = "게시글 댓글 조회", description = "특정 게시글의 모든 댓글을 조회합니다. 대댓글 포함 계층 구조로 반환됩니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    })
+    ResponseEntity<List<CommentResponse>> retrieveComments(
+            @Parameter(description = "게시글 ID") Long postId
     );
 }
