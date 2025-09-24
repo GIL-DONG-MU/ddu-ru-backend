@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -23,5 +24,12 @@ public class CommentController implements CommentApiDocs {
     public ResponseEntity<CommentResponse> createComment(@CurrentUser Long userId, @PathVariable Long postId, @Valid @RequestBody CommentCreateRequest request) {
         CommentResponse response = commentService.createComment(userId, postId, request);
         return ResponseEntity.created(URI.create("/api/v1/comments/" + response.id())).body(response);
+    }
+
+    @Override
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<List<CommentResponse>> getCommentsByPostId(@PathVariable Long postId) {
+        List<CommentResponse> comments = commentService.getCommentsByPostId(postId);
+        return ResponseEntity.ok(comments);
     }
 }
