@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -24,10 +23,9 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final CommentQueryService commentQueryService;
 
     @Transactional
-    public CommentResponse createComment(Long userId, Long postId, CommentCreateRequest request) {
+    public CommentResponse create(Long userId, Long postId, CommentCreateRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
         Comment parent = getValidParentComment(request.parentId(), postId);
@@ -50,10 +48,5 @@ public class CommentService {
         }
 
         return parent;
-    }
-
-    @Transactional(readOnly = true)
-    public List<CommentResponse> getCommentsByPostId(Long postId) {
-        return commentQueryService.getCommentsByPostId(postId);
     }
 }

@@ -31,7 +31,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
-    ResponseEntity<List<CommentResponse>> getCommentsByPostId(
+    ResponseEntity<List<CommentResponse>> retrieveComments(
             @Parameter(description = "게시글 ID") Long postId
     );
 }

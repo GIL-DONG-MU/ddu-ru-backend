@@ -19,7 +19,7 @@ public class CommentQueryService {
 
     private final CommentRepository commentRepository;
 
-    public List<CommentResponse> getCommentsByPostId(Long postId) {
+    public List<CommentResponse> retrieve(Long postId) {
         List<Comment> comments = commentRepository.findCommentsByPostId(postId);
 
         Map<Long, Comment> commentMap = comments.stream()
