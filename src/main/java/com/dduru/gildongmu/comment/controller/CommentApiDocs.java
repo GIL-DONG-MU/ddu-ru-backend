@@ -41,6 +41,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
     })
     ResponseEntity<Void> deleteComment(
+            @Parameter(hidden = true) Long userId,
             @Parameter(description = "댓글 ID") Long commentId
     );
 }

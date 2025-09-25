@@ -3,6 +3,7 @@ package com.dduru.gildongmu.comment.service;
 import com.dduru.gildongmu.comment.domain.Comment;
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
 import com.dduru.gildongmu.comment.dto.CommentResponse;
+import com.dduru.gildongmu.comment.exception.CommentAccessDeniedException;
 import com.dduru.gildongmu.comment.exception.CommentNotFoundException;
 import com.dduru.gildongmu.comment.exception.InvalidParentCommentException;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
@@ -11,11 +12,12 @@ import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -36,11 +38,19 @@ public class CommentService {
     }
 
     @Transactional
-    public void delete(Long commentId) {
+    public void delete(Long userId, Long commentId) {
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> CommentNotFoundException.of(commentId));
 
+        validatePermission(comment, userId);
         comment.softdelete();
+    }
+
+    private void validatePermission(Comment comment, Long userId) {
+        if (!comment.getUser().getId().equals(userId)) {
+            log.warn("댓글 권한 없음 - commentId: {}, userId: {}, ownerId: {}", comment.getId(), userId, comment.getUser().getId());
+            throw CommentAccessDeniedException.ownerOnly();
+        }
     }
 
     private Comment getValidParentComment(Long parentId, Long postId) {
