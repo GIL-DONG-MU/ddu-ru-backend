@@ -19,15 +19,18 @@ public record CommentResponse(
                 .map(CommentResponse::from)
                 .collect(Collectors.toList());
 
-        String author = comment.getUser().getNickname();
-        String profileImage = comment.getUser().getProfileImage();
-        String content = comment.getContent();
+        String content;
+        if (comment.isDeleted()) {
+            content = "작성자에 의해 삭제된 댓글입니다.";
+        } else {
+            content = comment.getContent();
+        }
 
         return new CommentResponse(
                 comment.getId(),
                 content,
-                author,
-                profileImage,
+                comment.getUser().getNickname(),
+                comment.getUser().getProfileImage(),
                 comment.getCreatedAt(),
                 childrenResponses
         );
