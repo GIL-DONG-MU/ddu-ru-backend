@@ -38,6 +38,7 @@ public class CommentQueryService {
         }
 
         return rootComments.stream()
+                .filter(comment -> !comment.isDeleted() || !comment.getChildren().isEmpty())
                 .map(CommentResponse::from)
                 .toList();
     }
