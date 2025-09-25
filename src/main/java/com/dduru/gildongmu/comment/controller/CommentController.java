@@ -34,4 +34,11 @@ public class CommentController implements CommentApiDocs {
         List<CommentResponse> comments = commentQueryService.retrieve(postId);
         return ResponseEntity.ok(comments);
     }
+
+    @Override
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+        commentService.delete(commentId);
+        return ResponseEntity.noContent().build();
+    }
 }

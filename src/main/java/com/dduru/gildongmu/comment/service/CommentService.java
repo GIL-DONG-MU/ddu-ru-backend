@@ -35,6 +35,14 @@ public class CommentService {
         return CommentResponse.from(savedComment);
     }
 
+    @Transactional
+    public void delete(Long commentId) {
+        Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
+                .orElseThrow(() -> CommentNotFoundException.of(commentId));
+
+        comment.softdelete();
+    }
+
     private Comment getValidParentComment(Long parentId, Long postId) {
         if (parentId == null || parentId == 0L) {
             return null;
