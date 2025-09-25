@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +41,12 @@ public class Comment extends BaseTimeEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> children = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     public Comment(String content, User user, Post post, Comment parent) {
         this.content = content;
@@ -49,6 +56,11 @@ public class Comment extends BaseTimeEntity {
             this.parent = parent;
             parent.addChildComment(this);
         }
+    }
+
+    public void softdelete() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
     }
 
     public static Comment createComment(String content, User user, Post post, Comment parent) {
