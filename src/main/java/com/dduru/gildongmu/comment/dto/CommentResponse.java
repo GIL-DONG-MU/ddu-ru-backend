@@ -20,17 +20,24 @@ public record CommentResponse(
                 .collect(Collectors.toList());
 
         String content;
-        if (comment.isDeleted()) {
+        String author;
+        String authorProfileImage;
+
+        if (comment.isDeleted() || comment.getUser() == null) {
             content = "작성자에 의해 삭제된 댓글입니다.";
+            author = "알 수 없음";
+            authorProfileImage = null;
         } else {
             content = comment.getContent();
+            author = comment.getUser().getNickname();
+            authorProfileImage = comment.getUser().getProfileImage();
         }
 
         return new CommentResponse(
                 comment.getId(),
                 content,
-                comment.getUser().getNickname(),
-                comment.getUser().getProfileImage(),
+                author,
+                authorProfileImage,
                 comment.getCreatedAt(),
                 childrenResponses
         );
