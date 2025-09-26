@@ -34,7 +34,7 @@ public enum ErrorCode {
     // 댓글 관련
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "댓글을 찾을 수 없습니다."),
     INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "COMMENT_002", "부모 댓글이 현재 게시글에 속해있지 않습니다."),
-    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMENT_003", "댓글에 대한 접근 권한이 없습니다"),
+    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMENT_003", "댓글에 대한 접근 권한이 없습니다."),
 
     // 여행지 관련
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "DEST_001", "여행지를 찾을 수 없습니다"),

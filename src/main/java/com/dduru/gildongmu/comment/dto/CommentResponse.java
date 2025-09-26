@@ -23,8 +23,12 @@ public record CommentResponse(
         String author;
         String authorProfileImage;
 
-        if (comment.isDeleted() || comment.getUser() == null) {
+        if (comment.isDeleted()) {
             content = "작성자에 의해 삭제된 댓글입니다.";
+            author = "알 수 없음";
+            authorProfileImage = null;
+        } else if (comment.getUser() == null) {
+            content = "작성자 정보가 없습니다.";
             author = "알 수 없음";
             authorProfileImage = null;
         } else {
