@@ -34,4 +34,14 @@ public interface CommentApiDocs {
     ResponseEntity<List<CommentResponse>> retrieveComments(
             @Parameter(description = "게시글 ID") Long postId
     );
+
+    @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
+    ResponseEntity<Void> deleteComment(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "댓글 ID") Long commentId
+    );
 }
