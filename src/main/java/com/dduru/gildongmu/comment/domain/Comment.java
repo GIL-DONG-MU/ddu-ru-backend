@@ -58,11 +58,6 @@ public class Comment extends BaseTimeEntity {
         }
     }
 
-    public void softdelete() {
-        this.deleted = true;
-        this.deletedAt = LocalDateTime.now();
-    }
-
     public static Comment createComment(String content, User user, Post post, Comment parent) {
         return Comment.builder()
                 .content(content)
@@ -70,6 +65,15 @@ public class Comment extends BaseTimeEntity {
                 .post(post)
                 .parent(parent)
                 .build();
+    }
+
+    public void softdelete() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void update(String content) {
+        this.content = content;
     }
 
     private void addChildComment(Comment child) {

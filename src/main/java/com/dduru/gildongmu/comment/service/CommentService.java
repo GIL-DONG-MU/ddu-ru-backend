@@ -2,6 +2,8 @@ package com.dduru.gildongmu.comment.service;
 
 import com.dduru.gildongmu.comment.domain.Comment;
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
+import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
+
 import com.dduru.gildongmu.comment.dto.CommentResponse;
 import com.dduru.gildongmu.comment.exception.CommentAccessDeniedException;
 import com.dduru.gildongmu.comment.exception.CommentNotFoundException;
@@ -28,22 +30,40 @@ public class CommentService {
 
     @Transactional
     public CommentResponse create(Long userId, Long postId, CommentCreateRequest request) {
+        log.debug("댓글 생성 시작 - userId: {}, postId: {}, request: {}", userId, postId, request);
         User user = userRepository.getByIdOrThrow(userId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
         Comment parent = getValidParentComment(request.parentId(), postId);
 
         Comment comment = Comment.createComment(request.content(), user, post, parent);
         Comment savedComment = commentRepository.save(comment);
+
+        log.info("댓글 생성 완료 - commentId: {}, userId: {}, postId: {}", savedComment.getId(), userId, postId);
         return CommentResponse.from(savedComment);
     }
 
     @Transactional
     public void delete(Long userId, Long commentId) {
+        log.debug("댓글 삭제 시작 - userId: {}, commentId: {}", userId, commentId);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> CommentNotFoundException.of(commentId));
 
         validatePermission(comment, userId);
         comment.softdelete();
+        log.info("댓글 삭제 완료 - commentId: {}, userId: {}", commentId, userId);
+    }
+
+    @Transactional
+    public CommentResponse update(Long userId, Long commentId, CommentUpdateRequest request) {
+        log.debug("댓글 수정 시작 - userId: {}, commentId: {}, request: {}", userId, commentId, request);
+        Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
+                .orElseThrow(() -> CommentNotFoundException.of(commentId));
+
+        validatePermission(comment, userId);
+        comment.update(request.content());
+
+        log.info("댓글 수정 완료 - commentId: {}, userId: {}", commentId, userId);
+        return CommentResponse.from(comment);
     }
 
     private void validatePermission(Comment comment, Long userId) {

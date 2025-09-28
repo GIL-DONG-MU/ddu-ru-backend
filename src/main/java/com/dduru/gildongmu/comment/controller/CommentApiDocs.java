@@ -1,6 +1,8 @@
 package com.dduru.gildongmu.comment.controller;
 
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
+import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
+
 import com.dduru.gildongmu.comment.dto.CommentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,5 +45,17 @@ public interface CommentApiDocs {
     ResponseEntity<Void> deleteComment(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "댓글 ID") Long commentId
+    );
+
+    @Operation(summary = "댓글 수정", description = "댓글을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+    })
+    ResponseEntity<CommentResponse> updateComment(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "댓글 ID") Long commentId,
+            @Valid CommentUpdateRequest request
     );
 }
