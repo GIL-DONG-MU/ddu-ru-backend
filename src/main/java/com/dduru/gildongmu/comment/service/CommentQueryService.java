@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -20,6 +23,7 @@ public class CommentQueryService {
     private final CommentRepository commentRepository;
 
     public List<CommentResponse> retrieve(Long postId) {
+        log.debug("댓글 목록 조회 시작 - postId: {}", postId);
         List<Comment> comments = commentRepository.findCommentsByPostId(postId);
 
         Map<Long, Comment> commentMap = comments.stream()
@@ -37,9 +41,12 @@ public class CommentQueryService {
             }
         }
 
-        return rootComments.stream()
+        List<CommentResponse> result = rootComments.stream()
                 .filter(comment -> !comment.isDeleted() || !comment.getChildren().isEmpty())
                 .map(CommentResponse::from)
                 .toList();
+
+        log.info("댓글 목록 조회 완료 - postId: {}, 댓글 수: {}", postId, result.size());
+        return result;
     }
 }
