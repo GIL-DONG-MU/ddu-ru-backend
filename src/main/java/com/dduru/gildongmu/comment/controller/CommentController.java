@@ -1,11 +1,10 @@
 package com.dduru.gildongmu.comment.controller;
 
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
-import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
-
 import com.dduru.gildongmu.comment.dto.CommentResponse;
-import com.dduru.gildongmu.comment.service.CommentService;
+import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
 import com.dduru.gildongmu.comment.service.CommentQueryService;
+import com.dduru.gildongmu.comment.service.CommentService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

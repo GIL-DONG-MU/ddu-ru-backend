@@ -1,9 +1,8 @@
 package com.dduru.gildongmu.comment.controller;
 
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
-import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
-
 import com.dduru.gildongmu.comment.dto.CommentResponse;
+import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.comment.domain.Comment;
 import com.dduru.gildongmu.comment.dto.CommentResponse;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
