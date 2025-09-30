@@ -53,7 +53,7 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponse update(Long userId, Long commentId, CommentUpdateRequest request) {
+    public void update(Long userId, Long commentId, CommentUpdateRequest request) {
         log.debug("댓글 수정 시작 - userId: {}, commentId: {}, request: {}", userId, commentId, request);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> CommentNotFoundException.of(commentId));
@@ -62,7 +62,6 @@ public class CommentService {
         comment.update(request.content());
 
         log.info("댓글 수정 완료 - commentId: {}, userId: {}", commentId, userId);
-        return CommentResponse.from(comment);
     }
 
     private void validatePermission(Comment comment, Long userId) {

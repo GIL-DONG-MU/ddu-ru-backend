@@ -50,11 +50,11 @@ public class CommentController implements CommentApiDocs {
 
     @Override
     @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<CommentResponse> updateComment(
+    public ResponseEntity<Void> updateComment(
             @CurrentUser Long userId,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateRequest request) {
-        CommentResponse response = commentService.update(userId, commentId, request);
-        return ResponseEntity.ok(response);
+        commentService.update(userId, commentId, request);
+        return ResponseEntity.noContent().build();
     }
 }

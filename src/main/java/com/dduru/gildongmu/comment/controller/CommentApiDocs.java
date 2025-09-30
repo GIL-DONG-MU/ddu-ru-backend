@@ -47,14 +47,9 @@ public interface CommentApiDocs {
     );
 
     @Operation(summary = "댓글 수정", description = "댓글을 수정합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
-    })
-    ResponseEntity<CommentResponse> updateComment(
+    ResponseEntity<Void> updateComment(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "댓글 ID") Long commentId,
-            @Valid CommentUpdateRequest request
+            @Parameter(description = "댓글 수정 요청") CommentUpdateRequest request
     );
 }
