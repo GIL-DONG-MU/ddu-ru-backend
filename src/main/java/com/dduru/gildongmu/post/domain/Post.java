@@ -157,21 +157,21 @@ public class Post extends BaseTimeEntity {
                            Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
         validateUpdatePermission();
 
-        this.destination = destination;
-        this.title = title;
-        this.content = content;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.recruitDeadline = recruitDeadline;
-        this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
-        this.preferredAgeMin = preferredAgeMin;
-        this.preferredAgeMax = preferredAgeMax;
-        this.budgetMin = budgetMin;
-        this.budgetMax = budgetMax;
-        this.photoUrls = photoUrls;
-        this.tags = tags;
+        if (destination != null) this.destination = destination;
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+        if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
+        if (preferredGender != null) this.preferredGender = preferredGender;
+        if (preferredAgeMin != null) this.preferredAgeMin = preferredAgeMin;
+        if (preferredAgeMax != null) this.preferredAgeMax = preferredAgeMax;
+        if (budgetMin != null) this.budgetMin = budgetMin;
+        if (budgetMax != null) this.budgetMax = budgetMax;
+        if (photoUrls != null) this.photoUrls = photoUrls;
+        if (tags != null) this.tags = tags;
 
-        updateRecruitCapacity(recruitCapacity);
+        if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
     }
 
     public void softDelete(Long userId) {

@@ -73,7 +73,9 @@ public class Comment extends BaseTimeEntity {
     }
 
     public void update(String content) {
-        this.content = content;
+        if (content != null) {
+            this.content = content;
+        }
     }
 
     private void addChildComment(Comment child) {
