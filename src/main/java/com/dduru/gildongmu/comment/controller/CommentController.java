@@ -2,8 +2,9 @@ package com.dduru.gildongmu.comment.controller;
 
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
 import com.dduru.gildongmu.comment.dto.CommentResponse;
-import com.dduru.gildongmu.comment.service.CommentService;
+import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
 import com.dduru.gildongmu.comment.service.CommentQueryService;
+import com.dduru.gildongmu.comment.service.CommentService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,10 @@ public class CommentController implements CommentApiDocs {
 
     @Override
     @PostMapping("/posts/{postId}/comments")
-    public ResponseEntity<CommentResponse> createComment(@CurrentUser Long userId, @PathVariable Long postId, @Valid @RequestBody CommentCreateRequest request) {
+    public ResponseEntity<CommentResponse> createComment(
+            @CurrentUser Long userId,
+            @PathVariable Long postId,
+            @Valid @RequestBody CommentCreateRequest request) {
         CommentResponse response = commentService.create(userId, postId, request);
         return ResponseEntity.created(URI.create("/api/v1/comments/" + response.id())).body(response);
     }
@@ -37,8 +41,20 @@ public class CommentController implements CommentApiDocs {
 
     @Override
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@CurrentUser Long userId, @PathVariable Long commentId) {
+    public ResponseEntity<Void> deleteComment(
+            @CurrentUser Long userId,
+            @PathVariable Long commentId) {
         commentService.delete(userId, commentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PatchMapping("/comments/{commentId}")
+    public ResponseEntity<Void> updateComment(
+            @CurrentUser Long userId,
+            @PathVariable Long commentId,
+            @Valid @RequestBody CommentUpdateRequest request) {
+        commentService.update(userId, commentId, request);
         return ResponseEntity.noContent().build();
     }
 }
