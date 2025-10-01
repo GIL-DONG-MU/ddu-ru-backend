@@ -4,7 +4,7 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.ParticipationResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
-import com.dduru.gildongmu.participation.exception.ParticipationNotFoundException;
+import com.dduru.gildongmu.participation.exception.ParticipationPostMismatchException;
 import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
@@ -128,7 +128,7 @@ public class ParticipationService {
 
     private void validateParticipationBelongsToPost(Participation participation, Long postId) {
         if (!participation.getPost().getId().equals(postId)) {
-            throw ParticipationNotFoundException.of(participation.getId());
+            throw new ParticipationPostMismatchException(participation.getId(), postId);
         }
     }
 }

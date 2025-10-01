@@ -44,6 +44,7 @@ public enum ErrorCode {
     DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "PAR_002", "이미 참여신청한 게시글입니다"),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "PAR_003", "모집이 마감되었거나 정원이 찼습니다"),
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PAR_004", "자신의 게시글에는 참여신청할 수 없습니다"),
+    PARTICIPATION_POST_MISMATCH(HttpStatus.BAD_REQUEST, "PAR_005", "해당 참여신청은 해당 게시글에 속해있지 않습니다"),
 
     // 파일 관련
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_001", "파일 업로드에 실패했습니다."),

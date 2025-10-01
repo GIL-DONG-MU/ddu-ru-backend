@@ -68,7 +68,7 @@ public class CommentService {
 
     private void validateCommentBelongsToPost(Comment comment, Long postId) {
         if (!comment.getPost().getId().equals(postId)) {
-            throw CommentNotFoundException.of(comment.getId());
+            throw InvalidParentCommentException.of(postId, comment.getPost().getId());
         }
     }
 
