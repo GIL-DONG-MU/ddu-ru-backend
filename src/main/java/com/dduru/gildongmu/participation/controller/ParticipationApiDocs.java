@@ -41,7 +41,8 @@ public interface ParticipationApiDocs {
             @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공"),
     })
     ResponseEntity<Void> approveParticipation(
-            @Parameter(description = "동행 참여 신청 ID") Long id,
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -50,7 +51,8 @@ public interface ParticipationApiDocs {
             @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공"),
     })
     ResponseEntity<Void> rejectParticipation(
-            @Parameter(description = "동행 참여 신청 ID") Long id,
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -59,7 +61,8 @@ public interface ParticipationApiDocs {
             @ApiResponse(responseCode = "204", description = "참여 취소 성공"),
     })
     ResponseEntity<Void> cancelParticipation(
-            @Parameter(description = "동행 참여 신청 ID") Long id,
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
     );
 }

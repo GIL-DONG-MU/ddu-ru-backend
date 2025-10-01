@@ -4,6 +4,7 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.ParticipationResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
+import com.dduru.gildongmu.participation.exception.ParticipationNotFoundException;
 import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
@@ -45,12 +46,13 @@ public class ParticipationService {
         return ParticipationResponse.from(savedParticipation);
     }
 
-    public void approveParticipation(Long participationId, Long userId) {
-        log.debug("참여신청 승인 시작 - participationId: {}, userId: {}", participationId, userId);
+    public void approveParticipation(Long postId, Long participationId, Long userId) {
+        log.debug("참여신청 승인 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
+        validateParticipationBelongsToPost(participation, postId);
 
+        Post post = participation.getPost();
         validatePostOwner(post, userId);
 
         post.approveParticipation(participation);
@@ -59,12 +61,13 @@ public class ParticipationService {
                 participationId, post.getId());
     }
 
-    public void rejectParticipation(Long participationId, Long userId) {
-        log.debug("참여신청 거절 시작 - participationId: {}, userId: {}", participationId, userId);
+    public void rejectParticipation(Long postId, Long participationId, Long userId) {
+        log.debug("참여신청 거절 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
+        validateParticipationBelongsToPost(participation, postId);
 
+        Post post = participation.getPost();
         validatePostOwner(post, userId);
 
         post.removeApprovedParticipation(participation);
@@ -73,12 +76,13 @@ public class ParticipationService {
         log.info("참여신청 거절 완료 - participationId: {}", participationId);
     }
 
-    public void cancelParticipation(Long participationId, Long userId) {
-        log.debug("참여신청 취소 시작 - participationId: {}, userId: {}", participationId, userId);
+    public void cancelParticipation(Long postId, Long participationId, Long userId) {
+        log.debug("참여신청 취소 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
+        validateParticipationBelongsToPost(participation, postId);
 
+        Post post = participation.getPost();
         validateParticipationAccess(participation, userId);
 
         post.removeApprovedParticipation(participation);
@@ -119,6 +123,12 @@ public class ParticipationService {
     private void validateParticipationAccess(Participation participation, Long userId) {
         if (!participation.getUser().getId().equals(userId)) {
             throw PostAccessDeniedException.applicantOnly();
+        }
+    }
+
+    private void validateParticipationBelongsToPost(Participation participation, Long postId) {
+        if (!participation.getPost().getId().equals(postId)) {
+            throw ParticipationNotFoundException.of(participation.getId());
         }
     }
 }

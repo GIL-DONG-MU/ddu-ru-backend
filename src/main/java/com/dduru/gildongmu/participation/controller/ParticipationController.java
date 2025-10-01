@@ -42,32 +42,35 @@ public class ParticipationController implements ParticipationApiDocs {
     }
 
     @Override
-    @PatchMapping("/participations/{id}/approve")
+    @PatchMapping("/posts/{postId}/participations/{participationId}/approve")
     public ResponseEntity<Void> approveParticipation(
-            @PathVariable Long id,
+            @PathVariable Long postId,
+            @PathVariable Long participationId,
             @CurrentUser Long userId
     ) {
-        participationService.approveParticipation(id, userId);
+        participationService.approveParticipation(postId, participationId, userId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    @PatchMapping("/participations/{id}/reject")
+    @PatchMapping("/posts/{postId}/participations/{participationId}/reject")
     public ResponseEntity<Void> rejectParticipation(
-            @PathVariable Long id,
+            @PathVariable Long postId,
+            @PathVariable Long participationId,
             @CurrentUser Long userId
     ) {
-        participationService.rejectParticipation(id, userId);
+        participationService.rejectParticipation(postId, participationId, userId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    @DeleteMapping("/participations/{id}")
+    @DeleteMapping("/posts/{postId}/participations/{participationId}")
     public ResponseEntity<Void> cancelParticipation(
-            @PathVariable Long id,
+            @PathVariable Long postId,
+            @PathVariable Long participationId,
             @CurrentUser Long userId
     ) {
-        participationService.cancelParticipation(id, userId);
+        participationService.cancelParticipation(postId, participationId, userId);
         return ResponseEntity.noContent().build();
     }
 }

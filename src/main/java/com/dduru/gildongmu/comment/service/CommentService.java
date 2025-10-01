@@ -42,26 +42,34 @@ public class CommentService {
     }
 
     @Transactional
-    public void delete(Long userId, Long commentId) {
-        log.debug("댓글 삭제 시작 - userId: {}, commentId: {}", userId, commentId);
+    public void delete(Long userId, Long postId, Long commentId) {
+        log.debug("댓글 삭제 시작 - userId: {}, postId: {}, commentId: {}", userId, postId, commentId);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> CommentNotFoundException.of(commentId));
 
+        validateCommentBelongsToPost(comment, postId);
         validatePermission(comment, userId);
         comment.softdelete();
         log.info("댓글 삭제 완료 - commentId: {}, userId: {}", commentId, userId);
     }
 
     @Transactional
-    public void update(Long userId, Long commentId, CommentUpdateRequest request) {
-        log.debug("댓글 수정 시작 - userId: {}, commentId: {}, request: {}", userId, commentId, request);
+    public void update(Long userId, Long postId, Long commentId, CommentUpdateRequest request) {
+        log.debug("댓글 수정 시작 - userId: {}, postId: {}, commentId: {}, request: {}", userId, postId, commentId, request);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> CommentNotFoundException.of(commentId));
 
+        validateCommentBelongsToPost(comment, postId);
         validatePermission(comment, userId);
         comment.update(request.content());
 
         log.info("댓글 수정 완료 - commentId: {}, userId: {}", commentId, userId);
+    }
+
+    private void validateCommentBelongsToPost(Comment comment, Long postId) {
+        if (!comment.getPost().getId().equals(postId)) {
+            throw CommentNotFoundException.of(comment.getId());
+        }
     }
 
     private void validatePermission(Comment comment, Long userId) {
