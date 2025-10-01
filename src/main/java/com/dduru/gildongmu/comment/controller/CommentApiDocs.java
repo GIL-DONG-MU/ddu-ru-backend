@@ -36,20 +36,26 @@ public interface CommentApiDocs {
             @Parameter(description = "게시글 ID") Long postId
     );
 
-    @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
+    @Operation(summary = "댓글 삭제", description = "특정 게시글의 댓글을 삭제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
-            @ApiResponse(responseCode = "404", description = "댓글을 찾을 수 없음")
+            @ApiResponse(responseCode = "404", description = "게시글 또는 댓글을 찾을 수 없음")
     })
     ResponseEntity<Void> deleteComment(
             @Parameter(hidden = true) Long userId,
+            @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "댓글 ID") Long commentId
     );
 
-    @Operation(summary = "댓글 수정", description = "댓글을 수정합니다.")
+    @Operation(summary = "댓글 수정", description = "특정 게시글의 댓글을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "수정 성공"),
+            @ApiResponse(responseCode = "404", description = "게시글 또는 댓글을 찾을 수 없음")
+    })
     ResponseEntity<Void> updateComment(
             @Parameter(hidden = true) Long userId,
+            @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "댓글 ID") Long commentId,
-            @Parameter(description = "댓글 수정 요청") CommentUpdateRequest request
+            @Valid CommentUpdateRequest request
     );
 }

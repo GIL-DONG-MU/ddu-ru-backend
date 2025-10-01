@@ -40,21 +40,23 @@ public class CommentController implements CommentApiDocs {
     }
 
     @Override
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("/posts/{postId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @CurrentUser Long userId,
+            @PathVariable Long postId,
             @PathVariable Long commentId) {
-        commentService.delete(userId, commentId);
+        commentService.delete(userId, postId, commentId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    @PatchMapping("/comments/{commentId}")
+    @PatchMapping("/posts/{postId}/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
             @CurrentUser Long userId,
+            @PathVariable Long postId,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateRequest request) {
-        commentService.update(userId, commentId, request);
+        commentService.update(userId, postId, commentId, request);
         return ResponseEntity.noContent().build();
     }
 }
