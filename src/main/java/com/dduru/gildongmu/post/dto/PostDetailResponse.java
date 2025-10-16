@@ -28,6 +28,7 @@ public record PostDetailResponse(
         List<String> photoUrls,
         List<String> tags,
         Integer viewCount,
+        int likeCount,
         LocalDateTime createdAt,
         UserInfo author
 ) {
@@ -56,6 +57,7 @@ public record PostDetailResponse(
                 photoUrls,
                 tags,
                 post.getViewCount(),
+                post.getLikeCount(),
                 post.getCreatedAt(),
                 authorInfo
         );
