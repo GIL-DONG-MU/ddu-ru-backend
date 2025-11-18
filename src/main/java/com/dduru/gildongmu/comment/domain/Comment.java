@@ -47,6 +47,9 @@ public class Comment extends BaseTimeEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "like_count", nullable = false)
+    private int likeCount = 0;
+
     @Builder
     public Comment(String content, User user, Post post, Comment parent) {
         this.content = content;
@@ -76,6 +79,14 @@ public class Comment extends BaseTimeEntity {
         if (content != null) {
             this.content = content;
         }
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        this.likeCount--;
     }
 
     private void addChildComment(Comment child) {

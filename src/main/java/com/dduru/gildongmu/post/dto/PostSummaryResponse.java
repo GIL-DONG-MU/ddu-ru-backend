@@ -16,7 +16,8 @@ public record PostSummaryResponse(
         LocalDate endDate,
         String destination,
         List<String> photoUrls,
-        Integer viewCount
+        Integer viewCount,
+        int likeCount
 ) {
     private static final int SUMMARY_MAX_LENGTH = 100;
     public static PostSummaryResponse from(Post post, JsonConverter jsonConverter) {
@@ -33,7 +34,8 @@ public record PostSummaryResponse(
                 post.getEndDate(),
                 post.getDestination().getCity(),
                 photoUrls,
-                post.getViewCount()
+                post.getViewCount(),
+                post.getLikeCount()
         );
     }
 }

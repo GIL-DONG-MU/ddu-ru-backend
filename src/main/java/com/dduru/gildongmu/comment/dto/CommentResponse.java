@@ -12,6 +12,7 @@ public record CommentResponse(
         String author,
         String authorProfileImage,
         LocalDateTime createdAt,
+        int likeCount,
         List<CommentResponse> children
 ) {
     public static CommentResponse from(Comment comment) {
@@ -43,6 +44,7 @@ public record CommentResponse(
                 author,
                 authorProfileImage,
                 comment.getCreatedAt(),
+                comment.getLikeCount(),
                 childrenResponses
         );
     }

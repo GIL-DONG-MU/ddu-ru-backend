@@ -15,7 +15,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor
 public class CommentController implements CommentApiDocs {
 
@@ -23,7 +23,7 @@ public class CommentController implements CommentApiDocs {
     private final CommentQueryService commentQueryService;
 
     @Override
-    @PostMapping("/posts/{postId}/comments")
+    @PostMapping("/{postId}/comments")
     public ResponseEntity<CommentResponse> createComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,
@@ -33,14 +33,14 @@ public class CommentController implements CommentApiDocs {
     }
 
     @Override
-    @GetMapping("/posts/{postId}/comments")
+    @GetMapping("/{postId}/comments")
     public ResponseEntity<List<CommentResponse>> retrieveComments(@PathVariable Long postId) {
         List<CommentResponse> comments = commentQueryService.retrieve(postId);
         return ResponseEntity.ok(comments);
     }
 
     @Override
-    @DeleteMapping("/posts/{postId}/comments/{commentId}")
+    @DeleteMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,
@@ -50,7 +50,7 @@ public class CommentController implements CommentApiDocs {
     }
 
     @Override
-    @PatchMapping("/posts/{postId}/comments/{commentId}")
+    @PatchMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,

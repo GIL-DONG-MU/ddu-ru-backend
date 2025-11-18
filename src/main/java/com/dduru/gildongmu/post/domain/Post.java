@@ -89,6 +89,10 @@ public class Post extends BaseTimeEntity {
     @ColumnDefault("0")
     private Integer viewCount = 0;
 
+    @Column(name = "like_count", nullable = false)
+    @ColumnDefault("0")
+    private int likeCount = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @ColumnDefault("'OPEN'")
@@ -214,6 +218,14 @@ public class Post extends BaseTimeEntity {
             throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
         }
         this.status = newStatus;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        this.likeCount--;
     }
 
     private boolean isTravelStarted() {
