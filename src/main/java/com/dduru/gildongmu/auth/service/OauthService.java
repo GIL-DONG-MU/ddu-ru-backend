@@ -4,9 +4,6 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.user.enums.OauthType;
 
 public interface OauthService {
-    OauthUserInfo getUserInfo(String accessToken);
-    String getAuthorizationUrl();
-    String getAccessToken(String code);
     OauthType getLoginType();
     OauthUserInfo verifyIdToken(String idToken);
 }
