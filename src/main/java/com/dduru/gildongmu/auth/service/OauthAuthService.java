@@ -3,14 +3,10 @@ package com.dduru.gildongmu.auth.service;
 import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
-import com.dduru.gildongmu.auth.dto.web.WebLoginRequest;
-import com.dduru.gildongmu.auth.dto.web.WebOAuthUrlResponse;
 import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.auth.exception.RefreshTokenException;
 import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.AgeRange;
@@ -22,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Slf4j
@@ -36,22 +30,6 @@ public class OauthAuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
-
-    public WebOAuthUrlResponse getAuthorizationUrl(String provider) {
-        OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
-        String authUrl = oauthService.getAuthorizationUrl();
-        return new WebOAuthUrlResponse(authUrl);
-    }
-
-    public LoginResponse processLogin(String provider, WebLoginRequest request) {
-        requireNonBlank(request.code());
-        String code = safeUrlDecode(request.code());
-
-        OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
-        String accessToken = oauthService.getAccessToken(code);
-        OauthUserInfo oauthUserInfo = oauthService.getUserInfo(accessToken);
-        return createLoginResponse(oauthUserInfo);
-    }
 
     public LoginResponse processTokenLogin(String provider, LoginRequest request) {
         OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
@@ -168,19 +146,5 @@ public class OauthAuthService {
                 .build();
 
         return userRepository.save(newUser);
-    }
-
-    private void requireNonBlank(String code) {
-        if (code == null || code.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "Authorization Code가 비어있습니다.");
-        }
-    }
-
-    private String safeUrlDecode(String code) {
-        try {
-            return URLDecoder.decode(code, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            return code;
-        }
     }
 }

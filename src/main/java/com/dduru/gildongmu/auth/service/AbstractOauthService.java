@@ -1,8 +1,6 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.auth.utils.OauthConstants;
 import com.dduru.gildongmu.auth.utils.OauthResponseUtils;
-import com.dduru.gildongmu.auth.utils.UrlParamBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,29 +23,5 @@ public abstract class AbstractOauthService implements OauthService {
         OauthResponseUtils.validateResponse(response, operation);
     }
 
-    protected String buildUrlParams(String... keyValues) {
-        UrlParamBuilder builder = new UrlParamBuilder();
-        for (int i = 0; i < keyValues.length; i += 2) {
-            builder.add(keyValues[i], keyValues[i + 1]);
-        }
-        return builder.build();
-    }
-
-    protected String buildTokenRequestBody(String code) {
-        return buildUrlParams(
-                "grant_type", OauthConstants.Common.GRANT_TYPE_AUTH_CODE,
-                "client_id", getClientId(),
-                "client_secret", getClientSecret(),
-                "code", code,
-                "redirect_uri", getRedirectUri()
-        );
-    }
-
     protected abstract String getClientId();
-    protected abstract String getClientSecret();
-    protected abstract String getRedirectUri();
-    protected abstract String getAuthUrl();
-    protected abstract String getTokenUrl();
-    protected abstract String getUserInfoUrl();
-    protected abstract String getScope();
 }
