@@ -21,4 +21,4 @@ assignees: ''
 - 
 
 ## ⏰ 예상 기한
-- Projects 확인
+- [ ] Projects에 설정 완료
