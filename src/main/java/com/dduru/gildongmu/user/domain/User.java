@@ -48,10 +48,10 @@ public class User extends BaseTimeEntity {
     // @Column(name = "age_range", nullable = true)
     // private AgeRange ageRange;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", nullable = true, length = 20)
     private String phoneNumber;
 
-    @Column(name = "birthday")
+    @Column(name = "birthday", nullable = true)
     private LocalDate birthday;
 
     @Builder

@@ -9,8 +9,6 @@ import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.AgeRange;
-import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +74,7 @@ public class OauthAuthService {
 
         String newAccessToken = jwtTokenProvider.createToken(user.getId());
 
-        extendTokenExpirationSafely(userId);    // refresh token 만료 기간 연장
+        extendTokenExpirationSafely(userId);
 
         return LoginResponse.of(newAccessToken, refreshToken);
     }
@@ -130,8 +128,7 @@ public class OauthAuthService {
     }
 
     private User createNewUser(OauthUserInfo oauthUserInfo) {
-        Gender gender = Gender.from(oauthUserInfo.gender());
-        AgeRange ageRange = AgeRange.from(oauthUserInfo.ageRange());
+        // 추가 정보는 회원가입 이후 별도 입력으로 변경
 
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
@@ -140,9 +137,9 @@ public class OauthAuthService {
                 .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
-                .gender(gender)
-                .ageRange(ageRange)
-                .phoneNumber(oauthUserInfo.phoneNumber())
+                .gender(null)
+                .phoneNumber(null)
+                .birthday(null)
                 .build();
 
         return userRepository.save(newUser);

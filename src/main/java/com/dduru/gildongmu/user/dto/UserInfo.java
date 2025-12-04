@@ -7,7 +7,7 @@ public record UserInfo(
         String name,
         String profileImage,
         String gender,
-        String ageRange,
+        String birthday,
         String nickname
 ) {
     public static UserInfo from(User user) {
@@ -15,8 +15,9 @@ public record UserInfo(
                 user.getId(),
                 user.getName(),
                 user.getProfileImage(),
-                user.getGender().name(),
-                user.getAgeRange().name(),
+                user.getGender() != null ? user.getGender().name() : null,
+                // user.getAgeRange().name(),
+                user.getBirthday() != null ? user.getBirthday().toString() : null,
                 user.getNickname()
         );
     }
