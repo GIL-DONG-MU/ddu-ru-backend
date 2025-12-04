@@ -85,7 +85,10 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         try {
             Gender preferredGender = Gender.from(preferredGenderStr);
-            if (preferredGender == Gender.U && !preferredGenderStr.equalsIgnoreCase("U")) {
+            if (preferredGender == null) {
+                return null;
+            }
+            if (preferredGender == Gender.U) {
                 return null;
             }
             return post.preferredGender.eq(preferredGender);
