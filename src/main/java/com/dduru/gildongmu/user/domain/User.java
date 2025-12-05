@@ -40,7 +40,6 @@ public class User extends BaseTimeEntity {
     private OauthType oauthType;
 
     @Enumerated(EnumType.STRING)
-    @Column()
     private Gender gender;
 
     // AgeRange는 사용하지 않으므로 주석 처리

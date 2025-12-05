@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.user.enums;
 
+import com.dduru.gildongmu.user.exception.InvalidGenderException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -20,8 +21,8 @@ public enum Gender {
 
         try {
             return Gender.valueOf(gender.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
+        } catch (Exception e) {
+            throw InvalidGenderException.invalidValue(gender);
         }
     }
 }
