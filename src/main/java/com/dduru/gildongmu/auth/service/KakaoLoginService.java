@@ -69,7 +69,6 @@ public class KakaoLoginService extends AbstractOauthService {
                     // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
                     // .gender(getJsonValue(payload, "gender"))
                     // .phoneNumber(getJsonValue(payload, "phone_number"))
-                    // .phoneNumber(null)
                     .build();
         }
 

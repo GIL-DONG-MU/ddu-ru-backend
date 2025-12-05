@@ -16,7 +16,6 @@ public record UserInfo(
                 user.getName(),
                 user.getProfileImage(),
                 user.getGender() != null ? user.getGender().name() : null,
-                // user.getAgeRange().name(),
                 user.getBirthday() != null ? user.getBirthday().toString() : null,
                 user.getNickname()
         );
