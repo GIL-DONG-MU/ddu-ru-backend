@@ -173,8 +173,8 @@ public class PostService {
 
         return new ParsedPostData(
                 preferredGender != null ? Gender.from(preferredGender) : Gender.U,
-                preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : null,
-                preferredAgeMax != null ? AgeRange.from(preferredAgeMax) : null,
+                preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : AgeRange.UNKNOWN,
+                preferredAgeMax != null ? AgeRange.from(preferredAgeMax) : AgeRange.UNKNOWN,
                 jsonConverter.convertListToJson(finalPhotoUrls),
                 jsonConverter.convertListToJson(tags)
         );

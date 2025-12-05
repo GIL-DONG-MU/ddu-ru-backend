@@ -20,13 +20,13 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = true, length = 12)
+    @Column(length = 12)
     private String nickname;
 
     @Column(name = "profile_image", nullable = false, length = 500)
@@ -40,7 +40,6 @@ public class User extends BaseTimeEntity {
     private OauthType oauthType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private Gender gender;
 
     // AgeRange는 사용하지 않으므로 주석 처리

@@ -66,12 +66,14 @@ public class Post extends BaseTimeEntity {
     private Gender preferredGender = Gender.U;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_min")
-    private AgeRange preferredAgeMin;
+    @Column(name = "preferred_age_min", nullable = false)
+    @ColumnDefault("'UNKNOWN'")
+    private AgeRange preferredAgeMin = AgeRange.UNKNOWN;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_max")
-    private AgeRange preferredAgeMax;
+    @Column(name = "preferred_age_max", nullable = false)
+    @ColumnDefault("'UNKNOWN'")
+    private AgeRange preferredAgeMax = AgeRange.UNKNOWN;
 
     @Column(name = "budget_min")
     private Integer budgetMin;
@@ -122,8 +124,8 @@ public class Post extends BaseTimeEntity {
         this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
-        this.preferredAgeMin = preferredAgeMin;
-        this.preferredAgeMax = preferredAgeMax;
+        this.preferredAgeMin = preferredAgeMin != null ? preferredAgeMin : AgeRange.UNKNOWN;
+        this.preferredAgeMax = preferredAgeMax != null ? preferredAgeMax : AgeRange.UNKNOWN;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.photoUrls = photoUrls;

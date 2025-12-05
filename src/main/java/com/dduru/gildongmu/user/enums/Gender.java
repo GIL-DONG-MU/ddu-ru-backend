@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.user.enums;
 
+import com.dduru.gildongmu.user.exception.InvalidGenderException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -8,20 +9,20 @@ import lombok.RequiredArgsConstructor;
 public enum Gender {
     M("Male", "남성"),
     F("Female", "여성"),
-    U("Unknown", "알 수 없음");
+    U("Unknown", "상관없음");
 
     private final String englishName;
     private final String koreanName;
 
     public static Gender from(String gender) {
         if (gender == null || gender.trim().isEmpty()) {
-            return U;
+            return null;
         }
 
-        return switch (gender.toLowerCase()) {
-            case "male", "m" -> M;
-            case "female", "f" -> F;
-            default -> U;
-        };
+        try {
+            return Gender.valueOf(gender.trim().toUpperCase());
+        } catch (Exception e) {
+            throw InvalidGenderException.invalidValue(gender);
+        }
     }
 }

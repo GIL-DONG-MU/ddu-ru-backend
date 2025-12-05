@@ -5,6 +5,7 @@ import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.PostListRequest;
 import com.dduru.gildongmu.post.enums.PostStatus;
+import com.dduru.gildongmu.user.exception.InvalidGenderException;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -85,11 +86,11 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         try {
             Gender preferredGender = Gender.from(preferredGenderStr);
-            if (preferredGender == Gender.U && !preferredGenderStr.equalsIgnoreCase("U")) {
+            if (preferredGender == null || preferredGender == Gender.U) {
                 return null;
             }
             return post.preferredGender.eq(preferredGender);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidGenderException e) {
             return null;
         }
     }

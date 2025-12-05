@@ -12,7 +12,7 @@ public enum AgeRange {
     AGE_40s("40s", "40대"),
     AGE_50s("50s", "50대"),
     AGE_60s("60s", "60대"),
-    UNKNOWN("Unknown", "알 수 없음");
+    UNKNOWN("Unknown", "상관없음");
 
     private final String value;
     private final String description;
@@ -22,22 +22,10 @@ public enum AgeRange {
             return UNKNOWN;
         }
 
-        return switch (ageRange) {
-            case "10~14", "15~19" -> AGE_10s;
-            case "20~29" -> AGE_20s;
-            case "30~39" -> AGE_30s;
-            case "40~49" -> AGE_40s;
-            case "50~59" -> AGE_50s;
-            case "60~69" -> AGE_60s;
-            default -> {
-                for (AgeRange range : values()) {
-                    if (range.name().equalsIgnoreCase(ageRange) ||
-                            range.value.equalsIgnoreCase(ageRange)) {
-                        yield range;
-                    }
-                }
-                yield UNKNOWN;
-            }
-        };
+        try {
+            return AgeRange.valueOf(ageRange.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UNKNOWN;
+        }
     }
 }
