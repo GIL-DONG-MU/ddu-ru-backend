@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @RestController
 public class UserController implements UserApiDocs {
@@ -22,14 +22,14 @@ public class UserController implements UserApiDocs {
     private final UserService userService;
 
     @Override
-    @PutMapping("/nickname")
+    @PutMapping("/users/nickname")
     public ResponseEntity<Void> updateNickname(@CurrentUser Long id, @Valid @RequestBody UserUpdateNicknameRequest request){
         userService.updateNickname(id, request);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    @GetMapping("/{nickname}/availability")
+    @GetMapping("/nicknames/{nickname}/availability")
     public ResponseEntity<UserCheckNicknameResponse> checkNickname(@PathVariable String nickname){
         UserCheckNicknameResponse response = userService.checkNickname(nickname);
         return ResponseEntity.ok(response);

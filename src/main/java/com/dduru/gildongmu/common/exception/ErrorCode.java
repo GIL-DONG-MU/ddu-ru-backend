@@ -15,14 +15,12 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_005", "인증되지 않은 사용자입니다"),
 
     // 온보딩 및 닉네임 관련
-    NICKNAME_ALREADY_TAKEN(HttpStatus.BAD_REQUEST, "ONBOARD_001", "이미 사용 중인 닉네임입니다."),
-    NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "ONBOARD_002", "닉네임은 공백일 수 없습니다."),
-    NICKNAME_INVALID_LENGTH(HttpStatus.BAD_REQUEST, "ONBOARD_003", "닉네임은 2자 이상 12자 이하로 입력해주세요."),
-    NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBOARD_005", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
-    NICKNAME_CONTAINS_EMOJI_OR_SYMBOL(HttpStatus.BAD_REQUEST, "ONBOARD_006", "닉네임에 이모지나 특수문자를 포함할 수 없습니다."),
-    NICKNAME_IS_RESERVED(HttpStatus.BAD_REQUEST, "ONBOARD_007", "사용할 수 없는 닉네임입니다."),
-    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBOARD_008", "닉네임에 부적절한 단어가 포함되어 있습니다."),
-
+    NICKNAME_ALREADY_TAKEN(HttpStatus.CONFLICT, "ONBD_002_01", "이미 사용 중인 닉네임입니다."),
+    NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 공백일 수 없습니다."),
+    NICKNAME_INVALID_LENGTH(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 2자 이상 12자 이하로 입력해주세요."),
+    NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
+    NICKNAME_CONTAINS_EMOJI_OR_SYMBOL(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 이모지나 특수문자를 포함할 수 없습니다."),
+    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 부적절한 단어가 포함되어 있습니다."),
 
     // 사용자 관련
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "사용자를 찾을 수 없습니다."),

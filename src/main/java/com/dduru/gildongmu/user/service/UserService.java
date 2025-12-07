@@ -16,20 +16,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final NicknameValidator nicknameValidator;
 
     @Transactional
     public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
 
-        NicknameValidator.validate(request.nickname());
+        nicknameValidator.validate(request.nickname());
         user.updateNickname(request.nickname());
     }
 
     @Transactional(readOnly = true)
     public UserCheckNicknameResponse checkNickname(String nickname) {
-        NicknameValidator.validate(nickname);
+        nicknameValidator.validate(nickname);
 
-        boolean isAvailable = !userRepository.existsByNickname(nickname);
-        return new UserCheckNicknameResponse(isAvailable);
+        return UserCheckNicknameResponse.builder()
+                .sanitizedNickname(nickname)
+                .build();
     }
 }
