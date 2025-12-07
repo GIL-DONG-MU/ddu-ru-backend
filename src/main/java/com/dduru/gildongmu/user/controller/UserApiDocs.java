@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.user.controller;
 
+import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,5 +21,9 @@ public interface UserApiDocs {
     ResponseEntity<Void> updateNickname(
             @Parameter(hidden = true) Long id, 
             @Valid UserUpdateNicknameRequest request
+    );
+
+    ResponseEntity<UserCheckNicknameResponse> checkNickname(
+            @Parameter(description = "체크할 닉네임", example = "gildongmu") String nickname
     );
 }
