@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.exception;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 public class ErrorResponse {
+    @JsonProperty("error_code")
     private final String code;
     private final String message;
     private final LocalDateTime timestamp;

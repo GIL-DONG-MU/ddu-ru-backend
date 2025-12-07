@@ -14,6 +14,14 @@ public enum ErrorCode {
     SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_004", "소셜 로그인에 실패했습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_005", "인증되지 않은 사용자입니다"),
 
+    // 온보딩 및 닉네임 관련
+    NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 공백일 수 없습니다."),
+    NICKNAME_INVALID_LENGTH(HttpStatus.BAD_REQUEST, "ONBD_002_02", "닉네임은 2자 이상 12자 이하로 입력해주세요."),
+    NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBD_002_03", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
+    NICKNAME_CONSECUTIVE_SPACES(HttpStatus.BAD_REQUEST, "ONBD_002_04", "공백은 단어 사이에 한 번만 사용할 수 있습니다."),
+    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBD_002_05", "닉네임에 부적절한 단어가 포함되어 있습니다."),
+    NICKNAME_ALREADY_TAKEN(HttpStatus.CONFLICT, "ONBD_002_06", "이미 사용 중인 닉네임입니다."),
+
     // 사용자 관련
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "사용자를 찾을 수 없습니다."),
 
@@ -58,6 +66,7 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_004", "요청한 리소스를 찾을 수 없습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_005", "지원하지 않는 HTTP 메서드입니다."),
     UNKNOWN_SURVEY_ANSWER_CODE(HttpStatus.BAD_REQUEST, "SURVEY_001", "알 수 없는 설문조사 답변 코드입니다.");
+
 
     private final HttpStatus status;
     private final String code;
