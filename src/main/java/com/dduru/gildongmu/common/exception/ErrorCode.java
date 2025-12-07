@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.common.exception;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,13 +15,12 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_005", "인증되지 않은 사용자입니다"),
 
     // 온보딩 및 닉네임 관련
-    NICKNAME_ALREADY_TAKEN(HttpStatus.CONFLICT, "ONBD_002_01", "이미 사용 중인 닉네임입니다."),
     NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 공백일 수 없습니다."),
-    NICKNAME_INVALID_LENGTH(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 2자 이상 12자 이하로 입력해주세요."),
-    NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
-    NICKNAME_CONTAINS_EMOJI_OR_SYMBOL(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 이모지나 특수문자를 포함할 수 없습니다."),
-    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 부적절한 단어가 포함되어 있습니다."),
-    NICKNAME_CONSECUTIVE_SPACES(HttpStatus.BAD_REQUEST, "ONBD_002_01", "공백은 단어 사이에 한 번만 사용할 수 있습니다."),
+    NICKNAME_INVALID_LENGTH(HttpStatus.BAD_REQUEST, "ONBD_002_02", "닉네임은 2자 이상 12자 이하로 입력해주세요."),
+    NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBD_002_03", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
+    NICKNAME_CONSECUTIVE_SPACES(HttpStatus.BAD_REQUEST, "ONBD_002_04", "공백은 단어 사이에 한 번만 사용할 수 있습니다."),
+    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBD_002_05", "닉네임에 부적절한 단어가 포함되어 있습니다."),
+    NICKNAME_ALREADY_TAKEN(HttpStatus.CONFLICT, "ONBD_002_06", "이미 사용 중인 닉네임입니다."),
 
     // 사용자 관련
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "사용자를 찾을 수 없습니다."),
@@ -61,7 +59,7 @@ public enum ErrorCode {
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "FILE_002", "업로드할 파일이 없습니다."),
     INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "FILE_003", "허용되지 않는 파일 확장자입니다."),
 
-    // 공통,
+    // 공통
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_001", "잘못된 입력 값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_002", "서버 오류가 발생했습니다."),
     JSON_CONVERT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_003", "JSON 변환 중 오류가 발생했습니다."),
@@ -71,7 +69,6 @@ public enum ErrorCode {
 
 
     private final HttpStatus status;
-    @JsonProperty("errorCode")
     private final String code;
     private final String message;
 }
