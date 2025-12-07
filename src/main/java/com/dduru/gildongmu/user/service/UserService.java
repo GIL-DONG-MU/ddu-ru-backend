@@ -1,13 +1,14 @@
 package com.dduru.gildongmu.user.service;
 
 import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
 import com.dduru.gildongmu.user.repository.UserRepository;
+import com.dduru.gildongmu.user.validator.NicknameValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,10 +21,15 @@ public class UserService {
     public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
 
-        if (!StringUtils.hasText(request.nickname())) {
-            user.updateNickname(user.getName());
-            return;
-        }
+        NicknameValidator.validate(request.nickname());
         user.updateNickname(request.nickname());
+    }
+
+    @Transactional(readOnly = true)
+    public UserCheckNicknameResponse checkNickname(String nickname) {
+        NicknameValidator.validate(nickname);
+
+        boolean isAvailable = !userRepository.existsByNickname(nickname);
+        return new UserCheckNicknameResponse(isAvailable);
     }
 }
