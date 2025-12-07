@@ -17,15 +17,21 @@ public class NicknameValidator {
 
     private static final int MIN_LENGTH = 2;
     private static final int MAX_LENGTH = 12;
-    private static final Pattern ALLOWED_CHARACTERS = Pattern.compile("^[a-zA-Z0-9가-힣]*$");
+
+    private static final Pattern ALLOWED_CHARACTERS = Pattern.compile("^[a-zA-Z0-9가-힣 ]*$");
     private static final List<String> BAD_WORDS = List.of("바보", "멍청이", "쓰레기"); // 예시입니다.
 
-    public void validate(String nickname) {
+    public String validate(String nickname) {
+        nickname = nickname.trim();
+
         validateNotBlank(nickname);
         validateLength(nickname);
         validateCharacters(nickname);
+        validateNoConsecutiveSpaces(nickname);
         validateNoBadWords(nickname);
         validateUniqueness(nickname);
+
+        return nickname;
     }
 
     private void validateNotBlank(String nickname) {
@@ -43,6 +49,12 @@ public class NicknameValidator {
     private void validateCharacters(String nickname) {
         if (!ALLOWED_CHARACTERS.matcher(nickname).matches()) {
             throw new BusinessException(ErrorCode.NICKNAME_INVALID_CHARACTERS);
+        }
+    }
+
+    private void validateNoConsecutiveSpaces(String nickname) {
+        if (nickname.contains("  ")) {
+            throw new BusinessException(ErrorCode.NICKNAME_CONSECUTIVE_SPACES);
         }
     }
 

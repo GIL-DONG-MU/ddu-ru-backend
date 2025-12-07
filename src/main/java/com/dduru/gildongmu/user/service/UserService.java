@@ -22,16 +22,16 @@ public class UserService {
     public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
 
-        nicknameValidator.validate(request.nickname());
-        user.updateNickname(request.nickname());
+        String sanitizedNickname = nicknameValidator.validate(request.nickname());
+        user.updateNickname(sanitizedNickname);
     }
 
     @Transactional(readOnly = true)
     public UserCheckNicknameResponse checkNickname(String nickname) {
-        nicknameValidator.validate(nickname);
+        String sanitizedNickname = nicknameValidator.validate(nickname);
 
         return UserCheckNicknameResponse.builder()
-                .sanitizedNickname(nickname)
+                .sanitizedNickname(sanitizedNickname)
                 .build();
     }
 }

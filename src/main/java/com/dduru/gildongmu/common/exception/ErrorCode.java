@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.exception;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ public enum ErrorCode {
     NICKNAME_INVALID_CHARACTERS(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임은 한글, 영어, 숫자만 사용 가능합니다."),
     NICKNAME_CONTAINS_EMOJI_OR_SYMBOL(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 이모지나 특수문자를 포함할 수 없습니다."),
     NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "ONBD_002_01", "닉네임에 부적절한 단어가 포함되어 있습니다."),
+    NICKNAME_CONSECUTIVE_SPACES(HttpStatus.BAD_REQUEST, "ONBD_002_01", "공백은 단어 사이에 한 번만 사용할 수 있습니다."),
 
     // 사용자 관련
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "사용자를 찾을 수 없습니다."),
@@ -69,6 +71,7 @@ public enum ErrorCode {
 
 
     private final HttpStatus status;
+    @JsonProperty("errorCode")
     private final String code;
     private final String message;
 }
