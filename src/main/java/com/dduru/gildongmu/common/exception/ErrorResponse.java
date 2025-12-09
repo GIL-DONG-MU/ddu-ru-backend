@@ -1,38 +1,42 @@
 package com.dduru.gildongmu.common.exception;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
-import lombok.Getter;
 
-import java.time.LocalDateTime;
-
-@Getter
-public class ErrorResponse {
-    @JsonProperty("error_code")
-    private final String code;
-    private final String message;
-    private final LocalDateTime timestamp;
-
-    @Builder
-    public ErrorResponse(String code, String message, LocalDateTime timestamp) {
-        this.code = code;
-        this.message = message;
-        this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
-    }
+@Builder
+public record ErrorResponse(
+        int status,
+        ErrorData data
+) {
 
     public static ErrorResponse of(ErrorCode errorCode) {
         return ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .timestamp(LocalDateTime.now())
+                .status(errorCode.getStatus())
+                .data(buildData(errorCode, null, errorCode.getMessage()))
                 .build();
     }
 
     public static ErrorResponse of(ErrorCode errorCode, String message) {
         return ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .message(message != null ? message : errorCode.getMessage())
-                .timestamp(LocalDateTime.now())
+                .status(errorCode.getStatus())
+                .data(buildData(errorCode, null, resolveMessage(message, errorCode)))
                 .build();
+    }
+
+    public static ErrorResponse ofField(ErrorCode code, String field, String message) {
+        return ErrorResponse.builder()
+                .status(code.getStatus())
+                .data(buildData(code, field, resolveMessage(message, code)))
+                .build();
+    }
+
+    private static ErrorData buildData(ErrorCode code, String field, String message) {
+        return new ErrorData(code.name(), field, message);
+    }
+
+    private static String resolveMessage(String message, ErrorCode code) {
+        if (message == null || message.isBlank()) {
+            return code.getMessage();
+        }
+        return message;
     }
 }

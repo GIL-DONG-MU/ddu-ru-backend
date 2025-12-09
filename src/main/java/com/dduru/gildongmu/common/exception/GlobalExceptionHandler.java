@@ -25,11 +25,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Validation Exception: {}", e.getMessage());
-        String msg = ErrorCode.INVALID_INPUT_VALUE.getMessage();
-        if (!e.getBindingResult().getFieldErrors().isEmpty()) {
-            msg = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        }
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, msg);
+        var fieldError = e.getBindingResult().getFieldErrors().get(0);
+
+        ErrorResponse response = ErrorResponse.ofField(
+                ErrorCode.INVALID_INPUT_VALUE,
+                fieldError.getField(),
+                fieldError.getDefaultMessage()
+        );
+
         return ResponseEntity.badRequest().body(response);
     }
 
