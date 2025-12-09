@@ -1,16 +1,17 @@
 package com.dduru.gildongmu.post.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.post.dto.*;
 import com.dduru.gildongmu.post.service.PostQueryService;
 import com.dduru.gildongmu.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.time.LocalDate;
 
 @RestController
@@ -22,7 +23,7 @@ public class PostController implements PostApiDocs {
 
     @Override
     @GetMapping
-    public ResponseEntity<PostListResponse> retrievePostsWithFilter(
+    public ResponseEntity<ApiResult<PostListResponse>> retrievePostsWithFilter(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
@@ -40,57 +41,55 @@ public class PostController implements PostApiDocs {
 
         PostListResponse response = postQueryService.retrieveAllWithFilter(request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailResponse> getPostDetail(@PathVariable Long postId) {
-
+    public ResponseEntity<ApiResult<PostDetailResponse>> getPostDetail(@PathVariable Long postId) {
         PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @PostMapping
-    public ResponseEntity<PostCreateResponse> createPost(
+    public ResponseEntity<ApiResult<PostCreateResponse>> createPost(
             @CurrentUser Long userId,
             @Valid @RequestBody PostCreateRequest request
     ) {
         PostCreateResponse response = postService.create(userId, request);
-        return ResponseEntity.created(URI.create("/api/v1/posts/" + response.id())).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
     @Override
     @PatchMapping(value = "/{postId}")
-    public ResponseEntity<Void> updatePost(
+    public ResponseEntity<ApiResult<Void>> updatePost(
             @PathVariable Long postId,
             @CurrentUser Long userId,
             @Valid @RequestBody PostUpdateRequest request
     ) {
         postService.update(postId, userId, request);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
     @Override
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(
+    public ResponseEntity<ApiResult<Void>> deletePost(
             @PathVariable Long postId,
             @CurrentUser Long userId
     ) {
         postService.delete(postId, userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
     @Override
     @PatchMapping("/{postId}/status")
-    public ResponseEntity<Void> updatePostStatus(
+    public ResponseEntity<ApiResult<Void>> updatePostStatus(
             @PathVariable Long postId,
             @CurrentUser Long userId,
             @Valid @RequestBody PostStatusUpdateRequest request
     ) {
         postService.updateStatus(postId, userId, request);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

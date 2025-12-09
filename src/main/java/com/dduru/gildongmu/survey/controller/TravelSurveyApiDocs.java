@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.survey.controller;
 
+import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.survey.dto.TravelSurveyRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,9 +17,9 @@ public interface TravelSurveyApiDocs {
 
     @Operation(summary = "여행 취향 설문 저장", description = "사용자의 여행 취향 설문을 저장합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 저장 성공"),
+            @ApiResponse(responseCode = "201", description = "테스트 저장 성공"),
     })
-    public ResponseEntity<Void> submitTravelSurvey(
+    ResponseEntity<ApiResult<Void>> submitTravelSurvey(
             @Parameter(hidden = true) Long userId,
             @Valid TravelSurveyRequest request
     );

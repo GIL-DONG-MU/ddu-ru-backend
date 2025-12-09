@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.home.controller;
 
+import com.dduru.gildongmu.common.dto.ApiResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +18,7 @@ public class HomeController implements HomeApiDocs {
 
     @Override
     @GetMapping("/")
-    public ResponseEntity<Map<String, Object>> welcome() {
+    public ResponseEntity<ApiResult<Map<String, Object>>> welcome() {
         Map<String, Object> response = new HashMap<>();
         
         response.put("service", applicationName);
@@ -34,6 +35,6 @@ public class HomeController implements HomeApiDocs {
         response.put("endpoints", endpoints);
         response.put("message", "🎒 길동무 API 서버에 오신 것을 환영합니다!");
         
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

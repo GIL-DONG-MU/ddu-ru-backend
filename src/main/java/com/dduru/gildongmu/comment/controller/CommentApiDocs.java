@@ -3,6 +3,7 @@ package com.dduru.gildongmu.comment.controller;
 import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
 import com.dduru.gildongmu.comment.dto.CommentResponse;
 import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,7 +22,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "404", description = "게시글 또는 부모 댓글을 찾을 수 없음")
     })
-    ResponseEntity<CommentResponse> createComment(
+    ResponseEntity<ApiResult<CommentResponse>> createComment(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID") Long postId,
             @Valid CommentCreateRequest request
@@ -32,7 +33,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
     })
-    ResponseEntity<List<CommentResponse>> retrieveComments(
+    ResponseEntity<ApiResult<List<CommentResponse>>> retrieveComments(
             @Parameter(description = "게시글 ID") Long postId
     );
 
@@ -41,7 +42,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
             @ApiResponse(responseCode = "404", description = "게시글 또는 댓글을 찾을 수 없음")
     })
-    ResponseEntity<Void> deleteComment(
+    ResponseEntity<ApiResult<Void>> deleteComment(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "댓글 ID") Long commentId
@@ -52,7 +53,7 @@ public interface CommentApiDocs {
             @ApiResponse(responseCode = "204", description = "수정 성공"),
             @ApiResponse(responseCode = "404", description = "게시글 또는 댓글을 찾을 수 없음")
     })
-    ResponseEntity<Void> updateComment(
+    ResponseEntity<ApiResult<Void>> updateComment(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "댓글 ID") Long commentId,

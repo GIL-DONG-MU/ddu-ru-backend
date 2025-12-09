@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.user.controller;
 
+import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,12 +19,14 @@ public interface UserApiDocs {
             @ApiResponse(responseCode = "204", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    ResponseEntity<Void> updateNickname(
+    ResponseEntity<ApiResult<Void>> updateNickname(
             @Parameter(hidden = true) Long id, 
             @Valid UserUpdateNicknameRequest request
     );
 
-    ResponseEntity<UserCheckNicknameResponse> checkNickname(
+    @Operation(summary = "닉네임 중복 확인", description = "닉네임의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "확인 성공")
+    ResponseEntity<ApiResult<UserCheckNicknameResponse>> checkNickname(
             @Parameter(description = "체크할 닉네임", example = "gildongmu") String nickname
     );
 }

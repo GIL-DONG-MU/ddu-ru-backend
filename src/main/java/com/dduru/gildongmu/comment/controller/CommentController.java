@@ -6,12 +6,13 @@ import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
 import com.dduru.gildongmu.comment.service.CommentQueryService;
 import com.dduru.gildongmu.comment.service.CommentService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -24,39 +25,39 @@ public class CommentController implements CommentApiDocs {
 
     @Override
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<CommentResponse> createComment(
+    public ResponseEntity<ApiResult<CommentResponse>> createComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,
             @Valid @RequestBody CommentCreateRequest request) {
         CommentResponse response = commentService.create(userId, postId, request);
-        return ResponseEntity.created(URI.create("/api/v1/comments/" + response.id())).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
     @Override
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<List<CommentResponse>> retrieveComments(@PathVariable Long postId) {
+    public ResponseEntity<ApiResult<List<CommentResponse>>> retrieveComments(@PathVariable Long postId) {
         List<CommentResponse> comments = commentQueryService.retrieve(postId);
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok(ApiResult.ok(comments));
     }
 
     @Override
     @DeleteMapping("/{postId}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(
+    public ResponseEntity<ApiResult<Void>> deleteComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,
             @PathVariable Long commentId) {
         commentService.delete(userId, postId, commentId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
     @Override
     @PatchMapping("/{postId}/comments/{commentId}")
-    public ResponseEntity<Void> updateComment(
+    public ResponseEntity<ApiResult<Void>> updateComment(
             @CurrentUser Long userId,
             @PathVariable Long postId,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateRequest request) {
         commentService.update(userId, postId, commentId, request);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

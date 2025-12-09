@@ -2,6 +2,7 @@ package com.dduru.gildongmu.S3.controller;
 
 import com.dduru.gildongmu.S3.dto.ImageUploadRequest;
 import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,5 +19,5 @@ public interface S3ApiDocs {
     @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공",
             content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = ImageUploadResponse.class)))
-    ResponseEntity<ImageUploadResponse> prepareUpload(@RequestBody ImageUploadRequest request);
+    ResponseEntity<ApiResult<ImageUploadResponse>> prepareUpload(@RequestBody ImageUploadRequest request);
 }
