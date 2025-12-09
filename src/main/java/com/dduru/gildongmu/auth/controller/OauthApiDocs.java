@@ -3,6 +3,7 @@ package com.dduru.gildongmu.auth.controller;
 import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.RefreshTokenRequest;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,7 +23,7 @@ public interface OauthApiDocs {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "401", description = "유효하지 않은 ID Token")
     })
-    ResponseEntity<LoginResponse> loginWithIdToken(
+    ResponseEntity<ApiResult<LoginResponse>> loginWithIdToken(
             @Parameter(description = "OAuth Provider (kakao, google)", example = "kakao") String provider,
             @RequestBody(required = false) LoginRequest request
     );
@@ -32,12 +33,12 @@ public interface OauthApiDocs {
             @ApiResponse(responseCode = "200", description = "토큰 갱신 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 Refresh Token")
     })
-    ResponseEntity<LoginResponse> refreshAccessToken(@Valid RefreshTokenRequest request);
+    ResponseEntity<ApiResult<LoginResponse>> refreshAccessToken(@Valid RefreshTokenRequest request);
 
     @Operation(summary = "로그아웃", description = "사용자 로그아웃을 처리합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    ResponseEntity<Void> logout(@Parameter(hidden = true) Long userId);
+    ResponseEntity<ApiResult<Void>> logout(@Parameter(hidden = true) Long userId);
 }

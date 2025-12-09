@@ -5,8 +5,10 @@ import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.RefreshTokenRequest;
 import com.dduru.gildongmu.auth.service.OauthAuthService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
+import com.dduru.gildongmu.common.dto.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,25 +21,25 @@ public class OauthController implements OauthApiDocs {
 
     @Override
     @PostMapping("/{provider}")
-    public ResponseEntity<LoginResponse> loginWithIdToken(
+    public ResponseEntity<ApiResult<LoginResponse>> loginWithIdToken(
             @PathVariable String provider,
             @RequestBody(required = false) LoginRequest request
     ) {
         LoginResponse response = oauthAuthService.processTokenLogin(provider, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<ApiResult<LoginResponse>> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request) {
         LoginResponse response = oauthAuthService.refreshAccessToken(request.refreshToken());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@CurrentUser Long userId) {
+    public ResponseEntity<ApiResult<Void>> logout(@CurrentUser Long userId) {
         oauthAuthService.logout(userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

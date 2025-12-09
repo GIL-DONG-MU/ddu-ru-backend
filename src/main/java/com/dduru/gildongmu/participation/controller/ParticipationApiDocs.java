@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.participation.controller;
 
+import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.participation.dto.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.ParticipationResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +22,7 @@ public interface ParticipationApiDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "참여 신청 성공"),
     })
-    ResponseEntity<ParticipationResponse> createParticipation(
+    ResponseEntity<ApiResult<ParticipationResponse>> createParticipation(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(hidden = true) Long userId,
             @Valid ParticipationRequest request
@@ -31,7 +32,7 @@ public interface ParticipationApiDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "참여자 목록 조회 성공"),
     })
-    ResponseEntity<List<ParticipationResponse>> getPostParticipants(
+    ResponseEntity<ApiResult<List<ParticipationResponse>>> getPostParticipants(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(hidden = true) Long userId
     );
@@ -40,7 +41,7 @@ public interface ParticipationApiDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공"),
     })
-    ResponseEntity<Void> approveParticipation(
+    ResponseEntity<ApiResult<Void>> approveParticipation(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
@@ -50,7 +51,7 @@ public interface ParticipationApiDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공"),
     })
-    ResponseEntity<Void> rejectParticipation(
+    ResponseEntity<ApiResult<Void>> rejectParticipation(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
@@ -60,7 +61,7 @@ public interface ParticipationApiDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "참여 취소 성공"),
     })
-    ResponseEntity<Void> cancelParticipation(
+    ResponseEntity<ApiResult<Void>> cancelParticipation(
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(description = "동행 참여 신청 ID") Long participationId,
             @Parameter(hidden = true) Long userId
