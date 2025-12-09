@@ -19,11 +19,9 @@ public class GlobalExceptionHandler {
         log.error("Business Exception: {}", e.getMessage());
         ErrorCode errorCode = e.getErrorCode();
 
-        ErrorResponse response = ErrorResponse.of(errorCode, e.getMessage());
-
-        if (e.getField() != null) {
-            response = ErrorResponse.ofField(errorCode, e.getField(), e.getMessage());
-        }
+        ErrorResponse response = e.getField() == null
+                ? ErrorResponse.of(errorCode, e.getMessage())
+                : ErrorResponse.ofField(errorCode, e.getField(), e.getMessage());
 
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
