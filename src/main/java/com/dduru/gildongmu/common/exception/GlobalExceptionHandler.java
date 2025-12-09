@@ -2,6 +2,7 @@ package com.dduru.gildongmu.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,7 +31,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Validation Exception: {}", e.getMessage());
-        var fieldError = e.getBindingResult().getFieldErrors().get(0);
+        FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
 
         ErrorResponse response = ErrorResponse.ofField(
                 ErrorCode.INVALID_INPUT_VALUE,
