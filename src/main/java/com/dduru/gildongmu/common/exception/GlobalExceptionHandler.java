@@ -2,6 +2,7 @@ package com.dduru.gildongmu.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,19 +18,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.error("Business Exception: {}", e.getMessage());
         ErrorCode errorCode = e.getErrorCode();
-        String msg = e.getMessage() != null ? e.getMessage() : errorCode.getMessage();
-        ErrorResponse response = ErrorResponse.of(errorCode, msg);
+
+        ErrorResponse response = e.getField() == null
+                ? ErrorResponse.of(errorCode, e.getMessage())
+                : ErrorResponse.ofField(errorCode, e.getField(), e.getMessage());
+
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Validation Exception: {}", e.getMessage());
-        String msg = ErrorCode.INVALID_INPUT_VALUE.getMessage();
-        if (!e.getBindingResult().getFieldErrors().isEmpty()) {
-            msg = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        }
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, msg);
+        FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
+
+        ErrorResponse response = ErrorResponse.ofField(
+                ErrorCode.INVALID_INPUT_VALUE,
+                fieldError.getField(),
+                fieldError.getDefaultMessage()
+        );
+
         return ResponseEntity.badRequest().body(response);
     }
 
@@ -38,13 +45,6 @@ public class GlobalExceptionHandler {
         log.error("Illegal Argument Exception: {}", e.getMessage());
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getMessage());
         return ResponseEntity.badRequest().body(response);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        log.error("Unexpected Exception: ", e);
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
-        return ResponseEntity.internalServerError().body(response);
     }
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
@@ -60,5 +60,12 @@ public class GlobalExceptionHandler {
         String message = "지원하지 않는 HTTP 메서드입니다: " + e.getMethod();
         ErrorResponse response = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED, message);
         return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Unexpected Exception: ", e);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError().body(response);
     }
 }

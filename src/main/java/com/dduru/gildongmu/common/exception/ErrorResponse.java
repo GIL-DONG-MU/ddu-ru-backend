@@ -1,38 +1,41 @@
 package com.dduru.gildongmu.common.exception;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
-import lombok.Getter;
 
-import java.time.LocalDateTime;
+@Builder
+public record ErrorResponse(
+        int status,
+        ErrorData data
+) {
 
-@Getter
-public class ErrorResponse {
-    @JsonProperty("error_code")
-    private final String code;
-    private final String message;
-    private final LocalDateTime timestamp;
-
-    @Builder
-    public ErrorResponse(String code, String message, LocalDateTime timestamp) {
-        this.code = code;
-        this.message = message;
-        this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
+    public static ErrorResponse of(ErrorCode code) {
+        return build(code, null, code.getMessage());
     }
 
-    public static ErrorResponse of(ErrorCode errorCode) {
+    public static ErrorResponse of(ErrorCode code, String message) {
+        return build(code, null, message);
+    }
+
+    public static ErrorResponse ofField(ErrorCode code, String field, String message) {
+        return build(code, field, message);
+    }
+
+    private static ErrorResponse build(ErrorCode code, String field, String message) {
         return ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .timestamp(LocalDateTime.now())
+                .status(code.getStatus())
+                .data(
+                        new ErrorData(
+                                code.name(),
+                                field,
+                                resolveMessage(message, code)
+                        ))
                 .build();
     }
 
-    public static ErrorResponse of(ErrorCode errorCode, String message) {
-        return ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .message(message != null ? message : errorCode.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
+    private static String resolveMessage(String message, ErrorCode code) {
+        if (message == null || message.isBlank()) {
+            return code.getMessage();
+        }
+        return message;
     }
 }

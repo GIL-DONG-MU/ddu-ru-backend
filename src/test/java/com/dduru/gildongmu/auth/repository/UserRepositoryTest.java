@@ -1,10 +1,9 @@
 package com.dduru.gildongmu.auth.repository;
 
+import com.dduru.gildongmu.config.QueryDslConfig;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.AgeRange;
 import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.user.enums.OauthType;
-import com.dduru.gildongmu.config.QueryDslConfig;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,6 @@ class UserRepositoryTest {
                 .oauthId("12345")
                 .oauthType(OauthType.KAKAO)
                 .gender(Gender.M)
-                .ageRange(AgeRange.AGE_20s)
                 .phoneNumber("010-1234-5678")
                 .build();
 
@@ -55,7 +53,6 @@ class UserRepositoryTest {
                 .oauthId("67890")
                 .oauthType(OauthType.GOOGLE)
                 .gender(Gender.F)
-                .ageRange(AgeRange.AGE_30s)
                 .build();
         
         userRepository.save(user);
@@ -77,7 +74,6 @@ class UserRepositoryTest {
                 .oauthId("oauth123")
                 .oauthType(OauthType.KAKAO)
                 .gender(Gender.M)
-                .ageRange(AgeRange.AGE_20s)
                 .build();
         
         userRepository.save(user);
