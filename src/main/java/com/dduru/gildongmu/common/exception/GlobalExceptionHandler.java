@@ -17,8 +17,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.error("Business Exception: {}", e.getMessage());
         ErrorCode errorCode = e.getErrorCode();
-        String msg = e.getMessage() != null ? e.getMessage() : errorCode.getMessage();
-        ErrorResponse response = ErrorResponse.of(errorCode, msg);
+
+        ErrorResponse response = ErrorResponse.of(errorCode, e.getMessage());
+
+        if (e.getField() != null) {
+            response = ErrorResponse.ofField(errorCode, e.getField(), e.getMessage());
+        }
+
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 

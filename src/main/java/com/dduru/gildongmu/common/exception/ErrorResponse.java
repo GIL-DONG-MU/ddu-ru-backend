@@ -8,29 +8,28 @@ public record ErrorResponse(
         ErrorData data
 ) {
 
-    public static ErrorResponse of(ErrorCode errorCode) {
-        return ErrorResponse.builder()
-                .status(errorCode.getStatus())
-                .data(buildData(errorCode.name(), null, errorCode.getMessage()))
-                .build();
+    public static ErrorResponse of(ErrorCode code) {
+        return build(code, null, code.getMessage());
     }
 
-    public static ErrorResponse of(ErrorCode errorCode, String reason) {
-        return ErrorResponse.builder()
-                .status(errorCode.getStatus())
-                .data(buildData(errorCode.name(), null, resolveReason(reason, errorCode)))
-                .build();
+    public static ErrorResponse of(ErrorCode code, String message) {
+        return build(code, null, message);
     }
 
-    public static ErrorResponse ofField(ErrorCode errorCode, String field, String reason) {
-        return ErrorResponse.builder()
-                .status(errorCode.getStatus())
-                .data(buildData(errorCode.name(), field, resolveReason(reason, errorCode)))
-                .build();
+    public static ErrorResponse ofField(ErrorCode code, String field, String message) {
+        return build(code, field, message);
     }
 
-    private static ErrorData buildData(String errorCode, String field, String reason) {
-        return new ErrorData(errorCode, field, reason);
+    private static ErrorResponse build(ErrorCode code, String field, String message) {
+        return ErrorResponse.builder()
+                .status(code.getStatus())
+                .data(
+                        new ErrorData(
+                                code.name(),
+                                field,
+                                resolveReason(message, code)
+                        ))
+                .build();
     }
 
     private static String resolveReason(String reason, ErrorCode code) {
