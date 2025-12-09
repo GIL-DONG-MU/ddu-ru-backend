@@ -27,15 +27,15 @@ public record ErrorResponse(
                         new ErrorData(
                                 code.name(),
                                 field,
-                                resolveReason(message, code)
+                                resolveMessage(message, code)
                         ))
                 .build();
     }
 
-    private static String resolveReason(String reason, ErrorCode code) {
-        if (reason == null || reason.isBlank()) {
+    private static String resolveMessage(String message, ErrorCode code) {
+        if (message == null || message.isBlank()) {
             return code.getMessage();
         }
-        return reason;
+        return message;
     }
 }
