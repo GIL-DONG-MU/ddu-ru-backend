@@ -11,32 +11,32 @@ public record ErrorResponse(
     public static ErrorResponse of(ErrorCode errorCode) {
         return ErrorResponse.builder()
                 .status(errorCode.getStatus())
-                .data(buildData(errorCode, null, errorCode.getMessage()))
+                .data(buildData(errorCode.name(), null, errorCode.getMessage()))
                 .build();
     }
 
-    public static ErrorResponse of(ErrorCode errorCode, String message) {
+    public static ErrorResponse of(ErrorCode errorCode, String reason) {
         return ErrorResponse.builder()
                 .status(errorCode.getStatus())
-                .data(buildData(errorCode, null, resolveMessage(message, errorCode)))
+                .data(buildData(errorCode.name(), null, resolveReason(reason, errorCode)))
                 .build();
     }
 
-    public static ErrorResponse ofField(ErrorCode code, String field, String message) {
+    public static ErrorResponse ofField(ErrorCode errorCode, String field, String reason) {
         return ErrorResponse.builder()
-                .status(code.getStatus())
-                .data(buildData(code, field, resolveMessage(message, code)))
+                .status(errorCode.getStatus())
+                .data(buildData(errorCode.name(), field, resolveReason(reason, errorCode)))
                 .build();
     }
 
-    private static ErrorData buildData(ErrorCode code, String field, String message) {
-        return new ErrorData(code.name(), field, message);
+    private static ErrorData buildData(String errorCode, String field, String reason) {
+        return new ErrorData(errorCode, field, reason);
     }
 
-    private static String resolveMessage(String message, ErrorCode code) {
-        if (message == null || message.isBlank()) {
+    private static String resolveReason(String reason, ErrorCode code) {
+        if (reason == null || reason.isBlank()) {
             return code.getMessage();
         }
-        return message;
+        return reason;
     }
 }
