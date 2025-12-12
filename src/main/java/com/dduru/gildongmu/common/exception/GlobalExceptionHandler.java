@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,6 +34,28 @@ public class GlobalExceptionHandler {
                 fieldError.getDefaultMessage()
         );
 
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException e) {
+        log.error("Constraint Violation Exception: {}", e.getMessage());
+
+        String message = e.getConstraintViolations().stream()
+                .findFirst()
+                .map(violation -> violation.getMessage())
+                .orElse("잘못된 요청입니다.");
+
+        String field = e.getConstraintViolations().stream()
+                .findFirst()
+                .map(violation -> {
+                    String path = violation.getPropertyPath().toString();
+                    // [ex] getPost.postId -> postId
+                    return path.contains(".") ? path.substring(path.lastIndexOf(".") + 1) : path;
+                })
+                .orElse(null);
+
+        ErrorResponse response = ErrorResponse.ofField(ErrorCode.INVALID_INPUT_VALUE, field, message);
         return ResponseEntity.badRequest().body(response);
     }
 
