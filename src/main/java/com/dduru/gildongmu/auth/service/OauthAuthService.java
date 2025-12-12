@@ -10,6 +10,7 @@ import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.enums.Role;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,6 +146,7 @@ public class OauthAuthService {
                 .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
+                .role(Role.USER)
                 .gender(null)
                 .phoneNumber(null)
                 .birthday(null)
