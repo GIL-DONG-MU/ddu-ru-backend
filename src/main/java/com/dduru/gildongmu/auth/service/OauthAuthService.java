@@ -36,12 +36,15 @@ public class OauthAuthService {
     }
 
     private LoginResponse createLoginResponse(OauthUserInfo oauthUserInfo) {
-        User user = findOrCreateUser(oauthUserInfo);
+        UserCreationResult result = findOrCreateUser(oauthUserInfo);
+        User user = result.user();
+        boolean isNewUser = result.isNewUser();
+        
         String jwtToken = jwtTokenProvider.createToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
         refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
-        return LoginResponse.of(jwtToken, refreshToken);
+        return LoginResponse.of(jwtToken, refreshToken, isNewUser);
     }
 
     public LoginResponse refreshAccessToken(String refreshToken) {
@@ -76,7 +79,7 @@ public class OauthAuthService {
 
         extendTokenExpirationSafely(userId);
 
-        return LoginResponse.of(newAccessToken, refreshToken);
+        return LoginResponse.of(newAccessToken, refreshToken, false);
     }
 
     public void logout(Long userId) {
@@ -109,14 +112,14 @@ public class OauthAuthService {
         }
     }
 
-    private User findOrCreateUser(OauthUserInfo oauthUserInfo) {
+    private UserCreationResult findOrCreateUser(OauthUserInfo oauthUserInfo) {
         Optional<User> existingUser = userRepository.findByOauthIdAndOauthType(
                 oauthUserInfo.oauthId(),
                 oauthUserInfo.loginType()
         );
 
         if (existingUser.isPresent()) {
-            return existingUser.get();
+            return new UserCreationResult(existingUser.get(), false);
         }
 
         if (userRepository.existsByEmail(oauthUserInfo.email())) {
@@ -124,16 +127,21 @@ public class OauthAuthService {
             throw new IllegalArgumentException("이미 다른 소셜 계정으로 가입된 이메일입니다: " + oauthUserInfo.email());
         }
 
-        return createNewUser(oauthUserInfo);
+        User newUser = createNewUser(oauthUserInfo);
+        return new UserCreationResult(newUser, true);
+    }
+
+    private record UserCreationResult(User user, boolean isNewUser) {
     }
 
     private User createNewUser(OauthUserInfo oauthUserInfo) {
         // 추가 정보는 회원가입 이후 별도 입력으로 변경
+        // 닉네임은 온보딩에서 설정하므로 null로 초기화
 
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
                 .name(oauthUserInfo.name())
-                .nickname(oauthUserInfo.name())
+                .nickname(null)
                 .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
