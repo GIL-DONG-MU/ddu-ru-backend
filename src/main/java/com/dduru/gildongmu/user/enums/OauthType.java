@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.user.enums;
 
+import com.dduru.gildongmu.auth.exception.UnsupportedOauthTypeException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +18,6 @@ public enum OauthType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown oauth type: " + value);
+        throw UnsupportedOauthTypeException.of(value);
     }
 }
