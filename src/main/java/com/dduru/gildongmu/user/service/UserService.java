@@ -22,26 +22,24 @@ public class UserService {
     public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
 
-        String sanitizedNickname = sanitizedAndCheckDuplicateNickname(request.nickname());
+        String sanitizedNickname = checkDuplicateNickname(request.nickname());
 
         user.updateNickname(sanitizedNickname);
     }
 
     @Transactional(readOnly = true)
     public UserCheckNicknameResponse checkNickname(String nickname) {
-        String sanitizedNickname = sanitizedAndCheckDuplicateNickname(nickname);
+        String sanitizedNickname = checkDuplicateNickname(nickname);
 
         return UserCheckNicknameResponse.builder()
                 .sanitizedNickname(sanitizedNickname)
                 .build();
     }
 
-    private String sanitizedAndCheckDuplicateNickname(String nickname) {
-        String sanitizedNickname = nickname.trim();
-
+    private String checkDuplicateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
-        return sanitizedNickname;
+        return nickname;
     }
 }

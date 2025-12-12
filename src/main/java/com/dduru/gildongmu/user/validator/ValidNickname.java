@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = NicknameConstraintValidator.class)
 @NotBlank(message = "닉네임은 필수입니다.")
 @Size(min = 2, max = 12, message = "닉네임은 2자 이상 12자 이하여야 합니다.")
-@Pattern(regexp = "^[a-zA-Z0-9가-힣 ]*$", message = "닉네임은 한글, 영문, 숫자, 공백만 사용할 수 있습니다.")
+@Pattern(regexp = "\"^[a-zA-Z0-9가-힣]+( [a-zA-Z0-9가-힣]+)*$\"", message = "닉네임은 한글, 영문, 숫자, 공백만 사용할 수 있습니다.")
 public @interface ValidNickname {
     String message() default "닉네임 형식이 올바르지 않습니다.";
     Class<?>[] groups() default {};
