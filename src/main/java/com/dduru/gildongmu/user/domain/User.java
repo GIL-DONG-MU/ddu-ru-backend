@@ -2,6 +2,7 @@ package com.dduru.gildongmu.user.domain;
 
 import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.enums.Role;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -40,6 +41,10 @@ public class User extends BaseTimeEntity {
     private OauthType oauthType;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
     // AgeRange는 사용하지 않으므로 주석 처리
@@ -55,13 +60,14 @@ public class User extends BaseTimeEntity {
 
     @Builder
     public User(String email, String name, String nickname, String profileImage, String oauthId,
-                OauthType oauthType, Gender gender, /* AgeRange ageRange, */ String phoneNumber, LocalDate birthday) {
+                OauthType oauthType, Role role, Gender gender, /* AgeRange ageRange, */ String phoneNumber, LocalDate birthday) {
         this.email = email;
         this.name = name;
         this.nickname = nickname;
         this.profileImage = profileImage;
         this.oauthId = oauthId;
         this.oauthType = oauthType;
+        this.role = role != null ? role : Role.USER;
         this.gender = gender;
         // this.ageRange = ageRange;
         this.phoneNumber = phoneNumber;
