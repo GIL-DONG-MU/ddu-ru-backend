@@ -12,6 +12,7 @@ public enum ErrorCode {
     UNSUPPORTED_SOCIAL_LOGIN(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
     SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "소셜 로그인에 실패했습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 다른 소셜 계정으로 가입된 이메일입니다."),
 
     // 닉네임 (NICKNAME) - 이전 '온보딩 (ONBD)'
     NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "닉네임은 공백일 수 없습니다."),
