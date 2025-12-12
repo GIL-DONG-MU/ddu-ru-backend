@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.auth.service;
 
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
+import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +44,7 @@ public class KakaoLoginService extends AbstractOauthService {
     private JsonNode parseIdTokenPayload(String idToken) throws Exception {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
-            throw new RuntimeException("잘못된 ID Token 형식입니다.");
+            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다.");
         }
 
         Base64.Decoder decoder = Base64.getUrlDecoder();
@@ -53,7 +54,7 @@ public class KakaoLoginService extends AbstractOauthService {
 
     private void validateAudience(JsonNode payload) {
         if (!getClientId().equals(payload.get("aud").asText())) {
-            throw new RuntimeException("잘못된 클라이언트 ID입니다.");
+            throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
         }
     }
 

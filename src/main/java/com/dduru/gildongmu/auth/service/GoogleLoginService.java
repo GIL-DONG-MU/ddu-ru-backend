@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.auth.service;
 
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
+import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -41,7 +42,7 @@ public class GoogleLoginService extends AbstractOauthService {
 
             GoogleIdToken token = verifier.verify(idToken);
             if (token == null) {
-                throw new RuntimeException("유효하지 않은 ID Token입니다.");
+                throw new InvalidTokenException("유효하지 않은 구글 ID Token입니다.");
             }
 
             GoogleIdToken.Payload payload = token.getPayload();

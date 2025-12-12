@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.auth.service;
 
+import com.dduru.gildongmu.auth.exception.UnsupportedOauthTypeException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +24,7 @@ public class OauthFactory {
     public OauthService getOauthService(OauthType loginType) {
         OauthService service = oauthServices.get(loginType);
         if (service == null) {
-            throw new IllegalArgumentException("지원하지 않는 소셜 로그인 타입입니다: " + loginType);
+            throw UnsupportedOauthTypeException.of(loginType.name());
         }
         return service;
     }
