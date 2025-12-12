@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.exception;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class GlobalExceptionHandler {
 
         String message = e.getConstraintViolations().stream()
                 .findFirst()
-                .map(violation -> violation.getMessage())
+                .map(ConstraintViolation::getMessage)
                 .orElse("잘못된 요청입니다.");
 
         String field = e.getConstraintViolations().stream()

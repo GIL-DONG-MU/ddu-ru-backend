@@ -14,14 +14,12 @@ import java.lang.annotation.Target;
 
 /**
  * 닉네임 형식 검증을 위한 복합 어노테이션입니다.
- *
  * 검증 규칙:
  * - 필수값 (빈 값 불가)
  * - 2자 이상 12자 이하
  * - 한글, 영문, 숫자, 공백만 허용
  * - 연속 공백 불가
  * - 금칙어 불가
- *
  * 처리하기 어려운 검증은 {@link NicknameConstraintValidator}에서 처리합니다.
  */
 @Documented
