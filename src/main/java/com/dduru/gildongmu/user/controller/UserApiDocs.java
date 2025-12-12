@@ -3,6 +3,7 @@ package com.dduru.gildongmu.user.controller;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
+import com.dduru.gildongmu.user.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,9 +25,13 @@ public interface UserApiDocs {
             @Valid UserUpdateNicknameRequest request
     );
 
-    @Operation(summary = "닉네임 중복 확인", description = "닉네임의 사용 가능 여부를 확인합니다.")
-    @ApiResponse(responseCode = "200", description = "확인 성공")
+    @Operation(summary = "닉네임 유효성 확인", description = "닉네임의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "유효성 확인 성공")
     ResponseEntity<ApiResult<UserCheckNicknameResponse>> checkNickname(
-            @Parameter(description = "체크할 닉네임", example = "gildongmu") String nickname
+            @Parameter(
+                    description = "체크할 닉네임 (2~12자, 한글/영문/숫자/공백만 허용, 연속 공백 불가)",
+                    example = "길동무"
+            )
+            @ValidNickname String nickname
     );
 }
