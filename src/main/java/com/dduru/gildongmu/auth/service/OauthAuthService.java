@@ -3,6 +3,7 @@ package com.dduru.gildongmu.auth.service;
 import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
+import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
 import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.auth.exception.RefreshTokenException;
 import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
@@ -125,7 +126,7 @@ public class OauthAuthService {
 
         if (userRepository.existsByEmail(oauthUserInfo.email())) {
             log.error("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
-            throw new IllegalArgumentException("이미 다른 소셜 계정으로 가입된 이메일입니다: " + oauthUserInfo.email());
+            throw DuplicateEmailException.of(oauthUserInfo.email());
         }
 
         User newUser = createNewUser(oauthUserInfo);
