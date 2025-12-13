@@ -35,6 +35,8 @@ public class KakaoLoginService extends AbstractOauthService {
 
             return userInfoMapper.mapFromIdToken(payload);
 
+        } catch (InvalidTokenException e) {
+            throw e;
         } catch (Exception e) {
             handleOauthException(e, "카카오 ID Token 검증");
             return null;
