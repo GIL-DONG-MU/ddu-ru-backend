@@ -35,7 +35,6 @@ public class SecurityConfig {
                         /* API 권한 설정 */
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/nicknames/**").permitAll()
                         .requestMatchers("/login/page", "/test/login/oauth2/code/**").permitAll()
 
                         /* Swagger, 정적 리소스, Actuator 권한 설정 */
