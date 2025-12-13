@@ -66,7 +66,7 @@ public class SmsService {
         } catch (SmsSendFailedException e) {
             throw e;
         } catch (Exception e) {
-            log.error("CoolSMS 발송 중 오류 발생: phoneNumber={}", phoneNumber, e);
+            log.error("CoolSMS 발송 중 예상치 못한 오류 발생: phoneNumber={}", phoneNumber, e);
             throw new SmsSendFailedException("SMS 발송 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
