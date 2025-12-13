@@ -107,6 +107,18 @@ public class JwtTokenProvider {
         }
     }
 
+    public String createVerificationToken(String phoneNumber) {
+        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs); // Access Token과 동일한 만료 시간 사용
+
+        return Jwts.builder()
+                .setSubject(phoneNumber)
+                .claim("type", "verification")
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)

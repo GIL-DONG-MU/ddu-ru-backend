@@ -63,6 +63,19 @@ public enum ErrorCode {
     // 설문 (SURVEY)
     UNKNOWN_SURVEY_ANSWER_CODE(HttpStatus.BAD_REQUEST, "알 수 없는 설문조사 답변 코드입니다."),
 
+    // 휴대폰 인증 (VERIFICATION)
+    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
+    INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다."),
+    VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "인증번호가 만료되었습니다."),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "재발송 제한 시간이 지나지 않았습니다."),
+    VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."),
+    VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.BAD_REQUEST, "검증 시도 횟수를 초과했습니다."),
+    ALREADY_VERIFIED(HttpStatus.CONFLICT, "이미 완료된 인증입니다."),
+    PHONE_NUMBER_MISMATCH(HttpStatus.BAD_REQUEST, "인증 요청한 번호와 검증하려는 번호가 일치하지 않습니다."),
+    DAILY_SMS_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "일일 SMS 발송 한도를 초과했습니다."),
+    DUPLICATE_PHONE_NUMBER(HttpStatus.CONFLICT, "이미 가입된 전화번호입니다."),
+    SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스에 일시적인 오류가 발생했습니다."),
+
     // 공통 (COMMON)
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력 값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
