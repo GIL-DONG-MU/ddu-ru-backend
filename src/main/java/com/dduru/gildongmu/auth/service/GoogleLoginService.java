@@ -62,7 +62,7 @@ public class GoogleLoginService extends AbstractOauthService {
             throw e;
         } catch (Exception e) {
             handleOauthException(e, "구글 ID Token 검증");
-            return null;
+            throw new AssertionError("handleOauthException은 항상 예외를 던집니다.");
         }
     }
 
