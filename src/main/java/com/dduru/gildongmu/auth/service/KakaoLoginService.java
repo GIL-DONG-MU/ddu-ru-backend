@@ -5,6 +5,7 @@ import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.Base64;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class KakaoLoginService extends AbstractOauthService {
 
@@ -35,21 +37,34 @@ public class KakaoLoginService extends AbstractOauthService {
 
             return userInfoMapper.mapFromIdToken(payload);
 
+        } catch (IllegalArgumentException e) {
+            log.warn("카카오 ID Token 파싱 실패: {}", e.getMessage(), e);
+            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다.");
         } catch (Exception e) {
+            log.error("카카오 ID Token 검증 중 예상치 못한 오류 발생", e);
             handleOauthException(e, "카카오 ID Token 검증");
-            return null;
+            throw new AssertionError("handleOauthException이 예외를 throw해야 하는데 throw하지 않았습니다.");
         }
     }
 
     private JsonNode parseIdTokenPayload(String idToken) throws Exception {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
-            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다.");
+            log.warn("카카오 ID Token 형식 오류: JWT 형식이 아님 (chunks.length: {})", chunks.length);
+            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
         }
 
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-        String payload = new String(decoder.decode(chunks[1]));
-        return objectMapper.readTree(payload);
+        try {
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+            String payload = new String(decoder.decode(chunks[1]));
+            return objectMapper.readTree(payload);
+        } catch (IllegalArgumentException e) {
+            log.warn("카카오 ID Token payload 디코딩 실패: {}", e.getMessage(), e);
+            throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
+        } catch (Exception e) {
+            log.error("카카오 ID Token payload 파싱 실패", e);
+            throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
+        }
     }
 
     private void validateAudience(JsonNode payload) {

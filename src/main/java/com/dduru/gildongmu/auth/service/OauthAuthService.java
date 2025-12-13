@@ -8,6 +8,8 @@ import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.auth.exception.RefreshTokenException;
 import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
+import com.dduru.gildongmu.common.exception.BusinessException;
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
@@ -34,6 +36,12 @@ public class OauthAuthService {
     public LoginResponse processTokenLogin(String provider, LoginRequest request) {
         OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
+
+        if (oauthUserInfo == null) {
+            log.error("OAuth 사용자 정보 추출 실패 - provider: {}", provider);
+            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "사용자 정보를 가져올 수 없습니다.");
+        }
+
         return createLoginResponse(oauthUserInfo);
     }
 
@@ -41,7 +49,7 @@ public class OauthAuthService {
         UserCreationResult result = findOrCreateUser(oauthUserInfo);
         User user = result.user();
         boolean isNewUser = result.isNewUser();
-        
+
         String jwtToken = jwtTokenProvider.createToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 

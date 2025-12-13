@@ -58,9 +58,13 @@ public class GoogleLoginService extends AbstractOauthService {
                     // .phoneNumber(null)
                     .build();
 
+        } catch (IllegalArgumentException e) {
+            log.warn("구글 ID Token 형식 오류: {}", e.getMessage(), e);
+            throw new InvalidTokenException("잘못된 구글 ID Token 형식입니다.");
         } catch (Exception e) {
+            log.error("구글 ID Token 검증 중 예상치 못한 오류 발생", e);
             handleOauthException(e, "구글 ID Token 검증");
-            return null;
+            throw new AssertionError("handleOauthException이 예외를 throw해야 하는데 throw하지 않았습니다.");
         }
     }
 
