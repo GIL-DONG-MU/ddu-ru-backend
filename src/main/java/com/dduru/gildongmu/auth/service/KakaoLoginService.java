@@ -50,6 +50,7 @@ public class KakaoLoginService extends AbstractOauthService {
     private JsonNode parseIdTokenPayload(String idToken) throws Exception {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
+            log.warn("카카오 ID Token 형식 오류: JWT 형식이 아님 (chunks.length: {})", chunks.length);
             throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
         }
 
@@ -58,8 +59,10 @@ public class KakaoLoginService extends AbstractOauthService {
             String payload = new String(decoder.decode(chunks[1]));
             return objectMapper.readTree(payload);
         } catch (IllegalArgumentException e) {
+            log.warn("카카오 ID Token payload 디코딩 실패: {}", e.getMessage(), e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
         } catch (Exception e) {
+            log.error("카카오 ID Token payload 파싱 실패", e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
         }
     }
