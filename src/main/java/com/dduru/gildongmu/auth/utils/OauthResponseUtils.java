@@ -23,28 +23,13 @@ public final class OauthResponseUtils {
     }
 
     public static void handleException(Exception e, String operation) {
-        if (e instanceof InvalidTokenException) {
-            throw (InvalidTokenException) e;
+        if (e instanceof InvalidTokenException invalidTokenException) {
+            log.warn("{} 중 토큰 검증 실패: {}", operation, invalidTokenException.getMessage());
+            throw invalidTokenException;
         }
-        
+
         log.error("{} 중 오류 발생", operation, e);
         throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED,
                 String.format("%s에 실패했습니다. 다시 시도해주세요.", operation));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Optional<String> extractFieldFromResponse(Map<String, Object> response,
-                                                            String fieldName,
-                                                            String valueKey) {
-        try {
-            List<Map<String, Object>> fieldList = (List<Map<String, Object>>) response.get(fieldName);
-            if (fieldList != null && !fieldList.isEmpty()) {
-                Map<String, Object> field = fieldList.get(0);
-                return Optional.ofNullable((String) field.get(valueKey));
-            }
-        } catch (Exception e) {
-            log.warn("{} 정보 추출 실패: {}", fieldName, e.getMessage());
-        }
-        return Optional.empty();
     }
 }
