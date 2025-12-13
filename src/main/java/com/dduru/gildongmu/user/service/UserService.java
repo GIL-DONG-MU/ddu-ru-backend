@@ -21,25 +21,23 @@ public class UserService {
     @Transactional
     public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
+        checkDuplicateNickname(request.nickname());
 
-        String sanitizedNickname = checkDuplicateNickname(request.nickname());
-
-        user.updateNickname(sanitizedNickname);
+        user.updateNickname(request.nickname());
     }
 
     @Transactional(readOnly = true)
     public UserCheckNicknameResponse checkNickname(String nickname) {
-        String sanitizedNickname = checkDuplicateNickname(nickname);
+        checkDuplicateNickname(nickname);
 
         return UserCheckNicknameResponse.builder()
-                .sanitizedNickname(sanitizedNickname)
+                .sanitizedNickname(nickname)
                 .build();
     }
 
-    private String checkDuplicateNickname(String nickname) {
+    private void checkDuplicateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
-        return nickname;
     }
 }
