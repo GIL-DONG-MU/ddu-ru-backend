@@ -38,6 +38,11 @@ aws:
         access-key: ${AWS_S3_ACCESS_KEY}
         secret-key: ${AWS_S3_SECRET_KEY}
 
+coolsms:
+    api-key: ${COOLSMS_API_KEY}
+    api-secret: ${COOLSMS_API_SECRET}
+    from-number: ${COOLSMS_FROM_NUMBER}
+
 springdoc:
   api-docs:
     path: /v3/api-docs
