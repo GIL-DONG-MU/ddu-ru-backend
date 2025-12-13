@@ -42,19 +42,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException e) {
         log.error("Constraint Violation Exception: {}", e.getMessage());
 
-        String message = e.getConstraintViolations().stream()
+        ConstraintViolation<?> violation = e.getConstraintViolations().stream()
                 .findFirst()
-                .map(ConstraintViolation::getMessage)
-                .orElse("잘못된 요청입니다.");
-
-        String field = e.getConstraintViolations().stream()
-                .findFirst()
-                .map(violation -> {
-                    String path = violation.getPropertyPath().toString();
-                    // [ex] getPost.postId -> postId
-                    return path.contains(".") ? path.substring(path.lastIndexOf(".") + 1) : path;
-                })
                 .orElse(null);
+
+        String message = violation != null ? violation.getMessage() : "잘못된 요청입니다.";
+
+        String field = null;
+        if (violation != null) {
+            String path = violation.getPropertyPath().toString();
+            // [ex] getPost.postId -> postId
+            field = path.contains(".") ? path.substring(path.lastIndexOf(".") + 1) : path;
+        }
 
         ErrorResponse response = ErrorResponse.ofField(ErrorCode.INVALID_INPUT_VALUE, field, message);
         return ResponseEntity.badRequest().body(response);
