@@ -27,15 +27,18 @@ public class VerificationCodeService {
     private static final String RESEND_LIMIT_KEY_PREFIX = "sms:resend:";
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRATION_MINUTES = 3;
+    private static final int VERIFIED_EXPIRATION_MINUTES = 10; // 인증 완료 후 토큰 발급을 위한 유지 시간
     private static final int MAX_VERIFICATION_ATTEMPTS = 5;
     private static final int DAILY_SMS_LIMIT = 5;
     private static final int RESEND_LIMIT_MINUTES = 1;
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_VERIFIED = "VERIFIED";
     private static final SecureRandom random = new SecureRandom();
 
     /**
      * 인증번호 생성 및 Redis에 저장
      * @param phoneNumber 전화번호 (Redis Key로 사용)
-     * @return 만료 시간
+     * @return 인증번호와 만료 시간
      */
     public VerificationCreateResult createVerification(String phoneNumber) {
         // 1분 내 재요청 차단
@@ -54,7 +57,7 @@ public class VerificationCodeService {
                 .code(code)
                 .phone(phoneNumber)
                 .count(0)
-                .status("PENDING")
+                .status(STATUS_PENDING)
                 .build();
 
         String redisKey = REDIS_KEY_PREFIX + phoneNumber;
@@ -79,7 +82,7 @@ public class VerificationCodeService {
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
         log.info("인증번호 생성 및 저장 완료: phoneNumber={}", phoneNumber);
         
-        return new VerificationCreateResult(expiresAt);
+        return new VerificationCreateResult(code, expiresAt);
     }
 
     /**
@@ -100,7 +103,7 @@ public class VerificationCodeService {
             VerificationData data = objectMapper.readValue(jsonData, VerificationData.class);
 
             // 이미 완료된 인증인지 확인
-            if ("VERIFIED".equals(data.status())) {
+            if (STATUS_VERIFIED.equals(data.status())) {
                 throw new AlreadyVerifiedException("이미 완료된 인증입니다.");
             }
 
@@ -114,20 +117,7 @@ public class VerificationCodeService {
             // 인증번호 불일치
             if (!data.code().equals(inputCode)) {
                 // 시도 횟수 증가
-                VerificationData updatedData = VerificationData.builder()
-                        .code(data.code())
-                        .phone(data.phone())
-                        .count(data.count() + 1)
-                        .status(data.status())
-                        .build();
-                
-                try {
-                    String updatedJson = objectMapper.writeValueAsString(updatedData);
-                    redisTemplate.opsForValue().set(redisKey, updatedJson, Duration.ofMinutes(EXPIRATION_MINUTES));
-                } catch (JsonProcessingException e) {
-                    log.error("인증 데이터 업데이트 실패: phoneNumber={}", phoneNumber, e);
-                }
-                
+                incrementAttemptCount(redisKey, data);
                 throw new InvalidVerificationCodeException("인증번호가 일치하지 않습니다.");
             }
 
@@ -136,13 +126,13 @@ public class VerificationCodeService {
                     .code(data.code())
                     .phone(data.phone())
                     .count(data.count())
-                    .status("VERIFIED")
+                    .status(STATUS_VERIFIED)
                     .build();
 
             try {
                 String verifiedJson = objectMapper.writeValueAsString(verifiedData);
-                // 인증 완료 후 10분간 유지 (토큰 발급을 위해)
-                redisTemplate.opsForValue().set(redisKey, verifiedJson, Duration.ofMinutes(10));
+                // 인증 완료 후 일정 시간 유지 (토큰 발급을 위해)
+                redisTemplate.opsForValue().set(redisKey, verifiedJson, Duration.ofMinutes(VERIFIED_EXPIRATION_MINUTES));
             } catch (JsonProcessingException e) {
                 log.error("인증 데이터 업데이트 실패: phoneNumber={}", phoneNumber, e);
             }
@@ -181,6 +171,25 @@ public class VerificationCodeService {
     public String getCode(String phoneNumber) {
         VerificationData data = getVerificationData(phoneNumber);
         return data.code();
+    }
+
+    /**
+     * 검증 시도 횟수 증가
+     */
+    private void incrementAttemptCount(String redisKey, VerificationData data) {
+        VerificationData updatedData = VerificationData.builder()
+                .code(data.code())
+                .phone(data.phone())
+                .count(data.count() + 1)
+                .status(data.status())
+                .build();
+        
+        try {
+            String updatedJson = objectMapper.writeValueAsString(updatedData);
+            redisTemplate.opsForValue().set(redisKey, updatedJson, Duration.ofMinutes(EXPIRATION_MINUTES));
+        } catch (JsonProcessingException e) {
+            log.error("인증 데이터 업데이트 실패: redisKey={}", redisKey, e);
+        }
     }
 
     /**
@@ -239,6 +248,6 @@ public class VerificationCodeService {
         redisTemplate.opsForValue().set(redisKey, String.valueOf(count), 24, TimeUnit.HOURS);
     }
 
-    public record VerificationCreateResult(LocalDateTime expiresAt) {
+    public record VerificationCreateResult(String code, LocalDateTime expiresAt) {
     }
 }

@@ -37,8 +37,7 @@ public class PhoneVerificationService {
                 verificationCodeService.createVerification(phoneNumber);
 
         // SMS 발송
-        String code = verificationCodeService.getCode(phoneNumber);
-        String message = String.format("[뚜르] 인증번호는 [%s]입니다. 3분 내에 입력해주세요.", code);
+        String message = String.format("[뚜르] 인증번호는 [%s]입니다. 3분 내에 입력해주세요.", result.code());
         
         try {
             smsService.sendSms(phoneNumber, message);
