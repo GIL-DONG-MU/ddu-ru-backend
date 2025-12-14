@@ -108,7 +108,7 @@ public class JwtTokenProvider {
     }
 
     public String createVerificationToken(String phoneNumber) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs); // Access Token과 동일한 만료 시간 사용
+        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
 
         return Jwts.builder()
                 .setSubject(phoneNumber)
