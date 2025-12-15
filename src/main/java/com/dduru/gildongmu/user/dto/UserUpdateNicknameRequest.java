@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record UserUpdateNicknameRequest(
         @Schema(
-                description = "닉네임 (2~12자, 한글/영문/숫자/공백만 허용, 연속 공백 불가)",
+                description = "닉네임",
                 example = "길동무",
                 minLength = 2,
-                maxLength = 12
+                maxLength = 14
         )
         @ValidNickname
         String nickname
