@@ -7,11 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -34,6 +38,26 @@ public class VerificationCodeService {
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_VERIFIED = "VERIFIED";
     private static final SecureRandom random = new SecureRandom();
+    
+    private DefaultRedisScript<Long> dailyLimitScript;
+
+    @PostConstruct
+    public void init() {
+        String script = 
+            "local count = redis.call('INCR', KEYS[1])\n" +
+            "if count == 1 then\n" +
+            "    redis.call('EXPIRE', KEYS[1], ARGV[2])\n" +
+            "end\n" +
+            "if count > tonumber(ARGV[1]) then\n" +
+            "    redis.call('DECR', KEYS[1])\n" +
+            "    return -1\n" +
+            "end\n" +
+            "return count";
+        
+        dailyLimitScript = new DefaultRedisScript<>();
+        dailyLimitScript.setScriptText(script);
+        dailyLimitScript.setResultType(Long.class);
+    }
 
     public VerificationCreateResult createVerification(String phoneNumber) {
         if (!canResend(phoneNumber)) {
@@ -175,21 +199,15 @@ public class VerificationCodeService {
         redisTemplate.opsForValue().set(redisKey, "1", RESEND_LIMIT_MINUTES, TimeUnit.MINUTES);
     }
 
-    /**
-     * 일일 발송 한도 확인 및 증가 (atomic operation)
-     * Redis INCR을 사용하여 race condition 방지
-     */
     private void checkAndIncrementDailyLimit(String phoneNumber) {
         String redisKey = DAILY_LIMIT_KEY_PREFIX + phoneNumber;
         
-        Long count = redisTemplate.opsForValue().increment(redisKey);
+        List<String> keys = Collections.singletonList(redisKey);
+        Long result = redisTemplate.execute(dailyLimitScript, keys, 
+            String.valueOf(DAILY_SMS_LIMIT), 
+            String.valueOf(24 * 60 * 60));
         
-        if (count == 1) {
-            redisTemplate.expire(redisKey, 24, TimeUnit.HOURS);
-        }
-        
-        if (count > DAILY_SMS_LIMIT) {
-            redisTemplate.opsForValue().decrement(redisKey);
+        if (result < 0) {
             throw new DailySmsLimitExceededException("일일 발송 한도를 초과했습니다.");
         }
     }
