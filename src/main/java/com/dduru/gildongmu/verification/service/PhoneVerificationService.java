@@ -26,7 +26,13 @@ public class PhoneVerificationService {
         VerificationCodeService.VerificationCreateResult result = 
                 verificationCodeService.createVerification(phoneNumber);
 
-        sendVerificationSms(phoneNumber, result.code());
+        try {
+            sendVerificationSms(phoneNumber, result.code());
+            verificationCodeService.setResendLimit(phoneNumber);
+        } catch (Exception e) {
+            verificationCodeService.rollbackVerificationCreation(phoneNumber);
+            throw e;
+        }
 
         return VerificationSendResponse.builder()
                 .expiresAt(result.expiresAt())
@@ -59,5 +65,4 @@ public class PhoneVerificationService {
     private String createVerificationMessage(String code) {
         return String.format("[뚜르] 인증번호는 [%s]입니다. 3분 내에 입력해주세요.", code);
     }
-
 }

@@ -35,6 +35,7 @@ public class VerificationCodeService {
     private static final int MAX_VERIFICATION_ATTEMPTS = 5;
     private static final int DAILY_SMS_LIMIT = 5;
     private static final int RESEND_LIMIT_MINUTES = 1;
+    private static final int DAILY_LIMIT_TTL_SECONDS = 24 * 60 * 60;
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_VERIFIED = "VERIFIED";
     private static final SecureRandom random = new SecureRandom();
@@ -60,17 +61,16 @@ public class VerificationCodeService {
     }
 
     public VerificationCreateResult createVerification(String phoneNumber) {
+        checkAndIncrementDailyLimit(phoneNumber);
+
         if (!canResend(phoneNumber)) {
+            rollbackDailyLimit(phoneNumber);
             throw new ResendLimitExceededException("잠시 후 다시 시도해주세요.");
         }
-
-        checkAndIncrementDailyLimit(phoneNumber);
 
         String code = generateCode();
         VerificationData data = createVerificationData(phoneNumber, code);
         saveVerificationData(phoneNumber, data);
-
-        setResendLimit(phoneNumber);
 
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
         log.info("인증번호 생성 및 저장 완료: phoneNumber={}", phoneNumber);
@@ -90,6 +90,21 @@ public class VerificationCodeService {
 
         markAsVerified(redisKey, data, phoneNumber);
         log.info("인증번호 검증 성공: phoneNumber={}", phoneNumber);
+    }
+
+    public void rollbackVerificationCreation(String phoneNumber) {
+        String authKey = REDIS_KEY_PREFIX + phoneNumber;
+        String dailyLimitKey = DAILY_LIMIT_KEY_PREFIX + phoneNumber;
+        
+        redisTemplate.delete(authKey);
+        redisTemplate.opsForValue().decrement(dailyLimitKey);
+        
+        log.info("인증 생성 롤백 완료: phoneNumber={}", phoneNumber);
+    }
+
+    public void setResendLimit(String phoneNumber) {
+        String redisKey = RESEND_LIMIT_KEY_PREFIX + phoneNumber;
+        redisTemplate.opsForValue().set(redisKey, "1", RESEND_LIMIT_MINUTES, TimeUnit.MINUTES);
     }
 
     private VerificationData createVerificationData(String phoneNumber, String code) {
@@ -178,6 +193,7 @@ public class VerificationCodeService {
             redisTemplate.opsForValue().set(redisKey, updatedJson, Duration.ofMinutes(EXPIRATION_MINUTES));
         } catch (JsonProcessingException e) {
             log.error("인증 데이터 업데이트 실패: redisKey={}", redisKey, e);
+            throw new VerificationCreationException("인증 시도 횟수 업데이트에 실패했습니다.");
         }
     }
 
@@ -194,22 +210,23 @@ public class VerificationCodeService {
         return value == null;
     }
 
-    private void setResendLimit(String phoneNumber) {
-        String redisKey = RESEND_LIMIT_KEY_PREFIX + phoneNumber;
-        redisTemplate.opsForValue().set(redisKey, "1", RESEND_LIMIT_MINUTES, TimeUnit.MINUTES);
-    }
-
     private void checkAndIncrementDailyLimit(String phoneNumber) {
         String redisKey = DAILY_LIMIT_KEY_PREFIX + phoneNumber;
         
         List<String> keys = Collections.singletonList(redisKey);
         Long result = redisTemplate.execute(dailyLimitScript, keys, 
             String.valueOf(DAILY_SMS_LIMIT), 
-            String.valueOf(24 * 60 * 60));
-        
+            String.valueOf(DAILY_LIMIT_TTL_SECONDS));
+
         if (result < 0) {
             throw new DailySmsLimitExceededException("일일 발송 한도를 초과했습니다.");
         }
+    }
+
+    private void rollbackDailyLimit(String phoneNumber) {
+        String dailyLimitKey = DAILY_LIMIT_KEY_PREFIX + phoneNumber;
+        redisTemplate.opsForValue().decrement(dailyLimitKey);
+        log.debug("일일 한도 롤백 완료: phoneNumber={}", phoneNumber);
     }
 
     public record VerificationCreateResult(String code, LocalDateTime expiresAt) {
