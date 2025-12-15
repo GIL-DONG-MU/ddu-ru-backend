@@ -2,6 +2,7 @@ package com.dduru.gildongmu.user.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import com.dduru.gildongmu.user.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
 import com.dduru.gildongmu.user.service.UserService;
@@ -42,6 +43,13 @@ public class UserController implements UserApiDocs {
             @PathVariable @ValidNickname String nickname
     ) {
         UserCheckNicknameResponse response = userService.checkNickname(nickname);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @GetMapping("/nicknames/random")
+    public ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname() {
+        NicknameRandomResponse response = userService.generateRandomNickname();
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
