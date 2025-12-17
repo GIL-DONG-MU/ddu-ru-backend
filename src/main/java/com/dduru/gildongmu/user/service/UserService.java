@@ -55,9 +55,9 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public NicknameRandomResponse generateRandomNickname() {
-        String baseNickname = nicknameGenerator.generateBaseNickname();
 
         for (int attempt = 0; attempt < NICKNAME_MAX_RETRY_ATTEMPTS; attempt++) {
+            String baseNickname = nicknameGenerator.generateBaseNickname();
             int randomNumber = nicknameGenerator.generateRandomNumber();
             String nickname = baseNickname + randomNumber;
 
@@ -69,7 +69,7 @@ public class UserService {
             log.debug("해당 닉네임이 이미 존재합니다: {}, 새로운 숫자를 부여하겠습니다.", nickname);
         }
 
-        String fallbackNickname = baseNickname + (System.currentTimeMillis() % 10000);
+        String fallbackNickname = "뚜비" + (System.currentTimeMillis() % 10000);
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
     }
