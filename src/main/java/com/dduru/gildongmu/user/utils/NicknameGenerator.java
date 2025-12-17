@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 랜덤 닉네임 생성 서비스
@@ -20,7 +20,6 @@ public class NicknameGenerator {
     private static final int RANDOM_NUMBER_MIN = 1000;
     private static final int RANDOM_NUMBER_MAX = 9999;
 
-    private final Random random = new Random();
     private final NicknameAdjectiveProvider nicknameAdjectiveProvider;
     private final NicknameNounProvider nicknameNounProvider;
 
@@ -28,7 +27,7 @@ public class NicknameGenerator {
      * 1000~9999 범위의 랜덤 숫자 생성
      */
     public int generateRandomNumber() {
-        return random.nextInt(RANDOM_NUMBER_MAX - RANDOM_NUMBER_MIN + 1) + RANDOM_NUMBER_MIN;
+        return ThreadLocalRandom.current().nextInt(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX + 1);
     }
 
     /**

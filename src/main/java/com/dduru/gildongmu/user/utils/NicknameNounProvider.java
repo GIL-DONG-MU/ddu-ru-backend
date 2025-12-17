@@ -4,12 +4,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class NicknameNounProvider {
 
-    private final Random random = new Random();
     private final List<String> nouns;
 
     public NicknameNounProvider() {
@@ -30,6 +29,6 @@ public class NicknameNounProvider {
     }
 
     public String getRandomNoun() {
-        return nouns.get(random.nextInt(nouns.size()));
+        return nouns.get(ThreadLocalRandom.current().nextInt(nouns.size()));
     }
 }
