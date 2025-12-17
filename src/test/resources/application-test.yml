@@ -26,10 +26,33 @@ spring:
 
 jwt:
   expiration: -1
+  secret: test-secret-key-for-jwt
+  refresh-expiration: 3600000
 
 aws:
   s3:
     enabled: false
+    region: ap-northeast-2
+    bucket: dummy-bucket
+    access-key: dummy
+    secret-key: dummy
+
+oauth:
+  kakao:
+    rest-client-id: dummy
+    client-id: dummy
+    client-secret: dummy
+    redirect-uri: http://localhost
+  google:
+    android-client-id: dummy
+    client-id: dummy
+    client-secret: dummy
+    redirect-uri: http://localhost
+
+coolsms:
+  api-key: dummy
+  api-secret: dummy
+  from-number: 01000000000
 
 logging:
   level:
