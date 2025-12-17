@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.user.controller;
 
 import com.dduru.gildongmu.common.dto.ApiResult;
+import com.dduru.gildongmu.user.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
 import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
 import com.dduru.gildongmu.user.validator.ValidNickname;
@@ -29,9 +30,16 @@ public interface UserApiDocs {
     @ApiResponse(responseCode = "200", description = "유효성 확인 성공")
     ResponseEntity<ApiResult<UserCheckNicknameResponse>> checkNickname(
             @Parameter(
-                    description = "체크할 닉네임 (2~12자, 한글/영문/숫자/공백만 허용, 연속 공백 불가)",
+                    description = "유효성 체크할 닉네임",
                     example = "길동무"
             )
             @ValidNickname String nickname
     );
+
+    @Operation(summary = "랜덤 닉네임 생성", description = "랜덤으로 닉네임을 생성합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "랜덤 닉네임 생성 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 필요")
+    })
+    ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname();
 }
