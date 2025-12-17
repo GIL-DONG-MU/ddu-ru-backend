@@ -43,7 +43,7 @@ public class PhoneVerificationService {
 
     public VerificationVerifyResponse verifyCode(String phoneNumber, String code) {
         verificationCodeService.verifyCode(phoneNumber, code);
-        String token = jwtTokenProvider.createVerificationToken(phoneNumber);
+        String token = jwtTokenProvider.createVerificationToken(null, phoneNumber);
         return VerificationVerifyResponse.verified(token);
     }
 
