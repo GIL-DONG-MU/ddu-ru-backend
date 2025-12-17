@@ -42,6 +42,13 @@ public class VerificationCodeService {
     
     private DefaultRedisScript<Long> dailyLimitScript;
 
+    /**
+     * 일별 발송 제한 카운터를 관리하는 Redis Lua Script
+     * KEYS[1]: Redis Key
+     * ARGV[1]: 최대 시도 횟수
+     * - count 증가 후 제한 초과 시: -1 반환
+     * - 정상 경우: 증가된 count 반환
+     */
     @PostConstruct
     public void init() {
         String script = 
