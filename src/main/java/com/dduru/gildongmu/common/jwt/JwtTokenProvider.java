@@ -107,6 +107,21 @@ public class JwtTokenProvider {
         }
     }
 
+    public String createVerificationToken(Long userId, String phoneNumber) {
+        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
+
+        String subject = userId != null ? userId.toString() : phoneNumber;
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim("type", "verification")
+                .claim("phone_number", phoneNumber)
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)

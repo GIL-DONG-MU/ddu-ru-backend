@@ -6,6 +6,7 @@ import com.dduru.gildongmu.S3.exception.InvalidFileExtensionException;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(prefix = "aws.s3", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class S3Service {
 

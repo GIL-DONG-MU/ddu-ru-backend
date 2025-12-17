@@ -5,6 +5,7 @@ import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
 import com.dduru.gildongmu.S3.service.S3Service;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/images")
+@ConditionalOnProperty(prefix = "aws.s3", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class S3Controller implements S3ApiDocs {
     private final S3Service s3Service;
 
