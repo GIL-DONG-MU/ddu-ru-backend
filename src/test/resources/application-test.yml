@@ -27,6 +27,10 @@ spring:
 jwt:
   expiration: -1
 
+aws:
+  s3:
+    enabled: false
+
 logging:
   level:
     com.dduru.gildongmu: debug
