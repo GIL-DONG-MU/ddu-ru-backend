@@ -6,6 +6,7 @@ import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
 import com.dduru.gildongmu.verification.exception.DuplicatePhoneNumberException;
 import com.dduru.gildongmu.verification.exception.SmsProviderException;
+import com.dduru.gildongmu.verification.exception.SmsSendFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,8 @@ public class PhoneVerificationService {
             verificationCodeService.setResendLimit(phoneNumber);
         } catch (Exception e) {
             verificationCodeService.rollbackVerificationCreation(phoneNumber);
-            throw e;
+            log.error("Verification code 메서드 처리 실패", e);
+            throw new SmsSendFailedException("SMS 발송 실패 등 서비스 처리 중 문제 발생");
         }
 
         return VerificationSendResponse.builder()
