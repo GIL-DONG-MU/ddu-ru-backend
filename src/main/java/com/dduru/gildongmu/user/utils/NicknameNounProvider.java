@@ -2,7 +2,6 @@ package com.dduru.gildongmu.user.utils;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,7 +15,7 @@ public class NicknameNounProvider {
     }
 
     private List<String> initializeNouns() {
-        return Arrays.asList(
+        return List.of(
                 "배낭", "지도", "여권", "티켓", "카메라",
                 "모자", "우산", "운동화", "텀블러", "노트",
                 "이어폰", "목베개", "파우치", "선글라스", "수첩",

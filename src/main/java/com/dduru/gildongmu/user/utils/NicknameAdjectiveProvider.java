@@ -2,7 +2,6 @@ package com.dduru.gildongmu.user.utils;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,7 +15,7 @@ public class NicknameAdjectiveProvider {
     }
 
     private List<String> initializeAdjectives() {
-        return Arrays.asList(
+        return List.of(
                 // 여행
                 "용감한", "씩씩한", "자유로운", "열정적인", "모험적인",
                 "낭만적인", "활기찬", "여유로운", "설레는", "떠나는",
@@ -27,7 +26,7 @@ public class NicknameAdjectiveProvider {
                 "상쾌한", "고요한", "평화로운", "싱그러운", "빛나는",
                 // 분위기
                 "낯선", "이국적인", "몽환적인", "감성적인", "힙한",
-                "고풍스러운","탁트인", "그림같은", "아기자기한",
+                "고풍스러운", "탁트인", "그림같은", "아기자기한",
                 // 감정/성격
                 "귀여운", "사랑스런", "깜찍한", "지혜로운", "영리한",
                 "다정한", "행복한", "즐거운", "유쾌한", "친절한",
