@@ -91,6 +91,11 @@ jobs:
             export AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
             export AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}
             export AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}
+            
+            # CoolSMS 설정
+            export COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}
+            export COOLSMS_API_SECRET=${{ secrets.COOLSMS_API_SECRET }}
+            export COOLSMS_FROM_NUMBER=${{ secrets.COOLSMS_FROM_NUMBER }}
 
             # 기존 환경변수들
             export ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
