@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.verification.controller;
 
+import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.verification.dto.VerificationSendRequest;
 import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
@@ -21,6 +22,7 @@ public class PhoneVerificationController implements PhoneVerificationApiDocs {
     @Override
     @PostMapping
     public ResponseEntity<ApiResult<VerificationSendResponse>> sendVerificationCode(
+            @CurrentUser Long userId,
             @Valid @RequestBody VerificationSendRequest request) {
         VerificationSendResponse response = phoneVerificationService.sendVerificationCode(request.phoneNumber());
         return ResponseEntity.ok(ApiResult.ok(response));
@@ -29,6 +31,7 @@ public class PhoneVerificationController implements PhoneVerificationApiDocs {
     @Override
     @PatchMapping
     public ResponseEntity<ApiResult<VerificationVerifyResponse>> verifyCode(
+            @CurrentUser Long userId,
             @Valid @RequestBody VerificationVerifyRequest request) {
         VerificationVerifyResponse response = phoneVerificationService.verifyCode(
                 request.phoneNumber(),
