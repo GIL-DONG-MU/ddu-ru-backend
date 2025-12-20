@@ -34,8 +34,8 @@ public record CommentResponse(
             authorProfileImage = null;
         } else {
             content = comment.getContent();
-            author = comment.getUser().getNickname();
-            authorProfileImage = comment.getUser().getProfileImage();
+            author = comment.getUser().getProfile().getNickname();
+            authorProfileImage = comment.getUser().getProfile().getProfileImage();
         }
 
         return new CommentResponse(
