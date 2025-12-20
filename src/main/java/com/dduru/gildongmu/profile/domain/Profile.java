@@ -1,0 +1,76 @@
+package com.dduru.gildongmu.profile.domain;
+
+import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.user.domain.User;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "profiles")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Profile extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
+
+    @Column(length = 14, unique = true)
+    private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "birthday")
+    private LocalDate birthday;
+
+    @Column(name = "profile_image", length = 500)
+    private String profileImage;
+
+    @Column(name = "self_introduction", length = 60)
+    private String selfIntroduction;
+
+    @Builder
+    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday, String profileImage, String selfIntroduction) {
+        this.user = user;
+        this.nickname = nickname;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
+        this.birthday = birthday;
+        this.profileImage = profileImage;
+        this.selfIntroduction = selfIntroduction;
+    }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateAdditionalInfo(Gender gender, LocalDate birthday, String phoneNumber) {
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (birthday != null) {
+            this.birthday = birthday;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+    }
+}
