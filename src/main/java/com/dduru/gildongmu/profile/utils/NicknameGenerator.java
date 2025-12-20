@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.utils;
+package com.dduru.gildongmu.profile.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

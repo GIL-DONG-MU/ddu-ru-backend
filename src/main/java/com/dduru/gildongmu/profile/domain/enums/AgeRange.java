@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.enums;
+package com.dduru.gildongmu.profile.domain.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

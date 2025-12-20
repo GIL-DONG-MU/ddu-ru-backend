@@ -1,6 +1,6 @@
-package com.dduru.gildongmu.user.enums;
+package com.dduru.gildongmu.profile.domain.enums;
 
-import com.dduru.gildongmu.user.exception.InvalidGenderException;
+import com.dduru.gildongmu.profile.exception.InvalidGenderException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

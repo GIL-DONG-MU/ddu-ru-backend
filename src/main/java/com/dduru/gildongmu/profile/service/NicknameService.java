@@ -1,13 +1,13 @@
-package com.dduru.gildongmu.user.service;
+package com.dduru.gildongmu.profile.service;
 
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
-import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.dto.NicknameRandomResponse;
-import com.dduru.gildongmu.user.dto.UserCheckNicknameResponse;
-import com.dduru.gildongmu.user.dto.UserUpdateNicknameRequest;
-import com.dduru.gildongmu.user.repository.UserRepository;
-import com.dduru.gildongmu.user.utils.NicknameGenerator;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
+import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,34 +16,29 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class UserService {
+public class NicknameService {
 
     private static final int NICKNAME_MAX_RETRY_ATTEMPTS = 10;
 
     private final NicknameGenerator nicknameGenerator;
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
 
     @Transactional
-    public void updateNickname(Long userId, UserUpdateNicknameRequest request) {
-        User user = userRepository.getByIdOrThrow(userId);
+    public void updateNickname(Long userId, NicknameUpdateRequest request) {
+        Profile profile = getProfileByUserId(userId);
         checkDuplicateNickname(request.nickname());
 
-        user.updateNickname(request.nickname());
+        profile.updateNickname(request.nickname());
+        profileRepository.save(profile);
     }
 
     @Transactional(readOnly = true)
-    public UserCheckNicknameResponse checkNickname(String nickname) {
+    public NicknameValidateResponse checkNickname(String nickname) {
         checkDuplicateNickname(nickname);
 
-        return UserCheckNicknameResponse.builder()
+        return NicknameValidateResponse.builder()
                 .sanitizedNickname(nickname)
                 .build();
-    }
-
-    private void checkDuplicateNickname(String nickname) {
-        if (userRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
     }
 
     /**
@@ -51,7 +46,7 @@ public class UserService {
      * 형용사 + 명사 조합에 랜덤 숫자를 추가하여 고유성을 보장합니다.
      * DB에 중복이 있으면 새로운 랜덤 숫자로 재시도합니다.
      *
-     * @return 유니크한 닉네임 (예: "용감한 여행자1234")
+     * @return 유니크한 닉네임 (예: "용감한여행자1234")
      */
     @Transactional(readOnly = true)
     public NicknameRandomResponse generateRandomNickname() {
@@ -61,7 +56,7 @@ public class UserService {
             int randomNumber = nicknameGenerator.generateRandomNumber();
             String nickname = baseNickname + randomNumber;
 
-            if (!userRepository.existsByNickname(nickname)) {
+            if (!profileRepository.existsByNickname(nickname)) {
                 log.info("랜덤 닉네임 생성: {}", nickname);
                 return NicknameRandomResponse.of(nickname);
             }
@@ -72,5 +67,16 @@ public class UserService {
         String fallbackNickname = "뚜비" + (System.currentTimeMillis() % 10000);
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
+    }
+
+    private Profile getProfileByUserId(Long userId) {
+        return profileRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+    }
+
+    private void checkDuplicateNickname(String nickname) {
+        if (profileRepository.existsByNickname(nickname)) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
     }
 }

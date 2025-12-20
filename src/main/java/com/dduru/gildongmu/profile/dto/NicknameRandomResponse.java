@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.dto;
+package com.dduru.gildongmu.profile.dto;
 
 import lombok.Builder;
 

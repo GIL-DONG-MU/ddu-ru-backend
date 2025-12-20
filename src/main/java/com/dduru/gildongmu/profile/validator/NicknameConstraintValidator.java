@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.validator;
+package com.dduru.gildongmu.profile.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
