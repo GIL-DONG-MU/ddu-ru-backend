@@ -11,6 +11,8 @@ import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.enums.Role;
@@ -30,6 +32,7 @@ public class OauthAuthService {
 
     private final OauthFactory oauthFactory;
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
 
@@ -145,22 +148,29 @@ public class OauthAuthService {
     }
 
     private User createNewUser(OauthUserInfo oauthUserInfo) {
-        // 추가 정보는 회원가입 이후 별도 입력으로 변경
-        // 닉네임은 온보딩에서 설정하므로 null로 초기화
-
+//         User 생성
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
                 .name(oauthUserInfo.name())
-                .nickname(null)
-                .profileImage(oauthUserInfo.profileImage())
                 .oauthId(oauthUserInfo.oauthId())
                 .oauthType(oauthUserInfo.loginType())
                 .role(Role.USER)
+                .build();
+
+        User savedUser = userRepository.save(newUser);
+
+        // Profile 생성 (OAuth에서 받은 profileImage는 저장, 나머지는 null)
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileImage(oauthUserInfo.profileImage())
+                .nickname(null)
                 .gender(null)
                 .phoneNumber(null)
                 .birthday(null)
                 .build();
 
-        return userRepository.save(newUser);
+        profileRepository.save(profile);
+
+        return savedUser;
     }
 }
