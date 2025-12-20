@@ -1,8 +1,9 @@
 package com.dduru.gildongmu.user.service;
 
-import com.dduru.gildongmu.user.dto.NicknameRandomResponse;
-import com.dduru.gildongmu.user.repository.UserRepository;
-import com.dduru.gildongmu.user.utils.NicknameGenerator;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.service.NicknameService;
+import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,10 +24,10 @@ class UserServiceTest {
     private NicknameGenerator nicknameGenerator;
 
     @Mock
-    private UserRepository userRepository;
+    private ProfileRepository profileRepository;
 
     @InjectMocks
-    private UserService userService;
+    private NicknameService nicknameService;
 
     @DisplayName("중복이 없는 경우 첫 시도에 랜덤 닉네임을 반환한다")
     @Test
@@ -38,16 +39,16 @@ class UserServiceTest {
 
         when(nicknameGenerator.generateBaseNickname()).thenReturn(baseNickname);
         when(nicknameGenerator.generateRandomNumber()).thenReturn(randomNumber);
-        when(userRepository.existsByNickname(expectedNickname)).thenReturn(false);
+        when(profileRepository.existsByNickname(expectedNickname)).thenReturn(false);
 
         // when
-        NicknameRandomResponse response = userService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).isEqualTo(expectedNickname);
         verify(nicknameGenerator, times(1)).generateBaseNickname();
         verify(nicknameGenerator, times(1)).generateRandomNumber();
-        verify(userRepository, times(1)).existsByNickname(eq(expectedNickname));
+        verify(profileRepository, times(1)).existsByNickname(eq(expectedNickname));
     }
 
     @DisplayName("중복이 발생하면 재시도하여 다음 닉네임을 반환한다")
@@ -62,16 +63,16 @@ class UserServiceTest {
 
         when(nicknameGenerator.generateBaseNickname()).thenReturn(baseNickname);
         when(nicknameGenerator.generateRandomNumber()).thenReturn(firstNumber, secondNumber);
-        when(userRepository.existsByNickname(firstNickname)).thenReturn(true);
-        when(userRepository.existsByNickname(secondNickname)).thenReturn(false);
+        when(profileRepository.existsByNickname(firstNickname)).thenReturn(true);
+        when(profileRepository.existsByNickname(secondNickname)).thenReturn(false);
 
         // when
-        NicknameRandomResponse response = userService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).isEqualTo(secondNickname);
-        verify(userRepository, times(1)).existsByNickname(eq(firstNickname));
-        verify(userRepository, times(1)).existsByNickname(eq(secondNickname));
+        verify(profileRepository, times(1)).existsByNickname(eq(firstNickname));
+        verify(profileRepository, times(1)).existsByNickname(eq(secondNickname));
         verify(nicknameGenerator, times(2)).generateRandomNumber();
     }
 
@@ -85,16 +86,16 @@ class UserServiceTest {
 
         when(nicknameGenerator.generateBaseNickname()).thenReturn(baseNickname);
         when(nicknameGenerator.generateRandomNumber()).thenReturn(duplicatedNumber);
-        when(userRepository.existsByNickname(duplicatedNickname)).thenReturn(true);
+        when(profileRepository.existsByNickname(duplicatedNickname)).thenReturn(true);
 
         // when
-        NicknameRandomResponse response = userService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).startsWith("뚜비");
         verify(nicknameGenerator, times(10)).generateBaseNickname();
         verify(nicknameGenerator, times(10)).generateRandomNumber();
-        verify(userRepository, times(10)).existsByNickname(eq(duplicatedNickname));
+        verify(profileRepository, times(10)).existsByNickname(eq(duplicatedNickname));
     }
 }
 

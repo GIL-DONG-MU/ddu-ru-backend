@@ -1,8 +1,10 @@
 package com.dduru.gildongmu.auth.repository;
 
 import com.dduru.gildongmu.config.QueryDslConfig;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.Gender;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -21,21 +23,29 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ProfileRepository profileRepository;
+
     @Test
     void 사용자_저장_및_조회_테스트() {
         // given
         User user = User.builder()
                 .email("test@example.com")
                 .name("테스트사용자")
-                .profileImage("http://example.com/profile.jpg")
                 .oauthId("12345")
                 .oauthType(OauthType.KAKAO)
-                .gender(Gender.M)
-                .phoneNumber("010-1234-5678")
                 .build();
 
         // when
         User savedUser = userRepository.save(user);
+        
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileImage("http://example.com/profile.jpg")
+                .gender(Gender.M)
+                .phoneNumber("010-1234-5678")
+                .build();
+        profileRepository.save(profile);
 
         // then
         assertThat(savedUser.getId()).isNotNull();
@@ -49,13 +59,18 @@ class UserRepositoryTest {
         User user = User.builder()
                 .email("find@example.com")
                 .name("찾을사용자")
-                .profileImage("http://example.com/profile.jpg")
                 .oauthId("67890")
                 .oauthType(OauthType.GOOGLE)
-                .gender(Gender.F)
                 .build();
         
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileImage("http://example.com/profile.jpg")
+                .gender(Gender.F)
+                .build();
+        profileRepository.save(profile);
 
         // when
         boolean exists = userRepository.existsByEmail("find@example.com");
@@ -70,13 +85,18 @@ class UserRepositoryTest {
         User user = User.builder()
                 .email("oauth@example.com")
                 .name("OAuth사용자")
-                .profileImage("http://example.com/profile.jpg")
                 .oauthId("oauth123")
                 .oauthType(OauthType.KAKAO)
-                .gender(Gender.M)
                 .build();
         
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .profileImage("http://example.com/profile.jpg")
+                .gender(Gender.M)
+                .build();
+        profileRepository.save(profile);
 
         // when
         boolean exists = userRepository.existsByOauthIdAndOauthType("oauth123", OauthType.KAKAO);
