@@ -1,0 +1,96 @@
+package com.dduru.gildongmu.survey.service;
+
+import com.dduru.gildongmu.survey.converter.SurveyConverter;
+import com.dduru.gildongmu.survey.domain.Survey;
+import com.dduru.gildongmu.survey.domain.TravelTendency;
+import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.dto.SurveyRequest;
+import com.dduru.gildongmu.survey.dto.SurveyResponse;
+import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
+import com.dduru.gildongmu.survey.repository.SurveyRepository;
+import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+@Slf4j
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class SurveyService {
+
+    private final SurveyRepository surveyRepository;
+    private final TravelTendencyRepository travelTendencyRepository;
+    private final SurveyConverter surveyConverter;
+    private final TravelTendencyCalculator tendencyCalculator;
+    private final AvatarMatcher avatarMatcher;
+    private final AvatarProfileProvider avatarProfileProvider;
+    private final UserRepository userRepository;
+
+    public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
+        log.debug("설문조사 제출 시작 - userId: {}", userId);
+
+        User user = userRepository.getByIdOrThrow(userId);
+
+        Survey survey = surveyRepository.findByUser(user)
+                .map(existing -> {
+                    Survey newSurvey = surveyConverter.toEntity(user, request);
+                    existing.update(newSurvey);
+                    return surveyRepository.save(existing);
+                })
+                .orElseGet(() -> surveyRepository.save(surveyConverter.toEntity(user, request)));
+
+        TravelTendencyCalculator.TendencyScores scores = tendencyCalculator.calculate(survey);
+
+        AvatarType avatarType = avatarMatcher.match(scores.r(), scores.w(), scores.s());
+
+        BigDecimal rDecimal = toBigDecimal(scores.r());
+        BigDecimal wDecimal = toBigDecimal(scores.w());
+        BigDecimal sDecimal = toBigDecimal(scores.s());
+        BigDecimal pDecimal = toBigDecimal(scores.p());
+
+        TravelTendency travelTendency = travelTendencyRepository.findByUser(user)
+                .map(existing -> {
+                    existing.update(rDecimal, wDecimal, sDecimal, pDecimal, avatarType);
+                    return travelTendencyRepository.save(existing);
+                })
+                .orElseGet(() -> travelTendencyRepository.save(
+                        TravelTendency.builder()
+                                .user(user)
+                                .r(rDecimal)
+                                .w(wDecimal)
+                                .s(sDecimal)
+                                .p(pDecimal)
+                                .avatarType(avatarType)
+                                .build()
+                ));
+
+        AvatarProfileProvider.AvatarProfile profile = avatarProfileProvider.getProfile(avatarType);
+
+        log.info("설문조사 제출 완료 - userId: {}, avatarType: {}, 점수: R={}, W={}, S={}, P={}",
+                userId, avatarType, scores.r(), scores.w(), scores.s(), scores.p());
+        return SurveyResponse.of(scores.r(), scores.w(), scores.s(), scores.p(), avatarType, profile);
+    }
+
+    @Transactional(readOnly = true)
+    public SurveyResponse getMySurveyResult(Long userId) {
+        log.debug("설문 결과 조회 시작 - userId: {}", userId);
+
+        User user = userRepository.getByIdOrThrow(userId);
+        TravelTendency travelTendency = travelTendencyRepository.findByUser(user)
+                .orElseThrow(SurveyResultNotFoundException::of);
+
+        log.info("설문 결과 조회 완료 - userId: {}, avatarType: {}", userId, travelTendency.getAvatarType());
+        return SurveyResponse.from(travelTendency, avatarProfileProvider);
+    }
+
+    private BigDecimal toBigDecimal(double value) {
+        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP);
+    }
+}
