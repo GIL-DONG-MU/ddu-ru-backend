@@ -6,9 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum CaptureStyle implements CodedEnum {
-    PHOTO(1, "사진으로 기록"),
-    EYES(2, "눈으로 담기");
+public enum Question5Expense implements CodedEnum {
+    EACH_PAYS(1, "각자 결제"),
+    POOLED(2, "모아 쓰기");
 
     private final int code;
     private final String text;

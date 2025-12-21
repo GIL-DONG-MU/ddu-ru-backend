@@ -6,9 +6,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PaceStyle implements CodedEnum {
-    EARLY_FULL(1, "아침 일찍 꽉 채우기"),
-    RELAXED(2, "여유롭게");
+public enum Question8Planning implements CodedEnum {
+    DETAILED(1, "디테일한 계획"),
+    FLEXIBLE(2, "융통성 있는 계획"),
+    ON_SITE(3, "현장 결정");
 
     private final int code;
     private final String text;

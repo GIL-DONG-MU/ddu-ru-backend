@@ -6,9 +6,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum StayStyle implements CodedEnum {
-    HOTEL(1, "호텔"),
-    JUST_SLEEP(2, "잠만 자기");
+public enum Question10Companion implements CodedEnum {
+    WELCOME(1, "완전 환영"),
+    SITUATIONAL(2, "상황 봐서"),
+    US_ONLY(3, "우리끼리만");
 
     private final int code;
     private final String text;
