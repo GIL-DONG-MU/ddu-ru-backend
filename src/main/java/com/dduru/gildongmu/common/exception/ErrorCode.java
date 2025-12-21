@@ -61,7 +61,7 @@ public enum ErrorCode {
     INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다."),
 
     // 설문 (SURVEY)
-    UNKNOWN_SURVEY_ANSWER_CODE(HttpStatus.BAD_REQUEST, "알 수 없는 설문조사 답변 코드입니다."),
+    SURVEY_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "설문 결과를 찾을 수 없습니다."),
 
     // 휴대폰 인증 (VERIFICATION)
     SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
