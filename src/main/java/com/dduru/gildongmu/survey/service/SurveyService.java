@@ -37,39 +37,12 @@ public class SurveyService {
         log.debug("설문조사 제출 시작 - userId: {}", userId);
 
         User user = userRepository.getByIdOrThrow(userId);
-
-        Survey survey = surveyRepository.findByUser(user)
-                .map(existing -> {
-                    Survey newSurvey = surveyConverter.toEntity(user, request);
-                    existing.update(newSurvey);
-                    return surveyRepository.save(existing);
-                })
-                .orElseGet(() -> surveyRepository.save(surveyConverter.toEntity(user, request)));
+        Survey survey = saveOrUpdateSurvey(user, request);
 
         TravelTendencyCalculator.TendencyScores scores = tendencyCalculator.calculate(survey);
-
         AvatarType avatarType = avatarMatcher.match(scores.r(), scores.w(), scores.s());
 
-        BigDecimal rDecimal = toBigDecimal(scores.r());
-        BigDecimal wDecimal = toBigDecimal(scores.w());
-        BigDecimal sDecimal = toBigDecimal(scores.s());
-        BigDecimal pDecimal = toBigDecimal(scores.p());
-
-        TravelTendency travelTendency = travelTendencyRepository.findByUser(user)
-                .map(existing -> {
-                    existing.update(rDecimal, wDecimal, sDecimal, pDecimal, avatarType);
-                    return travelTendencyRepository.save(existing);
-                })
-                .orElseGet(() -> travelTendencyRepository.save(
-                        TravelTendency.builder()
-                                .user(user)
-                                .r(rDecimal)
-                                .w(wDecimal)
-                                .s(sDecimal)
-                                .p(pDecimal)
-                                .avatarType(avatarType)
-                                .build()
-                ));
+        saveOrUpdateTravelTendency(user, scores, avatarType);
 
         AvatarProfileProvider.AvatarProfile profile = avatarProfileProvider.getProfile(avatarType);
 
@@ -88,6 +61,35 @@ public class SurveyService {
 
         log.info("설문 결과 조회 완료 - userId: {}, avatarType: {}", userId, travelTendency.getAvatarType());
         return SurveyResponse.from(travelTendency, avatarProfileProvider);
+    }
+
+    private Survey saveOrUpdateSurvey(User user, SurveyRequest request) {
+        SurveyConverter.ParsedSurveyData parsed = surveyConverter.parseRequest(request);
+
+        return surveyRepository.findByUser(user)
+                .map(existing -> {
+                    existing.update(parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
+                            parsed.q6(), parsed.q7(), parsed.q8(), parsed.q9(), parsed.q10(), parsed.q11());
+                    return existing;
+                })
+                .orElseGet(() -> surveyRepository.save(surveyConverter.toEntity(user, request)));
+    }
+
+    private void saveOrUpdateTravelTendency(User user, TravelTendencyCalculator.TendencyScores scores, AvatarType avatarType) {
+        BigDecimal rDecimal = toBigDecimal(scores.r());
+        BigDecimal wDecimal = toBigDecimal(scores.w());
+        BigDecimal sDecimal = toBigDecimal(scores.s());
+        BigDecimal pDecimal = toBigDecimal(scores.p());
+
+        travelTendencyRepository.findByUser(user)
+                .ifPresentOrElse(
+                        existing -> {
+                            existing.update(rDecimal, wDecimal, sDecimal, pDecimal, avatarType);
+                        },
+                        () -> travelTendencyRepository.save(
+                                TravelTendency.create(user, rDecimal, wDecimal, sDecimal, pDecimal, avatarType)
+                        )
+                );
     }
 
     private BigDecimal toBigDecimal(double value) {

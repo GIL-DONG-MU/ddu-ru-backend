@@ -51,6 +51,17 @@ public class TravelTendency extends BaseTimeEntity {
         this.avatarType = avatarType;
     }
 
+    public static TravelTendency create(User user, BigDecimal r, BigDecimal w, BigDecimal s, BigDecimal p, AvatarType avatarType) {
+        return TravelTendency.builder()
+                .user(user)
+                .r(r)
+                .w(w)
+                .s(s)
+                .p(p)
+                .avatarType(avatarType)
+                .build();
+    }
+
     public void update(BigDecimal r, BigDecimal w, BigDecimal s, BigDecimal p, AvatarType avatarType) {
         this.r = r;
         this.w = w;
