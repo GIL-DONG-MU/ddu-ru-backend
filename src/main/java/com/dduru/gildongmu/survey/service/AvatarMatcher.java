@@ -23,17 +23,17 @@ public class AvatarMatcher {
         // 8가지 조합 매칭
         if (isStable && !isSocial && isCostEffective) {
             return AvatarType.TTUR_POGUNI;  // 안정 x 독립 x 가성비
-        } else if (isStable && !isSocial && !isCostEffective) {
+        } else if (isStable && !isSocial) {
             return AvatarType.TTUR_MOOD;  // 안정 x 독립 x 플랙스
-        } else if (isStable && isSocial && isCostEffective) {
+        } else if (isStable && isCostEffective) {
             return AvatarType.TTUR_MALLANGI;  // 안정 x 사교 x 가성비
-        } else if (isStable && isSocial && !isCostEffective) {
+        } else if (isStable) {
             return AvatarType.TTUR_SWEET;  // 안정 x 사교 x 플랙스
-        } else if (!isStable && !isSocial && isCostEffective) {
+        } else if (!isSocial && isCostEffective) {
             return AvatarType.TTUR_POPO;  // 모험 x 독립 x 가성비
-        } else if (!isStable && !isSocial && !isCostEffective) {
+        } else if (!isSocial) {
             return AvatarType.TTUR_SPARKLE;  // 모험 x 독립 x 플랙스
-        } else if (!isStable && isSocial && isCostEffective) {
+        } else if (isCostEffective) {
             return AvatarType.TTUR_GLIMMING;  // 모험 x 사교 x 가성비
         } else {
             return AvatarType.TTUR_PADO;  // 모험 x 사교 x 플랙스
