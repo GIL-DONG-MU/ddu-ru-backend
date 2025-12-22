@@ -83,9 +83,7 @@ public class SurveyService {
 
         travelTendencyRepository.findByUser(user)
                 .ifPresentOrElse(
-                        existing -> {
-                            existing.update(rDecimal, wDecimal, sDecimal, pDecimal, avatarType);
-                        },
+                        existing -> existing.update(rDecimal, wDecimal, sDecimal, pDecimal, avatarType),
                         () -> travelTendencyRepository.save(
                                 TravelTendency.create(user, rDecimal, wDecimal, sDecimal, pDecimal, avatarType)
                         )
