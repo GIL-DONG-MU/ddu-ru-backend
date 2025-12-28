@@ -122,6 +122,50 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * Verification Token 검증 및 전화번호 추출
+     * 
+     * @param token verification token
+     * @param expectedPhoneNumber 검증할 전화번호
+     * @return 검증 성공 여부
+     */
+    public boolean validateVerificationToken(String token, String expectedPhoneNumber) {
+        try {
+            Claims claims = getClaims(token);
+            String tokenType = claims.get("type", String.class);
+            if (!"verification".equals(tokenType)) {
+                log.warn("Verification Token이 아닙니다 - {}", tokenType);
+                return false;
+            }
+            
+            String phoneNumber = claims.get("phone_number", String.class);
+            if (phoneNumber == null || !phoneNumber.equals(expectedPhoneNumber)) {
+                log.warn("전화번호가 일치하지 않습니다. 토큰: {}, 요청: {}", phoneNumber, expectedPhoneNumber);
+                return false;
+            }
+            
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.warn("Verification Token이 만료되었습니다");
+            return false;
+        } catch (UnsupportedJwtException e) {
+            log.warn("JWT 형식이 틀렸습니다");
+            return false;
+        } catch (MalformedJwtException e) {
+            log.warn("JWT 구조가 잘못되었습니다");
+            return false;
+        } catch (SignatureException e) {
+            log.warn("JWT 서명 검증 실패하였습니다");
+            return false;
+        } catch (IllegalArgumentException e) {
+            log.warn("부적절한 값이 들어왔습니다");
+            return false;
+        } catch (JwtException e) {
+            log.warn("Verification Token이 유효하지 않습니다: {}", e.getMessage());
+            return false;
+        }
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)
