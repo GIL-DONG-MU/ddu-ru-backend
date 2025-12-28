@@ -73,4 +73,19 @@ public class Profile extends BaseTimeEntity {
             this.phoneNumber = phoneNumber;
         }
     }
+
+    public void setupInitialProfile(String nickname, Gender gender, String phoneNumber, LocalDate birthday) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (birthday != null) {
+            this.birthday = birthday;
+        }
+    }
 }
