@@ -5,7 +5,8 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
-import com.dduru.gildongmu.profile.service.NicknameService;
+import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.service.ProfileService;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ProfileController implements ProfileApiDocs {
 
-    private final NicknameService nicknameService;
+    private final ProfileService profileService;
 
     @Override
     @PutMapping("/users/nickname")
@@ -33,7 +34,7 @@ public class ProfileController implements ProfileApiDocs {
             @CurrentUser Long id,
             @Valid @RequestBody NicknameUpdateRequest request
     ) {
-        nicknameService.updateNickname(id, request);
+        profileService.updateNickname(id, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
@@ -42,14 +43,23 @@ public class ProfileController implements ProfileApiDocs {
     public ResponseEntity<ApiResult<NicknameValidateResponse>> checkNickname(
             @PathVariable @ValidNickname String nickname
     ) {
-        NicknameValidateResponse response = nicknameService.checkNickname(nickname);
+        NicknameValidateResponse response = profileService.checkNickname(nickname);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @GetMapping("/nicknames/random")
     public ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname() {
-        NicknameRandomResponse response = nicknameService.generateRandomNickname();
+        NicknameRandomResponse response = profileService.generateRandomNickname();
         return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @PutMapping("/me/profile")
+    public ResponseEntity<ApiResult<Void>> setupInitialProfile(
+            @CurrentUser Long userId,
+            @RequestBody @Valid ProfileSetupRequest request
+    ) {
+        profileService.setupInitialProfile(userId, request);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }
