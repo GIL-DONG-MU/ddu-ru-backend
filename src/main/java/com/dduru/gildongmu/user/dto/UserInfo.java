@@ -16,10 +16,10 @@ public record UserInfo(
         return new UserInfo(
                 user.getId(),
                 user.getName(),
-                profile != null ? profile.getProfileImage() : null,
-                profile != null && profile.getGender() != null ? profile.getGender().name() : null,
-                profile != null && profile.getBirthday() != null ? profile.getBirthday().toString() : null,
-                profile != null ? profile.getNickname() : null
+                profile.getProfileImage(),
+                profile.getGender().name(),
+                profile.getBirthday().toString(),
+                profile.getNickname()
         );
     }
 }
