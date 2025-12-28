@@ -2,10 +2,13 @@ package com.dduru.gildongmu.profile.service;
 
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
@@ -13,15 +16,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class NicknameService {
+public class ProfileService {
 
     private static final int NICKNAME_MAX_RETRY_ATTEMPTS = 10;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final NicknameGenerator nicknameGenerator;
     private final ProfileRepository profileRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
@@ -67,6 +76,54 @@ public class NicknameService {
         String fallbackNickname = "뚜비" + (System.currentTimeMillis() % 10000);
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
+    }
+
+    @Transactional
+    public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
+        Profile profile = getProfileByUserId(userId);
+        
+        checkDuplicateNickname(request.nickname());
+        
+        validateVerificationToken(request.verificationToken(), request.phoneNumber());
+        
+        if (profileRepository.existsByPhoneNumber(request.phoneNumber())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
+
+        LocalDate birthday = parseBirthDate(request.birthday());
+        
+        profile.setupInitialProfile(
+                request.nickname(),
+                Gender.valueOf(request.gender()),
+                request.phoneNumber(),
+                birthday
+        );
+        
+        profileRepository.save(profile);
+        log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
+    }
+    
+    private LocalDate parseBirthDate(String birthDateString) {
+        if (birthDateString == null || birthDateString.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return LocalDate.parse(birthDateString.trim(), DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            log.warn("생년월일 파싱 실패: {}", birthDateString, e);
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd 형식)");
+        }
+    }
+    
+    private void validateVerificationToken(String verificationToken, String phoneNumber) {
+        if (verificationToken == null || verificationToken.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, "인증 토큰이 필요합니다.");
+        }
+        
+        if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않거나 만료된 인증 토큰입니다.");
+        }
     }
 
     private Profile getProfileByUserId(Long userId) {
