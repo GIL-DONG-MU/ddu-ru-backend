@@ -2,8 +2,9 @@ package com.dduru.gildongmu.profile.controller;
 
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
-import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
+import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,4 +43,10 @@ public interface ProfileApiDocs {
             @ApiResponse(responseCode = "401", description = "인증 필요")
     })
     ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname();
+
+
+    ResponseEntity<ApiResult<Void>> setupInitialProfile(
+            @Parameter(hidden = true) Long id,
+            @Valid ProfileSetupRequest request
+    );
 }
