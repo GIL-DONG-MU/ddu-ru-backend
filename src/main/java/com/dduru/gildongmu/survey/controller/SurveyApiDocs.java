@@ -34,7 +34,7 @@ public interface SurveyApiDocs {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청 (유효하지 않은 답변 코드, 필수 질문 미응답, Q7 3개 미선택 등)",
+                    description = "잘못된 요청 (유효하지 않은 답변 코드, 필수 질문 미응답, Q7 범위 초과 등)",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -73,7 +73,7 @@ public interface SurveyApiDocs {
                                                       "data": {
                                                         "errorCode": "INVALID_INPUT_VALUE",
                                                         "field": "q7",
-                                                        "message": "Q7 선호활동은 정확히 3개를 선택해야 합니다."
+                                                        "message": "Q7 선호활동은 최대 3개까지 선택할 수 있습니다."
                                                       }
                                                     }
                                                     """

@@ -25,7 +25,7 @@ public record SurveyRequest(
         Integer q6,
 
         @NotNull(message = "Q7 선호활동은 필수입니다.")
-        @Size(min = 3, max = 3, message = "Q7 선호활동은 정확히 3개를 선택해야 합니다.")
+        @Size(min = 1, max = 3, message = "Q7 선호활동은 최대 3개까지 선택할 수 있습니다.")
         List<Integer> q7,
 
         @NotNull(message = "Q8 계획성은 필수입니다.")
