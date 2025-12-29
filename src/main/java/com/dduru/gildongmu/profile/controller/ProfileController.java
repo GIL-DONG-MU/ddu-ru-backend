@@ -54,6 +54,7 @@ public class ProfileController implements ProfileApiDocs {
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
+    @Override
     @PutMapping("/me/profile")
     public ResponseEntity<ApiResult<Void>> setupInitialProfile(
             @CurrentUser Long userId,
