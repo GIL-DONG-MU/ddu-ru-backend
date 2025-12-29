@@ -36,6 +36,6 @@ public class NicknameGenerator {
     public String generateBaseNickname() {
         String adjective = nicknameAdjectiveProvider.getRandomAdjective();
         String noun = nicknameNounProvider.getRandomNoun();
-        return adjective + " " + noun;
+        return adjective + noun;
     }
 }
