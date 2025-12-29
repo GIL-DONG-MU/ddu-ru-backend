@@ -15,6 +15,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,33 +88,39 @@ public class ProfileService {
     public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Profile profile = getProfileByUserId(user);
-        
-        checkDuplicateNickname(request.nickname());
-        
+
+        // 비관적 잠금을 사용하여 닉네임 중복 체크 (race condition 방지)
+        checkDuplicateNicknameWithLock(request.nickname());
+
         validateVerificationToken(request.verificationToken(), request.phoneNumber());
-        
+
         if (profileRepository.existsByPhoneNumber(request.phoneNumber())) {
             throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
 
         LocalDate birthday = parseBirthDate(request.birthday());
-        
+
         profile.setupInitialProfile(
                 request.nickname(),
                 Gender.valueOf(request.gender()),
                 request.phoneNumber(),
                 birthday
         );
-        
-        profileRepository.save(profile);
-        log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
+
+        try {
+            profileRepository.save(profile);
+            log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
+        } catch (DataIntegrityViolationException e) {
+            log.warn("닉네임 중복으로 인한 저장 실패: userId={}, nickname={}", userId, request.nickname(), e);
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
     }
-    
+
     private LocalDate parseBirthDate(String birthDateString) {
         if (birthDateString == null || birthDateString.trim().isEmpty()) {
             return null;
         }
-        
+
         try {
             return LocalDate.parse(birthDateString.trim(), DATE_FORMATTER);
         } catch (DateTimeParseException e) {
@@ -121,12 +128,12 @@ public class ProfileService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd 형식)");
         }
     }
-    
+
     private void validateVerificationToken(String verificationToken, String phoneNumber) {
         if (verificationToken == null || verificationToken.trim().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN, "인증 토큰이 필요합니다.");
         }
-        
+
         if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않거나 만료된 인증 토큰입니다.");
         }
@@ -139,6 +146,12 @@ public class ProfileService {
 
     private void checkDuplicateNickname(String nickname) {
         if (profileRepository.existsByNickname(nickname)) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
+    }
+
+    private void checkDuplicateNicknameWithLock(String nickname) {
+        if (profileRepository.existsByNicknameWithLock(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
     }
