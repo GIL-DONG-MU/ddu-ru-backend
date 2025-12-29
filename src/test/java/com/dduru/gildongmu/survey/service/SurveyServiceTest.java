@@ -117,7 +117,7 @@ class SurveyServiceTest {
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_SWEET);
 
         AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격", "강점", "팁"
+                "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileProvider.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
@@ -184,7 +184,7 @@ class SurveyServiceTest {
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_PADO);
 
         AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격2", "강점2", "팁2"
+                "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileProvider.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
 
@@ -237,7 +237,7 @@ class SurveyServiceTest {
         when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.of(travelTendency));
 
         AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격", "강점", "팁"
+                "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileProvider.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
