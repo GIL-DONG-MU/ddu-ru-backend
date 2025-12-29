@@ -2,9 +2,7 @@ package com.dduru.gildongmu.survey.domain.enums;
 
 import com.dduru.gildongmu.common.enums.CodedEnum;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
 public enum Question9Menu implements CodedEnum {
     SAFE(1, "안전한 메뉴"),
@@ -13,4 +11,14 @@ public enum Question9Menu implements CodedEnum {
 
     private final int code;
     private final String text;
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getText() {
+        return text;
+    }
 }

@@ -2,9 +2,7 @@ package com.dduru.gildongmu.survey.domain.enums;
 
 import com.dduru.gildongmu.common.enums.CodedEnum;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
 public enum AvatarType implements CodedEnum {
     TTUR_POGUNI(1, "뚜르 포근이"),
@@ -18,6 +16,16 @@ public enum AvatarType implements CodedEnum {
 
     private final int code;
     private final String text;
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getText() {
+        return text;
+    }
 
     public String getDescription() {
         return switch (this) {
