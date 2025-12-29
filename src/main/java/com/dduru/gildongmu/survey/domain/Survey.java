@@ -92,11 +92,11 @@ public class Survey extends BaseTimeEntity {
         this.q11Photo = q11Photo;
     }
 
-    public static Survey create(User user, Question1Transport q1Transport, Question2Waiting q2Waiting,
-                                Question3Stay q3Stay, Question4Wakeup q4Wakeup, Question5Expense q5Expense,
-                                Question6Spend q6Spend, List<Question7Interest> q7Interests,
-                                Question8Planning q8Planning, Question9Menu q9Menu,
-                                Question10Companion q10Companion, Question11Photo q11Photo) {
+    public static Survey createSurvey(User user, Question1Transport q1Transport, Question2Waiting q2Waiting,
+                                      Question3Stay q3Stay, Question4Wakeup q4Wakeup, Question5Expense q5Expense,
+                                      Question6Spend q6Spend, List<Question7Interest> q7Interests,
+                                      Question8Planning q8Planning, Question9Menu q9Menu,
+                                      Question10Companion q10Companion, Question11Photo q11Photo) {
         return Survey.builder()
                 .user(user)
                 .q1Transport(q1Transport)
@@ -113,10 +113,10 @@ public class Survey extends BaseTimeEntity {
                 .build();
     }
 
-    public void update(Question1Transport q1Transport, Question2Waiting q2Waiting, Question3Stay q3Stay,
-                       Question4Wakeup q4Wakeup, Question5Expense q5Expense, Question6Spend q6Spend,
-                       List<Question7Interest> q7Interests, Question8Planning q8Planning,
-                       Question9Menu q9Menu, Question10Companion q10Companion, Question11Photo q11Photo) {
+    public void updateSurvey(Question1Transport q1Transport, Question2Waiting q2Waiting, Question3Stay q3Stay,
+                             Question4Wakeup q4Wakeup, Question5Expense q5Expense, Question6Spend q6Spend,
+                             List<Question7Interest> q7Interests, Question8Planning q8Planning,
+                             Question9Menu q9Menu, Question10Companion q10Companion, Question11Photo q11Photo) {
         this.q1Transport = q1Transport;
         this.q2Waiting = q2Waiting;
         this.q3Stay = q3Stay;

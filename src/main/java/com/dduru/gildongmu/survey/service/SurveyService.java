@@ -68,7 +68,7 @@ public class SurveyService {
 
         return surveyRepository.findByUser(user)
                 .map(existing -> {
-                    existing.update(parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
+                    existing.updateSurvey(parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
                             parsed.q6(), parsed.q7(), parsed.q8(), parsed.q9(), parsed.q10(), parsed.q11());
                     return existing;
                 })

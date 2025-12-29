@@ -17,7 +17,7 @@ public class SurveyConverter {
 
     public Survey toEntity(User user, SurveyRequest request) {
         ParsedSurveyData parsed = parseRequest(request);
-        return Survey.create(user, parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
+        return Survey.createSurvey(user, parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
                 parsed.q6(), parsed.q7(), parsed.q8(), parsed.q9(), parsed.q10(), parsed.q11());
     }
 

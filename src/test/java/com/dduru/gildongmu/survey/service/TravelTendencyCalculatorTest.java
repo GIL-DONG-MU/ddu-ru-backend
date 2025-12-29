@@ -33,7 +33,7 @@ class TravelTendencyCalculatorTest {
     @DisplayName("기본값_모두_5점으로_시작")
     void 기본값_모두_5점으로_시작() {
         // given
-        Survey survey = Survey.create(
+        Survey survey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS,
                 Question2Waiting.WAIT,
@@ -62,7 +62,7 @@ class TravelTendencyCalculatorTest {
     @DisplayName("Q1_걷기버스선택시_W감소_P증가")
     void Q1_걷기버스선택시_W감소_P증가() {
         // given
-        Survey walkBusSurvey = Survey.create(
+        Survey walkBusSurvey = Survey.createSurvey(
                 testUser, Question1Transport.WALK_BUS,
                 Question2Waiting.WAIT, Question3Stay.HOTEL, Question4Wakeup.EARLY,
                 Question5Expense.EACH_PAYS, Question6Spend.SAVE,
@@ -71,7 +71,7 @@ class TravelTendencyCalculatorTest {
                 Question10Companion.SITUATIONAL, Question11Photo.EYES_ONLY
         );
 
-        Survey taxiSurvey = Survey.create(
+        Survey taxiSurvey = Survey.createSurvey(
                 testUser, Question1Transport.TAXI,
                 Question2Waiting.WAIT, Question3Stay.HOTEL, Question4Wakeup.EARLY,
                 Question5Expense.EACH_PAYS, Question6Spend.SAVE,
@@ -93,7 +93,7 @@ class TravelTendencyCalculatorTest {
     @DisplayName("Q7_선호활동_택3_누적합산_정상작동")
     void Q7_선호활동_택3_누적합산_정상작동() {
         // given
-        Survey survey = Survey.create(
+        Survey survey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS,
                 Question2Waiting.WAIT,
@@ -120,7 +120,7 @@ class TravelTendencyCalculatorTest {
     @DisplayName("점수_범위_0점에서_10점으로_제한")
     void 점수_범위_0점에서_10점으로_제한() {
         // given
-        Survey minScoreSurvey = Survey.create(
+        Survey minScoreSurvey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS,
                 Question2Waiting.MOVE_ELSEWHERE,
@@ -153,7 +153,7 @@ class TravelTendencyCalculatorTest {
     @DisplayName("Q10_완전환영선택시_S크게증가")
     void Q10_완전환영선택시_S크게증가() {
         // given
-        Survey welcomeSurvey = Survey.create(
+        Survey welcomeSurvey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS, Question2Waiting.WAIT, Question3Stay.HOTEL,
                 Question4Wakeup.EARLY, Question5Expense.EACH_PAYS, Question6Spend.SAVE,
@@ -163,7 +163,7 @@ class TravelTendencyCalculatorTest {
                 Question11Photo.EYES_ONLY
         );
 
-        Survey onlyUsSurvey = Survey.create(
+        Survey onlyUsSurvey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS, Question2Waiting.WAIT, Question3Stay.HOTEL,
                 Question4Wakeup.EARLY, Question5Expense.EACH_PAYS, Question6Spend.SAVE,

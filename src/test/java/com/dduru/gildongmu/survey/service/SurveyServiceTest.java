@@ -71,7 +71,7 @@ class SurveyServiceTest {
                 1, 1, 1, 1
         );
 
-        testSurvey = Survey.create(
+        testSurvey = Survey.createSurvey(
                 testUser,
                 Question1Transport.WALK_BUS,
                 Question2Waiting.WAIT,
@@ -145,7 +145,7 @@ class SurveyServiceTest {
     @DisplayName("기존_설문_업데이트_성공")
     void 기존_설문_업데이트_성공() {
         // given
-        Survey existingSurvey = Survey.create(
+        Survey existingSurvey = Survey.createSurvey(
                 testUser,
                 Question1Transport.TAXI,
                 Question2Waiting.MOVE_ELSEWHERE,
