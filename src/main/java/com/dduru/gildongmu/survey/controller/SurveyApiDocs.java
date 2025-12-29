@@ -25,7 +25,7 @@ public interface SurveyApiDocs {
     @CommonApiResponses
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "설문 제출 성공",
                     content = @Content(
                             mediaType = "application/json",

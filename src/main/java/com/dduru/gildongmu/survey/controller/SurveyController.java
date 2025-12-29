@@ -22,15 +22,17 @@ public class SurveyController implements SurveyApiDocs {
     @PostMapping
     public ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(
             @CurrentUser Long userId,
-            @RequestBody @Valid SurveyRequest request) {
+            @RequestBody @Valid SurveyRequest request
+    ) {
         SurveyResponse response = surveyService.submitSurvey(userId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.ok(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.ok(response));
     }
 
     @Override
     @GetMapping("/me")
     public ResponseEntity<ApiResult<SurveyResponse>> getMySurveyResult(
-            @CurrentUser Long userId) {
+            @CurrentUser Long userId
+    ) {
         SurveyResponse response = surveyService.getMySurveyResult(userId);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResult.ok(response));
     }
