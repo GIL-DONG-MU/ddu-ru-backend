@@ -11,6 +11,8 @@ import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,12 +31,15 @@ public class ProfileService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final NicknameGenerator nicknameGenerator;
-    private final ProfileRepository profileRepository;
     private final JwtTokenProvider jwtTokenProvider;
+
+    private final ProfileRepository profileRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
-        Profile profile = getProfileByUserId(userId);
+        User user = userRepository.getByIdOrThrow(userId);
+        Profile profile = getProfileByUserId(user);
         checkDuplicateNickname(request.nickname());
 
         profile.updateNickname(request.nickname());
@@ -80,7 +85,8 @@ public class ProfileService {
 
     @Transactional
     public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
-        Profile profile = getProfileByUserId(userId);
+        User user = userRepository.getByIdOrThrow(userId);
+        Profile profile = getProfileByUserId(user);
         
         checkDuplicateNickname(request.nickname());
         
@@ -126,8 +132,8 @@ public class ProfileService {
         }
     }
 
-    private Profile getProfileByUserId(Long userId) {
-        return profileRepository.findByUser_Id(userId)
+    private Profile getProfileByUserId(User user) {
+        return profileRepository.findByUser(user)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
     }
 
