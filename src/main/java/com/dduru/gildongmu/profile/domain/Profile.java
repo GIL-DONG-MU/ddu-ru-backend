@@ -54,24 +54,8 @@ public class Profile extends BaseTimeEntity {
         this.selfIntroduction = selfIntroduction;
     }
 
-    public void updateProfileImage(String profileImage) {
-        this.profileImage = profileImage;
-    }
-
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-    }
-
-    public void updateAdditionalInfo(Gender gender, LocalDate birthday, String phoneNumber) {
-        if (gender != null) {
-            this.gender = gender;
-        }
-        if (birthday != null) {
-            this.birthday = birthday;
-        }
-        if (phoneNumber != null) {
-            this.phoneNumber = phoneNumber;
-        }
     }
 
     public void setupInitialProfile(String nickname, Gender gender, String phoneNumber, LocalDate birthday) {
