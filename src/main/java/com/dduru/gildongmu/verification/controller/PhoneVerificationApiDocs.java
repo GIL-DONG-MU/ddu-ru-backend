@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.verification.controller;
 
-import com.dduru.gildongmu.common.annotation.CommonApiResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorResponse;
 import com.dduru.gildongmu.verification.dto.VerificationSendRequest;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface PhoneVerificationApiDocs {
 
     @Operation(summary = "인증번호 발송", description = "전화번호로 인증번호를 발송합니다.")
-    @CommonApiResponses
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -95,7 +93,6 @@ public interface PhoneVerificationApiDocs {
     );
 
     @Operation(summary = "인증번호 검증", description = "발송된 인증번호를 검증하고 인증 토큰을 발급합니다.")
-    @CommonApiResponses
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
