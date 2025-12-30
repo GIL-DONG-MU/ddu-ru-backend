@@ -10,10 +10,7 @@ import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +19,7 @@ import org.springframework.http.ResponseEntity;
 public interface ProfileApiDocs {
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "닉네임 수정 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ApiResult.class))
-            )
-    })
+    @ApiResponse(responseCode = "204", description = "닉네임 수정 성공")
     @ApiErrorResponses({
             ErrorCode.NICKNAME_INVALID_LENGTH,
             ErrorCode.NICKNAME_INVALID_CHARACTERS,
@@ -44,12 +34,7 @@ public interface ProfileApiDocs {
     );
 
     @Operation(summary = "닉네임 유효성 확인", description = "닉네임의 사용 가능 여부를 확인합니다. 닉네임 형식 검증 및 중복 여부를 체크합니다.")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "닉네임 유효성 확인 성공(사용가능)"
-            )
-    })
+    @ApiResponse(responseCode = "200", description = "닉네임 유효성 확인 성공(사용가능)")
     @ApiErrorResponses({
             ErrorCode.NICKNAME_INVALID_LENGTH,
             ErrorCode.NICKNAME_INVALID_CHARACTERS,
@@ -65,12 +50,7 @@ public interface ProfileApiDocs {
     );
 
     @Operation(summary = "랜덤 닉네임 생성", description = "랜덤으로 사용 가능한 닉네임을 생성합니다. 형용사와 명사 조합에 랜덤 숫자를 추가하여 고유성을 보장합니다.")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "랜덤 닉네임 생성 성공"
-            )
-    })
+    @ApiResponse(responseCode = "200", description = "랜덤 닉네임 생성 성공")
     @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
     ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname();
 
@@ -78,14 +58,7 @@ public interface ProfileApiDocs {
             summary = "프로필 초기 설정",
             description = "온보딩 과정에서 사용자의 프로필 정보를 초기 설정합니다. 닉네임, 성별, 전화번호, 생년월일을 저장하며, 비관적 잠금을 사용하여 닉네임 중복을 방지합니다."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "프로필 초기 설정 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ApiResult.class))
-            )
-    })
+    @ApiResponse(responseCode = "204", description = "프로필 초기 설정 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.NICKNAME_INVALID_LENGTH,
