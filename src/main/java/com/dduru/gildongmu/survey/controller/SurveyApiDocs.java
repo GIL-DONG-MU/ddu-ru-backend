@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.survey.controller;
 
-import com.dduru.gildongmu.common.annotation.CommonApiResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
@@ -22,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 public interface SurveyApiDocs {
 
     @Operation(summary = "설문조사 제출", description = "11개 질문의 선택지를 제출하고 성향 점수 및 아바타를 매칭합니다.")
-    @CommonApiResponses
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
@@ -88,7 +86,6 @@ public interface SurveyApiDocs {
     );
 
     @Operation(summary = "내 설문 결과 조회", description = "현재 사용자의 설문 결과 및 매칭된 아바타를 조회합니다.")
-    @CommonApiResponses
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
