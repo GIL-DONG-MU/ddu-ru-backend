@@ -3,6 +3,7 @@ package com.dduru.gildongmu.survey.service;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.exception.AvatarProfileNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +43,5 @@ public class AvatarProfileService {
                 profile.getTip(),
                 tags
         );
-    }
-
-    public record AvatarProfileResponse(String description, String personality, String strength, String tip, List<String> tags) {
     }
 }

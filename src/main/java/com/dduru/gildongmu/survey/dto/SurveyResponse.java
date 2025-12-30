@@ -22,7 +22,7 @@ public record SurveyResponse(
 ) {
     public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
         AvatarType avatarType = travelTendency.getAvatarType();
-        AvatarProfileService.AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
+        AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 
         return new SurveyResponse(
                 travelTendency.getR().doubleValue(),
@@ -43,7 +43,7 @@ public record SurveyResponse(
     public static SurveyResponse of(
             double r, double w, double s, double p,
             AvatarType avatarType,
-            AvatarProfileService.AvatarProfileResponse profile
+            AvatarProfileResponse profile
     ) {
         return new SurveyResponse(
                 r, w, s, p,

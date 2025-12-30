@@ -5,6 +5,7 @@ import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.*;
+import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.SurveyResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
@@ -115,7 +116,7 @@ class SurveyServiceTest {
         when(tendencyCalculator.calculate(testSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_SWEET);
 
-        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+        AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
@@ -182,7 +183,7 @@ class SurveyServiceTest {
         when(tendencyCalculator.calculate(existingSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_PADO);
 
-        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+        AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명2", "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
@@ -235,7 +236,7 @@ class SurveyServiceTest {
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
         when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.of(travelTendency));
 
-        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+        AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.SurveyResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
@@ -44,7 +45,7 @@ public class SurveyService {
 
         saveOrUpdateTravelTendency(user, scores, avatarType);
 
-        AvatarProfileService.AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
+        AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}, 점수: R={}, W={}, S={}, P={}",
                 userId, avatarType, scores.r(), scores.w(), scores.s(), scores.p());
