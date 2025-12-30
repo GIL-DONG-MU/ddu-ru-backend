@@ -1,9 +1,9 @@
-package com.dduru.gildongmu.user.dto;
+package com.dduru.gildongmu.profile.dto;
 
-import com.dduru.gildongmu.user.validator.ValidNickname;
+import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record UserUpdateNicknameRequest(
+public record NicknameUpdateRequest(
         @Schema(
                 description = "닉네임",
                 example = "길동무",

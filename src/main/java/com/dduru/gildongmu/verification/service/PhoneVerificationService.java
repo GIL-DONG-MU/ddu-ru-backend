@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.verification.service;
 
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
-import com.dduru.gildongmu.user.repository.UserRepository;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
 import com.dduru.gildongmu.verification.exception.DuplicatePhoneNumberException;
@@ -19,7 +19,7 @@ public class PhoneVerificationService {
     private final SmsService smsService;
     private final VerificationCodeService verificationCodeService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
 
     public VerificationSendResponse sendVerificationCode(String phoneNumber) {
         validatePhoneNumber(phoneNumber);
@@ -48,7 +48,7 @@ public class PhoneVerificationService {
     }
 
     private void validatePhoneNumber(String phoneNumber) {
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+        if (profileRepository.existsByPhoneNumber(phoneNumber)) {
             throw new DuplicatePhoneNumberException("이미 가입된 전화번호입니다. 로그인해주세요.");
         }
     }

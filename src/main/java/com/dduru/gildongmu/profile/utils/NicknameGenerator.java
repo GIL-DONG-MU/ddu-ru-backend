@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.utils;
+package com.dduru.gildongmu.profile.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +36,6 @@ public class NicknameGenerator {
     public String generateBaseNickname() {
         String adjective = nicknameAdjectiveProvider.getRandomAdjective();
         String noun = nicknameNounProvider.getRandomNoun();
-        return adjective + " " + noun;
+        return adjective + noun;
     }
 }

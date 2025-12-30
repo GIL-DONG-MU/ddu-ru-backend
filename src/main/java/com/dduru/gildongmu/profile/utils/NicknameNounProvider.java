@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.utils;
+package com.dduru.gildongmu.profile.utils;
 
 import org.springframework.stereotype.Component;
 

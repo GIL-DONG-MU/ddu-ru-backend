@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.verification.service;
 
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
-import com.dduru.gildongmu.user.repository.UserRepository;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
 import com.dduru.gildongmu.verification.exception.DuplicatePhoneNumberException;
 import com.dduru.gildongmu.verification.exception.SmsSendFailedException;
@@ -25,7 +25,7 @@ class PhoneVerificationServiceTest {
     @Mock
     private JwtTokenProvider jwtTokenProvider;
     @Mock
-    private UserRepository userRepository;
+    private ProfileRepository profileRepository;
 
     @InjectMocks
     private PhoneVerificationService phoneVerificationService;
@@ -33,7 +33,7 @@ class PhoneVerificationServiceTest {
     @Test
     void 인증번호발송_가입된번호면_예외발생() {
         // given
-        when(userRepository.existsByPhoneNumber("01012345678")).thenReturn(true);
+        when(profileRepository.existsByPhoneNumber("01012345678")).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> phoneVerificationService.sendVerificationCode("01012345678"))
@@ -45,7 +45,7 @@ class PhoneVerificationServiceTest {
     @Test
     void 인증번호발송_SMS실패시_롤백후_예외발생() {
         // given
-        when(userRepository.existsByPhoneNumber(anyString())).thenReturn(false);
+        when(profileRepository.existsByPhoneNumber(anyString())).thenReturn(false);
         VerificationCodeService.VerificationCreateResult result =
                 new VerificationCodeService.VerificationCreateResult("999999", java.time.LocalDateTime.now().plusMinutes(3));
         when(verificationCodeService.createVerification("01022223333")).thenReturn(result);
