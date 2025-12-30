@@ -7,6 +7,7 @@ import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyRequest;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Phone Verification", description = "휴대폰 인증 API")
 public interface PhoneVerificationApiDocs {
@@ -89,7 +89,8 @@ public interface PhoneVerificationApiDocs {
             )
     })
     ResponseEntity<ApiResult<VerificationSendResponse>> sendVerificationCode(
-            @Valid @RequestBody VerificationSendRequest request
+            @Parameter(hidden = true) Long userId,
+            @Valid VerificationSendRequest request
     );
 
     @Operation(summary = "인증번호 검증", description = "발송된 인증번호를 검증하고 인증 토큰을 발급합니다.")
@@ -182,6 +183,7 @@ public interface PhoneVerificationApiDocs {
             )
     })
     ResponseEntity<ApiResult<VerificationVerifyResponse>> verifyCode(
-            @Valid @RequestBody VerificationVerifyRequest request
+            @Parameter(hidden = true) Long userId,
+            @Valid VerificationVerifyRequest request
     );
 }
