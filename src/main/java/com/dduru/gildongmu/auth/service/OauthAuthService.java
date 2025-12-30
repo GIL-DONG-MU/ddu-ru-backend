@@ -148,7 +148,6 @@ public class OauthAuthService {
     }
 
     private User createNewUser(OauthUserInfo oauthUserInfo) {
-//         User 생성
         User newUser = User.builder()
                 .email(oauthUserInfo.email())
                 .name(oauthUserInfo.name())
@@ -159,10 +158,9 @@ public class OauthAuthService {
 
         User savedUser = userRepository.save(newUser);
 
-        // Profile 생성 (OAuth에서 받은 profileImage는 저장, 나머지는 null)
         Profile profile = Profile.builder()
                 .user(savedUser)
-                .profileImage(oauthUserInfo.profileImage())
+                .profileImage(null)
                 .nickname(null)
                 .gender(null)
                 .phoneNumber(null)
