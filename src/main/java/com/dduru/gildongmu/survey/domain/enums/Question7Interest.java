@@ -2,15 +2,13 @@ package com.dduru.gildongmu.survey.domain.enums;
 
 import com.dduru.gildongmu.common.enums.CodedEnum;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
-public enum Interest implements CodedEnum {
+public enum Question7Interest implements CodedEnum {
     SIGHTSEEING(1, "관광"),
     EXHIBITION(2, "관람"),
     NATURE(3, "자연 탐방"),
-    FOOD(4, "먹방"),
+    FOOD(4, "맛집 탐방"),
     SHOPPING(5, "쇼핑"),
     RESORT(6, "휴양"),
     ACTIVITY(7, "액티비티"),
@@ -19,4 +17,14 @@ public enum Interest implements CodedEnum {
 
     private final int code;
     private final String text;
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getText() {
+        return text;
+    }
 }
