@@ -15,7 +15,6 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +40,7 @@ public class ProfileService {
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Profile profile = getProfileByUserId(user);
-        checkDuplicateNickname(request.nickname());
+        checkDuplicateNicknameWithLock(request.nickname());
 
         profile.updateNickname(request.nickname());
         profileRepository.save(profile);
@@ -107,13 +106,8 @@ public class ProfileService {
                 birthday
         );
 
-        try {
-            profileRepository.save(profile);
-            log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
-        } catch (DataIntegrityViolationException e) {
-            log.warn("닉네임 중복으로 인한 저장 실패: userId={}, nickname={}", userId, request.nickname(), e);
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
+        profileRepository.save(profile);
+        log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
     }
 
     private LocalDate parseBirthDate(String birthDateString) {
