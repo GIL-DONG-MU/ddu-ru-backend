@@ -25,7 +25,7 @@ public class AvatarProfileService {
 
     @Cacheable(value = "avatarProfiles", key = "#avatarType.name()")
     public AvatarProfileResponse getProfile(AvatarType avatarType) {
-        log.debug("아바타 프로필 조회 - avatarType: {}", avatarType);
+        log.info("아바타 프로필 조회 - avatarType: {}", avatarType);
 
         AvatarProfile profile = avatarProfileRepository.findByAvatarType(avatarType)
                 .orElseThrow(() -> {
@@ -35,7 +35,7 @@ public class AvatarProfileService {
 
         List<String> tags = jsonConverter.convertJsonToList(profile.getTags());
 
-        log.debug("아바타 프로필 조회 완료 - avatarType: {}", avatarType);
+        log.info("아바타 프로필 조회 완료 - avatarType: {}", avatarType);
         return new AvatarProfileResponse(
                 profile.getDescription(),
                 profile.getPersonality(),
