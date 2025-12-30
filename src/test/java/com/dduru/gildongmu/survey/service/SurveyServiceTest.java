@@ -44,7 +44,7 @@ class SurveyServiceTest {
     @Mock
     private AvatarMatcher avatarMatcher;
     @Mock
-    private AvatarProfileProvider avatarProfileProvider;
+    private AvatarProfileService avatarProfileService;
     @Mock
     private UserRepository userRepository;
 
@@ -115,10 +115,10 @@ class SurveyServiceTest {
         when(tendencyCalculator.calculate(testSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_SWEET);
 
-        AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
+        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+                "설명", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
-        when(avatarProfileProvider.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
         when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.empty());
         when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -182,10 +182,10 @@ class SurveyServiceTest {
         when(tendencyCalculator.calculate(existingSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_PADO);
 
-        AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
+        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+                "설명2", "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
         );
-        when(avatarProfileProvider.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
 
         TravelTendency existingTendency = TravelTendency.create(
                 testUser,
@@ -235,10 +235,10 @@ class SurveyServiceTest {
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
         when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.of(travelTendency));
 
-        AvatarProfileProvider.AvatarProfile profile = new AvatarProfileProvider.AvatarProfile(
-                "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
+        AvatarProfileService.AvatarProfileResponse profile = new AvatarProfileService.AvatarProfileResponse(
+                "설명", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
-        when(avatarProfileProvider.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
         // when
         SurveyResponse response = surveyService.getMySurveyResult(1L);
