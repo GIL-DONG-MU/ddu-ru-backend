@@ -25,12 +25,8 @@ public class CacheConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
                 .disableCachingNullValues();
 
-        // 아바타 프로필 캐시 설정 (1시간)
-        RedisCacheConfiguration avatarProfilesConfig = defaultConfig.entryTtl(Duration.ofHours(1));
-
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(defaultConfig)
-                .withCacheConfiguration("avatarProfiles", avatarProfilesConfig)
                 .build();
     }
 }
