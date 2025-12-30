@@ -8,6 +8,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,7 +42,7 @@ public interface CommentApiDocs {
     );
 
     @Operation(summary = "댓글 삭제", description = "특정 게시글의 댓글을 삭제합니다.")
-    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.COMMENT_NOT_FOUND,
@@ -56,7 +57,7 @@ public interface CommentApiDocs {
     );
 
     @Operation(summary = "댓글 수정", description = "특정 게시글의 댓글을 수정합니다.")
-    @ApiResponse(responseCode = "204", description = "수정 성공")
+    @ApiResponse(responseCode = "204", description = "수정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.POST_NOT_FOUND,

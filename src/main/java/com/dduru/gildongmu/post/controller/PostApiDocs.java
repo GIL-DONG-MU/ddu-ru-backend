@@ -11,6 +11,7 @@ import com.dduru.gildongmu.post.dto.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -60,7 +61,7 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
-    @ApiResponse(responseCode = "204", description = "수정 성공")
+    @ApiResponse(responseCode = "204", description = "수정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.POST_NOT_FOUND,
@@ -82,7 +83,7 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
-    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.POST_ACCESS_DENIED,
@@ -94,7 +95,7 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 모집 상태 변경", description = "게시글 모집 상태를 변경합니다. (true: 모집중, false: 모집마감)")
-    @ApiResponse(responseCode = "204", description = "상태 변경 성공")
+    @ApiResponse(responseCode = "204", description = "상태 변경 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.POST_NOT_FOUND,

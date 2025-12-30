@@ -8,6 +8,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +43,7 @@ public interface OauthApiDocs {
     ResponseEntity<ApiResult<LoginResponse>> refreshAccessToken(@Valid RefreshTokenRequest request);
 
     @Operation(summary = "로그아웃", description = "사용자 로그아웃을 처리합니다.", security = @SecurityRequirement(name = "JWT"))
-    @ApiResponse(responseCode = "204", description = "로그아웃 성공")
+    @ApiResponse(responseCode = "204", description = "로그아웃 성공", content = @Content())
     @ApiErrorResponses({ErrorCode.UNAUTHORIZED, ErrorCode.INVALID_TOKEN, ErrorCode.EXPIRED_TOKEN})
     ResponseEntity<ApiResult<Void>> logout(@Parameter(hidden = true) Long userId);
 }

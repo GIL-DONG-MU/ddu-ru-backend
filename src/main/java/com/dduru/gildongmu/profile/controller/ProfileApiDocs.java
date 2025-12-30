@@ -10,6 +10,7 @@ import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 public interface ProfileApiDocs {
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
-    @ApiResponse(responseCode = "204", description = "닉네임 수정 성공")
+    @ApiResponse(responseCode = "204", description = "닉네임 수정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.NICKNAME_INVALID_LENGTH,
             ErrorCode.NICKNAME_INVALID_CHARACTERS,
@@ -58,7 +59,7 @@ public interface ProfileApiDocs {
             summary = "프로필 초기 설정",
             description = "온보딩 과정에서 사용자의 프로필 정보를 초기 설정합니다. 닉네임, 성별, 전화번호, 생년월일을 저장하며, 비관적 잠금을 사용하여 닉네임 중복을 방지합니다."
     )
-    @ApiResponse(responseCode = "204", description = "프로필 초기 설정 성공")
+    @ApiResponse(responseCode = "204", description = "프로필 초기 설정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.NICKNAME_INVALID_LENGTH,

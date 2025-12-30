@@ -7,6 +7,7 @@ import com.dduru.gildongmu.participation.dto.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.ParticipationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,7 +50,7 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 신청 승인", description = "게시글 참여 신청을 승인합니다.")
-    @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공")
+    @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.PARTICIPATION_NOT_FOUND,
@@ -65,7 +66,7 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 신청 거절", description = "게시글 참여 신청을 거절합니다.")
-    @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공")
+    @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.PARTICIPATION_NOT_FOUND,
@@ -80,7 +81,7 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 취소", description = "게시글 참여를 취소합니다.")
-    @ApiResponse(responseCode = "204", description = "참여 취소 성공")
+    @ApiResponse(responseCode = "204", description = "참여 취소 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.PARTICIPATION_NOT_FOUND,
