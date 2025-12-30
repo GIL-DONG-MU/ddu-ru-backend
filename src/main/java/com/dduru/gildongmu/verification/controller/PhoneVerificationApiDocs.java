@@ -1,7 +1,5 @@
 package com.dduru.gildongmu.verification.controller;
 
-import com.dduru.gildongmu.common.annotation.CommonApiResponses;
-import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorResponse;
 import com.dduru.gildongmu.verification.dto.VerificationSendRequest;
@@ -18,13 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Phone Verification", description = "휴대폰 인증 API")
 public interface PhoneVerificationApiDocs {
 
-    @Operation(summary = "인증번호 발송", description = "소셜 로그인한 사용자만 전화번호로 인증번호를 발송할 수 있습니다.")
-    @CommonApiResponses
+    @Operation(summary = "인증번호 발송", description = "전화번호로 인증번호를 발송합니다.")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -93,12 +89,11 @@ public interface PhoneVerificationApiDocs {
             )
     })
     ResponseEntity<ApiResult<VerificationSendResponse>> sendVerificationCode(
-            @Parameter(hidden = true) @CurrentUser Long userId,
-            @Valid @RequestBody VerificationSendRequest request
+            @Parameter(hidden = true) Long userId,
+            @Valid VerificationSendRequest request
     );
 
-    @Operation(summary = "인증번호 검증", description = "소셜 로그인한 사용자만 발송된 인증번호를 검증하고 인증 토큰을 발급할 수 있습니다.")
-    @CommonApiResponses
+    @Operation(summary = "인증번호 검증", description = "발송된 인증번호를 검증하고 인증 토큰을 발급합니다.")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -188,7 +183,7 @@ public interface PhoneVerificationApiDocs {
             )
     })
     ResponseEntity<ApiResult<VerificationVerifyResponse>> verifyCode(
-            @Parameter(hidden = true) @CurrentUser Long userId,
-            @Valid @RequestBody VerificationVerifyRequest request
+            @Parameter(hidden = true) Long userId,
+            @Valid VerificationVerifyRequest request
     );
 }
