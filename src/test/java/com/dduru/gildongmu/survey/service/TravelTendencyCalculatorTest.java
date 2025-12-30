@@ -23,7 +23,6 @@ class TravelTendencyCalculatorTest {
         testUser = User.builder()
                 .email("test@example.com")
                 .name("테스트")
-                .profileImage("http://example.com/image.jpg")
                 .oauthId("12345")
                 .oauthType(com.dduru.gildongmu.user.enums.OauthType.KAKAO)
                 .build();
