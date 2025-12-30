@@ -25,7 +25,7 @@ public class SurveyController implements SurveyApiDocs {
             @RequestBody @Valid SurveyRequest request
     ) {
         SurveyResponse response = surveyService.submitSurvey(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.ok(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
     @Override
@@ -34,6 +34,6 @@ public class SurveyController implements SurveyApiDocs {
             @CurrentUser Long userId
     ) {
         SurveyResponse response = surveyService.getMySurveyResult(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.ok(response));
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

@@ -1,11 +1,18 @@
 package com.dduru.gildongmu.post.controller;
 
+import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.post.dto.*;
+import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.post.dto.PostCreateRequest;
+import com.dduru.gildongmu.post.dto.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.PostDetailResponse;
+import com.dduru.gildongmu.post.dto.PostListResponse;
+import com.dduru.gildongmu.post.dto.PostStatusUpdateRequest;
+import com.dduru.gildongmu.post.dto.PostUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,18 +38,22 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 정보를 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
-    })
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({ErrorCode.POST_NOT_FOUND})
     ResponseEntity<ApiResult<PostDetailResponse>> getPostDetail(
             @Parameter(description = "게시글 ID") Long postId
     );
 
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "작성 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    @ApiResponse(responseCode = "201", description = "작성 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.INVALID_POST_DATE,
+            ErrorCode.INVALID_BUDGET_RANGE,
+            ErrorCode.INVALID_AGE_RANGE,
+            ErrorCode.DESTINATION_NOT_FOUND,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<PostCreateResponse>> createPost(
             @Parameter(hidden = true) Long userId,
@@ -50,10 +61,20 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "수정 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    @ApiResponse(responseCode = "204", description = "수정 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.INVALID_POST_DATE,
+            ErrorCode.INVALID_BUDGET_RANGE,
+            ErrorCode.INVALID_AGE_RANGE,
+            ErrorCode.DESTINATION_NOT_FOUND,
+            ErrorCode.TRAVEL_ALREADY_STARTED,
+            ErrorCode.TRAVEL_ALREADY_ENDED,
+            ErrorCode.INVALID_RECRUIT_CAPACITY,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> updatePost(
             @Parameter(description = "게시글 ID") Long postId,
@@ -62,10 +83,11 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> deletePost(
             @Parameter(description = "게시글 ID") Long postId,
@@ -73,11 +95,13 @@ public interface PostApiDocs {
     );
 
     @Operation(summary = "게시글 모집 상태 변경", description = "게시글 모집 상태를 변경합니다. (true: 모집중, false: 모집마감)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "상태 변경 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음")
+    @ApiResponse(responseCode = "204", description = "상태 변경 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.INVALID_POST_STATUS,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> updatePostStatus(
             @Parameter(description = "게시글 ID") Long postId,

@@ -1,12 +1,14 @@
 package com.dduru.gildongmu.participation.controller;
 
+import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.participation.dto.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.ParticipationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,8 +21,15 @@ import java.util.List;
 public interface ParticipationApiDocs {
 
     @Operation(summary = "참여 신청", description = "게시글에 참여 신청을 합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "참여 신청 성공"),
+    @ApiResponse(responseCode = "201", description = "참여 신청 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.RECRUITMENT_CLOSED,
+            ErrorCode.DUPLICATE_PARTICIPATION,
+            ErrorCode.SELF_PARTICIPATION_NOT_ALLOWED,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<ParticipationResponse>> createParticipation(
             @Parameter(description = "게시글 ID") Long postId,
@@ -29,8 +38,11 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "게시글 참여자 목록 조회", description = "게시글에 참여한 사용자 목록을 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "참여자 목록 조회 성공"),
+    @ApiResponse(responseCode = "200", description = "참여자 목록 조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<List<ParticipationResponse>>> getPostParticipants(
             @Parameter(description = "게시글 ID") Long postId,
@@ -38,8 +50,14 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 신청 승인", description = "게시글 참여 신청을 승인합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공"),
+    @ApiResponse(responseCode = "204", description = "참여 신청 승인 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.RECRUIT_COUNT_EXCEED_CAPACITY,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> approveParticipation(
             @Parameter(description = "게시글 ID") Long postId,
@@ -48,8 +66,13 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 신청 거절", description = "게시글 참여 신청을 거절합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공"),
+    @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> rejectParticipation(
             @Parameter(description = "게시글 ID") Long postId,
@@ -58,8 +81,14 @@ public interface ParticipationApiDocs {
     );
 
     @Operation(summary = "참여 취소", description = "게시글 참여를 취소합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "참여 취소 성공"),
+    @ApiResponse(responseCode = "204", description = "참여 취소 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.RECRUIT_COUNT_BELOW_ZERO,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> cancelParticipation(
             @Parameter(description = "게시글 ID") Long postId,
