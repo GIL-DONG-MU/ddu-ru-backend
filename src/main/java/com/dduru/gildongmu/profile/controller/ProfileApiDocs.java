@@ -47,9 +47,7 @@ public interface ProfileApiDocs {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "닉네임 유효성 확인 성공 - 사용 가능한 닉네임임",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = NicknameValidateResponse.class))
+                    description = "닉네임 유효성 확인 성공(사용가능)"
             )
     })
     @ApiErrorResponses({
@@ -70,9 +68,7 @@ public interface ProfileApiDocs {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "랜덤 닉네임 생성 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = NicknameRandomResponse.class))
+                    description = "랜덤 닉네임 생성 성공"
             )
     })
     @ApiErrorResponses({ErrorCode.UNAUTHORIZED})

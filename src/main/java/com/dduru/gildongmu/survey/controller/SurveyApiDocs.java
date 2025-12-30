@@ -24,11 +24,7 @@ public interface SurveyApiDocs {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "설문 제출 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = SurveyResponse.class)
-                    )
+                    description = "설문 제출 성공"
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -89,11 +85,7 @@ public interface SurveyApiDocs {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "조회 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = SurveyResponse.class)
-                    )
+                    description = "조회 성공"
             ),
             @ApiResponse(
                     responseCode = "404",
