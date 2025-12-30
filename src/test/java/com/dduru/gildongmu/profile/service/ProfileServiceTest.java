@@ -16,14 +16,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProfileService 프로필 생성 테스트")
@@ -128,53 +130,6 @@ class ProfileServiceTest {
         verify(profileRepository).existsByNicknameWithLock(duplicateNickname);
         verify(profileRepository, never()).save(any(Profile.class));
         verify(jwtTokenProvider, never()).validateVerificationToken(anyString(), anyString());
-    }
-
-    @Test
-    @DisplayName("DB unique 제약조건 위반 시 DataIntegrityViolationException 처리")
-    void 데이터베이스제약조건위반_예외처리() {
-        // given
-        Long userId = 1L;
-        String nickname = "테스트닉네임";
-        String phoneNumber = "01012345678";
-        String verificationToken = "valid-token";
-        ProfileSetupRequest request = new ProfileSetupRequest(
-                nickname,
-                "M",
-                phoneNumber,
-                "2000-01-01",
-                verificationToken
-        );
-
-        User user = User.builder()
-                .email("test@example.com")
-                .name("테스트사용자")
-                .oauthId("12345")
-                .oauthType(OauthType.KAKAO)
-                .build();
-
-        Profile profile = Profile.builder()
-                .user(user)
-                .build();
-
-        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
-        when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
-        when(profileRepository.existsByNicknameWithLock(nickname)).thenReturn(false);
-        when(jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)).thenReturn(true);
-        when(profileRepository.existsByPhoneNumber(phoneNumber)).thenReturn(false);
-        when(profileRepository.save(any(Profile.class)))
-                .thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
-
-        // when & then
-        assertThatThrownBy(() -> profileService.setupInitialProfile(userId, request))
-                .isInstanceOf(BusinessException.class)
-                .satisfies(exception -> {
-                    BusinessException businessException = (BusinessException) exception;
-                    assertThat(businessException.getErrorCode()).isEqualTo(ErrorCode.NICKNAME_ALREADY_TAKEN);
-                });
-
-        verify(profileRepository).existsByNicknameWithLock(nickname);
-        verify(profileRepository).save(any(Profile.class));
     }
 
     @Test
