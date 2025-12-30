@@ -63,6 +63,7 @@ public enum ErrorCode {
 
     // 설문 (SURVEY)
     SURVEY_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "설문 결과를 찾을 수 없습니다."),
+    AVATAR_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "아바타 프로필을 찾을 수 없습니다."),
 
     // 휴대폰 인증 (VERIFICATION)
     SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
