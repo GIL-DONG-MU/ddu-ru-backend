@@ -2,7 +2,7 @@ package com.dduru.gildongmu.survey.dto;
 
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
-import com.dduru.gildongmu.survey.service.AvatarProfileProvider;
+import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
 import java.util.List;
 
@@ -20,9 +20,9 @@ public record SurveyResponse(
         String tip,
         List<String> tags
 ) {
-    public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileProvider avatarProfileProvider) {
+    public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
         AvatarType avatarType = travelTendency.getAvatarType();
-        AvatarProfileProvider.AvatarProfile profile = avatarProfileProvider.getProfile(avatarType);
+        AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 
         return new SurveyResponse(
                 travelTendency.getR().doubleValue(),
@@ -32,7 +32,7 @@ public record SurveyResponse(
                 avatarType.getCode(),
                 avatarType.name(),
                 avatarType.getText(),
-                avatarType.getDescription(),
+                profile.description(),
                 profile.personality(),
                 profile.strength(),
                 profile.tip(),
@@ -43,14 +43,14 @@ public record SurveyResponse(
     public static SurveyResponse of(
             double r, double w, double s, double p,
             AvatarType avatarType,
-            AvatarProfileProvider.AvatarProfile profile
+            AvatarProfileResponse profile
     ) {
         return new SurveyResponse(
                 r, w, s, p,
                 avatarType.getCode(),
                 avatarType.name(),
                 avatarType.getText(),
-                avatarType.getDescription(),
+                profile.description(),
                 profile.personality(),
                 profile.strength(),
                 profile.tip(),

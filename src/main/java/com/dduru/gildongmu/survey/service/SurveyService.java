@@ -4,6 +4,7 @@ import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.SurveyResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
@@ -30,7 +31,7 @@ public class SurveyService {
     private final SurveyConverter surveyConverter;
     private final TravelTendencyCalculator tendencyCalculator;
     private final AvatarMatcher avatarMatcher;
-    private final AvatarProfileProvider avatarProfileProvider;
+    private final AvatarProfileService avatarProfileService;
     private final UserRepository userRepository;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
@@ -44,7 +45,7 @@ public class SurveyService {
 
         saveOrUpdateTravelTendency(user, scores, avatarType);
 
-        AvatarProfileProvider.AvatarProfile profile = avatarProfileProvider.getProfile(avatarType);
+        AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}, 점수: R={}, W={}, S={}, P={}",
                 userId, avatarType, scores.r(), scores.w(), scores.s(), scores.p());
@@ -60,7 +61,7 @@ public class SurveyService {
                 .orElseThrow(SurveyResultNotFoundException::of);
 
         log.info("설문 결과 조회 완료 - userId: {}, avatarType: {}", userId, travelTendency.getAvatarType());
-        return SurveyResponse.from(travelTendency, avatarProfileProvider);
+        return SurveyResponse.from(travelTendency, avatarProfileService);
     }
 
     private Survey saveOrUpdateSurvey(User user, SurveyRequest request) {
