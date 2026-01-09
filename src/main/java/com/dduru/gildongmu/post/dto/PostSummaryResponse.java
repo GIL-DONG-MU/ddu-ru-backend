@@ -15,6 +15,11 @@ public record PostSummaryResponse(
         LocalDate startDate,
         LocalDate endDate,
         String destination,
+        Integer recruitCapacity,
+        Integer recruitCount,
+        String preferredGender,
+        Integer budgetMin,
+        Integer budgetMax,
         List<String> photoUrls,
         Integer viewCount,
         int likeCount
@@ -33,6 +38,11 @@ public record PostSummaryResponse(
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),
+                post.getRecruitCapacity(),
+                post.getRecruitCount(),
+                post.getPreferredGender() != null ? post.getPreferredGender().name() : "U",
+                post.getBudgetMin(),
+                post.getBudgetMax(),
                 photoUrls,
                 post.getViewCount(),
                 post.getLikeCount()
