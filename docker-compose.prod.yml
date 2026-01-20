@@ -12,8 +12,8 @@ services:
   app:
     image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
     restart: unless-stopped
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     volumes:
       - ddu-ru-app-logs:/app/logs
     environment:
@@ -78,6 +78,8 @@ services:
       - app
     networks:
       - ddu-ru-network
+    profiles:
+      - nginx
 
 volumes:
   ddu-ru-app-logs:
