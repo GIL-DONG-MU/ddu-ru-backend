@@ -28,7 +28,8 @@ echo "⏳ 서비스 상태 확인 중..."
 MAX_RETRIES=12
 RETRY_INTERVAL=5
 for i in $(seq 1 $MAX_RETRIES); do
-  if curl -fs http://localhost:8080/actuator/health > /dev/null; then
+  # nginx를 통해 health check (HTTP 또는 HTTPS)
+  if curl -fs http://localhost/actuator/health > /dev/null 2>&1 || curl -fs https://localhost/actuator/health > /dev/null 2>&1; then
     echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
     echo "🎉 ECR 배포 스크립트 완료!"
     exit 0
