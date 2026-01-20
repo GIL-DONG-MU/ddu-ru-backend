@@ -2,6 +2,8 @@ package com.dduru.gildongmu.auth.controller;
 
 import com.dduru.gildongmu.auth.dto.local.LocalGoogleTokenResponse;
 import com.dduru.gildongmu.auth.dto.local.LocalKakaoTokenResponse;
+import com.dduru.gildongmu.auth.utils.OAuthRedirectUriHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,7 +18,10 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Controller
+@RequiredArgsConstructor
 public class OauthRedirectController {
+
+    private final OAuthRedirectUriHelper redirectUriHelper;
 
     // Kakao 설정
     @Value("${oauth.kakao.client-id}")
@@ -25,16 +30,13 @@ public class OauthRedirectController {
     @Value("${oauth.kakao.client-secret}")
     private String kClientSecret;
 
-    private final String kTestRedirectUri = "http://localhost:8080/test/login/oauth2/code/kakao";
-
     // Google 설정
     @Value("${oauth.google.client-id}")
     private String gClientId;
 
     @Value("${oauth.google.client-secret}")
     private String gClientSecret;
-
-    private final String gTestRedirectUri = "http://localhost:8080/test/login/oauth2/code/google";
+    
 
     private static final String KAKAO = "Kakao";
     private static final String GOOGLE = "Google";
@@ -46,7 +48,7 @@ public class OauthRedirectController {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", kClientId);
-        formData.add("redirect_uri", kTestRedirectUri);
+        formData.add("redirect_uri", redirectUriHelper.getKakaoRedirectUri());
         formData.add("code", code);
         formData.add("client_secret", kClientSecret);
 
@@ -86,7 +88,7 @@ public class OauthRedirectController {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", gClientId);
-        formData.add("redirect_uri", gTestRedirectUri);
+        formData.add("redirect_uri", redirectUriHelper.getGoogleRedirectUri());
         formData.add("code", code);
         formData.add("client_secret", gClientSecret);
 
