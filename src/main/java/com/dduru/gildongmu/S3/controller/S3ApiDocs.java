@@ -14,12 +14,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Images", description = "이미지 관리 API")
 public interface S3ApiDocs {
 
-    @Operation(summary = "이미지 업로드를 위한 Presigned URL 생성",
-               description = "S3에 이미지를 직접 업로드하기 위한 Presigned URL을 생성합니다.")
+    @Operation(
+            summary = "이미지 업로드를 위한 Presigned URL 생성",
+            description = "게시글 작성 시 사용할 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "
+                    + "클라이언트는 이 Presigned URL로 직접 S3에 업로드한 후, 받은 fileUrl을 게시글 생성 요청의 photoUrls에 포함합니다."
+    )
     @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION
     })
     ResponseEntity<ApiResult<ImageUploadResponse>> prepareUpload(@RequestBody ImageUploadRequest request);
+
+    @Operation(
+            summary = "설문조사 이미지 업로드를 위한 Presigned URL 생성",
+            description = "설문조사 질문 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "
+                    + "설문조사 이미지는 고정된 파일명을 사용합니다 (예: q1.png, q2.png). "
+                    + "클라이언트는 이 Presigned URL로 직접 S3에 업로드한 후, 받은 fileUrl을 설문 질문에 저장합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.INVALID_FILE_EXTENSION
+    })
+    ResponseEntity<ApiResult<ImageUploadResponse>> prepareSurveyImageUpload(@RequestBody ImageUploadRequest request);
 }

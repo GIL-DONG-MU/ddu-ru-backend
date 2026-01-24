@@ -4,6 +4,7 @@ import com.dduru.gildongmu.S3.dto.ImageUploadRequest;
 import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
 import com.dduru.gildongmu.S3.service.S3Service;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,19 @@ public class S3Controller implements S3ApiDocs {
 
     @Override
     @PostMapping("/uploads")
-    public ResponseEntity<ApiResult<ImageUploadResponse>> prepareUpload(@RequestBody ImageUploadRequest request) {
+    public ResponseEntity<ApiResult<ImageUploadResponse>> prepareUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
         ImageUploadResponse response = s3Service.prepareUpload(request.fileName());
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PostMapping("/surveys/uploads")
+    public ResponseEntity<ApiResult<ImageUploadResponse>> prepareSurveyImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        ImageUploadResponse response = s3Service.prepareSurveyImageUpload(request.fileName());
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
