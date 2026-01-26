@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/images")
@@ -22,19 +24,19 @@ public class S3Controller implements S3ApiDocs {
 
     @Override
     @PostMapping("/posts/uploads")
-    public ResponseEntity<ApiResult<ImageUploadResponse>> preparePostImageUpload(
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(
             @Valid @RequestBody ImageUploadRequest request
     ) {
-        ImageUploadResponse response = s3Service.preparePostImageUpload(request.fileName());
-        return ResponseEntity.ok(ApiResult.ok(response));
+        List<ImageUploadResponse> responses = s3Service.preparePostImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
     }
 
     /*@Override
     @PostMapping("/surveys/uploads")
-    public ResponseEntity<ApiResult<ImageUploadResponse>> prepareSurveyImageUpload(
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareSurveyImageUpload(
             @Valid @RequestBody ImageUploadRequest request
     ) {
-        ImageUploadResponse response = s3Service.prepareSurveyImageUpload(request.fileName());
-        return ResponseEntity.ok(ApiResult.ok(response));
+        List<ImageUploadResponse> responses = s3Service.prepareSurveyImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
     }*/
 }

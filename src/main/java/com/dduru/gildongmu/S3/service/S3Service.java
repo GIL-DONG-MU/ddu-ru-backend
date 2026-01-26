@@ -28,21 +28,25 @@ public class S3Service {
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
     private static final String S3_POSTS_DIR = "posts/";
-   /* private static final String S3_SURVEY_DIR = "survey/";*/
+    /*private static final String S3_SURVEY_DIR = "survey/";*/
     private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
-    public ImageUploadResponse preparePostImageUpload(String fileName) {
-        log.debug("Presigned URL 생성 시작(posts) - fileName: {}", fileName);
-        ImageUploadResponse response = prepareUploadInternal(fileName, S3_POSTS_DIR, true);
-        log.info("Presigned URL 생성 완료(posts) - fileName: {}", fileName);
-        return response;
+    public List<ImageUploadResponse> preparePostImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(posts) - 파일 개수: {}", fileNames.size());
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR, true))
+                .toList();
+        log.info("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
+        return responses;
     }
 
-   /* public ImageUploadResponse prepareSurveyImageUpload(String fileName) {
-        log.debug("Presigned URL 생성 시작(survey) - fileName: {}", fileName);
-        ImageUploadResponse response = prepareUploadInternal(fileName, S3_SURVEY_DIR, false);
-        log.info("Presigned URL 생성 완료(survey) - fileName: {}", fileName);
-        return response;
+   /* public List<ImageUploadResponse> prepareSurveyImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(survey) - 파일 개수: {}", fileNames.size());
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3_SURVEY_DIR, false))
+                .toList();
+        log.info("Presigned URL 생성 완료(survey) - 파일 개수: {}", responses.size());
+        return responses;
     }*/
 
     private ImageUploadResponse prepareUploadInternal(String fileName, String directory, boolean useUuid) {
