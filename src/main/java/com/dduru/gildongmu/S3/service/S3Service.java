@@ -28,25 +28,28 @@ public class S3Service {
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
     private static final String S3_POSTS_DIR = "posts/";
-    private static final String S3_SURVEY_DIR = "survey/";
+   /* private static final String S3_SURVEY_DIR = "survey/";*/
     private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
-    public ImageUploadResponse prepareUpload(String fileName) {
+    public ImageUploadResponse preparePostImageUpload(String fileName) {
         log.debug("Presigned URL 생성 시작(posts) - fileName: {}", fileName);
-        validateFileExtension(fileName);
-        String key = S3_POSTS_DIR + generateFileName(fileName);
-        ImageUploadResponse response = presignPut(key);
-        log.info("Presigned URL 생성 완료(posts) - key: {}", key);
+        ImageUploadResponse response = prepareUploadInternal(fileName, S3_POSTS_DIR, true);
+        log.info("Presigned URL 생성 완료(posts) - fileName: {}", fileName);
         return response;
     }
 
-    public ImageUploadResponse prepareSurveyImageUpload(String fileName) {
+   /* public ImageUploadResponse prepareSurveyImageUpload(String fileName) {
         log.debug("Presigned URL 생성 시작(survey) - fileName: {}", fileName);
-        validateFileExtension(fileName);
-        String key = S3_SURVEY_DIR + fileName;
-        ImageUploadResponse response = presignPut(key);
-        log.info("Presigned URL 생성 완료(survey) - key: {}", key);
+        ImageUploadResponse response = prepareUploadInternal(fileName, S3_SURVEY_DIR, false);
+        log.info("Presigned URL 생성 완료(survey) - fileName: {}", fileName);
         return response;
+    }*/
+
+    private ImageUploadResponse prepareUploadInternal(String fileName, String directory, boolean useUuid) {
+        validateFileExtension(fileName);
+        String finalFileName = useUuid ? generateFileName(fileName) : fileName;
+        String key = directory + finalFileName;
+        return presignPut(key);
     }
 
     public String getS3Url(String key) {

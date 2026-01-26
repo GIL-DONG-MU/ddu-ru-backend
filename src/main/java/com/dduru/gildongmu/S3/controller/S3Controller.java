@@ -21,20 +21,20 @@ public class S3Controller implements S3ApiDocs {
     private final S3Service s3Service;
 
     @Override
-    @PostMapping("/uploads")
-    public ResponseEntity<ApiResult<ImageUploadResponse>> prepareUpload(
+    @PostMapping("/posts/uploads")
+    public ResponseEntity<ApiResult<ImageUploadResponse>> preparePostImageUpload(
             @Valid @RequestBody ImageUploadRequest request
     ) {
-        ImageUploadResponse response = s3Service.prepareUpload(request.fileName());
+        ImageUploadResponse response = s3Service.preparePostImageUpload(request.fileName());
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
-    @Override
+    /*@Override
     @PostMapping("/surveys/uploads")
     public ResponseEntity<ApiResult<ImageUploadResponse>> prepareSurveyImageUpload(
             @Valid @RequestBody ImageUploadRequest request
     ) {
         ImageUploadResponse response = s3Service.prepareSurveyImageUpload(request.fileName());
         return ResponseEntity.ok(ApiResult.ok(response));
-    }
+    }*/
 }
