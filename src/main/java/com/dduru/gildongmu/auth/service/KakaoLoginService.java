@@ -80,9 +80,9 @@ public class KakaoLoginService extends AbstractOauthService {
                     .oauthId(payload.get("sub").asText())
                     .email(getJsonValue(payload, "email"))
                     .name(getJsonValue(payload, "nickname"))
-                    .profileImage(getJsonValue(payload, "picture"))
                     .loginType(OauthType.KAKAO)
                     // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                    // .profileImage(getJsonValue(payload, "picture"))
                     // .gender(getJsonValue(payload, "gender"))
                     // .phoneNumber(getJsonValue(payload, "phone_number"))
                     .build();

@@ -51,9 +51,9 @@ public class GoogleLoginService extends AbstractOauthService {
                     .oauthId(payload.getSubject())
                     .email(payload.getEmail())
                     .name((String) payload.get("name"))
-                    .profileImage((String) payload.get("picture"))
                     .loginType(OauthType.GOOGLE)
                     // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                    // .profileImage((String) payload.get("picture"))
                     // .gender(null)
                     // .phoneNumber(null)
                     .build();
