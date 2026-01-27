@@ -8,6 +8,7 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -28,7 +29,25 @@ public interface S3ApiDocs {
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION
     })
-    ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(@RequestBody ImageUploadRequest request);
+    ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(
+            @RequestBody ImageUploadRequest request
+    );
+
+    @Operation(
+            summary = "프로필 이미지 업로드를 위한 Presigned URL 생성",
+            description = "사용자 프로필 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "
+                    + "여러 파일을 한 번에 요청할 수 있습니다 (최대 10개). "
+                    + "파일명은 UUID로 변환되어 중복을 방지합니다. "
+                    + "클라이언트는 각 Presigned URL로 직접 S3에 업로드한 후, 받은 fileUrl을 프로필 이미지 변경 요청에 포함합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.INVALID_FILE_EXTENSION
+    })
+    ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareProfileImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    );
 
     /*@Operation(
             summary = "설문조사 이미지 업로드를 위한 Presigned URL 생성",
