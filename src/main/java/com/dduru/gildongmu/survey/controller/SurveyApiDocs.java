@@ -36,10 +36,10 @@ public interface SurveyApiDocs {
     })
     ResponseEntity<ApiResult<SurveyResponse>> getMySurveyResult(@Parameter(hidden = true) Long userId);
 
-    @Operation(summary = "설문 문항 리스트 조회", description = "설문조사 11개 문항과 선택지를 조회합니다.")
+    @Operation(summary = "설문 문항 리스트 조회", description = "설문조사 11개 문항과 선택지를 조회합니다. 인증 없이 접근 가능합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
-            ErrorCode.UNAUTHORIZED
+            ErrorCode.INVALID_INPUT_VALUE
     })
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
 }
