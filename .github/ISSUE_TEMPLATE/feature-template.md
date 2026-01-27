@@ -2,14 +2,52 @@
 name: feature template
 about: feature 관련  이슈
 title: "[FEAT]"
-labels: enhancement
+labels: ✨feature
 assignees: ''
 
 ---
 
 # 어떤 기능인가요?
 <!-- 추가하려는 기능에 대해 간결하게 설명해주세요 -->
-<!-- API 구현이라면 해당 URL과 Response 형식을 작성해주세요 -->
+
+## 📋 API 명세서 (API 구현 시 작성)
+
+### 엔드포인트
+- **URL**: ``
+- **Method**: 
+- **인증**: 
+
+### 설명
+<!-- API의 목적과 동작 방식에 대해 설명해주세요 
+ex. 어떠어떤한 걸 수행하는 API 입니다. -->
+
+### 요청 형식
+<!-- Request Body, Query Parameter, Path Variable 등을 명시해주세요 -->
+```json
+{
+  
+}
+```
+
+### 응답 형식
+<!-- 성공 응답 예시를 작성해주세요 -->
+**성공 응답 (200/201/204)**
+```json
+{
+  
+}
+```
+
+**에러 응답 (4xx/5xx)**
+```json
+{
+  
+}
+```
+
+### 제한사항
+<!-- 파일 크기, 개수 제한, 유효기간 등이 있다면 작성해주세요 -->
+- 
 
 ## 🔎 작업 내용
 - [ ] 
