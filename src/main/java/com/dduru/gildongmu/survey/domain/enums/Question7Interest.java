@@ -12,8 +12,7 @@ public enum Question7Interest implements CodedEnum {
     SHOPPING(5, "쇼핑"),
     RESORT(6, "휴양"),
     ACTIVITY(7, "액티비티"),
-    THEME_PARK(8, "놀이공원"),
-    FESTIVAL(9, "페스티벌");
+    FESTIVAL(8, "페스티벌");
 
     private final int code;
     private final String text;

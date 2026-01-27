@@ -98,10 +98,6 @@ public class TravelTendencyCalculator {
                         r += 1.0;
                         p += 0.5;
                         break;
-                    case THEME_PARK:
-                        r += 0.5;
-                        p += 0.5;
-                        break;
                     case FESTIVAL:
                         r += 1.0;
                         p += 1.0;

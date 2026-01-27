@@ -196,7 +196,7 @@ public class SurveyQuestionSeeder implements ApplicationRunner {
         case 5 -> new OptionSeed("🛍️", "쇼핑");
         case 6 -> new OptionSeed("🏝️", "휴양");
         case 7 -> new OptionSeed("⛷️", "액티비티");
-        case 9 -> new OptionSeed("💃", "페스티벌");
+        case 8 -> new OptionSeed("💃", "페스티벌");
         default -> new OptionSeed(null, fallbackText);
     };
 
