@@ -127,6 +127,8 @@ public class SurveyQuestionService {
     private String resolveDbVersion() {
         LocalDateTime qMax = surveyQuestionRepository.findMaxModifiedAt();
         LocalDateTime oMax = surveyQuestionOptionRepository.findMaxModifiedAt();
+        long qCount = surveyQuestionRepository.count();
+        long oCount = surveyQuestionOptionRepository.count();
 
         LocalDateTime max = qMax;
         if (oMax != null && (max == null || oMax.isAfter(max))) {
@@ -137,6 +139,6 @@ public class SurveyQuestionService {
             return "v0";
         }
 
-        return max.truncatedTo(ChronoUnit.SECONDS).toString();
+        return max.truncatedTo(ChronoUnit.SECONDS).toString() + "_" + qCount + "_" + oCount;
     }
 }
