@@ -4,7 +4,7 @@ import java.util.List;
 
 public record SurveyQuestionResponse(
         String id,
-        Integer order,
+        Integer displayOrder,
         String questionText,
         String imageUrl,
         String type,
