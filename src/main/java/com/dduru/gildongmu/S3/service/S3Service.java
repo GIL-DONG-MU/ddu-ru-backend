@@ -3,7 +3,6 @@ package com.dduru.gildongmu.S3.service;
 import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
 import com.dduru.gildongmu.config.S3Properties;
 import com.dduru.gildongmu.S3.exception.InvalidFileExtensionException;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +12,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -28,34 +28,58 @@ public class S3Service {
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
     private static final String S3_POSTS_DIR = "posts/";
+    /*private static final String S3_SURVEY_DIR = "survey/";*/
+    private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
-    public ImageUploadResponse prepareUpload(String fileName) {
+    public List<ImageUploadResponse> preparePostImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(posts) - 파일 개수: {}", fileNames.size());
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR, true))
+                .toList();
+        log.info("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
+        return responses;
+    }
+
+   /* public List<ImageUploadResponse> prepareSurveyImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(survey) - 파일 개수: {}", fileNames.size());
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3_SURVEY_DIR, false))
+                .toList();
+        log.info("Presigned URL 생성 완료(survey) - 파일 개수: {}", responses.size());
+        return responses;
+    }*/
+
+    private ImageUploadResponse prepareUploadInternal(String fileName, String directory, boolean useUuid) {
         validateFileExtension(fileName);
+        String finalFileName = useUuid ? generateFileName(fileName) : fileName;
+        String key = directory + finalFileName;
+        return presignPut(key);
+    }
 
-        String uniqueFileName = generateFileName(fileName);
-        String key = S3_POSTS_DIR + uniqueFileName;
+    public String getS3Url(String key) {
+        return "https://%s.s3.%s.amazonaws.com/%s".formatted(s3Properties.getBucket(), s3Properties.getRegion(), key);
+    }
 
+    private ImageUploadResponse presignPut(String key) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(s3Properties.getBucket())
                 .key(key)
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
+                .signatureDuration(PRESIGNED_URL_TTL)
                 .putObjectRequest(putObjectRequest)
                 .build();
 
         String presignedUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
-        String fileUrl = "https://%s.s3.%s.amazonaws.com/%s".formatted(s3Properties.getBucket(), s3Properties.getRegion(), key);
-
+        String fileUrl = getS3Url(key);
         return new ImageUploadResponse(presignedUrl, fileUrl);
     }
 
     private void validateFileExtension(String fileName) {
         String extension = StringUtils.getFilenameExtension(fileName);
         if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
-            throw new InvalidFileExtensionException(
-                "허용되지 않는 파일 확장자입니다. 허용 확장자: " + ALLOWED_EXTENSIONS);
+            throw new InvalidFileExtensionException("허용되지 않는 파일 확장자입니다. 허용 확장자: " + ALLOWED_EXTENSIONS);
         }
     }
 

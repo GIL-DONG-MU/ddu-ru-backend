@@ -100,7 +100,7 @@ class SurveyConverterTest {
         // given
         SurveyRequest request = new SurveyRequest(
                 2, 2, 2, 2, 2, 1,
-                List.of(7, 8, 9),
+                List.of(6, 7, 8),  // Question7Interest 최대 코드는 8 (FESTIVAL)
                 3, 3, 1, 3
         );
 
@@ -114,6 +114,12 @@ class SurveyConverterTest {
         assertThat(survey.getQ4Wakeup()).isEqualTo(Question4Wakeup.RELAXED);
         assertThat(survey.getQ5Expense()).isEqualTo(Question5Expense.POOLED);
         assertThat(survey.getQ6Spend()).isEqualTo(Question6Spend.SPLURGE);
+        assertThat(survey.getQ7Interests()).hasSize(3);
+        assertThat(survey.getQ7Interests()).containsExactly(
+                Question7Interest.RESORT,
+                Question7Interest.ACTIVITY,
+                Question7Interest.FESTIVAL
+        );
         assertThat(survey.getQ8Planning()).isEqualTo(Question8Planning.ON_SITE);
         assertThat(survey.getQ9Menu()).isEqualTo(Question9Menu.CHALLENGE);
         assertThat(survey.getQ10Companion()).isEqualTo(Question10Companion.WELCOME);
