@@ -15,6 +15,7 @@ public interface SurveyQuestionOptionRepository extends JpaRepository<SurveyQues
     @Query("""
             select o
             from SurveyQuestionOption o
+            join fetch o.question
             where o.question.questionId in :questionIds
             order by o.question.questionId asc, o.displayOrder asc
             """)
