@@ -3,13 +3,7 @@ package com.dduru.gildongmu.auth.service;
 import com.dduru.gildongmu.auth.dto.LoginRequest;
 import com.dduru.gildongmu.auth.dto.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
-import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
-import com.dduru.gildongmu.auth.exception.InvalidTokenException;
-import com.dduru.gildongmu.auth.exception.RefreshTokenException;
-import com.dduru.gildongmu.auth.exception.TokenRefreshFailedException;
-import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.auth.exception.*;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
@@ -37,13 +31,9 @@ public class OauthAuthService {
     private final RefreshTokenService refreshTokenService;
 
     public LoginResponse processTokenLogin(String provider, LoginRequest request) {
+        log.debug("OAuth 로그인 시작 - provider: {}", provider);
         OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
-
-        if (oauthUserInfo == null) {
-            log.error("OAuth 사용자 정보 추출 실패 - provider: {}", provider);
-            throw new BusinessException(ErrorCode.SOCIAL_LOGIN_FAILED, "사용자 정보를 가져올 수 없습니다.");
-        }
 
         return createLoginResponse(oauthUserInfo);
     }
@@ -57,15 +47,25 @@ public class OauthAuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
         refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
+        
+        if (isNewUser) {
+            log.info("신규 사용자 로그인 성공 - userId: {}, provider: {}, email: {}", 
+                    user.getId(), oauthUserInfo.loginType(), oauthUserInfo.email());
+        } else {
+            log.info("기존 사용자 로그인 성공 - userId: {}, provider: {}", 
+                    user.getId(), oauthUserInfo.loginType());
+        }
+        
         return LoginResponse.of(jwtToken, refreshToken, isNewUser);
     }
 
     public LoginResponse refreshAccessToken(String refreshToken) {
+        log.debug("Access Token 갱신 시작");
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("사용자를 찾을 수 없음 - userId: {}", userId);
+                    log.warn("사용자를 찾을 수 없음 - userId: {}", userId);
                     return new UserNotFoundException();
                 });
 
@@ -92,17 +92,18 @@ public class OauthAuthService {
 
         extendTokenExpirationSafely(userId);
 
+        log.debug("Access Token 갱신 완료 - userId: {}", userId);
         return LoginResponse.of(newAccessToken, refreshToken, false);
     }
 
     public void logout(Long userId) {
-
+        log.debug("로그아웃 시작 - userId: {}", userId);
         try {
             boolean deleted = refreshTokenService.deleteRefreshToken(userId);
             if (deleted) {
                 log.info("로그아웃 성공 - userId: {}", userId);
             } else {
-                log.info("로그아웃 처리 (토큰이 이미 없음) - userId: {}", userId);
+                log.debug("로그아웃 처리 (토큰이 이미 없음) - userId: {}", userId);
             }
         } catch (RefreshTokenException infraException) {
             log.warn("로그아웃 중 Redis 오류 (사용자에게는 성공 처리) - userId: {}", userId, infraException);
@@ -136,7 +137,7 @@ public class OauthAuthService {
         }
 
         if (userRepository.existsByEmail(oauthUserInfo.email())) {
-            log.error("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
+            log.warn("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
             throw DuplicateEmailException.of(oauthUserInfo.email());
         }
 
@@ -168,6 +169,9 @@ public class OauthAuthService {
                 .build();
 
         profileRepository.save(profile);
+
+        log.info("신규 사용자 회원가입 완료 - userId: {}, provider: {}, email: {}",
+                savedUser.getId(), oauthUserInfo.loginType(), oauthUserInfo.email());
 
         return savedUser;
     }

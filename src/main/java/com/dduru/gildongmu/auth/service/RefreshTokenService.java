@@ -26,7 +26,7 @@ public class RefreshTokenService {
         try {
             redisTemplate.opsForValue()
                     .set(key(userId), refreshToken, refreshTtl);
-            log.info("Refresh token 저장 - userId: {}", userId);
+            log.debug("Refresh token 저장 - userId: {}", userId);
         } catch (Exception e) {
             log.error("Refresh token 저장 실패 - userId: {}", userId, e);
             throw new RefreshTokenException("Refresh token 저장 실패");
@@ -45,7 +45,7 @@ public class RefreshTokenService {
     public boolean deleteRefreshToken(Long userId) {
         try {
             boolean deleted = redisTemplate.delete(key(userId));
-            log.info("Refresh token 삭제 - userId: {}, 성공: {}", userId, deleted);
+            log.debug("Refresh token 삭제 - userId: {}, 성공: {}", userId, deleted);
             return deleted;
         } catch (Exception e) {
             log.error("Refresh token 삭제 실패 - userId: {}", userId, e);
@@ -62,7 +62,7 @@ public class RefreshTokenService {
     public void refreshTokenExpiration(Long userId) {
         try {
             redisTemplate.expire(key(userId), refreshTtl);
-            log.info("Refresh token 만료 연장 - userId: {}", userId);
+            log.debug("Refresh token 만료 연장 - userId: {}", userId);
         } catch (Exception e) {
             log.error("Refresh token 만료 연장 실패 - userId: {}", userId, e);
             throw new RefreshTokenException("Refresh token 만료 연장 실패");

@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
-        log.error("Business Exception: {}", e.getMessage());
+        log.warn("Business Exception: {}", e.getMessage());
         ErrorCode errorCode = e.getErrorCode();
         ErrorResponse response = ErrorResponse.of(errorCode, e.getMessage());
         return ResponseEntity.status(errorCode.getStatus()).body(response);
@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
-        log.error("Validation Exception: {}", e.getMessage());
+        log.warn("Validation Exception: {}", e.getMessage());
         FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
 
         ErrorResponse response = ErrorResponse.ofField(
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException e) {
-        log.error("Constraint Violation Exception: {}", e.getMessage());
+        log.warn("Constraint Violation Exception: {}", e.getMessage());
 
         ConstraintViolation<?> violation = e.getConstraintViolations().stream()
                 .findFirst()
@@ -51,7 +51,6 @@ public class GlobalExceptionHandler {
         String field = null;
         if (violation != null) {
             String path = violation.getPropertyPath().toString();
-            // [ex] getPost.postId -> postId
             field = path.contains(".") ? path.substring(path.lastIndexOf(".") + 1) : path;
         }
 
@@ -61,7 +60,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.error("Illegal Argument Exception: {}", e.getMessage());
+        log.warn("Illegal Argument Exception: {}", e.getMessage());
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getMessage());
         return ResponseEntity.badRequest().body(response);
     }

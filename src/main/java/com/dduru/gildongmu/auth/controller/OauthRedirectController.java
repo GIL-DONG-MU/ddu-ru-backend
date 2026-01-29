@@ -4,7 +4,6 @@ import com.dduru.gildongmu.auth.dto.local.LocalGoogleTokenResponse;
 import com.dduru.gildongmu.auth.dto.local.LocalKakaoTokenResponse;
 import com.dduru.gildongmu.auth.utils.OAuthRedirectUriHelper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class OauthRedirectController {
@@ -43,8 +41,6 @@ public class OauthRedirectController {
 
     @GetMapping("/test/login/oauth2/code/kakao")
     public String kakaoCallback(@RequestParam("code") String code, Model model) {
-        log.info("카카오 테스트용 인증 코드를 받았습니다.");
-
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", kClientId);
@@ -59,15 +55,12 @@ public class OauthRedirectController {
                     .bodyValue(formData)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class).flatMap(errorBody -> {
-                                log.error("{} 서버 에러: {}", KAKAO, errorBody);
-                                return Mono.error(new RuntimeException(errorBody));
-                            }))
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorBody -> Mono.error(new RuntimeException(errorBody))))
                     .bodyToMono(LocalKakaoTokenResponse.class)
                     .block();
 
             String idToken = (tokenResponse != null) ? tokenResponse.idToken() : KAKAO + " idToken 조회 실패.";
-            log.info("{} idToken: {}", KAKAO, idToken);
 
             model.addAttribute("provider", KAKAO);
             model.addAttribute("idToken", idToken);
@@ -83,8 +76,6 @@ public class OauthRedirectController {
 
     @GetMapping("/test/login/oauth2/code/google")
     public String googleCallback(@RequestParam("code") String code, Model model) {
-        log.info("구글 테스트용 인증 코드를 받았습니다.");
-
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
         formData.add("client_id", gClientId);
@@ -99,15 +90,12 @@ public class OauthRedirectController {
                     .bodyValue(formData)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class).flatMap(errorBody -> {
-                                log.error("{} 서버 에러: {}", GOOGLE, errorBody);
-                                return Mono.error(new RuntimeException(errorBody));
-                            }))
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorBody -> Mono.error(new RuntimeException(errorBody))))
                     .bodyToMono(LocalGoogleTokenResponse.class)
                     .block();
 
             String idToken = (tokenResponse != null) ? tokenResponse.idToken() : GOOGLE + " idToken 조회 실패.";
-            log.info("{} idToken: {}", GOOGLE, idToken);
 
             model.addAttribute("provider", GOOGLE);
             model.addAttribute("idToken", idToken);

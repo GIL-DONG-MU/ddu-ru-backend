@@ -32,26 +32,19 @@ public class KakaoLoginService extends AbstractOauthService {
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
-        try {
-            JsonNode payload = parseIdTokenPayload(idToken);
-            validateAudience(payload);
-
-            return userInfoMapper.mapFromIdToken(payload);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("카카오 ID Token 파싱 실패: {}", e.getMessage(), e);
-            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다.");
-        } catch (Exception e) {
-            log.error("카카오 ID Token 검증 중 예상치 못한 오류 발생", e);
-            handleOauthException(e, "카카오 ID Token 검증");
-            return null;
-        }
+        log.debug("카카오 ID Token 검증 시작");
+        
+        JsonNode payload = parseIdTokenPayload(idToken);
+        validateAudience(payload);
+        OauthUserInfo userInfo = userInfoMapper.mapFromIdToken(payload);
+        
+        log.debug("카카오 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
+        return userInfo;
     }
 
-    private JsonNode parseIdTokenPayload(String idToken) throws Exception {
+    private JsonNode parseIdTokenPayload(String idToken) throws InvalidTokenException {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
-            log.warn("카카오 ID Token 형식 오류: JWT 형식이 아님 (chunks.length: {})", chunks.length);
             throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
         }
 
@@ -60,10 +53,8 @@ public class KakaoLoginService extends AbstractOauthService {
             String payload = new String(decoder.decode(chunks[1]));
             return objectMapper.readTree(payload);
         } catch (IllegalArgumentException e) {
-            log.warn("카카오 ID Token payload 디코딩 실패: {}", e.getMessage(), e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
         } catch (Exception e) {
-            log.error("카카오 ID Token payload 파싱 실패", e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
         }
     }
