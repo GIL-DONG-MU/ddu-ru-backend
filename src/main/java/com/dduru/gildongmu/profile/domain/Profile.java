@@ -2,6 +2,7 @@ package com.dduru.gildongmu.profile.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -37,21 +38,32 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "birthday")
     private LocalDate birthday;
 
-    @Column(name = "profile_image", length = 500)
-    private String profileImage;
+    @Column(name = "avatar_id")
+    private Long avatarId;
 
-    @Column(name = "self_introduction", length = 60)
-    private String selfIntroduction;
+    @Column(name = "uploadedImageUrl", length = 500)
+    private String uploadedImageUrl;
+
+    @Column(name = "profile_image_type")
+    @Enumerated(EnumType.STRING)
+    private ProfileImageType profileImageType;
+
+    @Column(name = "bio", length = 60)
+    private String bio;
 
     @Builder
-    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday, String profileImage, String selfIntroduction) {
+    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
+                   Long avatarId, String uploadedImageUrl, ProfileImageType profileImageType, String bio
+    ) {
         this.user = user;
         this.nickname = nickname;
         this.gender = gender;
         this.phoneNumber = phoneNumber;
         this.birthday = birthday;
-        this.profileImage = profileImage;
-        this.selfIntroduction = selfIntroduction;
+        this.avatarId = avatarId;
+        this.uploadedImageUrl = uploadedImageUrl;
+        this.profileImageType = profileImageType;
+        this.bio = bio;
     }
 
     public void updateNickname(String nickname) {
