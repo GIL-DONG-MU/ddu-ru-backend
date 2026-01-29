@@ -41,6 +41,9 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "avatar_id")
     private Long avatarId;
 
+    @Column(name = "bg_color_id")
+    private Integer bgColorId;
+
     @Column(name = "uploadedImageUrl", length = 500)
     private String uploadedImageUrl;
 
@@ -53,7 +56,7 @@ public class Profile extends BaseTimeEntity {
 
     @Builder
     public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
-                   Long avatarId, String uploadedImageUrl, ProfileImageType profileImageType, String bio
+                   Long avatarId, Integer bgColorId, String uploadedImageUrl, ProfileImageType profileImageType, String bio
     ) {
         this.user = user;
         this.nickname = nickname;
@@ -61,6 +64,7 @@ public class Profile extends BaseTimeEntity {
         this.phoneNumber = phoneNumber;
         this.birthday = birthday;
         this.avatarId = avatarId;
+        this.bgColorId = bgColorId;
         this.uploadedImageUrl = uploadedImageUrl;
         this.profileImageType = profileImageType;
         this.bio = bio;
