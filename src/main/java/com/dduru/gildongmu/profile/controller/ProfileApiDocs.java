@@ -7,6 +7,7 @@ import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -77,5 +78,20 @@ public interface ProfileApiDocs {
                     required = true
             )
             @Valid ProfileSetupRequest request
+    );
+
+    @Operation(
+            summary = "프로필 이미지 및 소개글 수정",
+            description = "사용자의 프로필 이미지를 변경하고, 소개글을 수정합니다."
+    )
+    @ApiResponse(responseCode = "204", description = "프로필 이미지 및 소개글 수정 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.PROFILE_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<Void>> updateProfile(
+            @Parameter(hidden = true) Long userId,
+            @Valid ProfileUpdateRequest request
     );
 }

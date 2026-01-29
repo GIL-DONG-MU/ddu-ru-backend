@@ -5,10 +5,12 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import com.dduru.gildongmu.user.domain.User;
@@ -109,6 +111,31 @@ public class ProfileService {
         profileRepository.save(profile);
         log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
     }
+
+    @Transactional
+    public void updateProfile(Long userId, ProfileUpdateRequest request) {
+        User user = userRepository.getByIdOrThrow(userId);
+        Profile profile = getProfileByUserId(user);
+
+
+
+        switch (request.profileImageType()){
+            case "UPLOADED":
+                profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, request.bgColorId(), request.bio());
+                break;
+            case "AVATAR":
+                profile.updateProfile(null, ProfileImageType.AVATAR, request.bgColorId(), request.bio());
+                break;
+            default:
+                log.warn("알 수 없는 프로필 이미지 타입: {}. 기존 아바타 이미지로 처리합니다.", request.profileImageType());
+                profile.updateProfile(null, ProfileImageType.AVATAR, request.bgColorId(), request.bio());
+        }
+
+        profileRepository.save(profile);
+        log.info("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
+                userId, request.profileImageType(), request.bgColorId());
+    }
+
 
     @Transactional
     public void updateAvatarId(Long userId, Long avatarId) {

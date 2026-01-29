@@ -89,6 +89,23 @@ public class Profile extends BaseTimeEntity {
         }
     }
 
+
+    public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, Integer bgColorId, String bio) {
+        if (uploadedImageUrl != null) {
+            this.uploadedImageUrl = uploadedImageUrl;
+        }
+        if (profileImageType != null) {
+            this.profileImageType = profileImageType;
+        }
+        if (bgColorId != null) {
+            this.bgColorId = bgColorId;
+        }
+        if (bio != null) {
+            this.bio = bio;
+        }
+    }
+
+
     public void updateAvatarId(Long avatarId) {
         this.avatarId = avatarId;
     }
