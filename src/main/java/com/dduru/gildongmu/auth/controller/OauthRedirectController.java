@@ -24,7 +24,7 @@ public class OauthRedirectController {
     private final OAuthRedirectUriHelper redirectUriHelper;
 
     // Kakao 설정
-    @Value("${oauth.kakao.client-id}")
+    @Value("${oauth.kakao.rest-client-id}")
     private String kClientId;
 
     @Value("${oauth.kakao.client-secret}")
