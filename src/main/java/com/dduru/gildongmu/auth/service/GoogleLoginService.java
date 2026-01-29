@@ -10,7 +10,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Arrays;
 
@@ -24,10 +23,6 @@ public class GoogleLoginService extends AbstractOauthService {
 
     @Value("${oauth.google.client-id}")
     private String googleClientId;
-
-    public GoogleLoginService(WebClient.Builder webClientBuilder) {
-        super(webClientBuilder);
-    }
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {

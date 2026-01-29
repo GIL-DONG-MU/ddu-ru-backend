@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Base64;
 import java.util.Optional;
@@ -26,8 +25,7 @@ public class KakaoLoginService extends AbstractOauthService {
     private final ObjectMapper objectMapper;
     private final KakaoUserInfoMapper userInfoMapper;
 
-    public KakaoLoginService(WebClient.Builder webClientBuilder) {
-        super(webClientBuilder);
+    public KakaoLoginService() {
         this.objectMapper = new ObjectMapper();
         this.userInfoMapper = new KakaoUserInfoMapper();
     }
