@@ -84,4 +84,8 @@ public class Profile extends BaseTimeEntity {
             this.birthday = birthday;
         }
     }
+
+    public void updateAvatarId(Long avatarId) {
+        this.avatarId = avatarId;
+    }
 }

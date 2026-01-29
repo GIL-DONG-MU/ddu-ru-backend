@@ -110,6 +110,16 @@ public class ProfileService {
         log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
     }
 
+    @Transactional
+    public void updateAvatarId(Long userId, Long avatarId) {
+        User user = userRepository.getByIdOrThrow(userId);
+        Profile profile = getProfileByUserId(user);
+
+        profile.updateAvatarId(avatarId);
+        profileRepository.save(profile);
+        log.info("아바타 ID 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
+    }
+
     private LocalDate parseBirthDate(String birthDateString) {
         if (birthDateString == null || birthDateString.trim().isEmpty()) {
             return null;
