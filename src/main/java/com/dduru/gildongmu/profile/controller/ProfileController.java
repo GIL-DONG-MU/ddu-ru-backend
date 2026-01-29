@@ -55,7 +55,7 @@ public class ProfileController implements ProfileApiDocs {
     }
 
     @Override
-    @PutMapping("/users/me/profile")
+    @PatchMapping("/users/me/onboarding")
     public ResponseEntity<ApiResult<Void>> setupInitialProfile(
             @CurrentUser Long userId,
             @RequestBody @Valid ProfileSetupRequest request
