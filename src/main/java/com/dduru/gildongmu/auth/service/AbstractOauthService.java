@@ -19,9 +19,5 @@ public abstract class AbstractOauthService implements OauthService {
         OauthResponseUtils.handleException(e, operation);
     }
 
-    protected void validateResponse(Object response, String operation) {
-        OauthResponseUtils.validateResponse(response, operation);
-    }
-
     protected abstract String getClientId();
 }
