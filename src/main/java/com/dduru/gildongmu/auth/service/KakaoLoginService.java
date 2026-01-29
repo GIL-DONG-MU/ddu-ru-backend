@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class KakaoLoginService extends AbstractOauthService {
+public class KakaoLoginService implements OauthService {
 
     @Value("${oauth.kakao.client-id}")
     private String kakaoClientId;
@@ -89,8 +89,6 @@ public class KakaoLoginService extends AbstractOauthService {
         }
     }
 
-    @Override
-    protected String getClientId() { return kakaoClientId; }
     @Override
     public OauthType getLoginType() { return OauthType.KAKAO; }
 }

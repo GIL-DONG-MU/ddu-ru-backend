@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 @Slf4j
 @Service
-public class GoogleLoginService extends AbstractOauthService {
+public class GoogleLoginService implements OauthService {
 
     @Value("${oauth.google.android-client-id}")
     private String googleAndroidClientId;
@@ -77,8 +77,6 @@ public class GoogleLoginService extends AbstractOauthService {
                 .build();
     }
 
-    @Override
-    protected String getClientId() { return googleClientId; }
     @Override
     public OauthType getLoginType() { return OauthType.GOOGLE; }
 }
