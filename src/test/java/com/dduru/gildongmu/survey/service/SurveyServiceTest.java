@@ -1,7 +1,9 @@
 package com.dduru.gildongmu.survey.service;
 
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
+import com.dduru.gildongmu.profile.service.ProfileService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.*;
@@ -9,6 +11,7 @@ import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.SurveyResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
+import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
 import com.dduru.gildongmu.user.domain.User;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,6 +50,10 @@ class SurveyServiceTest {
     private AvatarMatcher avatarMatcher;
     @Mock
     private AvatarProfileService avatarProfileService;
+    @Mock
+    private AvatarProfileRepository avatarProfileRepository;
+    @Mock
+    private ProfileService profileService;
     @Mock
     private UserRepository userRepository;
 
@@ -121,6 +129,17 @@ class SurveyServiceTest {
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
+        AvatarProfile avatarProfile = AvatarProfile.builder()
+                .avatarType(AvatarType.TTUR_SWEET)
+                .description("설명")
+                .personality("성격")
+                .strength("강점")
+                .tip("팁")
+                .tags("[]")
+                .build();
+        ReflectionTestUtils.setField(avatarProfile, "id", 1L);
+        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_SWEET)).thenReturn(Optional.of(avatarProfile));
+
         when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.empty());
         when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -187,6 +206,17 @@ class SurveyServiceTest {
                 "설명2", "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
+
+        AvatarProfile avatarProfile = AvatarProfile.builder()
+                .avatarType(AvatarType.TTUR_PADO)
+                .description("설명2")
+                .personality("성격2")
+                .strength("강점2")
+                .tip("팁2")
+                .tags("[]")
+                .build();
+        ReflectionTestUtils.setField(avatarProfile, "id", 2L);
+        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_PADO)).thenReturn(Optional.of(avatarProfile));
 
         TravelTendency existingTendency = TravelTendency.create(
                 testUser,
