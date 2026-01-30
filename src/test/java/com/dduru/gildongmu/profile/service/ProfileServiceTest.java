@@ -4,7 +4,9 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import com.dduru.gildongmu.user.domain.User;
@@ -296,5 +298,226 @@ class ProfileServiceTest {
         // existsByNickname이 아닌 existsByNicknameWithLock이 호출되었는지 확인
         verify(profileRepository).existsByNicknameWithLock(nickname);
         verify(profileRepository, never()).existsByNickname(nickname);
+    }
+
+    // ==================== updateProfile 단위 테스트 ====================
+
+    @Test
+    @DisplayName("updateProfile: UPLOADED 타입일 때 이미지 URL·배경색·bio가 반영되고 저장된다")
+    void updateProfile_UPLOADED_성공() {
+        // given
+        Long userId = 1L;
+        String imageUrl = "https://s3.example.com/profile/abc.png";
+        Integer bgColorId = 3;
+        String bio = "안녕하세요 여행 좋아해요";
+        ProfileUpdateRequest request = new ProfileUpdateRequest(
+                imageUrl,
+                "UPLOADED",
+                bgColorId,
+                bio
+        );
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        Profile profile = Profile.builder()
+                .user(user)
+                .nickname("닉네임")
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(profileRepository.save(any(Profile.class))).thenReturn(profile);
+
+        // when
+        profileService.updateProfile(userId, request);
+
+        // then
+        verify(profileRepository).findByUser(user);
+        verify(profileRepository).save(profile);
+        assertThat(profile.getUploadedImageUrl()).isEqualTo(imageUrl);
+        assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.UPLOADED);
+        assertThat(profile.getBgColorId()).isEqualTo(bgColorId);
+        assertThat(profile.getBio()).isEqualTo(bio);
+    }
+
+    @Test
+    @DisplayName("updateProfile: AVATAR 타입일 때 uploadedImageUrl은 null, 배경색·bio는 반영된다")
+    void updateProfile_AVATAR_성공() {
+        // given
+        Long userId = 1L;
+        Integer bgColorId = 5;
+        String bio = "아바타로 할게요";
+        ProfileUpdateRequest request = new ProfileUpdateRequest(
+                null,
+                "AVATAR",
+                bgColorId,
+                bio
+        );
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        Profile profile = Profile.builder()
+                .user(user)
+                .nickname("닉네임")
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(profileRepository.save(any(Profile.class))).thenReturn(profile);
+
+        // when
+        profileService.updateProfile(userId, request);
+
+        // then
+        verify(profileRepository).save(profile);
+        assertThat(profile.getUploadedImageUrl()).isNull();
+        assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.AVATAR);
+        assertThat(profile.getBgColorId()).isEqualTo(bgColorId);
+        assertThat(profile.getBio()).isEqualTo(bio);
+    }
+
+    @Test
+    @DisplayName("updateProfile: DEFAULT 타입은 AVATAR와 동일하게 처리된다")
+    void updateProfile_DEFAULT_AVATAR와동일처리() {
+        // given
+        Long userId = 1L;
+        ProfileUpdateRequest request = new ProfileUpdateRequest(
+                null,
+                "DEFAULT",
+                1,
+                "기본"
+        );
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        Profile profile = Profile.builder()
+                .user(user)
+                .nickname("닉네임")
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(profileRepository.save(any(Profile.class))).thenReturn(profile);
+
+        // when
+        profileService.updateProfile(userId, request);
+
+        // then
+        verify(profileRepository).save(profile);
+        assertThat(profile.getUploadedImageUrl()).isNull();
+        assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.AVATAR);
+        assertThat(profile.getBgColorId()).isEqualTo(1);
+        assertThat(profile.getBio()).isEqualTo("기본");
+    }
+
+    @Test
+    @DisplayName("updateProfile: 프로필이 없으면 PROFILE_NOT_FOUND 예외 발생")
+    void updateProfile_프로필없음_예외발생() {
+        // given
+        Long userId = 1L;
+        ProfileUpdateRequest request = new ProfileUpdateRequest(
+                null,
+                "AVATAR",
+                1,
+                "bio"
+        );
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> profileService.updateProfile(userId, request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> {
+                    BusinessException e = (BusinessException) ex;
+                    assertThat(e.getErrorCode()).isEqualTo(ErrorCode.PROFILE_NOT_FOUND);
+                });
+
+        verify(profileRepository).findByUser(user);
+        verify(profileRepository, never()).save(any(Profile.class));
+    }
+
+    // ==================== updateAvatarId 단위 테스트 ====================
+
+    @Test
+    @DisplayName("updateAvatarId: 아바타 ID가 정상 반영되고 저장된다")
+    void updateAvatarId_성공() {
+        // given
+        Long userId = 1L;
+        Long avatarId = 10L;
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        Profile profile = Profile.builder()
+                .user(user)
+                .nickname("닉네임")
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(profileRepository.save(any(Profile.class))).thenReturn(profile);
+
+        // when
+        profileService.updateAvatarId(userId, avatarId);
+
+        // then
+        verify(profileRepository).save(profile);
+        assertThat(profile.getAvatarId()).isEqualTo(avatarId);
+    }
+
+    @Test
+    @DisplayName("updateAvatarId: 프로필이 없으면 PROFILE_NOT_FOUND 예외 발생")
+    void updateAvatarId_프로필없음_예외발생() {
+        // given
+        Long userId = 1L;
+        Long avatarId = 10L;
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(profileRepository.findByUser(user)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> profileService.updateAvatarId(userId, avatarId))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> {
+                    BusinessException e = (BusinessException) ex;
+                    assertThat(e.getErrorCode()).isEqualTo(ErrorCode.PROFILE_NOT_FOUND);
+                });
+
+        verify(profileRepository).findByUser(user);
+        verify(profileRepository, never()).save(any(Profile.class));
     }
 }
