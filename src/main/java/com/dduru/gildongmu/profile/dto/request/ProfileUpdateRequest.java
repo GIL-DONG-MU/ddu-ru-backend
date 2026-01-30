@@ -13,7 +13,7 @@ public record ProfileUpdateRequest(
         @Pattern(regexp = "DEFAULT|AVATAR|UPLOADED", message = "프로필 이미지 타입은 DEFAULT, AVATAR, UPLOADED 중 하나여야 합니다.")
         String profileImageType,
 
-        Integer bgColorId,
+        Long bgColorId,
 
         @Size(max = 60)
         String bio

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.profile.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -38,11 +39,13 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "birthday")
     private LocalDate birthday;
 
-    @Column(name = "avatar_id")
-    private Long avatarId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_id")
+    private AvatarProfile avatar;
 
-    @Column(name = "bg_color_id")
-    private Integer bgColorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bg_color_id")
+    private BgColor bgColor;
 
     @Column(name = "uploaded_image_url", length = 500)
     private String uploadedImageUrl;
@@ -56,15 +59,15 @@ public class Profile extends BaseTimeEntity {
 
     @Builder
     public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
-                   Long avatarId, Integer bgColorId, String uploadedImageUrl, ProfileImageType profileImageType, String bio
+                   AvatarProfile avatar, BgColor bgColor, String uploadedImageUrl, ProfileImageType profileImageType, String bio
     ) {
         this.user = user;
         this.nickname = nickname;
         this.gender = gender;
         this.phoneNumber = phoneNumber;
         this.birthday = birthday;
-        this.avatarId = avatarId;
-        this.bgColorId = bgColorId;
+        this.avatar = avatar;
+        this.bgColor = bgColor;
         this.uploadedImageUrl = uploadedImageUrl;
         this.profileImageType = profileImageType;
         this.bio = bio;
@@ -90,23 +93,22 @@ public class Profile extends BaseTimeEntity {
     }
 
 
-    public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, Integer bgColorId, String bio) {
+    public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
         if (uploadedImageUrl != null) {
             this.uploadedImageUrl = uploadedImageUrl;
         }
         if (profileImageType != null) {
             this.profileImageType = profileImageType;
         }
-        if (bgColorId != null) {
-            this.bgColorId = bgColorId;
+        if (bgColor != null) {
+            this.bgColor = bgColor;
         }
         if (bio != null) {
             this.bio = bio;
         }
     }
 
-
-    public void updateAvatarId(Long avatarId) {
-        this.avatarId = avatarId;
+    public void updateAvatar(AvatarProfile avatar) {
+        this.avatar = avatar;
     }
 }

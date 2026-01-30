@@ -3,12 +3,17 @@ package com.dduru.gildongmu.profile.service;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.repository.BgColorRepository;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
+import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -38,6 +43,12 @@ class ProfileServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private BgColorRepository bgColorRepository;
+
+    @Mock
+    private AvatarProfileRepository avatarProfileRepository;
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
@@ -308,7 +319,8 @@ class ProfileServiceTest {
         // given
         Long userId = 1L;
         String imageUrl = "https://s3.example.com/profile/abc.png";
-        Integer bgColorId = 3;
+        Long bgColorId = 3L;
+        BgColor bgColor = BgColor.builder().hexCode("#E1FFBD").displayOrder(3).build();
         String bio = "안녕하세요 여행 좋아해요";
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 imageUrl,
@@ -331,6 +343,7 @@ class ProfileServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(bgColorRepository.getByIdOrThrow(bgColorId)).thenReturn(bgColor);
         when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
         // when
@@ -341,7 +354,7 @@ class ProfileServiceTest {
         verify(profileRepository).save(profile);
         assertThat(profile.getUploadedImageUrl()).isEqualTo(imageUrl);
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.UPLOADED);
-        assertThat(profile.getBgColorId()).isEqualTo(bgColorId);
+        assertThat(profile.getBgColor()).isSameAs(bgColor);
         assertThat(profile.getBio()).isEqualTo(bio);
     }
 
@@ -350,7 +363,8 @@ class ProfileServiceTest {
     void updateProfile_AVATAR_성공() {
         // given
         Long userId = 1L;
-        Integer bgColorId = 5;
+        Long bgColorId = 5L;
+        BgColor bgColor = BgColor.builder().hexCode("#97C8FF").displayOrder(5).build();
         String bio = "아바타로 할게요";
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 null,
@@ -373,6 +387,7 @@ class ProfileServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(bgColorRepository.getByIdOrThrow(bgColorId)).thenReturn(bgColor);
         when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
         // when
@@ -382,7 +397,7 @@ class ProfileServiceTest {
         verify(profileRepository).save(profile);
         assertThat(profile.getUploadedImageUrl()).isNull();
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.AVATAR);
-        assertThat(profile.getBgColorId()).isEqualTo(bgColorId);
+        assertThat(profile.getBgColor()).isSameAs(bgColor);
         assertThat(profile.getBio()).isEqualTo(bio);
     }
 
@@ -391,10 +406,12 @@ class ProfileServiceTest {
     void updateProfile_DEFAULT_AVATAR와동일처리() {
         // given
         Long userId = 1L;
+        Long bgColorId = 1L;
+        BgColor bgColor = BgColor.builder().hexCode("#FFB3BA").displayOrder(1).build();
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 null,
                 "DEFAULT",
-                1,
+                bgColorId,
                 "기본"
         );
 
@@ -412,6 +429,7 @@ class ProfileServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(bgColorRepository.getByIdOrThrow(bgColorId)).thenReturn(bgColor);
         when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
         // when
@@ -421,7 +439,7 @@ class ProfileServiceTest {
         verify(profileRepository).save(profile);
         assertThat(profile.getUploadedImageUrl()).isNull();
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.AVATAR);
-        assertThat(profile.getBgColorId()).isEqualTo(1);
+        assertThat(profile.getBgColor()).isSameAs(bgColor);
         assertThat(profile.getBio()).isEqualTo("기본");
     }
 
@@ -433,7 +451,7 @@ class ProfileServiceTest {
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 null,
                 "AVATAR",
-                1,
+                1L,
                 "bio"
         );
 
@@ -459,14 +477,22 @@ class ProfileServiceTest {
         verify(profileRepository, never()).save(any(Profile.class));
     }
 
-    // ==================== updateAvatarId 단위 테스트 ====================
+    // ==================== updateAvatar 단위 테스트 ====================
 
     @Test
-    @DisplayName("updateAvatarId: 아바타 ID가 정상 반영되고 저장된다")
-    void updateAvatarId_성공() {
+    @DisplayName("updateAvatar: 아바타가 정상 반영되고 저장된다")
+    void updateAvatar_성공() {
         // given
         Long userId = 1L;
         Long avatarId = 10L;
+        AvatarProfile avatarProfile = AvatarProfile.builder()
+                .avatarType(AvatarType.TTUR_POGUNI)
+                .description("뚜르 포근이")
+                .personality("포근한 성격")
+                .strength("친화력")
+                .tip("여행 팁")
+                .tags("[]")
+                .build();
 
         User user = User.builder()
                 .email("test@example.com")
@@ -482,19 +508,20 @@ class ProfileServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(profileRepository.findByUser(user)).thenReturn(Optional.of(profile));
+        when(avatarProfileRepository.getByIdOrThrow(avatarId)).thenReturn(avatarProfile);
         when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
         // when
-        profileService.updateAvatarId(userId, avatarId);
+        profileService.updateAvatar(userId, avatarId);
 
         // then
         verify(profileRepository).save(profile);
-        assertThat(profile.getAvatarId()).isEqualTo(avatarId);
+        assertThat(profile.getAvatar()).isSameAs(avatarProfile);
     }
 
     @Test
-    @DisplayName("updateAvatarId: 프로필이 없으면 PROFILE_NOT_FOUND 예외 발생")
-    void updateAvatarId_프로필없음_예외발생() {
+    @DisplayName("updateAvatar: 프로필이 없으면 PROFILE_NOT_FOUND 예외 발생")
+    void updateAvatar_프로필없음_예외발생() {
         // given
         Long userId = 1L;
         Long avatarId = 10L;
@@ -510,7 +537,7 @@ class ProfileServiceTest {
         when(profileRepository.findByUser(user)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> profileService.updateAvatarId(userId, avatarId))
+        assertThatThrownBy(() -> profileService.updateAvatar(userId, avatarId))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(ex -> {
                     BusinessException e = (BusinessException) ex;
@@ -519,5 +546,6 @@ class ProfileServiceTest {
 
         verify(profileRepository).findByUser(user);
         verify(profileRepository, never()).save(any(Profile.class));
+        verify(avatarProfileRepository, never()).getByIdOrThrow(any());
     }
 }

@@ -101,7 +101,8 @@ class UserRepositoryTest {
         
         Profile profile = Profile.builder()
                 .user(savedUser)
-                .avatarId(1L)
+                .avatar(null)
+                .bgColor(null)
                 .profileImageType(ProfileImageType.AVATAR)
                 .gender(Gender.M)
                 .build();

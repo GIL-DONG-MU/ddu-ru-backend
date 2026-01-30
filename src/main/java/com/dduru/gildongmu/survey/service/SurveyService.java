@@ -101,7 +101,7 @@ public class SurveyService {
         avatarProfileRepository.findByAvatarType(avatarType)
                 .ifPresentOrElse(
                         avatarProfile -> {
-                            profileService.updateAvatarId(userId, avatarProfile.getId());
+                            profileService.updateAvatar(userId, avatarProfile.getId());
                             log.debug("아바타 ID 저장 완료 - userId: {}, avatarId: {}", userId, avatarProfile.getId());
                         },
                         () -> log.warn("아바타 프로필을 찾을 수 없어 Profile에 저장하지 않음 - userId: {}, avatarType: {}", userId, avatarType)

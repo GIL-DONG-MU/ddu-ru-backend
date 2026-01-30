@@ -3,6 +3,7 @@ package com.dduru.gildongmu.profile.service;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
@@ -11,8 +12,11 @@ import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.repository.BgColorRepository;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
+import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +41,8 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
+    private final BgColorRepository bgColorRepository;
+    private final AvatarProfileRepository avatarProfileRepository;
 
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
@@ -116,17 +122,18 @@ public class ProfileService {
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Profile profile = getProfileByUserId(user);
+        BgColor bgColor = bgColorRepository.getByIdOrThrow(request.bgColorId());
 
         switch (request.profileImageType()){
             case "UPLOADED":
-                profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, request.bgColorId(), request.bio());
+                profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
                 break;
             case "AVATAR":
-                profile.updateProfile(null, ProfileImageType.AVATAR, request.bgColorId(), request.bio());
+                profile.updateProfile(null, ProfileImageType.AVATAR, bgColor, request.bio());
                 break;
             default:
                 log.warn("알 수 없는 프로필 이미지 타입: {}. 기존 아바타 이미지로 처리합니다.", request.profileImageType());
-                profile.updateProfile(null, ProfileImageType.AVATAR, request.bgColorId(), request.bio());
+                profile.updateProfile(null, ProfileImageType.AVATAR, bgColor, request.bio());
         }
 
         profileRepository.save(profile);
@@ -135,13 +142,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateAvatarId(Long userId, Long avatarId) {
+    public void updateAvatar(Long userId, Long avatarId) {
         User user = userRepository.getByIdOrThrow(userId);
         Profile profile = getProfileByUserId(user);
+        AvatarProfile avatar = avatarProfileRepository.getByIdOrThrow(avatarId);
 
-        profile.updateAvatarId(avatarId);
+        profile.updateAvatar(avatar);
         profileRepository.save(profile);
-        log.info("아바타 ID 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
+        log.info("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
     }
 
     private LocalDate parseBirthDate(String birthDateString) {
