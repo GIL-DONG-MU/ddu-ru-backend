@@ -117,8 +117,6 @@ public class ProfileService {
         User user = userRepository.getByIdOrThrow(userId);
         Profile profile = getProfileByUserId(user);
 
-
-
         switch (request.profileImageType()){
             case "UPLOADED":
                 profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, request.bgColorId(), request.bio());
@@ -135,7 +133,6 @@ public class ProfileService {
         log.info("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
     }
-
 
     @Transactional
     public void updateAvatarId(Long userId, Long avatarId) {
