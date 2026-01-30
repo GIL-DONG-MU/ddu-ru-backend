@@ -44,7 +44,7 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "bg_color_id")
     private Integer bgColorId;
 
-    @Column(name = "uploadedImageUrl", length = 500)
+    @Column(name = "uploaded_image_url", length = 500)
     private String uploadedImageUrl;
 
     @Column(name = "profile_image_type")

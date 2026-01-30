@@ -53,12 +53,17 @@ ALTER TABLE profiles ADD CONSTRAINT fk_profiles_bg_color_id
 -- 5. profiles: avatar_id 컬럼 추가 (이미 있으면 에러 → 해당 라인만 제외하고 실행)
 ALTER TABLE profiles ADD COLUMN avatar_id BIGINT NULL;
 
--- 6. profiles: avatar_id FK 추가 (avatar_profiles.id 참조)
+-- 6. profiles: profile_image_type 컬럼 추가
+ALTER TABLE profiles ADD COLUMN profile_image_type VARCHAR(50) NULL;
+
+-- 7. profiles: avatar_id FK 추가 (avatar_profiles.id 참조)
 ALTER TABLE profiles ADD CONSTRAINT fk_profiles_avatar_id
     FOREIGN KEY (avatar_id) REFERENCES avatar_profiles(id) ON DELETE SET NULL;
 
--- 7. profiles: profile_image → uploadedImageUrl 컬럼명 변경
-ALTER TABLE profiles CHANGE COLUMN profile_image uploadedImageUrl VARCHAR(500) NULL;
+-- 8. profiles: profile_image → uploaded_image_url 컬럼명 변경
+ALTER TABLE profiles CHANGE COLUMN profile_image uploaded_image_url VARCHAR(500) NULL;
 
--- 8. profiles: self_introduction → bio 컬럼명 변경
+-- 9. profiles: self_introduction → bio 컬럼명 변경
 ALTER TABLE profiles CHANGE COLUMN self_introduction bio VARCHAR(60) NULL;
+
+
