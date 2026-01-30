@@ -20,6 +20,9 @@ public class KakaoLoginService extends AbstractOauthService {
     @Value("${oauth.kakao.client-id}")
     private String kakaoClientId;
 
+    @Value("${oauth.kakao.rest-client-id}")
+    private String kakaoRestClientId;
+
     private final ObjectMapper objectMapper;
     private final KakaoUserInfoMapper userInfoMapper;
 
@@ -68,7 +71,8 @@ public class KakaoLoginService extends AbstractOauthService {
     }
 
     private void validateAudience(JsonNode payload) {
-        if (!getClientId().equals(payload.get("aud").asText())) {
+        String aud = payload.get("aud").asText();
+        if (!kakaoClientId.equals(aud) && !kakaoRestClientId.equals(aud)) {
             throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
         }
     }
