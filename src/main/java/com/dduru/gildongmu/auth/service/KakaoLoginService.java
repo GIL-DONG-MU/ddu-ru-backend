@@ -5,15 +5,16 @@ import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
-import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KakaoLoginService implements OauthService {
 
     @Value("${oauth.kakao.client-id}")
@@ -23,12 +24,6 @@ public class KakaoLoginService implements OauthService {
     private String kakaoRestClientId;
 
     private final ObjectMapper objectMapper;
-    private final KakaoUserInfoMapper userInfoMapper;
-
-    public KakaoLoginService() {
-        this.objectMapper = new ObjectMapper();
-        this.userInfoMapper = new KakaoUserInfoMapper();
-    }
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
@@ -36,12 +31,17 @@ public class KakaoLoginService implements OauthService {
         
         JsonNode payload = parseIdTokenPayload(idToken);
         validateAudience(payload);
-        OauthUserInfo userInfo = userInfoMapper.mapFromIdToken(payload);
+        OauthUserInfo userInfo = extractUserInfo(payload);
         
         log.debug("카카오 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
         return userInfo;
     }
 
+    /**
+     * 카카오 ID Token의 payload를 파싱
+     * 보안: 현재는 Base64 디코딩만 수행
+     * 앱에서 받은 토큰은 카카오 공개키(JWK)로 서명 검증이 필요.
+     */
     private JsonNode parseIdTokenPayload(String idToken) throws InvalidTokenException {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
@@ -66,27 +66,17 @@ public class KakaoLoginService implements OauthService {
         }
     }
 
-    private static class KakaoUserInfoMapper {
-
-        public OauthUserInfo mapFromIdToken(JsonNode payload) {
-            return OauthUserInfo.builder()
-                    .oauthId(payload.get("sub").asText())
-                    .email(getJsonValue(payload, "email"))
-                    .name(getJsonValue(payload, "nickname"))
-                    .profileImage(getJsonValue(payload, "picture"))
-                    .loginType(OauthType.KAKAO)
-                    // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
-                    // .gender(getJsonValue(payload, "gender"))
-                    // .phoneNumber(getJsonValue(payload, "phone_number"))
-                    .build();
-        }
-
-        private String getJsonValue(JsonNode json, String key) {
-            return Optional.ofNullable(json.get(key))
-                    .filter(node -> !node.isNull())
-                    .map(JsonNode::asText)
-                    .orElse(null);
-        }
+    private OauthUserInfo extractUserInfo(JsonNode payload) {
+        return OauthUserInfo.builder()
+                .oauthId(payload.get("sub").asText())
+                .email(payload.path("email").asText(null))
+                .name(payload.path("nickname").asText(null))
+                .profileImage(payload.path("picture").asText(null))
+                .loginType(OauthType.KAKAO)
+                // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                // .gender(payload.path("gender").asText(null))
+                // .phoneNumber(payload.path("phone_number").asText(null))
+                .build();
     }
 
     @Override
