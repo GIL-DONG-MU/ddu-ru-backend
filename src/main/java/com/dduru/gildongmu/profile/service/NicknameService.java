@@ -8,8 +8,6 @@ import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
-import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,12 +24,10 @@ public class NicknameService {
 
     private final NicknameGenerator nicknameGenerator;
     private final ProfileRepository profileRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
-        User user = userRepository.getByIdOrThrow(userId);
-        Profile profile = getProfileByUserId(user);
+        Profile profile = profileRepository.getByUserIdOrThrow(userId);
         checkDuplicateNicknameWithLock(request.nickname());
 
         profile.updateNickname(request.nickname());
@@ -72,11 +68,6 @@ public class NicknameService {
         String fallbackNickname = FALLBACK_NICKNAME_PREFIX + (System.currentTimeMillis() % FALLBACK_RANDOM_BOUND);
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
-    }
-
-    private Profile getProfileByUserId(User user) {
-        return profileRepository.findByUser(user)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
     }
 
     private void checkDuplicateNickname(String nickname) {

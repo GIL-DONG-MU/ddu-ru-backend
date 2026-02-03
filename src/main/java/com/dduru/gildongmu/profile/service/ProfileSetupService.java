@@ -6,8 +6,6 @@ import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
-import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,14 +24,11 @@ public class ProfileSetupService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ProfileRepository profileRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
-        User user = userRepository.getByIdOrThrow(userId);
-        Profile profile = getProfileByUserId(user);
+        Profile profile = profileRepository.getByUserIdOrThrow(userId);
 
-        // 비관적 잠금을 사용하여 닉네임 중복 체크 (race condition 방지)
         checkDuplicateNicknameWithLock(request.nickname());
 
         validateVerificationToken(request.verificationToken(), request.phoneNumber());
@@ -76,11 +71,6 @@ public class ProfileSetupService {
         if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않거나 만료된 인증 토큰입니다.");
         }
-    }
-
-    private Profile getProfileByUserId(User user) {
-        return profileRepository.findByUser(user)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
     }
 
     private void checkDuplicateNicknameWithLock(String nickname) {
