@@ -16,4 +16,8 @@ public class AvatarProfileNotFoundException extends BusinessException {
     public static AvatarProfileNotFoundException of(AvatarType avatarType) {
         return new AvatarProfileNotFoundException("아바타 프로필을 찾을 수 없습니다. avatarType=" + avatarType);
     }
+
+    public static AvatarProfileNotFoundException of(Long avatarId) {
+        return new AvatarProfileNotFoundException("아바타 프로필을 찾을 수 없습니다. avatarId=" + avatarId);
+    }
 }

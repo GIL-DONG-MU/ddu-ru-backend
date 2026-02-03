@@ -35,7 +35,7 @@ public record CommentResponse(
         } else {
             content = comment.getContent();
             author = comment.getUser().getProfile().getNickname();
-            authorProfileImage = comment.getUser().getProfile().getProfileImage();
+            authorProfileImage = comment.getUser().getProfile().getUploadedImageUrl();
         }
 
         return new CommentResponse(

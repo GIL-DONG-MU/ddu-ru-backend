@@ -16,7 +16,7 @@ public record UserInfo(
         return new UserInfo(
                 user.getId(),
                 user.getName(),
-                profile.getProfileImage(),
+                profile.getUploadedImageUrl(),
                 profile.getGender().name(),
                 profile.getBirthday().toString(),
                 profile.getNickname()

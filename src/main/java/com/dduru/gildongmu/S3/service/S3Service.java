@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.S3.service;
 
 import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
-import com.dduru.gildongmu.config.S3Properties;
 import com.dduru.gildongmu.S3.exception.InvalidFileExtensionException;
+import com.dduru.gildongmu.config.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +28,7 @@ public class S3Service {
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
     private static final String S3_POSTS_DIR = "posts/";
+    private static final String S3_PROFILES_DIR = "profiles/";
     /*private static final String S3_SURVEY_DIR = "survey/";*/
     private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
@@ -36,7 +37,17 @@ public class S3Service {
         List<ImageUploadResponse> responses = fileNames.stream()
                 .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR, true))
                 .toList();
-        log.info("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
+        log.debug("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
+        return responses;
+    }
+
+
+    public List<ImageUploadResponse> prepareProfileImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(profiles) - 파일 개수: {}", fileNames.size());
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3_PROFILES_DIR, true))
+                .toList();
+        log.debug("Presigned URL 생성 완료{} 파일 개수: {}", S3_PROFILES_DIR, responses.size());
         return responses;
     }
 
