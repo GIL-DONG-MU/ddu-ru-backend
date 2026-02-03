@@ -51,6 +51,7 @@ public enum ErrorCode {
 
     // 프로필 (PROFILE)
     BG_COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "배경색을 찾을 수 없습니다."),
+    INVALID_PROFILE_IMAGE_URL(HttpStatus.BAD_REQUEST, "프로필 이미지 URL이 유효하지 않습니다."),
 
     // 참여신청 (PARTICIPATION)
     PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "참여신청을 찾을 수 없습니다."),

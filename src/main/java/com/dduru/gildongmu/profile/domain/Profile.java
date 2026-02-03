@@ -3,6 +3,7 @@ package com.dduru.gildongmu.profile.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.exception.InvalidProfileImageUrlException;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
@@ -92,7 +93,6 @@ public class Profile extends BaseTimeEntity {
         }
     }
 
-
     public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
         validateUploadedImageUrlForType(profileImageType, uploadedImageUrl);
 
@@ -116,7 +116,7 @@ public class Profile extends BaseTimeEntity {
 
     private void validateUploadedImageUrlForType(ProfileImageType profileImageType, String uploadedImageUrl) {
         if (profileImageType == ProfileImageType.UPLOADED && (uploadedImageUrl == null || uploadedImageUrl.isBlank())) {
-            throw new IllegalArgumentException("UPLOADED 타입일 때는 업로드된 이미지 URL이 필요합니다.");
+            throw InvalidProfileImageUrlException.uploadedTypeRequiresUrl();
         }
     }
 }
