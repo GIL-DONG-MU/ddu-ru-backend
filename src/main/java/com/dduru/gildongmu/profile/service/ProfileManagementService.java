@@ -33,9 +33,7 @@ public class ProfileManagementService {
         Profile profile = getProfileByUserId(user);
         BgColor bgColor = bgColorRepository.getByIdOrThrow(request.bgColorId());
 
-        ProfileImageType imageType = parseProfileImageType(request.profileImageType());
-        
-        switch (imageType) {
+        switch (request.profileImageType()) {
             case UPLOADED -> profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
             case AVATAR -> profile.updateProfile("", ProfileImageType.AVATAR, bgColor, request.bio());
             case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());

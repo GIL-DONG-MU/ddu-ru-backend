@@ -4,7 +4,6 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
@@ -47,7 +46,7 @@ public class ProfileSetupService {
 
         profile.setupInitialProfile(
                 request.nickname(),
-                Gender.valueOf(request.gender()),
+                request.gender(),
                 request.phoneNumber(),
                 birthday
         );

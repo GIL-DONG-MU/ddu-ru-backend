@@ -1,8 +1,10 @@
 package com.dduru.gildongmu.profile.dto;
 
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 
@@ -13,9 +15,8 @@ public record ProfileSetupRequest(
         String nickname,
         
         @Schema(description = "성별", example = "M", allowableValues = {"M", "F"})
-        @NotBlank
-        @Pattern(regexp = "^(M|F)$", message = "성별 형식이 올바르지 않습니다.")
-        String gender,
+        @NotNull
+        Gender gender,
         
         @Schema(description = "전화번호", example = "01012345678")
         @NotBlank
