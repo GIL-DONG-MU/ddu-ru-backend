@@ -37,6 +37,11 @@ public class KakaoLoginService implements OauthService {
         return userInfo;
     }
 
+    @Override
+    public OauthType getLoginType() {
+        return OauthType.KAKAO;
+    }
+
     /**
      * 카카오 ID Token의 payload를 파싱
      * 보안: 현재는 Base64 디코딩만 수행
@@ -45,6 +50,7 @@ public class KakaoLoginService implements OauthService {
     private JsonNode parseIdTokenPayload(String idToken) throws InvalidTokenException {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
+            log.warn("카카오 ID Token 형식 오류 - tokenParts: {}", chunks.length);
             throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
         }
 
@@ -53,8 +59,10 @@ public class KakaoLoginService implements OauthService {
             String payload = new String(decoder.decode(chunks[1]));
             return objectMapper.readTree(payload);
         } catch (IllegalArgumentException e) {
+            log.warn("카카오 ID Token 디코딩 실패 - payload segment 손상, message: {}", e.getMessage());
             throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
         } catch (Exception e) {
+            log.warn("카카오 ID Token 파싱 실패 - message: {}", e.getMessage(), e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
         }
     }
@@ -62,6 +70,7 @@ public class KakaoLoginService implements OauthService {
     private void validateAudience(JsonNode payload) {
         String aud = payload.get("aud").asText();
         if (!kakaoClientId.equals(aud) && !kakaoRestClientId.equals(aud)) {
+            log.warn("카카오 토큰 audience 불일치 - aud: {}", aud);
             throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
         }
     }
@@ -78,7 +87,4 @@ public class KakaoLoginService implements OauthService {
                 // .phoneNumber(payload.path("phone_number").asText(null))
                 .build();
     }
-
-    @Override
-    public OauthType getLoginType() { return OauthType.KAKAO; }
 }
