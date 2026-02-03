@@ -55,7 +55,10 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
     @Override
     public void extendExpiration(Long userId) {
         try {
-            redisTemplate.expire(key(userId), refreshTtl);
+            Boolean extended = redisTemplate.expire(key(userId), refreshTtl);
+            if (Boolean.FALSE.equals(extended)) {
+                log.debug("Refresh token 키 없음 - 만료 연장 스킵, userId: {}", userId);
+            }
         } catch (Exception e) {
             log.error("Refresh token 만료 연장 실패 - userId: {}", userId, e);
             throw new RefreshTokenException("Refresh token 만료 연장 실패");
