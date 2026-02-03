@@ -53,7 +53,6 @@ public class ProfileManagementService {
         AvatarProfile avatar = avatarProfileRepository.getByIdOrThrow(avatarId);
 
         profile.updateAvatar(avatar);
-        profileRepository.save(profile);
         log.info("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
     }
 

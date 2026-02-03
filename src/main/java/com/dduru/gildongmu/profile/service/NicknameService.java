@@ -35,7 +35,6 @@ public class NicknameService {
         checkDuplicateNicknameWithLock(request.nickname());
 
         profile.updateNickname(request.nickname());
-        profileRepository.save(profile);
     }
 
     @Transactional(readOnly = true)
