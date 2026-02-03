@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.survey.service;
 
+import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
@@ -8,6 +9,7 @@ import com.dduru.gildongmu.survey.dto.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.SurveyResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
+import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
 import com.dduru.gildongmu.user.domain.User;
@@ -32,6 +34,8 @@ public class SurveyService {
     private final TravelTendencyCalculator tendencyCalculator;
     private final AvatarMatcher avatarMatcher;
     private final AvatarProfileService avatarProfileService;
+    private final AvatarProfileRepository avatarProfileRepository;
+    private final ProfileManagementService profileManagementService;
     private final UserRepository userRepository;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
@@ -44,6 +48,8 @@ public class SurveyService {
         AvatarType avatarType = avatarMatcher.match(scores.r(), scores.w(), scores.s());
 
         saveOrUpdateTravelTendency(user, scores, avatarType);
+
+        saveAvatarIdToProfile(userId, avatarType);
 
         AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 
@@ -88,6 +94,17 @@ public class SurveyService {
                         () -> travelTendencyRepository.save(
                                 TravelTendency.create(user, rDecimal, wDecimal, sDecimal, pDecimal, avatarType)
                         )
+                );
+    }
+
+    private void saveAvatarIdToProfile(Long userId, AvatarType avatarType) {
+        avatarProfileRepository.findByAvatarType(avatarType)
+                .ifPresentOrElse(
+                        avatarProfile -> {
+                            profileManagementService.updateAvatar(userId, avatarProfile.getId());
+                            log.debug("아바타 ID 저장 완료 - userId: {}, avatarId: {}", userId, avatarProfile.getId());
+                        },
+                        () -> log.warn("아바타 프로필을 찾을 수 없어 Profile에 저장하지 않음 - userId: {}, avatarType: {}", userId, avatarType)
                 );
     }
 

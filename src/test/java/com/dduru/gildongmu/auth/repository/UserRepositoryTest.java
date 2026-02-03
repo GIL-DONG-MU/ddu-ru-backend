@@ -3,6 +3,7 @@ package com.dduru.gildongmu.auth.repository;
 import com.dduru.gildongmu.config.QueryDslConfig;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +44,8 @@ class UserRepositoryTest {
         
         Profile profile = Profile.builder()
                 .user(savedUser)
-                .profileImage("http://example.com/profile.jpg")
+                .uploadedImageUrl("http://example.com/profile.jpg")
+                .profileImageType(ProfileImageType.UPLOADED)
                 .gender(Gender.M)
                 .phoneNumber("010-1234-5678")
                 .build();
@@ -67,8 +71,12 @@ class UserRepositoryTest {
         
         Profile profile = Profile.builder()
                 .user(savedUser)
-                .profileImage("http://example.com/profile.jpg")
+                .nickname("users")
                 .gender(Gender.F)
+                .phoneNumber("01011111111")
+                .birthday(LocalDate.of(1990, 1, 1))
+                .uploadedImageUrl("http://example.com/profile.jpg")
+                .profileImageType(ProfileImageType.UPLOADED)
                 .build();
         profileRepository.save(profile);
 
@@ -93,7 +101,9 @@ class UserRepositoryTest {
         
         Profile profile = Profile.builder()
                 .user(savedUser)
-                .profileImage("http://example.com/profile.jpg")
+                .avatar(null)
+                .bgColor(null)
+                .profileImageType(ProfileImageType.AVATAR)
                 .gender(Gender.M)
                 .build();
         profileRepository.save(profile);

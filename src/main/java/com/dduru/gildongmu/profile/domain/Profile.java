@@ -2,6 +2,9 @@ package com.dduru.gildongmu.profile.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.exception.InvalidProfileImageUrlException;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -37,21 +40,38 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "birthday")
     private LocalDate birthday;
 
-    @Column(name = "profile_image", length = 500)
-    private String profileImage;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_id")
+    private AvatarProfile avatar;
 
-    @Column(name = "self_introduction", length = 60)
-    private String selfIntroduction;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bg_color_id")
+    private BgColor bgColor;
+
+    @Column(name = "uploaded_image_url", length = 500)
+    private String uploadedImageUrl;
+
+    @Column(name = "profile_image_type")
+    @Enumerated(EnumType.STRING)
+    private ProfileImageType profileImageType;
+
+    @Column(name = "bio", length = 60)
+    private String bio;
 
     @Builder
-    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday, String profileImage, String selfIntroduction) {
+    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
+                   AvatarProfile avatar, BgColor bgColor, String uploadedImageUrl, ProfileImageType profileImageType, String bio
+    ) {
         this.user = user;
         this.nickname = nickname;
         this.gender = gender;
         this.phoneNumber = phoneNumber;
         this.birthday = birthday;
-        this.profileImage = profileImage;
-        this.selfIntroduction = selfIntroduction;
+        this.avatar = avatar;
+        this.bgColor = bgColor;
+        this.uploadedImageUrl = uploadedImageUrl;
+        this.profileImageType = profileImageType;
+        this.bio = bio;
     }
 
     public void updateNickname(String nickname) {
@@ -70,6 +90,33 @@ public class Profile extends BaseTimeEntity {
         }
         if (birthday != null) {
             this.birthday = birthday;
+        }
+    }
+
+    public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
+        validateUploadedImageUrlForType(profileImageType, uploadedImageUrl);
+
+        if (uploadedImageUrl != null) {
+            this.uploadedImageUrl = uploadedImageUrl;
+        }
+        if (profileImageType != null) {
+            this.profileImageType = profileImageType;
+        }
+        if (bgColor != null) {
+            this.bgColor = bgColor;
+        }
+        if (bio != null) {
+            this.bio = bio;
+        }
+    }
+
+    public void updateAvatar(AvatarProfile avatar) {
+        this.avatar = avatar;
+    }
+
+    private void validateUploadedImageUrlForType(ProfileImageType profileImageType, String uploadedImageUrl) {
+        if (profileImageType == ProfileImageType.UPLOADED && (uploadedImageUrl == null || uploadedImageUrl.isBlank())) {
+            throw InvalidProfileImageUrlException.uploadedTypeRequiresUrl();
         }
     }
 }

@@ -23,11 +23,20 @@ public class S3Controller implements S3ApiDocs {
     private final S3Service s3Service;
 
     @Override
-    @PostMapping("/posts/uploads")
+    @PostMapping("/posts/presigned-url")
     public ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(
             @Valid @RequestBody ImageUploadRequest request
     ) {
         List<ImageUploadResponse> responses = s3Service.preparePostImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
+    }
+
+    @Override
+    @PostMapping("/profiles/presigned-url")
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareProfileImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        List<ImageUploadResponse> responses = s3Service.prepareProfileImageUpload(request.fileNames());
         return ResponseEntity.ok(ApiResult.ok(responses));
     }
 

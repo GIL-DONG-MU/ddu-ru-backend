@@ -6,7 +6,10 @@ import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
-import com.dduru.gildongmu.profile.service.ProfileService;
+import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.service.NicknameService;
+import com.dduru.gildongmu.profile.service.ProfileManagementService;
+import com.dduru.gildongmu.profile.service.ProfileSetupService;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ProfileController implements ProfileApiDocs {
 
-    private final ProfileService profileService;
+    private final NicknameService nicknameService;
+    private final ProfileSetupService profileSetupService;
+    private final ProfileManagementService profileManagementService;
 
     @Override
     @PutMapping("/users/nickname")
@@ -34,7 +40,7 @@ public class ProfileController implements ProfileApiDocs {
             @CurrentUser Long id,
             @Valid @RequestBody NicknameUpdateRequest request
     ) {
-        profileService.updateNickname(id, request);
+        nicknameService.updateNickname(id, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
@@ -43,24 +49,34 @@ public class ProfileController implements ProfileApiDocs {
     public ResponseEntity<ApiResult<NicknameValidateResponse>> checkNickname(
             @PathVariable @ValidNickname String nickname
     ) {
-        NicknameValidateResponse response = profileService.checkNickname(nickname);
+        NicknameValidateResponse response = nicknameService.checkNickname(nickname);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @GetMapping("/nicknames/random")
     public ResponseEntity<ApiResult<NicknameRandomResponse>> generateRandomNickname() {
-        NicknameRandomResponse response = profileService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
-    @PutMapping("/me/profile")
+    @PatchMapping("/users/me/onboarding")
     public ResponseEntity<ApiResult<Void>> setupInitialProfile(
             @CurrentUser Long userId,
             @RequestBody @Valid ProfileSetupRequest request
     ) {
-        profileService.setupInitialProfile(userId, request);
+        profileSetupService.setupInitialProfile(userId, request);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+    }
+
+    @Override
+    @PatchMapping("/users/me/profile")
+    public ResponseEntity<ApiResult<Void>> updateProfile(
+            @CurrentUser Long userId,
+            @RequestBody @Valid ProfileUpdateRequest request
+    ){
+        profileManagementService.updateProfile(userId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

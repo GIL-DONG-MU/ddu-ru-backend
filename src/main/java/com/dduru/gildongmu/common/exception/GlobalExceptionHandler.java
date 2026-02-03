@@ -1,9 +1,12 @@
 package com.dduru.gildongmu.common.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -62,6 +65,45 @@ public class GlobalExceptionHandler {
         log.warn("Illegal Argument Exception: {}", e.getMessage());
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getMessage());
         return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * 요청 본문(JSON) 역직렬화 실패 시 처리.
+     * Spring이 Jackson의 InvalidFormatException을 HttpMessageNotReadableException으로 감싸서 전달함.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof InvalidFormatException ife) {
+            return handleInvalidFormatException(ife);
+        }
+        log.warn("HttpMessageNotReadableException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, "요청 본문 형식이 올바르지 않습니다.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    private ResponseEntity<ErrorResponse> handleInvalidFormatException(InvalidFormatException e) {
+        String fieldName = e.getPath().isEmpty()
+                ? "request"
+                : e.getPath().get(e.getPath().size() - 1).getFieldName();
+
+        log.warn("Invalid Format Exception: field={}, value={}, targetType={}",
+                fieldName, e.getValue(), e.getTargetType().getSimpleName());
+
+        String message;
+        if (e.getTargetType().isEnum()) {
+            Object[] enumConstants = e.getTargetType().getEnumConstants();
+            String allowed = java.util.stream.Stream.of(enumConstants)
+                    .map(Object::toString)
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            message = String.format("%s은(는) [%s] 중 하나여야 합니다. 받은 값: %s", fieldName, allowed, e.getValue());
+        } else {
+            message = String.format("필드 '%s'의 값 '%s' 형식이 올바르지 않습니다.", fieldName, e.getValue());
+        }
+
+        ErrorResponse response = ErrorResponse.ofField(ErrorCode.INVALID_INPUT_VALUE, fieldName, message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
