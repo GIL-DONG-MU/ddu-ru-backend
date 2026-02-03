@@ -126,6 +126,7 @@ public class ProfileService {
 
         switch (request.profileImageType()){
             case "UPLOADED":
+                validateUploadedImageUrlRequired(request.uploadedImageUrl());
                 profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
                 break;
             case "AVATAR":
@@ -189,6 +190,12 @@ public class ProfileService {
     private void checkDuplicateNicknameWithLock(String nickname) {
         if (profileRepository.existsByNicknameWithLock(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
+    }
+
+    private void validateUploadedImageUrlRequired(String uploadedImageUrl) {
+        if (uploadedImageUrl == null || uploadedImageUrl.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "업로드된 이미지 URL이 필요합니다.");
         }
     }
 }
