@@ -90,9 +90,9 @@ public class KakaoLoginService implements OauthService {
                 .oauthId(subNode.asText())
                 .email(payload.path("email").asText(null))
                 .name(payload.path("nickname").asText(null))
-                .profileImage(payload.path("picture").asText(null))
                 .loginType(OauthType.KAKAO)
                 // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                // .profileImage(payload.path("picture").asText(null))
                 // .gender(payload.path("gender").asText(null))
                 // .phoneNumber(payload.path("phone_number").asText(null))
                 .build();

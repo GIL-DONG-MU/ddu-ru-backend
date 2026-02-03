@@ -87,11 +87,15 @@ public class UserCreationService {
     private void saveProfile(User user) {
         Profile profile = Profile.builder()
                 .user(user)
-                .profileImage(null)
                 .nickname(null)
                 .gender(null)
                 .phoneNumber(null)
                 .birthday(null)
+                .avatar(null)
+                .bgColor(null)
+                .uploadedImageUrl(null)
+                .profileImageType(null)
+                .bio(null)
                 .build();
         profileRepository.save(profile);
     }
