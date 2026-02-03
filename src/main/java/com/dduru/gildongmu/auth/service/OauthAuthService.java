@@ -62,7 +62,11 @@ public class OauthAuthService {
     private TokenPair generateTokens(Long userId) {
         String accessToken = jwtTokenProvider.createToken(userId);
         String refreshToken = jwtTokenProvider.createRefreshToken(userId);
-        refreshTokenService.saveRefreshToken(userId, refreshToken);
+        try {
+            refreshTokenService.saveRefreshToken(userId, refreshToken);
+        } catch (RefreshTokenException e) {
+            log.error("로그인 중 Refresh token 저장 실패 - userId: {}, 사용자에게는 로그인 성공 처리", userId, e);
+        }
         return new TokenPair(accessToken, refreshToken);
     }
 
