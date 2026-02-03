@@ -1,10 +1,8 @@
 -- ============================================================
 -- Profile 관련 스키마 마이그레이션 (운영 DB 적용용)
 -- - bg_colors 테이블 생성 및 시딩
--- - profiles: bg_color_id 추가 + FK, avatar_id FK, 컬럼명 변경
---
--- 사용법: 운영 DB 접속 후 전체 실행.
--- 이미 컬럼/테이블이 있으면 해당 문만 에러 → 그 문 건너뛰고 다음 실행.
+-- - profiles: 기존 profile_image, self_introduction 컬럼 삭제
+--   (ddl-auto=update로 이미 새 컬럼들이 추가되었으므로 기존 컬럼만 삭제)
 -- ============================================================
 
 -- 1. 배경색 테이블 생성
@@ -16,8 +14,8 @@ CREATE TABLE IF NOT EXISTS bg_colors (
     modified_at DATETIME(6) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. 배경색 초기 데이터 (24개) — FK 추가 전에 데이터 필요
-INSERT INTO bg_colors (hex_code, display_order, created_at, modified_at) VALUES
+-- 2. 배경색 초기 데이터 (24개)
+INSERT IGNORE INTO bg_colors (hex_code, display_order, created_at, modified_at) VALUES
 ('#FFB3BA', 1, NOW(), NOW()),
 ('#FFDFBA', 2, NOW(), NOW()),
 ('#E1FFBD', 3, NOW(), NOW()),
@@ -43,27 +41,10 @@ INSERT INTO bg_colors (hex_code, display_order, created_at, modified_at) VALUES
 ('#DB86FF', 23, NOW(), NOW()),
 ('#646464', 24, NOW(), NOW());
 
--- 3. profiles: bg_color_id 컬럼 추가 (bg_colors.id와 타입 맞춤)
-ALTER TABLE profiles ADD COLUMN bg_color_id BIGINT NULL;
+-- 3. profiles: 기존 profile_image 컬럼 삭제 (uploaded_image_url이 이미 있으므로)
+ALTER TABLE profiles DROP COLUMN profile_image;
 
--- 4. profiles: bg_color_id FK 추가 (bg_colors.id 참조)
-ALTER TABLE profiles ADD CONSTRAINT fk_profiles_bg_color_id
-    FOREIGN KEY (bg_color_id) REFERENCES bg_colors(id) ON DELETE SET NULL;
-
--- 5. profiles: avatar_id 컬럼 추가 (이미 있으면 에러 → 해당 라인만 제외하고 실행)
-ALTER TABLE profiles ADD COLUMN avatar_id BIGINT NULL;
-
--- 6. profiles: profile_image_type 컬럼 추가
-ALTER TABLE profiles ADD COLUMN profile_image_type VARCHAR(50) NULL;
-
--- 7. profiles: avatar_id FK 추가 (avatar_profiles.id 참조)
-ALTER TABLE profiles ADD CONSTRAINT fk_profiles_avatar_id
-    FOREIGN KEY (avatar_id) REFERENCES avatar_profiles(id) ON DELETE SET NULL;
-
--- 8. profiles: profile_image → uploaded_image_url 컬럼명 변경
-ALTER TABLE profiles CHANGE COLUMN profile_image uploaded_image_url VARCHAR(500) NULL;
-
--- 9. profiles: self_introduction → bio 컬럼명 변경
-ALTER TABLE profiles CHANGE COLUMN self_introduction bio VARCHAR(60) NULL;
+-- 4. profiles: 기존 self_introduction 컬럼 삭제 (bio가 이미 있으므로)
+ALTER TABLE profiles DROP COLUMN self_introduction;
 
 
