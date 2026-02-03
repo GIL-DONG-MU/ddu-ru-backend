@@ -42,7 +42,7 @@ public class ProfileManagementService {
         }
 
         profileRepository.save(profile);
-        log.info("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
+        log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
     }
 
@@ -53,7 +53,7 @@ public class ProfileManagementService {
         AvatarProfile avatar = avatarProfileRepository.getByIdOrThrow(avatarId);
 
         profile.updateAvatar(avatar);
-        log.info("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
+        log.debug("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
     }
 
     private Profile getProfileByUserId(User user) {

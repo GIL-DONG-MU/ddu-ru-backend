@@ -53,7 +53,7 @@ public class ProfileSetupService {
         );
 
         profileRepository.save(profile);
-        log.info("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
+        log.debug("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
     }
 
     private LocalDate parseBirthDate(String birthDateString) {

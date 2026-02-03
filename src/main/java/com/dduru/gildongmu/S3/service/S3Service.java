@@ -37,16 +37,17 @@ public class S3Service {
         List<ImageUploadResponse> responses = fileNames.stream()
                 .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR, true))
                 .toList();
-        log.info("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
+        log.debug("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
         return responses;
     }
 
 
     public List<ImageUploadResponse> prepareProfileImageUpload(List<String> fileNames) {
+        log.debug("Presigned URL 생성 시작(profiles) - 파일 개수: {}", fileNames.size());
         List<ImageUploadResponse> responses = fileNames.stream()
                 .map(fileName -> prepareUploadInternal(fileName, S3_PROFILES_DIR, true))
                 .toList();
-        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3_PROFILES_DIR, responses.size());
+        log.debug("Presigned URL 생성 완료{} 파일 개수: {}", S3_PROFILES_DIR, responses.size());
         return responses;
     }
 
