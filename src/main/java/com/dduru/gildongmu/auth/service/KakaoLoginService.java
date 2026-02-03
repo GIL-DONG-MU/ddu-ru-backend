@@ -68,7 +68,12 @@ public class KakaoLoginService implements OauthService {
     }
 
     private void validateAudience(JsonNode payload) {
-        String aud = payload.get("aud").asText();
+        JsonNode audNode = payload.path("aud");
+        if (audNode.isMissingNode()) {
+            log.warn("카카오 토큰에 aud 필드 없음");
+            throw new InvalidTokenException("카카오 ID Token에 audience(aud)가 없습니다.");
+        }
+        String aud = audNode.asText();
         if (!kakaoClientId.equals(aud) && !kakaoRestClientId.equals(aud)) {
             log.warn("카카오 토큰 audience 불일치 - aud: {}", aud);
             throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
@@ -76,8 +81,13 @@ public class KakaoLoginService implements OauthService {
     }
 
     private OauthUserInfo extractUserInfo(JsonNode payload) {
+        JsonNode subNode = payload.path("sub");
+        if (subNode.isMissingNode()) {
+            log.warn("카카오 토큰에 sub 필드 없음");
+            throw new InvalidTokenException("카카오 ID Token에 subject(sub)가 없습니다.");
+        }
         return OauthUserInfo.builder()
-                .oauthId(payload.get("sub").asText())
+                .oauthId(subNode.asText())
                 .email(payload.path("email").asText(null))
                 .name(payload.path("nickname").asText(null))
                 .profileImage(payload.path("picture").asText(null))
