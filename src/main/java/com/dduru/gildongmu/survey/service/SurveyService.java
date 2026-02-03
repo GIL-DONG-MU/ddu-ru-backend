@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.survey.service;
 
-import com.dduru.gildongmu.profile.service.ProfileService;
+import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
@@ -35,7 +35,7 @@ public class SurveyService {
     private final AvatarMatcher avatarMatcher;
     private final AvatarProfileService avatarProfileService;
     private final AvatarProfileRepository avatarProfileRepository;
-    private final ProfileService profileService;
+    private final ProfileManagementService profileManagementService;
     private final UserRepository userRepository;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
@@ -101,7 +101,7 @@ public class SurveyService {
         avatarProfileRepository.findByAvatarType(avatarType)
                 .ifPresentOrElse(
                         avatarProfile -> {
-                            profileService.updateAvatar(userId, avatarProfile.getId());
+                            profileManagementService.updateAvatar(userId, avatarProfile.getId());
                             log.debug("아바타 ID 저장 완료 - userId: {}, avatarId: {}", userId, avatarProfile.getId());
                         },
                         () -> log.warn("아바타 프로필을 찾을 수 없어 Profile에 저장하지 않음 - userId: {}, avatarType: {}", userId, avatarType)

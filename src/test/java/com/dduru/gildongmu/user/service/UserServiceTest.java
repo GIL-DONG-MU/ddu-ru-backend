@@ -1,8 +1,9 @@
 package com.dduru.gildongmu.user.service;
 
-import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
-import com.dduru.gildongmu.profile.service.ProfileService;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,11 @@ class UserServiceTest {
     @Mock
     private ProfileRepository profileRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
-    private ProfileService profileService;
+    private NicknameService nicknameService;
 
     @DisplayName("중복이 없는 경우 첫 시도에 랜덤 닉네임을 반환한다")
     @Test
@@ -42,7 +46,7 @@ class UserServiceTest {
         when(profileRepository.existsByNickname(expectedNickname)).thenReturn(false);
 
         // when
-        NicknameRandomResponse response = profileService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).isEqualTo(expectedNickname);
@@ -67,7 +71,7 @@ class UserServiceTest {
         when(profileRepository.existsByNickname(secondNickname)).thenReturn(false);
 
         // when
-        NicknameRandomResponse response = profileService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).isEqualTo(secondNickname);
@@ -89,7 +93,7 @@ class UserServiceTest {
         when(profileRepository.existsByNickname(duplicatedNickname)).thenReturn(true);
 
         // when
-        NicknameRandomResponse response = profileService.generateRandomNickname();
+        NicknameRandomResponse response = nicknameService.generateRandomNickname();
 
         // then
         assertThat(response.nickname()).startsWith("뚜비");

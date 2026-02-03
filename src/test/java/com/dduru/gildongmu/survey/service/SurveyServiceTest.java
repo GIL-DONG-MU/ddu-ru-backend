@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.survey.service;
 
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.profile.service.ProfileService;
+import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.Survey;
@@ -53,7 +53,7 @@ class SurveyServiceTest {
     @Mock
     private AvatarProfileRepository avatarProfileRepository;
     @Mock
-    private ProfileService profileService;
+    private ProfileManagementService profileManagementService;
     @Mock
     private UserRepository userRepository;
 
