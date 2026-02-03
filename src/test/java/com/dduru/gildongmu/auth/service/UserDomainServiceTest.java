@@ -4,8 +4,6 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
-import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -34,7 +32,7 @@ class UserDomainServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private ProfileRepository profileRepository;
+    private UserCreationService userCreationService;
 
     @InjectMocks
     private UserDomainService userDomainService;
@@ -109,8 +107,7 @@ class UserDomainServiceTest {
         assertThat(result.user().getId()).isEqualTo(1L);
         assertThat(result.user().getEmail()).isEqualTo("existing@example.com");
         verify(userRepository).findByOauthIdAndOauthType("oauth-123", OauthType.KAKAO);
-        verify(userRepository, never()).save(any(User.class));
-        verify(profileRepository, never()).save(any(Profile.class));
+        verify(userCreationService, never()).createNewUser(any(OauthUserInfo.class));
     }
 
     @Test
@@ -132,11 +129,11 @@ class UserDomainServiceTest {
                 .build();
         ReflectionTestUtils.setField(savedUser, "id", 2L);
 
+        UserCreationResult creationResult = new UserCreationResult(savedUser, true);
+
         when(userRepository.findByOauthIdAndOauthType("new-oauth-456", OauthType.GOOGLE))
                 .thenReturn(Optional.empty());
-        when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(profileRepository.save(any(Profile.class))).thenReturn(null);
+        when(userCreationService.createNewUser(oauthUserInfo)).thenReturn(creationResult);
 
         // when
         UserCreationResult result = userDomainService.findOrCreateUser(oauthUserInfo);
@@ -147,9 +144,7 @@ class UserDomainServiceTest {
         assertThat(result.user().getId()).isEqualTo(2L);
         assertThat(result.user().getEmail()).isEqualTo("new@example.com");
         verify(userRepository).findByOauthIdAndOauthType("new-oauth-456", OauthType.GOOGLE);
-        verify(userRepository).existsByEmail("new@example.com");
-        verify(userRepository).save(any(User.class));
-        verify(profileRepository).save(any(Profile.class));
+        verify(userCreationService).createNewUser(oauthUserInfo);
     }
 
     @Test
@@ -165,15 +160,15 @@ class UserDomainServiceTest {
 
         when(userRepository.findByOauthIdAndOauthType("other-oauth-789", OauthType.KAKAO))
                 .thenReturn(Optional.empty());
-        when(userRepository.existsByEmail("duplicate@example.com")).thenReturn(true);
+        when(userCreationService.createNewUser(oauthUserInfo))
+                .thenThrow(DuplicateEmailException.of("duplicate@example.com"));
 
         // when & then
         assertThatThrownBy(() -> userDomainService.findOrCreateUser(oauthUserInfo))
                 .isInstanceOf(DuplicateEmailException.class);
 
         verify(userRepository).findByOauthIdAndOauthType("other-oauth-789", OauthType.KAKAO);
-        verify(userRepository).existsByEmail("duplicate@example.com");
-        verify(userRepository, never()).save(any(User.class));
-        verify(profileRepository, never()).save(any(Profile.class));
+        verify(userCreationService).createNewUser(oauthUserInfo);
+        verify(userCreationService, never()).findExistingUserOrThrow(any(OauthUserInfo.class));
     }
 }
