@@ -94,6 +94,8 @@ public class Profile extends BaseTimeEntity {
 
 
     public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
+        validateUploadedImageUrlForType(profileImageType, uploadedImageUrl);
+
         if (uploadedImageUrl != null) {
             this.uploadedImageUrl = uploadedImageUrl;
         }
@@ -110,5 +112,11 @@ public class Profile extends BaseTimeEntity {
 
     public void updateAvatar(AvatarProfile avatar) {
         this.avatar = avatar;
+    }
+
+    private void validateUploadedImageUrlForType(ProfileImageType profileImageType, String uploadedImageUrl) {
+        if (profileImageType == ProfileImageType.UPLOADED && (uploadedImageUrl == null || uploadedImageUrl.isBlank())) {
+            throw new IllegalArgumentException("UPLOADED 타입일 때는 업로드된 이미지 URL이 필요합니다.");
+        }
     }
 }

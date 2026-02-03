@@ -36,12 +36,9 @@ public class ProfileManagementService {
         ProfileImageType imageType = parseProfileImageType(request.profileImageType());
         
         switch (imageType) {
-            case UPLOADED -> {
-                validateUploadedImageUrlRequired(request.uploadedImageUrl());
-                profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
-            }
-            case AVATAR -> profile.updateProfile(null, ProfileImageType.AVATAR, bgColor, request.bio());
-            case DEFAULT -> profile.updateProfile(null, ProfileImageType.DEFAULT, bgColor, request.bio());
+            case UPLOADED -> profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
+            case AVATAR -> profile.updateProfile("", ProfileImageType.AVATAR, bgColor, request.bio());
+            case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());
         }
 
         profileRepository.save(profile);
@@ -65,11 +62,6 @@ public class ProfileManagementService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
     }
 
-    private void validateUploadedImageUrlRequired(String uploadedImageUrl) {
-        if (uploadedImageUrl == null || uploadedImageUrl.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "업로드된 이미지 URL이 필요합니다.");
-        }
-    }
 
     private ProfileImageType parseProfileImageType(String profileImageTypeString) {
         try {
