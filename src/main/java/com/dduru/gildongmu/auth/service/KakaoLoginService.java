@@ -5,17 +5,17 @@ import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.user.enums.OauthType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Base64;
-import java.util.Optional;
 
 @Slf4j
 @Service
-public class KakaoLoginService extends AbstractOauthService {
+@RequiredArgsConstructor
+public class KakaoLoginService implements OauthService {
 
     @Value("${oauth.kakao.client-id}")
     private String kakaoClientId;
@@ -24,36 +24,33 @@ public class KakaoLoginService extends AbstractOauthService {
     private String kakaoRestClientId;
 
     private final ObjectMapper objectMapper;
-    private final KakaoUserInfoMapper userInfoMapper;
-
-    public KakaoLoginService(WebClient.Builder webClientBuilder) {
-        super(webClientBuilder);
-        this.objectMapper = new ObjectMapper();
-        this.userInfoMapper = new KakaoUserInfoMapper();
-    }
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
-        try {
-            JsonNode payload = parseIdTokenPayload(idToken);
-            validateAudience(payload);
-
-            return userInfoMapper.mapFromIdToken(payload);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("카카오 ID Token 파싱 실패: {}", e.getMessage(), e);
-            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다.");
-        } catch (Exception e) {
-            log.error("카카오 ID Token 검증 중 예상치 못한 오류 발생", e);
-            handleOauthException(e, "카카오 ID Token 검증");
-            throw new AssertionError("handleOauthException이 예외를 throw해야 하는데 throw하지 않았습니다.");
-        }
+        log.debug("카카오 ID Token 검증 시작");
+        
+        JsonNode payload = parseIdTokenPayload(idToken);
+        validateAudience(payload);
+        OauthUserInfo userInfo = extractUserInfo(payload);
+        
+        log.debug("카카오 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
+        return userInfo;
     }
 
-    private JsonNode parseIdTokenPayload(String idToken) throws Exception {
+    @Override
+    public OauthType getLoginType() {
+        return OauthType.KAKAO;
+    }
+
+    /**
+     * 카카오 ID Token의 payload를 파싱
+     * 보안: 현재는 Base64 디코딩만 수행
+     * 앱에서 받은 토큰은 카카오 공개키(JWK)로 서명 검증이 필요.
+     */
+    private JsonNode parseIdTokenPayload(String idToken) throws InvalidTokenException {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
-            log.warn("카카오 ID Token 형식 오류: JWT 형식이 아님 (chunks.length: {})", chunks.length);
+            log.warn("카카오 ID Token 형식 오류 - tokenParts: {}", chunks.length);
             throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
         }
 
@@ -62,46 +59,42 @@ public class KakaoLoginService extends AbstractOauthService {
             String payload = new String(decoder.decode(chunks[1]));
             return objectMapper.readTree(payload);
         } catch (IllegalArgumentException e) {
-            log.warn("카카오 ID Token payload 디코딩 실패: {}", e.getMessage(), e);
+            log.warn("카카오 ID Token 디코딩 실패 - payload segment 손상, message: {}", e.getMessage());
             throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
         } catch (Exception e) {
-            log.error("카카오 ID Token payload 파싱 실패", e);
+            log.warn("카카오 ID Token 파싱 실패 - message: {}", e.getMessage(), e);
             throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
         }
     }
 
     private void validateAudience(JsonNode payload) {
-        String aud = payload.get("aud").asText();
+        JsonNode audNode = payload.path("aud");
+        if (audNode.isMissingNode()) {
+            log.warn("카카오 토큰에 aud 필드 없음");
+            throw new InvalidTokenException("카카오 ID Token에 audience(aud)가 없습니다.");
+        }
+        String aud = audNode.asText();
         if (!kakaoClientId.equals(aud) && !kakaoRestClientId.equals(aud)) {
+            log.warn("카카오 토큰 audience 불일치 - aud: {}", aud);
             throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
         }
     }
 
-    private static class KakaoUserInfoMapper {
-
-        public OauthUserInfo mapFromIdToken(JsonNode payload) {
-            return OauthUserInfo.builder()
-                    .oauthId(payload.get("sub").asText())
-                    .email(getJsonValue(payload, "email"))
-                    .name(getJsonValue(payload, "nickname"))
-                    .loginType(OauthType.KAKAO)
-                    // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
-                    // .profileImage(getJsonValue(payload, "picture"))
-                    // .gender(getJsonValue(payload, "gender"))
-                    // .phoneNumber(getJsonValue(payload, "phone_number"))
-                    .build();
+    private OauthUserInfo extractUserInfo(JsonNode payload) {
+        JsonNode subNode = payload.path("sub");
+        if (subNode.isMissingNode()) {
+            log.warn("카카오 토큰에 sub 필드 없음");
+            throw new InvalidTokenException("카카오 ID Token에 subject(sub)가 없습니다.");
         }
-
-        private String getJsonValue(JsonNode json, String key) {
-            return Optional.ofNullable(json.get(key))
-                    .filter(node -> !node.isNull())
-                    .map(JsonNode::asText)
-                    .orElse(null);
-        }
+        return OauthUserInfo.builder()
+                .oauthId(subNode.asText())
+                .email(payload.path("email").asText(null))
+                .name(payload.path("nickname").asText(null))
+                .loginType(OauthType.KAKAO)
+                // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                // .profileImage(payload.path("picture").asText(null))
+                // .gender(payload.path("gender").asText(null))
+                // .phoneNumber(payload.path("phone_number").asText(null))
+                .build();
     }
-
-    @Override
-    protected String getClientId() { return kakaoClientId; }
-    @Override
-    public OauthType getLoginType() { return OauthType.KAKAO; }
 }

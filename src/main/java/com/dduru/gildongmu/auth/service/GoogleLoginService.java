@@ -7,17 +7,19 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 
 @Slf4j
 @Service
-public class GoogleLoginService extends AbstractOauthService {
+public class GoogleLoginService implements OauthService {
 
     @Value("${oauth.google.android-client-id}")
     private String googleAndroidClientId;
@@ -25,51 +27,58 @@ public class GoogleLoginService extends AbstractOauthService {
     @Value("${oauth.google.client-id}")
     private String googleClientId;
 
-    public GoogleLoginService(WebClient.Builder webClientBuilder) {
-        super(webClientBuilder);
+    private GoogleIdTokenVerifier verifier;
+
+    @PostConstruct
+    public void init() {
+        this.verifier = new GoogleIdTokenVerifier.Builder(
+                new NetHttpTransport(),
+                GsonFactory.getDefaultInstance())
+                .setAudience(Arrays.asList(
+                        googleClientId,
+                        googleAndroidClientId))
+                .build();
     }
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
-        try {
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                    new NetHttpTransport(),
-                    GsonFactory.getDefaultInstance())
-                    .setAudience(Arrays.asList(
-                            getClientId(),
-                            googleAndroidClientId))
-                    .build();
+        log.debug("구글 ID Token 검증 시작");
+        
+        GoogleIdToken token = verifyToken(idToken);
+        GoogleIdToken.Payload payload = token.getPayload();
+        OauthUserInfo userInfo = extractUserInfo(payload);
+        
+        log.debug("구글 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
+        return userInfo;
+    }
 
+    private GoogleIdToken verifyToken(String idToken) throws InvalidTokenException {
+        try {
             GoogleIdToken token = verifier.verify(idToken);
             if (token == null) {
+                log.warn("구글 ID Token 검증 실패 - verifier가 null 반환");
                 throw new InvalidTokenException("유효하지 않은 구글 ID Token입니다.");
             }
-
-            GoogleIdToken.Payload payload = token.getPayload();
-
-            return OauthUserInfo.builder()
-                    .oauthId(payload.getSubject())
-                    .email(payload.getEmail())
-                    .name((String) payload.get("name"))
-                    .loginType(OauthType.GOOGLE)
-                    // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
-                    // .profileImage((String) payload.get("picture"))
-                    // .gender(null)
-                    // .phoneNumber(null)
-                    .build();
-
-        } catch (IllegalArgumentException e) {
-            log.warn("구글 ID Token 형식 오류: {}", e.getMessage(), e);
-            throw new InvalidTokenException("잘못된 구글 ID Token 형식입니다.");
-        } catch (Exception e) {
-            log.error("구글 ID Token 검증 중 예상치 못한 오류 발생", e);
-            handleOauthException(e, "구글 ID Token 검증");
-            throw new AssertionError("handleOauthException이 예외를 throw해야 하는데 throw하지 않았습니다.");
+            return token;
+        } catch (GeneralSecurityException | IOException e) {
+            log.warn("구글 ID Token 검증 중 예외 발생 - message: {}", e.getMessage(), e);
+            throw new InvalidTokenException("구글 ID Token 검증 중 오류가 발생했습니다.");
         }
     }
 
-    @Override
-    protected String getClientId() { return googleClientId; }
+    private OauthUserInfo extractUserInfo(GoogleIdToken.Payload payload) {
+        return OauthUserInfo.builder()
+                .oauthId(payload.getSubject())
+                .email(payload.getEmail())
+                .name((String) payload.get("name"))
+                .loginType(OauthType.GOOGLE)
+                // 회원가입 시 기본 정보만 받으므로 추가 정보는 추출하지 않음
+                // .profileImage((String) payload.get("picture"))
+                // .gender(null)
+                // .phoneNumber(null)
+                .build();
+    }
+
     @Override
     public OauthType getLoginType() { return OauthType.GOOGLE; }
 }

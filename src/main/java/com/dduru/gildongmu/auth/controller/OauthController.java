@@ -23,7 +23,7 @@ public class OauthController implements OauthApiDocs {
     @PostMapping("/{provider}")
     public ResponseEntity<ApiResult<LoginResponse>> loginWithIdToken(
             @PathVariable String provider,
-            @RequestBody(required = false) LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
         LoginResponse response = oauthAuthService.processTokenLogin(provider, request);
         return ResponseEntity.ok(ApiResult.ok(response));
