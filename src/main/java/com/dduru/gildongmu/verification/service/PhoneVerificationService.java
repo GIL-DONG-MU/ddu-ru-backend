@@ -9,12 +9,16 @@ import com.dduru.gildongmu.verification.exception.SmsProviderException;
 import com.dduru.gildongmu.verification.exception.SmsSendFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PhoneVerificationService {
+
+    @Value("${verification.admin-code:123456}")
+    private String adminCode;
 
     private final SmsService smsService;
     private final VerificationCodeService verificationCodeService;
@@ -45,6 +49,25 @@ public class PhoneVerificationService {
         verificationCodeService.verifyCode(phoneNumber, code);
         String token = jwtTokenProvider.createVerificationToken(null, phoneNumber);
         return VerificationVerifyResponse.verified(token);
+    }
+
+    /**
+     * Admin 테스트용 - SMS 발송 없이 고정 인증코드로 인증 생성.
+     * 전화번호는 요청값 사용, 인증코드는 verification.admin-code 사용.
+     */
+    public VerificationSendResponse sendVerificationCodeAdmin(String phoneNumber) {
+        validatePhoneNumber(phoneNumber);
+
+        String code = (adminCode != null && !adminCode.isBlank()) ? adminCode : "123456";
+        VerificationCodeService.VerificationCreateResult result =
+                verificationCodeService.createVerificationWithAdminCode(phoneNumber, code);
+
+        verificationCodeService.setResendLimit(phoneNumber);
+        log.info("[ADMIN] 인증번호 발송 스킵 - phoneNumber={}, 고정코드={}", phoneNumber, code);
+
+        return VerificationSendResponse.builder()
+                .expiresAt(result.expiresAt())
+                .build();
     }
 
     private void validatePhoneNumber(String phoneNumber) {

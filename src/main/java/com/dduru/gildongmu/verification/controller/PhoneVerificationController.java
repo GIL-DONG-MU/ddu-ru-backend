@@ -7,6 +7,7 @@ import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyRequest;
 import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
 import com.dduru.gildongmu.verification.service.PhoneVerificationService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,15 @@ public class PhoneVerificationController implements PhoneVerificationApiDocs {
                 request.phoneNumber(),
                 request.code()
         );
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PostMapping("/admin")
+    public ResponseEntity<ApiResult<VerificationSendResponse>> sendVerificationCodeAdmin(
+            @Parameter(hidden = true) @CurrentUser Long userId,
+            @Valid @RequestBody VerificationSendRequest request) {
+        VerificationSendResponse response = phoneVerificationService.sendVerificationCodeAdmin(request.phoneNumber());
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

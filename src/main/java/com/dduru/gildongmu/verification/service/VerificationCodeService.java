@@ -68,6 +68,17 @@ public class VerificationCodeService {
     }
 
     public VerificationCreateResult createVerification(String phoneNumber) {
+        return createVerification(phoneNumber, false, null);
+    }
+
+    /**
+     * Admin 테스트용 - 고정 인증코드 사용
+     */
+    public VerificationCreateResult createVerificationWithAdminCode(String phoneNumber, String adminCode) {
+        return createVerification(phoneNumber, true, adminCode);
+    }
+
+    private VerificationCreateResult createVerification(String phoneNumber, boolean useAdminCode, String adminCode) {
         checkAndIncrementDailyLimit(phoneNumber);
 
         if (!canResend(phoneNumber)) {
@@ -75,7 +86,7 @@ public class VerificationCodeService {
             throw new ResendLimitExceededException("잠시 후 다시 시도해주세요.");
         }
 
-        String code = generateCode();
+        String code = useAdminCode ? adminCode : generateCode();
         VerificationData data = createVerificationData(phoneNumber, code);
         saveVerificationData(phoneNumber, data);
 
