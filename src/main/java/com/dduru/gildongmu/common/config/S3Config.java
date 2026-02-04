@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.config;
+package com.dduru.gildongmu.common.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

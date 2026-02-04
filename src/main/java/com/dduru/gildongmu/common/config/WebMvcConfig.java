@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.config;
+package com.dduru.gildongmu.common.config;
 
 import com.dduru.gildongmu.common.resolver.CurrentUserArgumentResolver;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.config;
+package com.dduru.gildongmu.common.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

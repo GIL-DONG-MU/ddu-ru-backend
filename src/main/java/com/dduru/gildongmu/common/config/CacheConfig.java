@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.config;
+package com.dduru.gildongmu.common.config;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;

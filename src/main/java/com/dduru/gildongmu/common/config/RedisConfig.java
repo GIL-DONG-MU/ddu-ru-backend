@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.config;
+package com.dduru.gildongmu.common.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

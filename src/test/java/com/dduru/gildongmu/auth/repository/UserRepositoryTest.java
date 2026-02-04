@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.repository;
 
-import com.dduru.gildongmu.config.QueryDslConfig;
+import com.dduru.gildongmu.common.config.QueryDslConfig;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
