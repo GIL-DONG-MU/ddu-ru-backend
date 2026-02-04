@@ -191,7 +191,6 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-
     public boolean isRecruitOpen() {
         return status == PostStatus.OPEN;
     }
@@ -199,6 +198,10 @@ public class Post extends BaseTimeEntity {
     public int getDaysLeftForRecruitment() {
         int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
         return Math.max(daysLeft, 0);
+    }
+
+    public int getDaysUntilTravelStart() {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
     }
 
     public void approveParticipation(Participation participation) {
