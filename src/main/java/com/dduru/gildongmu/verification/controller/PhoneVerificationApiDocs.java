@@ -46,7 +46,7 @@ public interface PhoneVerificationApiDocs {
 
     @Operation(
             summary = "[Admin] 인증번호 발송",
-            description = "테스트용 - SMS 발송 없이 고정 인증코드 사용. (나중에 삭제 예정)"
+            description = "테스트용 - SMS 발송 없이 고정 인증코드(123456) 사용. (나중에 삭제 예정)"
     )
     @ApiResponse(responseCode = "200", description = "인증번호 발송 성공")
     @ApiErrorResponses({
