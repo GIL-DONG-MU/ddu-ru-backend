@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.post.exception;
+package com.dduru.gildongmu.destination.exception;
 
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
