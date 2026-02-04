@@ -2,7 +2,6 @@ package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
@@ -44,16 +43,4 @@ public class PostQueryService {
         return PostListResponse.of(dtos, hasNext);
     }
 
-    @Transactional
-    public PostDetailResponse retrieveDetailWithViewCount(Long postId) {
-        log.debug("게시글 상세 조회 - postId={}", postId);
-
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-
-        postRepository.incrementViewCount(postId);
-
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
-        log.debug("게시글 상세 조회 완료 - postId={}", postId);
-        return response;
-    }
 }

@@ -6,12 +6,14 @@ import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
+import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
@@ -89,6 +91,17 @@ public class PostService {
         return postRepository.closeExpiredPostsByDate(today);
     }
 
+    public PostDetailResponse recordViewAndGetDetail(Long postId) {
+        log.debug("게시글 상세 조회(조회수 증가) - postId={}", postId);
+
+        Post post = postRepository.getActiveByIdOrThrow(postId);
+        postRepository.incrementViewCount(postId);
+
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
+        log.debug("게시글 상세 조회 완료 - postId={}", postId);
+        return response;
+    }
+
     public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
         log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
 
@@ -96,7 +109,13 @@ public class PostService {
         validatePermission(post, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
-        post.updateStatus(newStatus);
+        try {
+            post.updateStatus(newStatus);
+        } catch (InvalidPostStatusException e) {
+            log.warn("게시글 모집 상태 변경 불가 - postId={}, userId={}, currentStatus={}, requestedStatus={}",
+                    postId, userId, post.getStatus(), newStatus);
+            throw e;
+        }
 
         log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
     }

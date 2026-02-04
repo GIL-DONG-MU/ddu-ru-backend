@@ -29,7 +29,7 @@ public class PostController implements PostApiDocs {
 
     @Override
     @GetMapping
-    public ResponseEntity<ApiResult<PostListResponse>> retrievePostsWithFilter(
+    public ResponseEntity<ApiResult<PostListResponse>> retrievePosts(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
@@ -52,8 +52,8 @@ public class PostController implements PostApiDocs {
 
     @Override
     @GetMapping("/{postId}")
-    public ResponseEntity<ApiResult<PostDetailResponse>> getPostDetail(@PathVariable Long postId) {
-        PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
+    public ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(@PathVariable Long postId) {
+        PostDetailResponse response = postService.recordViewAndGetDetail(postId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 

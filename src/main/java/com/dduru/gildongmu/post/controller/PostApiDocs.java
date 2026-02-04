@@ -25,7 +25,7 @@ public interface PostApiDocs {
 
     @Operation(summary = "게시글 목록 조회", description = "필터 조건에 따라 게시글 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    ResponseEntity<ApiResult<PostListResponse>> retrievePostsWithFilter(
+    ResponseEntity<ApiResult<PostListResponse>> retrievePosts(
             @Parameter(description = "커서 (페이징용)") Long cursor,
             @Parameter(description = "페이지 크기", example = "10") Integer size,
             @Parameter(description = "검색 키워드") String keyword,
@@ -40,7 +40,7 @@ public interface PostApiDocs {
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({ErrorCode.POST_NOT_FOUND})
-    ResponseEntity<ApiResult<PostDetailResponse>> getPostDetail(
+    ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(
             @Parameter(description = "게시글 ID") Long postId
     );
 
