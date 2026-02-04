@@ -43,7 +43,7 @@ public record PostSummaryResponse(
                 post.getDestination().getCity(),
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
-                post.getPreferredGender() != null ? post.getPreferredGender().name() : "U",
+                post.getPreferredGender().name(),
                 post.getBudgetMin(),
                 post.getBudgetMax(),
                 photoUrls,
