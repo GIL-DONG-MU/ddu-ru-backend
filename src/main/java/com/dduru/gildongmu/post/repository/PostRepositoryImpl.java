@@ -17,6 +17,7 @@ import java.util.List;
 
 import static com.dduru.gildongmu.destination.domain.QDestination.destination;
 import static com.dduru.gildongmu.post.domain.QPost.post;
+import static com.dduru.gildongmu.profile.domain.QProfile.profile;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
                 .leftJoin(post.user).fetchJoin()
+                .leftJoin(post.user.profile, profile).fetchJoin()
                 .where(
                         isNotDeleted(),
                         cursorCondition(request.cursor()),

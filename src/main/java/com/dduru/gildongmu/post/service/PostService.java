@@ -41,7 +41,7 @@ public class PostService {
     private final JsonConverter jsonConverter;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
-        log.debug("게시글 생성 시작 - userId: {}, request: {}", userId, request);
+        log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
@@ -52,13 +52,12 @@ public class PostService {
         Post post = createPost(user, destination, request, request.photoUrls());
         Post savedPost = postRepository.save(post);
 
-        log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                savedPost.getId(), userId, savedPost.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
+        log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());
     }
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
-        log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
+        log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validatePermission(post, userId);
@@ -69,34 +68,29 @@ public class PostService {
 
         updatePost(post, destination, request, request.photoUrls());
 
-        log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                postId, userId, post.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
+        log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
 
     public void delete(Long postId, Long userId) {
-        log.debug("게시글 삭제 시작 - postId: {}, userId: {}", postId, userId);
+        log.debug("게시글 삭제 - postId={}, userId={}", postId, userId);
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validatePermission(post, userId);
 
         post.softDelete(userId);
 
-        log.info("게시글 삭제 완료 - postId: {}, userId: {}, title: {}",
-                postId, userId, post.getTitle());
+        log.info("게시글 삭제됨 - postId={}, userId={}", postId, userId);
     }
 
     public int closeExpiredPosts() {
-        log.debug("만료된 게시글 상태 업데이트 시작");
+        log.debug("만료 게시글 상태 업데이트 - 실행");
         LocalDate today = LocalDate.now();
 
-        int updatedCount = postRepository.closeExpiredPostsByDate(today);
-
-        log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
-        return updatedCount;
+        return postRepository.closeExpiredPostsByDate(today);
     }
 
     public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
-        log.debug("게시글 모집 상태 변경 시작 - postId: {}, userId: {}, open: {}", postId, userId, request.open());
+        log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validatePermission(post, userId);
@@ -104,12 +98,12 @@ public class PostService {
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
         post.updateStatus(newStatus);
 
-        log.info("게시글 모집 상태 변경 완료 - postId: {}, userId: {}, status: {}", postId, userId, newStatus);
+        log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
     }
 
     private void validatePermission(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
-            log.warn("게시글 권한 없음 - postId: {}, userId: {}, ownerId: {}", post.getId(), userId, post.getUser().getId());
+            log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
             throw PostAccessDeniedException.ownerOnly();
         }
     }
@@ -182,19 +176,18 @@ public class PostService {
 
     private List<String> getFinalPhotoUrls(List<String> photoUrls, Destination destination) {
         if (photoUrls != null && !photoUrls.isEmpty()) {
-            log.debug("사용자가 업로드한 이미지 사용 - 개수: {}", photoUrls.size());
+            log.debug("이미지 소스 - 업로드, count={}", photoUrls.size());
             return photoUrls;
         }
 
         if (StringUtils.hasText(destination.getImage())) {
-            log.debug("목적지 기본 이미지 사용 - destination: {}, image: {}",
-                    destination.getCity(), destination.getImage());
+            log.debug("이미지 소스 - 목적지 기본, destination={}", destination.getCity());
             List<String> defaultImages = new ArrayList<>();
             defaultImages.add(destination.getImage());
             return defaultImages;
         }
 
-        log.debug("이미지 없음 - 빈 리스트 반환");
+        log.debug("이미지 소스 - 없음");
         return Collections.emptyList();
     }
 

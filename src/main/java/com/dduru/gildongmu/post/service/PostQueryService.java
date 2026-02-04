@@ -25,7 +25,7 @@ public class PostQueryService {
     private final JsonConverter jsonConverter;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
-        log.debug("게시글 목록 조회 시작 - request: {}", request);
+        log.debug("게시글 목록 조회 - size={}", request.size());
 
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
@@ -40,20 +40,20 @@ public class PostQueryService {
                 .map(post -> PostSummaryResponse.from(post, jsonConverter))
                 .toList();
 
-        log.info("게시글 목록 조회 완료 - 결과 수: {}, hasNext: {}", dtos.size(), hasNext);
+        log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", dtos.size(), hasNext);
         return PostListResponse.of(dtos, hasNext);
     }
 
     @Transactional
     public PostDetailResponse retrieveDetailWithViewCount(Long postId) {
-        log.debug("게시글 상세 조회 및 조회수 증가 시작 - postId: {}", postId);
+        log.debug("게시글 상세 조회 - postId={}", postId);
 
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
         postRepository.incrementViewCount(postId);
 
         PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
-        log.info("게시글 상세 조회 및 조회수 증가 완료 - postId: {}, title: {}", postId, response.title());
+        log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
 }
