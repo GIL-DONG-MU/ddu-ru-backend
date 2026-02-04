@@ -2,10 +2,10 @@ package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.dto.PostDetailResponse;
-import com.dduru.gildongmu.post.dto.PostListRequest;
-import com.dduru.gildongmu.post.dto.PostListResponse;
-import com.dduru.gildongmu.post.dto.PostSummaryResponse;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
+import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.dto.response.PostListResponse;
+import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

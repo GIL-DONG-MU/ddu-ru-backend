@@ -4,7 +4,7 @@ import com.dduru.gildongmu.common.enums.CodedEnum;
 import com.dduru.gildongmu.common.enums.EnumUtils;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.enums.*;
-import com.dduru.gildongmu.survey.dto.SurveyRequest;
+import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.exception.InvalidSurveyAnswerCodeException;
 import com.dduru.gildongmu.user.domain.User;
 import org.springframework.stereotype.Component;

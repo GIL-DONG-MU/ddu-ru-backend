@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.participation.service;
 
 import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.dto.ParticipationRequest;
-import com.dduru.gildongmu.participation.dto.ParticipationResponse;
+import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
+import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
 import com.dduru.gildongmu.participation.exception.ParticipationPostMismatchException;
 import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;

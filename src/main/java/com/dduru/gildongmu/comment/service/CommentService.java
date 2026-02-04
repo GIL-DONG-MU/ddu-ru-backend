@@ -1,9 +1,9 @@
 package com.dduru.gildongmu.comment.service;
 
 import com.dduru.gildongmu.comment.domain.Comment;
-import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
-import com.dduru.gildongmu.comment.dto.CommentResponse;
-import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
+import com.dduru.gildongmu.comment.dto.request.CommentCreateRequest;
+import com.dduru.gildongmu.comment.dto.response.CommentResponse;
+import com.dduru.gildongmu.comment.dto.request.CommentUpdateRequest;
 import com.dduru.gildongmu.comment.exception.CommentAccessDeniedException;
 import com.dduru.gildongmu.comment.exception.CommentNotFoundException;
 import com.dduru.gildongmu.comment.exception.InvalidParentCommentException;

@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.user.service;
 
 import com.dduru.gildongmu.user.repository.UserRepository;
-import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;

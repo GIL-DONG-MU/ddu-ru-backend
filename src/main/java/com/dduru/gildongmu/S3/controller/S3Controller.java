@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.S3.controller;
 
-import com.dduru.gildongmu.S3.dto.ImageUploadRequest;
-import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
+import com.dduru.gildongmu.S3.dto.request.ImageUploadRequest;
+import com.dduru.gildongmu.S3.dto.response.ImageUploadResponse;
 import com.dduru.gildongmu.S3.service.S3Service;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import jakarta.validation.Valid;

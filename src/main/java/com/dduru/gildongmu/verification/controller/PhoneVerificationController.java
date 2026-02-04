@@ -2,10 +2,10 @@ package com.dduru.gildongmu.verification.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.verification.dto.VerificationSendRequest;
-import com.dduru.gildongmu.verification.dto.VerificationSendResponse;
-import com.dduru.gildongmu.verification.dto.VerificationVerifyRequest;
-import com.dduru.gildongmu.verification.dto.VerificationVerifyResponse;
+import com.dduru.gildongmu.verification.dto.request.VerificationSendRequest;
+import com.dduru.gildongmu.verification.dto.response.VerificationSendResponse;
+import com.dduru.gildongmu.verification.dto.request.VerificationVerifyRequest;
+import com.dduru.gildongmu.verification.dto.response.VerificationVerifyResponse;
 import com.dduru.gildongmu.verification.service.PhoneVerificationService;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;

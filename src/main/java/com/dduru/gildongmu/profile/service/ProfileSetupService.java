@@ -4,7 +4,7 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

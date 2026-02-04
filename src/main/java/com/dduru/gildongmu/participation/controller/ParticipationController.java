@@ -2,8 +2,8 @@ package com.dduru.gildongmu.participation.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.participation.dto.ParticipationRequest;
-import com.dduru.gildongmu.participation.dto.ParticipationResponse;
+import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
+import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import com.dduru.gildongmu.participation.service.ParticipationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.S3.service;
 
-import com.dduru.gildongmu.S3.dto.ImageUploadResponse;
+import com.dduru.gildongmu.S3.dto.response.ImageUploadResponse;
 import com.dduru.gildongmu.S3.exception.InvalidFileExtensionException;
 import com.dduru.gildongmu.common.config.S3Properties;
 import lombok.RequiredArgsConstructor;

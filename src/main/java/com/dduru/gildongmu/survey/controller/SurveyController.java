@@ -2,9 +2,9 @@ package com.dduru.gildongmu.survey.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.survey.dto.SurveyRequest;
-import com.dduru.gildongmu.survey.dto.SurveyQuestionListResponse;
-import com.dduru.gildongmu.survey.dto.SurveyResponse;
+import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
+import com.dduru.gildongmu.survey.dto.response.SurveyQuestionListResponse;
+import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.service.SurveyQuestionService;
 import com.dduru.gildongmu.survey.service.SurveyService;
 import jakarta.validation.Valid;

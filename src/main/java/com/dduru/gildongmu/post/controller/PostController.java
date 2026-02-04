@@ -2,7 +2,13 @@ package com.dduru.gildongmu.post.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.post.dto.*;
+import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
+import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
+import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
+import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.service.PostQueryService;
 import com.dduru.gildongmu.post.service.PostService;
 import jakarta.validation.Valid;

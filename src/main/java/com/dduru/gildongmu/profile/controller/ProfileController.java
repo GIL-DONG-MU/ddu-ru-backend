@@ -2,10 +2,10 @@ package com.dduru.gildongmu.profile.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.profile.dto.NicknameRandomResponse;
-import com.dduru.gildongmu.profile.dto.NicknameValidateResponse;
-import com.dduru.gildongmu.profile.dto.NicknameUpdateRequest;
-import com.dduru.gildongmu.profile.dto.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
+import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;

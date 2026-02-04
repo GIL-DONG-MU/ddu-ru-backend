@@ -2,9 +2,9 @@ package com.dduru.gildongmu.survey.service;
 
 import com.dduru.gildongmu.survey.domain.SurveyQuestion;
 import com.dduru.gildongmu.survey.domain.SurveyQuestionOption;
-import com.dduru.gildongmu.survey.dto.SurveyQuestionListResponse;
-import com.dduru.gildongmu.survey.dto.SurveyQuestionOptionResponse;
-import com.dduru.gildongmu.survey.dto.SurveyQuestionResponse;
+import com.dduru.gildongmu.survey.dto.response.SurveyQuestionListResponse;
+import com.dduru.gildongmu.survey.dto.response.SurveyQuestionOptionResponse;
+import com.dduru.gildongmu.survey.dto.response.SurveyQuestionResponse;
 import com.dduru.gildongmu.survey.repository.SurveyQuestionOptionRepository;
 import com.dduru.gildongmu.survey.repository.SurveyQuestionRepository;
 import lombok.RequiredArgsConstructor;

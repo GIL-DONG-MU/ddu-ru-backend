@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.comment.controller;
 
-import com.dduru.gildongmu.comment.dto.CommentCreateRequest;
-import com.dduru.gildongmu.comment.dto.CommentResponse;
-import com.dduru.gildongmu.comment.dto.CommentUpdateRequest;
+import com.dduru.gildongmu.comment.dto.request.CommentCreateRequest;
+import com.dduru.gildongmu.comment.dto.response.CommentResponse;
+import com.dduru.gildongmu.comment.dto.request.CommentUpdateRequest;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;

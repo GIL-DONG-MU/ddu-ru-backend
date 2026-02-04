@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.comment.service;
 
 import com.dduru.gildongmu.comment.domain.Comment;
-import com.dduru.gildongmu.comment.dto.CommentResponse;
+import com.dduru.gildongmu.comment.dto.response.CommentResponse;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
