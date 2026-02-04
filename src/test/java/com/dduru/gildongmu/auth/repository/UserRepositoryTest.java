@@ -6,7 +6,7 @@ import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

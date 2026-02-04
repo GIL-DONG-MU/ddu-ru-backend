@@ -3,7 +3,7 @@ package com.dduru.gildongmu.participation.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.participation.enums.ParticipationStatus;
+import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

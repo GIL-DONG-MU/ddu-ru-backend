@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.user.enums;
+package com.dduru.gildongmu.user.domain.enums;
 
 import com.dduru.gildongmu.auth.exception.UnsupportedOauthTypeException;
 import lombok.Getter;

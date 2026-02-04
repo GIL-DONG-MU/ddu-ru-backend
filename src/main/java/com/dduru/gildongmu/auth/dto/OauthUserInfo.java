@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.dto;
 
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import lombok.Builder;
 
 @Builder

@@ -8,7 +8,7 @@ import com.dduru.gildongmu.post.dto.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.PostUpdateRequest;
-import com.dduru.gildongmu.post.enums.PostStatus;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;

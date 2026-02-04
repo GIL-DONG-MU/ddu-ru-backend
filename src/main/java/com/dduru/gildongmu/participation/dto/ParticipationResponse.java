@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.participation.dto;
 
 import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.enums.ParticipationStatus;
+import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 
 import java.time.LocalDateTime;
 

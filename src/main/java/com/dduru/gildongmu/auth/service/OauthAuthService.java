@@ -8,7 +8,7 @@ import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.*;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

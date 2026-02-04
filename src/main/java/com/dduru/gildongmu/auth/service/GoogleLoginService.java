@@ -2,7 +2,7 @@ package com.dduru.gildongmu.auth.service;
 
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.exception.InvalidTokenException;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;

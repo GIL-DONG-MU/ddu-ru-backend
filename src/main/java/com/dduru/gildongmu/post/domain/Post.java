@@ -3,7 +3,7 @@ package com.dduru.gildongmu.post.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.post.enums.PostStatus;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;

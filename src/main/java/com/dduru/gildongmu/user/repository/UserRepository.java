@@ -2,7 +2,7 @@ package com.dduru.gildongmu.user.repository;
 
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

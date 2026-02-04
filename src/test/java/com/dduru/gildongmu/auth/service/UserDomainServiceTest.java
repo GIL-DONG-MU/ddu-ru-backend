@@ -5,7 +5,7 @@ import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

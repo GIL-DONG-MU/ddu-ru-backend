@@ -3,6 +3,7 @@ package com.dduru.gildongmu.survey.service;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.enums.*;
 import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class TravelTendencyCalculatorTest {
                 .email("test@example.com")
                 .name("테스트")
                 .oauthId("12345")
-                .oauthType(com.dduru.gildongmu.user.enums.OauthType.KAKAO)
+                .oauthType(OauthType.KAKAO)
                 .build();
     }
 

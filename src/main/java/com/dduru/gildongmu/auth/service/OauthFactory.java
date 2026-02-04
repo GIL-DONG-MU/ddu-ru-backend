@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.auth.service;
 
 import com.dduru.gildongmu.auth.exception.UnsupportedOauthTypeException;
-import com.dduru.gildongmu.user.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

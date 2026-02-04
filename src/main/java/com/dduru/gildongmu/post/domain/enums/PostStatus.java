@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.post.enums;
+package com.dduru.gildongmu.post.domain.enums;
 
 import lombok.Getter;
 

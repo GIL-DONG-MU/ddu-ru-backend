@@ -2,8 +2,8 @@ package com.dduru.gildongmu.user.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.user.enums.OauthType;
-import com.dduru.gildongmu.user.enums.Role;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

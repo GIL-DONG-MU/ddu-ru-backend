@@ -15,6 +15,7 @@ import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
 import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -70,7 +71,7 @@ class SurveyServiceTest {
                 .email("test@example.com")
                 .name("테스트")
                 .oauthId("12345")
-                .oauthType(com.dduru.gildongmu.user.enums.OauthType.KAKAO)
+                .oauthType(OauthType.KAKAO)
                 .build();
 
         testRequest = new SurveyRequest(

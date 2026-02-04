@@ -6,7 +6,7 @@ import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
-import com.dduru.gildongmu.user.enums.Role;
+import com.dduru.gildongmu.user.domain.enums.Role;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
