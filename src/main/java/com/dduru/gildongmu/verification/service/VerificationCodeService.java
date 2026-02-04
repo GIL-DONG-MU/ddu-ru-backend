@@ -33,7 +33,7 @@ public class VerificationCodeService {
     private static final int EXPIRATION_MINUTES = 3;
     private static final int VERIFIED_EXPIRATION_MINUTES = 10;
     private static final int MAX_VERIFICATION_ATTEMPTS = 5;
-    private static final int DAILY_SMS_LIMIT = 5;
+    private static final int DAILY_SMS_LIMIT = 50;
     private static final int RESEND_LIMIT_MINUTES = 1;
     private static final int DAILY_LIMIT_TTL_SECONDS = 24 * 60 * 60;
     private static final String STATUS_PENDING = "PENDING";
