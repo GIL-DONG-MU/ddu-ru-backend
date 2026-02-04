@@ -43,4 +43,19 @@ public interface PhoneVerificationApiDocs {
             @Parameter(hidden = true) Long userId,
             @Valid VerificationVerifyRequest request
     );
+
+    @Operation(
+            summary = "[Admin] 인증번호 발송",
+            description = "테스트용 - SMS 발송 없이 고정 인증코드 사용. (나중에 삭제 예정)"
+    )
+    @ApiResponse(responseCode = "200", description = "인증번호 발송 성공")
+    @ApiErrorResponses({
+            ErrorCode.DUPLICATE_PHONE_NUMBER,
+            ErrorCode.TOO_MANY_REQUESTS,
+            ErrorCode.DAILY_SMS_LIMIT_EXCEEDED
+    })
+    ResponseEntity<ApiResult<VerificationSendResponse>> sendVerificationCodeAdmin(
+            @Parameter(hidden = true) Long userId,
+            @Valid VerificationSendRequest request
+    );
 }
