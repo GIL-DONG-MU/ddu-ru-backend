@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.profile.domain.enums.AgeRange;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -34,9 +36,9 @@ public record PostCreateRequest(
         @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
         LocalDate recruitDeadline,
 
-        String preferredGender,
-        String preferredAgeMin,
-        String preferredAgeMax,
+        Gender preferredGender,
+        AgeRange preferredAgeMin,
+        AgeRange preferredAgeMax,
 
         @Min(value = 0, message = "예산은 0원 이상이어야 합니다")
         Integer budgetMin,

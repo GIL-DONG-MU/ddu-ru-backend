@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
@@ -129,7 +130,7 @@ public class PostService {
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
-                                       String preferredAgeMin, String preferredAgeMax) {
+                                       AgeRange preferredAgeMin, AgeRange preferredAgeMax) {
 
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
@@ -140,20 +141,8 @@ public class PostService {
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
             throw new InvalidBudgetRangeException();
         }
-        if (preferredAgeMin != null && preferredAgeMax != null) {
-            validateAgeRange(preferredAgeMin, preferredAgeMax);
-        }
-    }
-
-    private void validateAgeRange(String ageMin, String ageMax) {
-        try {
-            AgeRange minAge = AgeRange.from(ageMin);
-            AgeRange maxAge = AgeRange.from(ageMax);
-            if (minAge.ordinal() > maxAge.ordinal()) {
-                throw InvalidAgeRangeException.maxLessThanMin();
-            }
-        } catch (IllegalArgumentException e) {
-            throw InvalidAgeRangeException.invalidValue();
+        if (preferredAgeMin != null && preferredAgeMax != null && preferredAgeMin.ordinal() > preferredAgeMax.ordinal()) {
+            throw InvalidAgeRangeException.maxLessThanMin();
         }
     }
 
@@ -179,15 +168,15 @@ public class PostService {
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin,
-                                       String preferredAgeMax, List<String> photoUrls, List<String> tags, Destination destination) {
+    private ParsedPostData parsePostData(Gender preferredGender, AgeRange preferredAgeMin,
+                                       AgeRange preferredAgeMax, List<String> photoUrls, List<String> tags, Destination destination) {
 
         List<String> finalPhotoUrls = getFinalPhotoUrls(photoUrls, destination);
 
         return new ParsedPostData(
-                preferredGender != null ? Gender.from(preferredGender) : Gender.U,
-                preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : AgeRange.UNKNOWN,
-                preferredAgeMax != null ? AgeRange.from(preferredAgeMax) : AgeRange.UNKNOWN,
+                preferredGender != null ? preferredGender : Gender.U,
+                preferredAgeMin != null ? preferredAgeMin : AgeRange.UNKNOWN,
+                preferredAgeMax != null ? preferredAgeMax : AgeRange.UNKNOWN,
                 jsonConverter.convertListToJson(finalPhotoUrls),
                 jsonConverter.convertListToJson(tags)
         );
@@ -208,14 +197,5 @@ public class PostService {
 
         log.debug("이미지 소스 - 없음");
         return Collections.emptyList();
-    }
-
-    private record ParsedPostData(
-            Gender preferredGender,
-            AgeRange preferredAgeMin,
-            AgeRange preferredAgeMax,
-            String photoUrlsJson,
-            String tagsJson
-    ) {
     }
 }

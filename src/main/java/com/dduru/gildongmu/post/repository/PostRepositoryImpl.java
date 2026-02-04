@@ -5,7 +5,6 @@ import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
-import com.dduru.gildongmu.profile.exception.InvalidGenderException;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -81,36 +80,18 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return condition;
     }
 
-    private BooleanExpression genderCondition(String preferredGenderStr) {
-        if (preferredGenderStr == null || preferredGenderStr.trim().isEmpty()) {
+    private BooleanExpression genderCondition(Gender preferredGender) {
+        if (preferredGender == null || preferredGender == Gender.U) {
             return null;
         }
-
-        try {
-            Gender preferredGender = Gender.from(preferredGenderStr);
-            if (preferredGender == null || preferredGender == Gender.U) {
-                return null;
-            }
-            return post.preferredGender.eq(preferredGender);
-        } catch (InvalidGenderException e) {
-            return null;
-        }
+        return post.preferredGender.eq(preferredGender);
     }
 
-    private BooleanExpression ageRangeCondition(String preferredAgeStr) {
-        if (preferredAgeStr == null || preferredAgeStr.trim().isEmpty()) {
+    private BooleanExpression ageRangeCondition(AgeRange preferredAge) {
+        if (preferredAge == null || preferredAge == AgeRange.UNKNOWN) {
             return null;
         }
-
-        try {
-            AgeRange preferredAge = AgeRange.from(preferredAgeStr);
-            if (preferredAge == AgeRange.UNKNOWN) {
-                return null;
-            }
-            return buildAgeRangeExpression(preferredAge);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+        return buildAgeRangeExpression(preferredAge);
     }
 
     private BooleanExpression buildAgeRangeExpression(AgeRange preferredAge) {
