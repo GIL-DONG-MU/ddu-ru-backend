@@ -237,11 +237,11 @@ public class Post extends BaseTimeEntity {
     }
 
     private void validateUpdatePermission() {
-        if (isTravelStarted()) {
-            throw new TravelAlreadyStartedException();
-        }
         if (isTravelEnded()) {
             throw new TravelAlreadyEndedException();
+        }
+        if (isTravelStarted()) {
+            throw new TravelAlreadyStartedException();
         }
     }
 
