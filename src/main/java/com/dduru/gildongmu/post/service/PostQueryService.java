@@ -35,12 +35,12 @@ public class PostQueryService {
             posts = posts.subList(0, request.size());
         }
 
-        List<PostSummaryResponse> dtos = posts.stream()
+        List<PostSummaryResponse> summaries = posts.stream()
                 .map(post -> PostSummaryResponse.from(post, jsonConverter))
                 .toList();
 
-        log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", dtos.size(), hasNext);
-        return PostListResponse.of(dtos, hasNext);
+        log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", summaries.size(), hasNext);
+        return PostListResponse.of(summaries, hasNext);
     }
 
 }
