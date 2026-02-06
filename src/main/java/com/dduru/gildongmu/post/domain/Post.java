@@ -140,8 +140,8 @@ public class Post extends BaseTimeEntity {
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
+                                  LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
 
         return Post.builder()
                 .user(user)

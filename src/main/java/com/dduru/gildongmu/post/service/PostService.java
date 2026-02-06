@@ -18,7 +18,6 @@ import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
-import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -147,36 +146,29 @@ public class PostService {
     }
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+        ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
 
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
-                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+        ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
-                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private ParsedPostData parsePostData(Gender preferredGender, AgeRange preferredAgeMin,
-                                       AgeRange preferredAgeMax, List<String> photoUrls, List<String> tags, Destination destination) {
-
+    private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {
         List<String> finalPhotoUrls = getFinalPhotoUrls(photoUrls, destination);
 
         return new ParsedPostData(
-                preferredGender != null ? preferredGender : Gender.U,
-                preferredAgeMin != null ? preferredAgeMin : AgeRange.UNKNOWN,
-                preferredAgeMax != null ? preferredAgeMax : AgeRange.UNKNOWN,
                 jsonConverter.convertListToJson(finalPhotoUrls),
                 jsonConverter.convertListToJson(tags)
         );
