@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -191,9 +190,7 @@ public class PostService {
 
         if (StringUtils.hasText(destination.getImage())) {
             log.debug("이미지 소스 - 목적지 기본, destination={}", destination.getCity());
-            List<String> defaultImages = new ArrayList<>();
-            defaultImages.add(destination.getImage());
-            return defaultImages;
+            return List.of(destination.getImage());
         }
 
         log.debug("이미지 소스 - 없음");
