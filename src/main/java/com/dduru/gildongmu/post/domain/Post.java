@@ -191,23 +191,16 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public boolean isRecruitOpen() {
-        return status == PostStatus.OPEN;
-    }
-
-    public int getDaysLeftForRecruitment() {
-        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
-        return Math.max(daysLeft, 0);
-    }
-
-    public int getDaysUntilTravelStart() {
-        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+    public void updateStatus(PostStatus newStatus) {
+        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
+            throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
+        }
+        this.status = newStatus;
     }
 
     public void approveParticipation(Participation participation) {
         participation.approve();
         this.incrementRecruitCount();
-        
         if (this.recruitCount >= this.recruitCapacity) {
             this.updateStatus(PostStatus.FULL);
         }
@@ -216,18 +209,10 @@ public class Post extends BaseTimeEntity {
     public void removeApprovedParticipation(Participation participation) {
         if (participation.isApproved()) {
             this.decrementRecruitCount();
-            
             if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
                 this.updateStatus(PostStatus.OPEN);
             }
         }
-    }
-
-    public void updateStatus(PostStatus newStatus) {
-        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
-        }
-        this.status = newStatus;
     }
 
     public void increaseLikeCount() {
@@ -238,33 +223,17 @@ public class Post extends BaseTimeEntity {
         this.likeCount--;
     }
 
-    private boolean isTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
+    public boolean isRecruitOpen() {
+        return status == PostStatus.OPEN;
     }
 
-    private boolean isTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
-    }
-    
-    private void incrementRecruitCount() {
-        if (this.recruitCount >= this.recruitCapacity) {
-            throw new RecruitCountExceedCapacityException();
-        }
-        this.recruitCount++;
-    }
-    
-    private void decrementRecruitCount() {
-        if (this.recruitCount <= 0) {
-            throw new RecruitCountBelowZeroException();
-        }
-        this.recruitCount--;
+    public int getDaysUntilRecruitDeadline() {
+        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+        return Math.max(daysLeft, 0);
     }
 
-    private void updateRecruitCapacity(Integer newCapacity) {
-        if (newCapacity < this.recruitCount) {
-            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
-        }
-        this.recruitCapacity = newCapacity;
+    public int getDaysUntilTravelStart() {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
     }
 
     private void validateUpdatePermission() {
@@ -274,5 +243,34 @@ public class Post extends BaseTimeEntity {
         if (isTravelEnded()) {
             throw new TravelAlreadyEndedException();
         }
+    }
+
+    private boolean isTravelStarted() {
+        return LocalDate.now().isAfter(startDate);
+    }
+
+    private boolean isTravelEnded() {
+        return LocalDate.now().isAfter(endDate);
+    }
+
+    private void updateRecruitCapacity(Integer newCapacity) {
+        if (newCapacity < this.recruitCount) {
+            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
+        }
+        this.recruitCapacity = newCapacity;
+    }
+
+    private void incrementRecruitCount() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            throw new RecruitCountExceedCapacityException();
+        }
+        this.recruitCount++;
+    }
+
+    private void decrementRecruitCount() {
+        if (this.recruitCount <= 0) {
+            throw new RecruitCountBelowZeroException();
+        }
+        this.recruitCount--;
     }
 }
