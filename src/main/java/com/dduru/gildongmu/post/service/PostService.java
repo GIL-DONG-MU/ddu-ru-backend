@@ -94,8 +94,8 @@ public class PostService {
     public PostDetailResponse recordViewAndGetDetail(Long postId) {
         log.debug("게시글 상세 조회(조회수 증가) - postId={}", postId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
         postRepository.incrementViewCount(postId);
+        Post post = postRepository.getActiveByIdOrThrow(postId);
 
         PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
