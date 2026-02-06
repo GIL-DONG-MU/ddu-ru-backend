@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.auth.dto;
+package com.dduru.gildongmu.auth.dto.response;
 
 public record LoginResponse(
         String accessToken,

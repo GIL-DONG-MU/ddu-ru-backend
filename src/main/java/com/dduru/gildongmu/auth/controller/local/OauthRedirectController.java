@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.auth.controller;
+package com.dduru.gildongmu.auth.controller.local;
 
 import com.dduru.gildongmu.auth.dto.local.LocalGoogleTokenResponse;
 import com.dduru.gildongmu.auth.dto.local.LocalKakaoTokenResponse;

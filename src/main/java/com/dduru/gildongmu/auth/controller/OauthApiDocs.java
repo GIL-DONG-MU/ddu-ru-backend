@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.auth.controller;
 
-import com.dduru.gildongmu.auth.dto.LoginRequest;
-import com.dduru.gildongmu.auth.dto.LoginResponse;
-import com.dduru.gildongmu.auth.dto.RefreshTokenRequest;
+import com.dduru.gildongmu.auth.dto.request.LoginRequest;
+import com.dduru.gildongmu.auth.dto.response.LoginResponse;
+import com.dduru.gildongmu.auth.dto.request.RefreshTokenRequest;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;

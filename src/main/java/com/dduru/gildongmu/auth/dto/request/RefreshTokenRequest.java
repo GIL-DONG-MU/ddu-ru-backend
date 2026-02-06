@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.auth.dto;
+package com.dduru.gildongmu.auth.dto.request;
 import jakarta.validation.constraints.NotBlank;
 
 public record RefreshTokenRequest(

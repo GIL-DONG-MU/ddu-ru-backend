@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.auth.service;
 
-import com.dduru.gildongmu.auth.dto.LoginRequest;
-import com.dduru.gildongmu.auth.dto.LoginResponse;
+import com.dduru.gildongmu.auth.dto.request.LoginRequest;
+import com.dduru.gildongmu.auth.dto.response.LoginResponse;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.TokenPair;
 import com.dduru.gildongmu.auth.dto.UserCreationResult;
