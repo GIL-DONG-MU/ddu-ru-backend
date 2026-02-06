@@ -193,7 +193,7 @@ public class Post extends BaseTimeEntity {
 
     public void updateStatus(PostStatus newStatus) {
         if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
+            throw new InvalidPostStatusException();
         }
         this.status = newStatus;
     }
