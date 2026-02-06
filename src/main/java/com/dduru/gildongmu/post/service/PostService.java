@@ -61,14 +61,19 @@ public class PostService {
     public void update(Long postId, Long userId, PostUpdateRequest request) {
         log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
-        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
+        Post post = getPostAndValidateOwner(postId, userId);
+
+        LocalDate effectiveStartDate = request.startDate() != null ? request.startDate() : post.getStartDate();
+        LocalDate effectiveEndDate = request.endDate() != null ? request.endDate() : post.getEndDate();
+        LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
+        validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
 
-        Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
+        Destination destination = request.destinationId() != null
+                ? destinationRepository.getByIdOrThrow(request.destinationId())
+                : null;
 
-        updatePost(post, destination, request, request.photoUrls());
+        updatePost(post, destination, request);
 
         log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
@@ -76,8 +81,7 @@ public class PostService {
     public void delete(Long postId, Long userId) {
         log.debug("게시글 삭제 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
+        Post post = getPostAndValidateOwner(postId, userId);
 
         post.softDelete(userId);
 
@@ -105,8 +109,7 @@ public class PostService {
     public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
         log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
+        Post post = getPostAndValidateOwner(postId, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
         try {
@@ -120,11 +123,13 @@ public class PostService {
         log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
     }
 
-    private void validatePermission(Post post, Long userId) {
+    private Post getPostAndValidateOwner(Long postId, Long userId) {
+        Post post = postRepository.getActiveByIdOrThrow(postId);
         if (!post.getUser().getId().equals(userId)) {
             log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
             throw PostAccessDeniedException.ownerOnly();
         }
+        return post;
     }
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
@@ -155,14 +160,18 @@ public class PostService {
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
+        Destination destinationForParse = destination != null ? destination : post.getDestination();
+        String photoUrlsJson = request.photoUrls() != null
+                ? jsonConverter.convertListToJson(getFinalPhotoUrls(request.photoUrls(), destinationForParse))
+                : null;
+        String tagsJson = request.tags() != null ? jsonConverter.convertListToJson(request.tags()) : null;
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
                 request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                parsed.photoUrlsJson(), parsed.tagsJson());
+                photoUrlsJson, tagsJson);
     }
 
     private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {
