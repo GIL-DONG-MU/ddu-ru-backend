@@ -12,7 +12,8 @@ public record ProfileUpdateRequest(
         @NotNull
         ProfileImageType profileImageType,
 
-        String bgColorId,
+        @NotNull
+        Long bgColorId,
 
         @Size(max = 60)
         String bio
