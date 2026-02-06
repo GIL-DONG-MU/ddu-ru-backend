@@ -210,7 +210,7 @@ public class Post extends BaseTimeEntity {
         if (participation.isApproved()) {
             this.decrementRecruitCount();
             if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-                this.updateStatus(PostStatus.OPEN);
+                this.status = PostStatus.OPEN;
             }
         }
     }
