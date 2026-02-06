@@ -23,7 +23,7 @@ public record PostSummaryResponse(
         Integer budgetMin,
         Integer budgetMax,
         List<String> photoUrls,
-        Integer viewCount,
+        int viewCount,
         int likeCount,
         UserInfo author
 ) {

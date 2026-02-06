@@ -28,7 +28,7 @@ public record PostDetailResponse(
         Integer budgetMax,
         List<String> photoUrls,
         List<String> tags,
-        Integer viewCount,
+        int viewCount,
         int likeCount,
         LocalDateTime createdAt,
         UserInfo author
