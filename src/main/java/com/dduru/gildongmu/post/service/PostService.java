@@ -134,7 +134,6 @@ public class PostService {
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
                                        AgeRange preferredAgeMin, AgeRange preferredAgeMax) {
-
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
         }

@@ -61,6 +61,7 @@ public interface PostApiDocs {
             ErrorCode.DESTINATION_NOT_FOUND,
             ErrorCode.TRAVEL_ALREADY_STARTED,
             ErrorCode.TRAVEL_ALREADY_ENDED,
+            ErrorCode.RECRUIT_DEADLINE_PASSED,
             ErrorCode.INVALID_RECRUIT_CAPACITY,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.UNAUTHORIZED

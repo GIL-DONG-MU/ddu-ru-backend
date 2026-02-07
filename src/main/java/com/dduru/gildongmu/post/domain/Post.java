@@ -6,6 +6,7 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
@@ -237,12 +238,19 @@ public class Post extends BaseTimeEntity {
     }
 
     private void validateUpdatePermission() {
+        if (isRecruitDeadlinePassed()) {
+            throw new RecruitDeadlinePassedException();
+        }
         if (isTravelEnded()) {
             throw new TravelAlreadyEndedException();
         }
         if (isTravelStarted()) {
             throw new TravelAlreadyStartedException();
         }
+    }
+
+    private boolean isRecruitDeadlinePassed() {
+        return LocalDate.now().isAfter(recruitDeadline);
     }
 
     private boolean isTravelStarted() {
