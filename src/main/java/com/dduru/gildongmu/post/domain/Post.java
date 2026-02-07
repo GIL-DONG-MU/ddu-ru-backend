@@ -210,9 +210,13 @@ public class Post extends BaseTimeEntity {
     public void removeApprovedParticipation(Participation participation) {
         if (participation.isApproved()) {
             this.decrementRecruitCount();
-            if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-                this.status = PostStatus.OPEN;
-            }
+            reopenIfParticipantRemoved();
+        }
+    }
+
+    private void reopenIfParticipantRemoved() {
+        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+            this.status = PostStatus.OPEN;
         }
     }
 
