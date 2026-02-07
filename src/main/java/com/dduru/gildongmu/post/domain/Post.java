@@ -194,7 +194,7 @@ public class Post extends BaseTimeEntity {
 
     public void updateStatus(PostStatus newStatus) {
         if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw new InvalidPostStatusException();
+            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
         }
         this.status = newStatus;
     }
