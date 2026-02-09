@@ -14,6 +14,7 @@ public record UserInfo(
         ProfileImageType profileImageType,
         String profileImage,
         AvatarType avatarType,
+        Long bgColorId,
         String bgColorHex,
         Gender gender,
         LocalDate birthday,
@@ -25,6 +26,7 @@ public record UserInfo(
 
         String profileImage = null;
         AvatarType avatarType = null;
+        Long bgColorId = null;
         String bgColorHex = null;
 
         if (imageType == ProfileImageType.UPLOADED) {
@@ -33,9 +35,10 @@ public record UserInfo(
             avatarType = profile.getAvatar() != null
                     ? profile.getAvatar().getAvatarType()
                     : null;
-            bgColorHex = profile.getBgColor() != null
-                    ? profile.getBgColor().getHexCode()
-                    : null;
+            if (profile.getBgColor() != null) {
+                bgColorId = profile.getBgColor().getId();
+                bgColorHex = profile.getBgColor().getHexCode();
+            }
         }
 
         return new UserInfo(
@@ -44,6 +47,7 @@ public record UserInfo(
                 imageType,
                 profileImage,
                 avatarType,
+                bgColorId,
                 bgColorHex,
                 profile.getGender(),
                 profile.getBirthday(),
