@@ -98,7 +98,7 @@ public class SurveyQuestionService {
                 question.getDisplayOrder(),
                 question.getQuestionText(),
                 question.getImageUrl(),
-                question.getType().name(),
+                question.getType(),
                 question.isRequired(),
                 question.getMinSelect(),
                 question.getMaxSelect(),

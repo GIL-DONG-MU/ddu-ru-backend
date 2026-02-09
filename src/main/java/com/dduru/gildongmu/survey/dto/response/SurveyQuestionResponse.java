@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.survey.dto.response;
 
+import com.dduru.gildongmu.survey.domain.enums.SurveyQuestionType;
+
 import java.util.List;
 
 public record SurveyQuestionResponse(
@@ -7,7 +9,7 @@ public record SurveyQuestionResponse(
         Integer displayOrder,
         String questionText,
         String imageUrl,
-        String type,
+        SurveyQuestionType type,
         boolean required,
         Integer minSelect,
         Integer maxSelect,
