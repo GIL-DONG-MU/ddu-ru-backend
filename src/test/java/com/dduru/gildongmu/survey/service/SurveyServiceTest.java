@@ -152,7 +152,7 @@ class SurveyServiceTest {
         assertThat(response.w()).isEqualTo(6.0);
         assertThat(response.s()).isEqualTo(7.0);
         assertThat(response.p()).isEqualTo(4.5);
-        assertThat(response.avatarType()).isEqualTo("TTUR_SWEET");
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
         assertThat(response.personality()).isEqualTo("성격");
         assertThat(response.strength()).isEqualTo("강점");
         assertThat(response.tip()).isEqualTo("팁");
@@ -233,7 +233,7 @@ class SurveyServiceTest {
         SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
 
         // then
-        assertThat(response.avatarType()).isEqualTo("TTUR_PADO");
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_PADO);
         verify(surveyRepository, never()).save(any(Survey.class));
     }
 
@@ -280,7 +280,7 @@ class SurveyServiceTest {
         assertThat(response.w()).isEqualTo(6.0);
         assertThat(response.s()).isEqualTo(7.0);
         assertThat(response.p()).isEqualTo(4.5);
-        assertThat(response.avatarType()).isEqualTo("TTUR_SWEET");
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
         assertThat(response.avatarCode()).isEqualTo(4);
     }
 
