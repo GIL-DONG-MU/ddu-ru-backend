@@ -2,6 +2,7 @@ package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
@@ -19,7 +20,7 @@ public record PostSummaryResponse(
         String destination,
         Integer recruitCapacity,
         Integer recruitCount,
-        String preferredGender,
+        Gender preferredGender,
         Integer budgetMin,
         Integer budgetMax,
         List<String> photoUrls,
@@ -43,7 +44,7 @@ public record PostSummaryResponse(
                 post.getDestination().getCity(),
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
-                post.getPreferredGender().name(),
+                post.getPreferredGender(),
                 post.getBudgetMin(),
                 post.getBudgetMax(),
                 photoUrls,

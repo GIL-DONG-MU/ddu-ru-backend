@@ -1,18 +1,22 @@
 package com.dduru.gildongmu.user.dto;
 
 import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.user.domain.User;
+
+import java.time.LocalDate;
 
 public record UserInfo(
         Long id,
         String name,
-        String profileImageType,
+        ProfileImageType profileImageType,
         String profileImage,
-        String avatarType,
+        AvatarType avatarType,
         String bgColorHex,
-        String gender,
-        String birthday,
+        Gender gender,
+        LocalDate birthday,
         String nickname
 ) {
     public static UserInfo from(User user) {
@@ -20,14 +24,14 @@ public record UserInfo(
         ProfileImageType imageType = profile.getProfileImageType();
 
         String profileImage = null;
-        String avatarType = null;
+        AvatarType avatarType = null;
         String bgColorHex = null;
 
         if (imageType == ProfileImageType.UPLOADED) {
             profileImage = profile.getUploadedImageUrl();
         } else if (imageType == ProfileImageType.AVATAR) {
             avatarType = profile.getAvatar() != null
-                    ? profile.getAvatar().getAvatarType().name()
+                    ? profile.getAvatar().getAvatarType()
                     : null;
             bgColorHex = profile.getBgColor() != null
                     ? profile.getBgColor().getHexCode()
@@ -37,12 +41,12 @@ public record UserInfo(
         return new UserInfo(
                 user.getId(),
                 user.getName(),
-                imageType != null ? imageType.name() : null,
+                imageType,
                 profileImage,
                 avatarType,
                 bgColorHex,
-                profile.getGender().name(),
-                profile.getBirthday().toString(),
+                profile.getGender(),
+                profile.getBirthday(),
                 profile.getNickname()
         );
     }
