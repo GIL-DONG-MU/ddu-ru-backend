@@ -15,13 +15,13 @@ public class PostStatusScheduler {
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정 실행
     public void updateExpiredPostStatus() {
-        log.info("모집 마감일 지난 게시글 상태 업데이트 스케줄러 시작");
+        log.debug("만료 게시글 상태 업데이트 스케줄러 - 실행");
         
         try {
             int updatedCount = postService.closeExpiredPosts();
-            log.info("모집 마감일 지난 게시글 {}개 CLOSED 상태로 변경 완료", updatedCount);
+            log.info("만료 게시글 상태 업데이트됨 - count={}", updatedCount);
         } catch (Exception e) {
-            log.error("게시글 상태 업데이트 스케줄러 실행 중 오류 발생", e);
+            log.error("만료 게시글 상태 업데이트 스케줄러 실패", e);
         }
     }
 }

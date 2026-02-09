@@ -2,6 +2,8 @@ package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,41 +13,44 @@ public record PostSummaryResponse(
         String title,
         String content,
         boolean isRecruitOpen,
-        int daysLeft,
+        int daysUntilRecruitDeadline,
+        int daysUntilTravelStart,
         LocalDate startDate,
         LocalDate endDate,
         String destination,
         Integer recruitCapacity,
         Integer recruitCount,
-        String preferredGender,
+        Gender preferredGender,
         Integer budgetMin,
         Integer budgetMax,
         List<String> photoUrls,
-        Integer viewCount,
-        int likeCount
+        int viewCount,
+        int likeCount,
+        UserInfo author
 ) {
-    private static final int SUMMARY_MAX_LENGTH = 100;
     public static PostSummaryResponse from(Post post, JsonConverter jsonConverter) {
-
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+        UserInfo authorInfo = UserInfo.from(post.getUser());
 
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 post.isRecruitOpen(),
-                post.getDaysLeftForRecruitment(),
+                post.getDaysUntilRecruitDeadline(),
+                post.getDaysUntilTravelStart(),
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
-                post.getPreferredGender() != null ? post.getPreferredGender().name() : "U",
+                post.getPreferredGender(),
                 post.getBudgetMin(),
                 post.getBudgetMax(),
                 photoUrls,
                 post.getViewCount(),
-                post.getLikeCount()
+                post.getLikeCount(),
+                authorInfo
         );
     }
 }

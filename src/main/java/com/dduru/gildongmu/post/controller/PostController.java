@@ -13,12 +13,9 @@ import com.dduru.gildongmu.post.service.PostQueryService;
 import com.dduru.gildongmu.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,31 +26,15 @@ public class PostController implements PostApiDocs {
 
     @Override
     @GetMapping
-    public ResponseEntity<ApiResult<PostListResponse>> retrievePostsWithFilter(
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String preferredGender,
-            @RequestParam(required = false) String preferredAge,
-            @RequestParam(required = false) Long destinationId,
-            @RequestParam(required = false) Boolean isRecruitOpen
-    ) {
-        PostListRequest request = new PostListRequest(
-                cursor, size, keyword, startDate, endDate, preferredGender,
-                preferredAge, destinationId, isRecruitOpen
-        );
-
+    public ResponseEntity<ApiResult<PostListResponse>> retrievePosts(PostListRequest request) {
         PostListResponse response = postQueryService.retrieveAllWithFilter(request);
-
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
     @GetMapping("/{postId}")
-    public ResponseEntity<ApiResult<PostDetailResponse>> getPostDetail(@PathVariable Long postId) {
-        PostDetailResponse response = postQueryService.retrieveDetailWithViewCount(postId);
+    public ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(@PathVariable Long postId) {
+        PostDetailResponse response = postService.recordViewAndGetDetail(postId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 

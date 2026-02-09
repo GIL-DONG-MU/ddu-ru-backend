@@ -4,18 +4,20 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
+import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
-import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class PostService {
     private final JsonConverter jsonConverter;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
-        log.debug("게시글 생성 시작 - userId: {}, request: {}", userId, request);
+        log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
@@ -52,72 +53,87 @@ public class PostService {
         Post post = createPost(user, destination, request, request.photoUrls());
         Post savedPost = postRepository.save(post);
 
-        log.info("게시글 생성 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                savedPost.getId(), userId, savedPost.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
+        log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());
     }
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
-        log.debug("게시글 수정 시작 - postId: {}, userId: {}, request: {}", postId, userId, request);
+        log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
-        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
+        Post post = getPostAndValidateOwner(postId, userId);
+
+        LocalDate effectiveStartDate = request.startDate() != null ? request.startDate() : post.getStartDate();
+        LocalDate effectiveEndDate = request.endDate() != null ? request.endDate() : post.getEndDate();
+        LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
+        validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
                 request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
 
-        Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
+        Destination destination = request.destinationId() != null
+                ? destinationRepository.getByIdOrThrow(request.destinationId())
+                : null;
 
-        updatePost(post, destination, request, request.photoUrls());
+        updatePost(post, destination, request);
 
-        log.info("게시글 수정 완료 - postId: {}, userId: {}, title: {}, 이미지 개수: {}",
-                postId, userId, post.getTitle(), request.photoUrls() != null ? request.photoUrls().size() : 0);
+        log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
 
     public void delete(Long postId, Long userId) {
-        log.debug("게시글 삭제 시작 - postId: {}, userId: {}", postId, userId);
+        log.debug("게시글 삭제 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
+        Post post = getPostAndValidateOwner(postId, userId);
 
         post.softDelete(userId);
 
-        log.info("게시글 삭제 완료 - postId: {}, userId: {}, title: {}",
-                postId, userId, post.getTitle());
+        log.info("게시글 삭제됨 - postId={}, userId={}", postId, userId);
     }
 
     public int closeExpiredPosts() {
-        log.debug("만료된 게시글 상태 업데이트 시작");
+        log.debug("만료 게시글 상태 업데이트 - 실행");
         LocalDate today = LocalDate.now();
 
-        int updatedCount = postRepository.closeExpiredPostsByDate(today);
+        return postRepository.closeExpiredPostsByDate(today);
+    }
 
-        log.info("만료된 게시글 {}개의 상태를 CLOSED로 변경 완료", updatedCount);
-        return updatedCount;
+    public PostDetailResponse recordViewAndGetDetail(Long postId) {
+        log.debug("게시글 상세 조회(조회수 증가) - postId={}", postId);
+
+        postRepository.incrementViewCount(postId);
+        Post post = postRepository.getActiveByIdOrThrow(postId);
+
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
+        log.debug("게시글 상세 조회 완료 - postId={}", postId);
+        return response;
     }
 
     public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
-        log.debug("게시글 모집 상태 변경 시작 - postId: {}, userId: {}, open: {}", postId, userId, request.open());
+        log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
 
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        validatePermission(post, userId);
+        Post post = getPostAndValidateOwner(postId, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
-        post.updateStatus(newStatus);
+        try {
+            post.updateStatus(newStatus);
+        } catch (InvalidPostStatusException e) {
+            log.warn("게시글 모집 상태 변경 불가 - postId={}, userId={}, currentStatus={}, requestedStatus={}",
+                    postId, userId, post.getStatus(), newStatus);
+            throw e;
+        }
 
-        log.info("게시글 모집 상태 변경 완료 - postId: {}, userId: {}, status: {}", postId, userId, newStatus);
+        log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
     }
 
-    private void validatePermission(Post post, Long userId) {
+    private Post getPostAndValidateOwner(Long postId, Long userId) {
+        Post post = postRepository.getActiveByIdOrThrow(postId);
         if (!post.getUser().getId().equals(userId)) {
-            log.warn("게시글 권한 없음 - postId: {}, userId: {}, ownerId: {}", post.getId(), userId, post.getUser().getId());
+            log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
             throw PostAccessDeniedException.ownerOnly();
         }
+        return post;
     }
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
-                                       String preferredAgeMin, String preferredAgeMax) {
-
+                                       AgeRange preferredAgeMin, AgeRange preferredAgeMax) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
         }
@@ -127,54 +143,39 @@ public class PostService {
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
             throw new InvalidBudgetRangeException();
         }
-        if (preferredAgeMin != null && preferredAgeMax != null) {
-            validateAgeRange(preferredAgeMin, preferredAgeMax);
-        }
-    }
-
-    private void validateAgeRange(String ageMin, String ageMax) {
-        try {
-            AgeRange minAge = AgeRange.from(ageMin);
-            AgeRange maxAge = AgeRange.from(ageMax);
-            if (minAge.ordinal() > maxAge.ordinal()) {
-                throw InvalidAgeRangeException.maxLessThanMin();
-            }
-        } catch (IllegalArgumentException e) {
-            throw InvalidAgeRangeException.invalidValue();
+        if (preferredAgeMin != null && preferredAgeMax != null && preferredAgeMin.ordinal() > preferredAgeMax.ordinal()) {
+            throw InvalidAgeRangeException.maxLessThanMin();
         }
     }
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+        ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
 
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
-                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson());
     }
 
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), photoUrls, request.tags(), destination);
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
+        Destination destinationForParse = destination != null ? destination : post.getDestination();
+        String photoUrlsJson = request.photoUrls() != null
+                ? jsonConverter.convertListToJson(getFinalPhotoUrls(request.photoUrls(), destinationForParse))
+                : null;
+        String tagsJson = request.tags() != null ? jsonConverter.convertListToJson(request.tags()) : null;
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), parsed.preferredGender(), parsed.preferredAgeMin(),
-                parsed.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                parsed.photoUrlsJson(), parsed.tagsJson());
+                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
+                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                photoUrlsJson, tagsJson);
     }
 
-    private ParsedPostData parsePostData(String preferredGender, String preferredAgeMin,
-                                       String preferredAgeMax, List<String> photoUrls, List<String> tags, Destination destination) {
-
+    private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {
         List<String> finalPhotoUrls = getFinalPhotoUrls(photoUrls, destination);
 
         return new ParsedPostData(
-                preferredGender != null ? Gender.from(preferredGender) : Gender.U,
-                preferredAgeMin != null ? AgeRange.from(preferredAgeMin) : AgeRange.UNKNOWN,
-                preferredAgeMax != null ? AgeRange.from(preferredAgeMax) : AgeRange.UNKNOWN,
                 jsonConverter.convertListToJson(finalPhotoUrls),
                 jsonConverter.convertListToJson(tags)
         );
@@ -182,28 +183,16 @@ public class PostService {
 
     private List<String> getFinalPhotoUrls(List<String> photoUrls, Destination destination) {
         if (photoUrls != null && !photoUrls.isEmpty()) {
-            log.debug("사용자가 업로드한 이미지 사용 - 개수: {}", photoUrls.size());
+            log.debug("이미지 소스 - 업로드, count={}", photoUrls.size());
             return photoUrls;
         }
 
         if (StringUtils.hasText(destination.getImage())) {
-            log.debug("목적지 기본 이미지 사용 - destination: {}, image: {}",
-                    destination.getCity(), destination.getImage());
-            List<String> defaultImages = new ArrayList<>();
-            defaultImages.add(destination.getImage());
-            return defaultImages;
+            log.debug("이미지 소스 - 목적지 기본, destination={}", destination.getCity());
+            return List.of(destination.getImage());
         }
 
-        log.debug("이미지 없음 - 빈 리스트 반환");
+        log.debug("이미지 소스 - 없음");
         return Collections.emptyList();
-    }
-
-    private record ParsedPostData(
-            Gender preferredGender,
-            AgeRange preferredAgeMin,
-            AgeRange preferredAgeMax,
-            String photoUrlsJson,
-            String tagsJson
-    ) {
     }
 }

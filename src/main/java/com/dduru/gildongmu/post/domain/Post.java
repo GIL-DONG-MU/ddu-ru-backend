@@ -6,6 +6,7 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
+import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
@@ -94,7 +95,7 @@ public class Post extends BaseTimeEntity {
 
     @Column(name = "view_count", nullable = false)
     @ColumnDefault("0")
-    private Integer viewCount = 0;
+    private int viewCount = 0;
 
     @Column(name = "like_count", nullable = false)
     @ColumnDefault("0")
@@ -140,8 +141,8 @@ public class Post extends BaseTimeEntity {
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
+                                  LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
 
         return Post.builder()
                 .user(user)
@@ -191,20 +192,16 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-
-    public boolean isRecruitOpen() {
-        return status == PostStatus.OPEN;
-    }
-
-    public int getDaysLeftForRecruitment() {
-        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
-        return Math.max(daysLeft, 0);
+    public void updateStatus(PostStatus newStatus) {
+        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
+            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
+        }
+        this.status = newStatus;
     }
 
     public void approveParticipation(Participation participation) {
         participation.approve();
         this.incrementRecruitCount();
-        
         if (this.recruitCount >= this.recruitCapacity) {
             this.updateStatus(PostStatus.FULL);
         }
@@ -213,18 +210,14 @@ public class Post extends BaseTimeEntity {
     public void removeApprovedParticipation(Participation participation) {
         if (participation.isApproved()) {
             this.decrementRecruitCount();
-            
-            if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-                this.updateStatus(PostStatus.OPEN);
-            }
+            reopenIfParticipantRemoved();
         }
     }
 
-    public void updateStatus(PostStatus newStatus) {
-        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw new InvalidPostStatusException("모집이 완료된 게시글은 다시 모집 중 상태로 변경할 수 없습니다.");
+    private void reopenIfParticipantRemoved() {
+        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+            this.status = PostStatus.OPEN;
         }
-        this.status = newStatus;
     }
 
     public void increaseLikeCount() {
@@ -235,26 +228,41 @@ public class Post extends BaseTimeEntity {
         this.likeCount--;
     }
 
+    public boolean isRecruitOpen() {
+        return status == PostStatus.OPEN;
+    }
+
+    public int getDaysUntilRecruitDeadline() {
+        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+        return Math.max(daysLeft, 0);
+    }
+
+    public int getDaysUntilTravelStart() {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+    }
+
+    private void validateUpdatePermission() {
+        if (isRecruitDeadlinePassed()) {
+            throw new RecruitDeadlinePassedException();
+        }
+        if (isTravelEnded()) {
+            throw new TravelAlreadyEndedException();
+        }
+        if (isTravelStarted()) {
+            throw new TravelAlreadyStartedException();
+        }
+    }
+
+    private boolean isRecruitDeadlinePassed() {
+        return LocalDate.now().isAfter(recruitDeadline);
+    }
+
     private boolean isTravelStarted() {
         return LocalDate.now().isAfter(startDate);
     }
 
     private boolean isTravelEnded() {
         return LocalDate.now().isAfter(endDate);
-    }
-    
-    private void incrementRecruitCount() {
-        if (this.recruitCount >= this.recruitCapacity) {
-            throw new RecruitCountExceedCapacityException();
-        }
-        this.recruitCount++;
-    }
-    
-    private void decrementRecruitCount() {
-        if (this.recruitCount <= 0) {
-            throw new RecruitCountBelowZeroException();
-        }
-        this.recruitCount--;
     }
 
     private void updateRecruitCapacity(Integer newCapacity) {
@@ -264,12 +272,17 @@ public class Post extends BaseTimeEntity {
         this.recruitCapacity = newCapacity;
     }
 
-    private void validateUpdatePermission() {
-        if (isTravelStarted()) {
-            throw new TravelAlreadyStartedException();
+    private void incrementRecruitCount() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            throw new RecruitCountExceedCapacityException();
         }
-        if (isTravelEnded()) {
-            throw new TravelAlreadyEndedException();
+        this.recruitCount++;
+    }
+
+    private void decrementRecruitCount() {
+        if (this.recruitCount <= 0) {
+            throw new RecruitCountBelowZeroException();
         }
+        this.recruitCount--;
     }
 }

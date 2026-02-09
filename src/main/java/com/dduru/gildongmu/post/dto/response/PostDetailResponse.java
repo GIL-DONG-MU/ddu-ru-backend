@@ -2,6 +2,8 @@ package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.profile.domain.enums.AgeRange;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
@@ -13,21 +15,22 @@ public record PostDetailResponse(
         String title,
         String content,
         boolean isRecruitOpen,
-        int daysLeft,
+        int daysUntilRecruitDeadline,
+        int daysUntilTravelStart,
         LocalDate startDate,
         LocalDate endDate,
         String destination,
         Integer recruitCapacity,
         Integer recruitCount,
         LocalDate recruitDeadline,
-        String preferredGender,
-        String preferredAgeMin,
-        String preferredAgeMax,
+        Gender preferredGender,
+        AgeRange preferredAgeMin,
+        AgeRange preferredAgeMax,
         Integer budgetMin,
         Integer budgetMax,
         List<String> photoUrls,
         List<String> tags,
-        Integer viewCount,
+        int viewCount,
         int likeCount,
         LocalDateTime createdAt,
         UserInfo author
@@ -42,16 +45,17 @@ public record PostDetailResponse(
                 post.getTitle(),
                 post.getContent(),
                 post.isRecruitOpen(),
-                post.getDaysLeftForRecruitment(),
+                post.getDaysUntilRecruitDeadline(),
+                post.getDaysUntilTravelStart(),
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
                 post.getRecruitDeadline(),
-                post.getPreferredGender() != null ? post.getPreferredGender().name() : "U",
-                post.getPreferredAgeMin() != null ? post.getPreferredAgeMin().name() : "UNKNOWN",
-                post.getPreferredAgeMax() != null ? post.getPreferredAgeMax().name() : "UNKNOWN",
+                post.getPreferredGender(),
+                post.getPreferredAgeMin(),
+                post.getPreferredAgeMax(),
                 post.getBudgetMin(),
                 post.getBudgetMax(),
                 photoUrls,

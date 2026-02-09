@@ -34,6 +34,7 @@ public enum ErrorCode {
     INVALID_RECRUIT_CAPACITY(HttpStatus.BAD_REQUEST, "잘못된 모집 인원 설정입니다."),
     TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "이미 시작된 여행입니다."),
     TRAVEL_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "이미 종료된 여행입니다."),
+    RECRUIT_DEADLINE_PASSED(HttpStatus.BAD_REQUEST, "모집 마감된 게시글은 수정할 수 없습니다."),
     INVALID_AGE_RANGE(HttpStatus.BAD_REQUEST, "최대 연령은 최소 연령보다 크거나 같아야 합니다."),
     INVALID_BUDGET_RANGE(HttpStatus.BAD_REQUEST, "최대 예산은 최소 예산보다 커야 합니다."),
     RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "모집 정원을 초과할 수 없습니다."),
