@@ -24,6 +24,9 @@ public class GoogleLoginService implements OauthService {
     @Value("${oauth.google.android-client-id}")
     private String googleAndroidClientId;
 
+    @Value("${oauth.google.ios-client-id}")
+    private String googleIosClientId;
+
     @Value("${oauth.google.client-id}")
     private String googleClientId;
 
@@ -36,7 +39,8 @@ public class GoogleLoginService implements OauthService {
                 GsonFactory.getDefaultInstance())
                 .setAudience(Arrays.asList(
                         googleClientId,
-                        googleAndroidClientId))
+                        googleAndroidClientId,
+                        googleIosClientId))
                 .build();
     }
 

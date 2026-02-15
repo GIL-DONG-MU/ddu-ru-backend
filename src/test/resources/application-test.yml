@@ -45,6 +45,7 @@ oauth:
     redirect-uri: http://localhost
   google:
     android-client-id: dummy
+    ios-client-id: dummy
     client-id: dummy
     client-secret: dummy
     redirect-uri: http://localhost
