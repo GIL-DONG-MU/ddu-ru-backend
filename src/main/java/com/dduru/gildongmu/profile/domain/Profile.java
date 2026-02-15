@@ -105,6 +105,10 @@ public class Profile extends BaseTimeEntity {
         this.surveyStatus = SurveyStatus.SKIPPED;
     }
 
+    public void cancelSurveySkip() {
+        this.surveySkipped = false;
+    }
+
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
