@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface SurveyRepository extends JpaRepository<Survey, Long> {
     Optional<Survey> findByUser(User user);
+
+    boolean existsByUser_Id(Long userId);
 }

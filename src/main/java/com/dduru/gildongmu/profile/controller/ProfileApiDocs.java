@@ -6,6 +6,7 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.dto.response.OnboardingStatusResponse;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
@@ -93,5 +94,18 @@ public interface ProfileApiDocs {
     ResponseEntity<ApiResult<Void>> updateProfile(
             @Parameter(hidden = true) Long userId,
             @Valid ProfileUpdateRequest request
+    );
+
+    @Operation(
+            summary = "온보딩 상태 조회",
+            description = "현재 사용자의 온보딩 진행 상태를 조회합니다. 회원가입, 기본정보 설정, 설문조사, 프로필 완성 여부를 확인합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "온보딩 상태 조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.PROFILE_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<OnboardingStatusResponse>> getOnboardingStatus(
+            @Parameter(hidden = true) Long userId
     );
 }

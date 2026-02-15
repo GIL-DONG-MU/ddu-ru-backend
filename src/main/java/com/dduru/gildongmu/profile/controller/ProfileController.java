@@ -4,10 +4,12 @@ import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
+import com.dduru.gildongmu.profile.dto.response.OnboardingStatusResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.service.NicknameService;
+import com.dduru.gildongmu.profile.service.OnboardingService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.profile.service.ProfileSetupService;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
@@ -33,6 +35,7 @@ public class ProfileController implements ProfileApiDocs {
     private final NicknameService nicknameService;
     private final ProfileSetupService profileSetupService;
     private final ProfileManagementService profileManagementService;
+    private final OnboardingService onboardingService;
 
     @Override
     @PutMapping("/users/nickname")
@@ -78,5 +81,14 @@ public class ProfileController implements ProfileApiDocs {
     ){
         profileManagementService.updateProfile(userId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+    }
+
+    @Override
+    @GetMapping("/users/me/onboarding/status")
+    public ResponseEntity<ApiResult<OnboardingStatusResponse>> getOnboardingStatus(
+            @CurrentUser Long userId
+    ) {
+        OnboardingStatusResponse response = onboardingService.getOnboardingStatus(userId);
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
