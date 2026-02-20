@@ -42,4 +42,12 @@ public interface SurveyApiDocs {
             ErrorCode.INVALID_INPUT_VALUE
     })
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
+
+    @Operation(summary = "설문조사 스킵", description = "설문조사를 스킵 처리합니다.")
+    @ApiResponse(responseCode = "204", description = "설문조사 스킵 성공", content = @io.swagger.v3.oas.annotations.media.Content())
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.PROFILE_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<Void>> skipSurvey(@Parameter(hidden = true) Long userId);
 }

@@ -38,6 +38,11 @@ public class SurveyService {
     private final ProfileManagementService profileManagementService;
     private final UserRepository userRepository;
 
+    public void skipSurvey(Long userId) {
+        profileManagementService.skipSurvey(userId);
+        log.info("설문조사 스킵 처리 완료 - userId: {}", userId);
+    }
+
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
         log.debug("설문조사 제출 시작 - userId: {}", userId);
 
@@ -50,6 +55,7 @@ public class SurveyService {
         saveOrUpdateTravelTendency(user, scores, avatarType);
 
         saveAvatarIdToProfile(userId, avatarType);
+        profileManagementService.completeSurvey(userId);
 
         AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 

@@ -45,6 +45,7 @@ public class ProfileSetupService {
                 request.phoneNumber(),
                 birthday
         );
+        profile.completeOnboarding();
 
         profileRepository.save(profile);
         log.debug("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());

@@ -33,9 +33,22 @@ public class ProfileManagementService {
             case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());
         }
 
+        profile.completeProfile();
         profileRepository.save(profile);
         log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
+    }
+
+    @Transactional
+    public void skipSurvey(Long userId) {
+        Profile profile = profileRepository.getByUserIdOrThrow(userId);
+        profile.skipSurvey();
+    }
+
+    @Transactional
+    public void completeSurvey(Long userId) {
+        Profile profile = profileRepository.getByUserIdOrThrow(userId);
+        profile.completeSurvey();
     }
 
     @Transactional

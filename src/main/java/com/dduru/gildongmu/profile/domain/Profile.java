@@ -3,6 +3,7 @@ package com.dduru.gildongmu.profile.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.profile.exception.InvalidProfileImageUrlException;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
@@ -58,9 +59,20 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "bio", length = 60)
     private String bio;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted;
+
+    @Column(name = "profile_completed", nullable = false)
+    private boolean profileCompleted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "survey_status", nullable = false, length = 20)
+    private SurveyStatus surveyStatus;
+
     @Builder
     public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
-                   AvatarProfile avatar, BgColor bgColor, String uploadedImageUrl, ProfileImageType profileImageType, String bio
+                   AvatarProfile avatar, BgColor bgColor, String uploadedImageUrl, ProfileImageType profileImageType,
+                   String bio
     ) {
         this.user = user;
         this.nickname = nickname;
@@ -72,6 +84,25 @@ public class Profile extends BaseTimeEntity {
         this.uploadedImageUrl = uploadedImageUrl;
         this.profileImageType = profileImageType;
         this.bio = bio;
+        this.onboardingCompleted = false;
+        this.profileCompleted = false;
+        this.surveyStatus = SurveyStatus.NOT_STARTED;
+    }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
+    }
+
+    public void completeProfile() {
+        this.profileCompleted = true;
+    }
+
+    public void completeSurvey() {
+        this.surveyStatus = SurveyStatus.COMPLETED;
+    }
+
+    public void skipSurvey() {
+        this.surveyStatus = SurveyStatus.SKIPPED;
     }
 
     public void updateNickname(String nickname) {

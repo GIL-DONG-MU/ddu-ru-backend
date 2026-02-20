@@ -1,10 +1,10 @@
 package com.dduru.gildongmu.profile.dto.response;
 
+import com.dduru.gildongmu.profile.domain.enums.SurveyStatus;
+
 public record OnboardingStatusResponse(
-        boolean isSignUpCompleted,
-        boolean isBasicInfoCompleted,
-        boolean isSurveyCompleted,
-        boolean isSurveySkipped,
-        boolean isProfileCompleted
+        boolean onboardingCompleted,
+        boolean profileCompleted,
+        SurveyStatus surveyStatus
 ) {
 }
