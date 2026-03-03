@@ -49,6 +49,6 @@ public class SurveyController implements SurveyApiDocs {
     @PostMapping("/skip")
     public ResponseEntity<ApiResult<Void>> skipSurvey(@CurrentUser Long userId) {
         surveyService.skipSurvey(userId);
-        return ResponseEntity.ok(ApiResult.noContent());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }
