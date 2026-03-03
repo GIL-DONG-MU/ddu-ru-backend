@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.survey.service;
 
+import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
 import com.dduru.gildongmu.survey.domain.Survey;
@@ -37,6 +38,7 @@ public class SurveyService {
     private final AvatarProfileRepository avatarProfileRepository;
     private final ProfileManagementService profileManagementService;
     private final UserRepository userRepository;
+    private final OnboardingService onboardingService;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
         log.debug("설문조사 제출 시작 - userId: {}", userId);
@@ -57,6 +59,11 @@ public class SurveyService {
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}, 점수: R={}, W={}, S={}, P={}",
                 userId, avatarType, scores.r(), scores.w(), scores.s(), scores.p());
         return SurveyResponse.of(scores.r(), scores.w(), scores.s(), scores.p(), avatarType, profile);
+    }
+
+    public void skipSurvey(Long userId) {
+        onboardingService.skipSurvey(userId);
+        log.info("설문조사 스킵 - userId: {}", userId);
     }
 
     @Transactional(readOnly = true)

@@ -42,4 +42,12 @@ public interface SurveyApiDocs {
             ErrorCode.INVALID_INPUT_VALUE
     })
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
+
+    @Operation(summary = "설문조사 스킵", description = "설문조사를 건너뛰고 온보딩 상태를 SKIPPED로 업데이트합니다.")
+    @ApiResponse(responseCode = "200", description = "스킵 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<Void>> skipSurvey(@Parameter(hidden = true) Long userId);
 }
