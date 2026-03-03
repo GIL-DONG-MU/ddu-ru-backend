@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
 import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -46,6 +47,8 @@ public record PostUpdateRequest(
         @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
         List<String> tags,
 
-        RecruitType recruitType
+        RecruitType recruitType,
+
+        RecruitMethod recruitMethod
 ) {
 }

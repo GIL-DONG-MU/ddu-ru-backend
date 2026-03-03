@@ -11,6 +11,7 @@ import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
 import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,7 +47,7 @@ public class PostService {
         log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
+                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax(), request.recruitMethod());
 
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
@@ -65,8 +67,9 @@ public class PostService {
         LocalDate effectiveStartDate = request.startDate() != null ? request.startDate() : post.getStartDate();
         LocalDate effectiveEndDate = request.endDate() != null ? request.endDate() : post.getEndDate();
         LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
+        RecruitMethod effectiveRecruitMethod = request.recruitMethod() != null ? request.recruitMethod() : post.getRecruitMethod();
         validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
-                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax());
+                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax(), effectiveRecruitMethod);
 
         Destination destination = request.destinationId() != null
                 ? destinationRepository.getByIdOrThrow(request.destinationId())
@@ -133,12 +136,22 @@ public class PostService {
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
-                                       AgeRange preferredAgeMin, AgeRange preferredAgeMax) {
+                                       AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                                       RecruitMethod recruitMethod) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
         }
-        if (recruitDeadline.isAfter(startDate)) {
-            throw InvalidPostDateException.deadlineAfterStart();
+        if (recruitMethod == RecruitMethod.PERIOD) {
+            if (recruitDeadline == null) {
+                throw InvalidPostDateException.invalidRecruitPeriod();
+            }
+            if (recruitDeadline.isAfter(startDate)) {
+                throw InvalidPostDateException.deadlineAfterStart();
+            }
+            long recruitPeriodDays = ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+            if (recruitPeriodDays < 1 || recruitPeriodDays > 30) {
+                throw InvalidPostDateException.invalidRecruitPeriod();
+            }
         }
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
             throw new InvalidBudgetRangeException();
@@ -155,7 +168,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
                 request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType());
+                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod());
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
@@ -169,7 +182,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
                 request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                photoUrlsJson, tagsJson, request.recruitType());
+                photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod());
     }
 
     private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {

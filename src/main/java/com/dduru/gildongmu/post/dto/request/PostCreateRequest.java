@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
 import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -33,7 +34,6 @@ public record PostCreateRequest(
         @Max(value = 10, message = "모집 인원은 최대 10명까지 가능합니다")
         Integer recruitCapacity,
 
-        @NotNull(message = "모집 마감일은 필수입니다")
         @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
         LocalDate recruitDeadline,
 
@@ -53,7 +53,10 @@ public record PostCreateRequest(
         @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
         List<String> tags,
 
-        @NotNull(message = "모집 방식은 필수입니다")
-        RecruitType recruitType
+        @NotNull(message = "모집 공개 방식은 필수입니다")
+        RecruitType recruitType,
+
+        @NotNull(message = "모집 기간 방식은 필수입니다")
+        RecruitMethod recruitMethod
 ) {
 }
