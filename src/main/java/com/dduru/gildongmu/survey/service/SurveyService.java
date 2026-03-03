@@ -50,6 +50,7 @@ public class SurveyService {
         saveOrUpdateTravelTendency(user, scores, avatarType);
 
         saveAvatarIdToProfile(userId, avatarType);
+        onboardingService.completeSurvey(userId);
 
         AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
 

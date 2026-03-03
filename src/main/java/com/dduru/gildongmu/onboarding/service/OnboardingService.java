@@ -16,7 +16,30 @@ public class OnboardingService {
     @Transactional(readOnly = true)
     public OnboardingStatusResponse getStatus(Long userId) {
         UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-
         return OnboardingStatusResponse.from(userOnboarding);
+    }
+
+    @Transactional
+    public void completeOnboarding(Long userId) {
+        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
+        userOnboarding.completeOnboarding();
+    }
+
+    @Transactional
+    public void completeSurvey(Long userId) {
+        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
+        userOnboarding.completeSurvey();
+    }
+
+    @Transactional
+    public void skipSurvey(Long userId) {
+        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
+        userOnboarding.skipSurvey();
+    }
+
+    @Transactional
+    public void completeProfile(Long userId) {
+        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
+        userOnboarding.completeProfile();
     }
 }
