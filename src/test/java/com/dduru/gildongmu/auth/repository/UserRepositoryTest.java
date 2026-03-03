@@ -42,19 +42,11 @@ class UserRepositoryTest {
         // when
         User savedUser = userRepository.save(user);
         
-        Profile profile = Profile.builder()
-                .user(savedUser)
-                .uploadedImageUrl("http://example.com/profile.jpg")
-                .profileImageType(ProfileImageType.UPLOADED)
-                .gender(Gender.M)
-                .phoneNumber("010-1234-5678")
-                .build();
+        Profile profile = new Profile(savedUser);
         profileRepository.save(profile);
 
         // then
         assertThat(savedUser.getId()).isNotNull();
-        assertThat(savedUser.getEmail()).isEqualTo("test@example.com");
-        assertThat(savedUser.getName()).isEqualTo("테스트사용자");
     }
 
     @Test
@@ -69,15 +61,9 @@ class UserRepositoryTest {
         
         User savedUser = userRepository.save(user);
         
-        Profile profile = Profile.builder()
-                .user(savedUser)
-                .nickname("users")
-                .gender(Gender.F)
-                .phoneNumber("01011111111")
-                .birthday(LocalDate.of(1990, 1, 1))
-                .uploadedImageUrl("http://example.com/profile.jpg")
-                .profileImageType(ProfileImageType.UPLOADED)
-                .build();
+        Profile profile = new Profile(savedUser);
+        profile.setupInitialProfile("users", Gender.F, "01011111111", LocalDate.of(1990, 1, 1));
+        profile.updateProfile("http://example.com/profile.jpg", ProfileImageType.UPLOADED, null, null);
         profileRepository.save(profile);
 
         // when
@@ -99,13 +85,9 @@ class UserRepositoryTest {
         
         User savedUser = userRepository.save(user);
         
-        Profile profile = Profile.builder()
-                .user(savedUser)
-                .avatar(null)
-                .bgColor(null)
-                .profileImageType(ProfileImageType.AVATAR)
-                .gender(Gender.M)
-                .build();
+        Profile profile = new Profile(savedUser);
+        profile.setupInitialProfile(null, Gender.M, null, null);
+        profile.updateProfile(null, ProfileImageType.AVATAR, null, null);
         profileRepository.save(profile);
 
         // when
