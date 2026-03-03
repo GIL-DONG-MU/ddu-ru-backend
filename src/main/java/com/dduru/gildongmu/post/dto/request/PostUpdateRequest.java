@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
 import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
@@ -50,6 +51,8 @@ public record PostUpdateRequest(
 
         RecruitType recruitType,
 
-        RecruitMethod recruitMethod
+        RecruitMethod recruitMethod,
+
+        CompanionType companionType
 ) {
 }

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.post.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
 import com.dduru.gildongmu.post.domain.enums.RecruitType;
@@ -121,11 +122,15 @@ public class Post extends BaseTimeEntity {
     @Column(name = "recruit_method", nullable = false)
     private RecruitMethod recruitMethod;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "companion_type")
+    private CompanionType companionType;
+
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                 LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
+                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -144,12 +149,13 @@ public class Post extends BaseTimeEntity {
         this.viewCount = 0;
         this.recruitType = recruitType;
         this.recruitMethod = recruitMethod;
+        this.companionType = companionType;
     }
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                                   LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
+                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -168,13 +174,14 @@ public class Post extends BaseTimeEntity {
                 .tags(tags)
                 .recruitType(recruitType)
                 .recruitMethod(recruitMethod)
+                .companionType(companionType)
                 .build();
     }
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                            LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
+                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -192,6 +199,7 @@ public class Post extends BaseTimeEntity {
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
         if (recruitType != null) this.recruitType = recruitType;
         if (recruitMethod != null) this.recruitMethod = recruitMethod;
+        if (companionType != null) this.companionType = companionType;
     }
 
     public void softDelete(Long userId) {

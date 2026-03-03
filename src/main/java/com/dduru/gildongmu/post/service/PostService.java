@@ -4,21 +4,22 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.dto.ParsedPostData;
-import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
-import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
-import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
-import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
-import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.exception.InvalidAgeRangeException;
+import com.dduru.gildongmu.post.domain.enums.RecruitType;
+import com.dduru.gildongmu.post.dto.ParsedPostData;
+import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
+import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
+import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
+import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,8 @@ public class PostService {
         log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(), request.recruitMethod());
+                request.budgetMin(), request.budgetMax(),
+                request.recruitMethod(), request.recruitType(), request.companionType());
 
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
@@ -68,8 +70,12 @@ public class PostService {
         LocalDate effectiveEndDate = request.endDate() != null ? request.endDate() : post.getEndDate();
         LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
         RecruitMethod effectiveRecruitMethod = request.recruitMethod() != null ? request.recruitMethod() : post.getRecruitMethod();
+        RecruitType effectiveRecruitType = request.recruitType() != null ? request.recruitType() : post.getRecruitType();
+        CompanionType effectiveCompanionType = request.companionType() != null ? request.companionType() : post.getCompanionType();
+
         validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
-                request.budgetMin(), request.budgetMax(), effectiveRecruitMethod);
+                request.budgetMin(), request.budgetMax(),
+                effectiveRecruitMethod, effectiveRecruitType, effectiveCompanionType);
 
         Destination destination = request.destinationId() != null
                 ? destinationRepository.getByIdOrThrow(request.destinationId())
@@ -136,7 +142,7 @@ public class PostService {
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
-                                       RecruitMethod recruitMethod) {
+                                       RecruitMethod recruitMethod, RecruitType recruitType, CompanionType companionType) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
         }
@@ -155,6 +161,10 @@ public class PostService {
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
             throw new InvalidBudgetRangeException();
         }
+
+        if (recruitType == RecruitType.PUBLIC && companionType == null) {
+            throw new InvalidRecruitSettingsException();
+        }
     }
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
@@ -164,7 +174,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
                 request.budgetMin(), request.budgetMax(),
-                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod());
+                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod(), request.companionType());
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
@@ -178,7 +188,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
                 request.budgetMin(), request.budgetMax(),
-                photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod());
+                photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod(), request.companionType());
     }
 
     private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {
