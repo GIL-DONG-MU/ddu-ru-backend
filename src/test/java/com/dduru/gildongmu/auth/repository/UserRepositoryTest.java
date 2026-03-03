@@ -62,8 +62,8 @@ class UserRepositoryTest {
         User savedUser = userRepository.save(user);
         
         Profile profile = new Profile(savedUser);
-        profile.setupInitialProfile("users", Gender.F, "01011111111", LocalDate.of(1990, 1, 1));
-        profile.updateProfile("http://example.com/profile.jpg", ProfileImageType.UPLOADED, null, null);
+        profile.setupInitialProfile(Gender.F, "01011111111", LocalDate.of(1990, 1, 1));
+        profile.updateProfile("users", "http://example.com/profile.jpg", ProfileImageType.UPLOADED, null, null);
         profileRepository.save(profile);
 
         // when
@@ -86,8 +86,8 @@ class UserRepositoryTest {
         User savedUser = userRepository.save(user);
         
         Profile profile = new Profile(savedUser);
-        profile.setupInitialProfile(null, Gender.M, null, null);
-        profile.updateProfile(null, ProfileImageType.AVATAR, null, null);
+        profile.setupInitialProfile(Gender.M, null, null);
+        profile.updateProfile("users", null, ProfileImageType.AVATAR, null, null);
         profileRepository.save(profile);
 
         // when
