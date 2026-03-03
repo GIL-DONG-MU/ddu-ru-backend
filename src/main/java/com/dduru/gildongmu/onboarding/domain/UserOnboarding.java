@@ -5,7 +5,6 @@ import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,13 +28,8 @@ public class UserOnboarding extends BaseTimeEntity {
     @Enumerated(value = EnumType.STRING)
     private SurveyStatus surveyStatus = SurveyStatus.NOT_STARTED;
 
-
-    @Builder
-    public UserOnboarding(User user, boolean isOnboardingCompleted, boolean isProfileCompleted, SurveyStatus surveyStatus) {
+    public UserOnboarding(User user) {
         this.user = user;
-        this.isOnboardingCompleted = isOnboardingCompleted;
-        this.isProfileCompleted = isProfileCompleted;
-        this.surveyStatus = surveyStatus;
     }
 
     public void completeOnboarding() {
