@@ -15,14 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @RestController
-public class OnboardingController {
+public class OnboardingController implements OnboardingApiDocs {
 
     private final OnboardingService onboardingService;
 
+    @Override
     @GetMapping("/users/me/onboarding/status")
     public ResponseEntity<ApiResult<OnboardingStatusResponse>> getOnboardingStatus(
             @CurrentUser Long userId
-    ){
+    ) {
         OnboardingStatusResponse response = onboardingService.getStatus(userId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
