@@ -37,7 +37,9 @@ public record PostCreateRequest(
         @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
         LocalDate recruitDeadline,
 
+        @NotNull(message = "선호하는 성별을 골라주세요")
         Gender preferredGender,
+
         AgeRange preferredAgeMin,
         AgeRange preferredAgeMax,
 
