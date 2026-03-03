@@ -23,7 +23,7 @@ public record PostUpdateRequest(
         @FutureOrPresent(message = "여행 종료일은 오늘 이후여야 합니다")
         LocalDate endDate,
 
-        @Min(value = 1, message = "모집 인원은 최소 1명 이상이어야 합니다")
+        @Min(value = 2, message = "모집 인원은 최소 2명 이상이어야 합니다")
         @Max(value = 10, message = "모집 인원은 최대 10명까지 가능합니다")
         Integer recruitCapacity,
 

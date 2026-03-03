@@ -57,8 +57,7 @@ public class Post extends BaseTimeEntity {
     private LocalDate endDate;
 
     @Column(name = "recruit_capacity", nullable = false)
-    @ColumnDefault("1")
-    private Integer recruitCapacity = 1;
+    private Integer recruitCapacity;
 
     @Column(name = "recruit_count", nullable = false)
     @ColumnDefault("0")
@@ -131,7 +130,7 @@ public class Post extends BaseTimeEntity {
         this.content = content;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.recruitCapacity = recruitCapacity != null ? recruitCapacity : 1;
+        this.recruitCapacity = recruitCapacity;
         this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
