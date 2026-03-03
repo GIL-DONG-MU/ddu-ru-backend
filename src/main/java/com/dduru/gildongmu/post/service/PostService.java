@@ -14,7 +14,6 @@ import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
-import com.dduru.gildongmu.post.exception.InvalidBudgetRangeException;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
@@ -48,7 +47,6 @@ public class PostService {
         log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(),
                 request.recruitMethod(), request.recruitType(), request.companionType());
 
         User user = userRepository.getByIdOrThrow(userId);
@@ -74,7 +72,6 @@ public class PostService {
         CompanionType effectiveCompanionType = request.companionType() != null ? request.companionType() : post.getCompanionType();
 
         validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
-                request.budgetMin(), request.budgetMax(),
                 effectiveRecruitMethod, effectiveRecruitType, effectiveCompanionType);
 
         Destination destination = request.destinationId() != null
@@ -141,7 +138,6 @@ public class PostService {
     }
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
-                                       Integer budgetMin, Integer budgetMax,
                                        RecruitMethod recruitMethod, RecruitType recruitType, CompanionType companionType) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
@@ -158,10 +154,6 @@ public class PostService {
                 throw InvalidPostDateException.invalidRecruitPeriod();
             }
         }
-        if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
-            throw new InvalidBudgetRangeException();
-        }
-
         if (recruitType == RecruitType.PUBLIC && companionType == null) {
             throw new InvalidRecruitSettingsException();
         }
@@ -173,7 +165,6 @@ public class PostService {
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
-                request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod(), request.companionType());
     }
 
@@ -187,7 +178,6 @@ public class PostService {
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
-                request.budgetMin(), request.budgetMax(),
                 photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod(), request.companionType());
     }
 

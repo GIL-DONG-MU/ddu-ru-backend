@@ -44,12 +44,6 @@ public record PostCreateRequest(
         @Size(max = 3, message = "선호 연령대는 최대 3개까지 선택할 수 있습니다")
         List<AgeRange> preferredAges,
 
-        @Min(value = 0, message = "예산은 0원 이상이어야 합니다")
-        Integer budgetMin,
-
-        @Min(value = 0, message = "예산은 0원 이상이어야 합니다")
-        Integer budgetMax,
-
         @Size(max = 5, message = "사진은 최대 5장까지 업로드 가능합니다")
         List<String> photoUrls,
 

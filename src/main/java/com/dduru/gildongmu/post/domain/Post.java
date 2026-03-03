@@ -80,12 +80,6 @@ public class Post extends BaseTimeEntity {
     @Column(name = "age_range", nullable = false)
     private List<AgeRange> preferredAges = new ArrayList<>();
 
-    @Column(name = "budget_min")
-    private Integer budgetMin;
-
-    @Column(name = "budget_max")
-    private Integer budgetMax;
-
     @Column(name = "photo_urls", columnDefinition = "JSON")
     private String photoUrls;
 
@@ -130,7 +124,7 @@ public class Post extends BaseTimeEntity {
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                 LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
+                String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -142,8 +136,6 @@ public class Post extends BaseTimeEntity {
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender;
         this.preferredAges = preferredAges;
-        this.budgetMin = budgetMin;
-        this.budgetMax = budgetMax;
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
@@ -155,7 +147,7 @@ public class Post extends BaseTimeEntity {
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                                   LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
+                                  String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -168,8 +160,6 @@ public class Post extends BaseTimeEntity {
                 .recruitDeadline(recruitDeadline)
                 .preferredGender(preferredGender)
                 .preferredAges(preferredAges)
-                .budgetMin(budgetMin)
-                .budgetMax(budgetMax)
                 .photoUrls(photoUrls)
                 .tags(tags)
                 .recruitType(recruitType)
@@ -181,7 +171,7 @@ public class Post extends BaseTimeEntity {
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                            LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
+                           String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -192,8 +182,6 @@ public class Post extends BaseTimeEntity {
         if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
         if (preferredGender != null) this.preferredGender = preferredGender;
         if (preferredAges != null) this.preferredAges = preferredAges;
-        if (budgetMin != null) this.budgetMin = budgetMin;
-        if (budgetMax != null) this.budgetMax = budgetMax;
         if (photoUrls != null) this.photoUrls = photoUrls;
         if (tags != null) this.tags = tags;
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
