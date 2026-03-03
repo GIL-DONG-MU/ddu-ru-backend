@@ -35,7 +35,6 @@ public class ProfileManagementService {
             case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());
         }
 
-        profileRepository.save(profile);
         onboardingService.completeProfile(userId);
         log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
