@@ -26,6 +26,8 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -71,15 +73,11 @@ public class Post extends BaseTimeEntity {
     @Column(name = "preferred_gender", nullable = false)
     private Gender preferredGender;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_preferred_ages", joinColumns = @JoinColumn(name = "post_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_min", nullable = false)
-    @ColumnDefault("'UNKNOWN'")
-    private AgeRange preferredAgeMin = AgeRange.UNKNOWN;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_max", nullable = false)
-    @ColumnDefault("'UNKNOWN'")
-    private AgeRange preferredAgeMax = AgeRange.UNKNOWN;
+    @Column(name = "age_range", nullable = false)
+    private List<AgeRange> preferredAges = new ArrayList<>();
 
     @Column(name = "budget_min")
     private Integer budgetMin;
@@ -126,7 +124,7 @@ public class Post extends BaseTimeEntity {
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
                 Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
         this.user = user;
         this.destination = destination;
@@ -138,8 +136,7 @@ public class Post extends BaseTimeEntity {
         this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender;
-        this.preferredAgeMin = preferredAgeMin != null ? preferredAgeMin : AgeRange.UNKNOWN;
-        this.preferredAgeMax = preferredAgeMax != null ? preferredAgeMax : AgeRange.UNKNOWN;
+        this.preferredAges = preferredAges;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.photoUrls = photoUrls;
@@ -151,7 +148,7 @@ public class Post extends BaseTimeEntity {
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                                  LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
                                   Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
 
         return Post.builder()
@@ -164,8 +161,7 @@ public class Post extends BaseTimeEntity {
                 .recruitCapacity(recruitCapacity)
                 .recruitDeadline(recruitDeadline)
                 .preferredGender(preferredGender)
-                .preferredAgeMin(preferredAgeMin)
-                .preferredAgeMax(preferredAgeMax)
+                .preferredAges(preferredAges)
                 .budgetMin(budgetMin)
                 .budgetMax(budgetMax)
                 .photoUrls(photoUrls)
@@ -177,8 +173,8 @@ public class Post extends BaseTimeEntity {
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
+                           LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -188,8 +184,7 @@ public class Post extends BaseTimeEntity {
         if (endDate != null) this.endDate = endDate;
         if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
         if (preferredGender != null) this.preferredGender = preferredGender;
-        if (preferredAgeMin != null) this.preferredAgeMin = preferredAgeMin;
-        if (preferredAgeMax != null) this.preferredAgeMax = preferredAgeMax;
+        if (preferredAges != null) this.preferredAges = preferredAges;
         if (budgetMin != null) this.budgetMin = budgetMin;
         if (budgetMax != null) this.budgetMax = budgetMax;
         if (photoUrls != null) this.photoUrls = photoUrls;

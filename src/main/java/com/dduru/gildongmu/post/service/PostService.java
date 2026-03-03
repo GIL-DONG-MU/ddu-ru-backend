@@ -47,7 +47,7 @@ public class PostService {
         log.debug("게시글 생성 - userId={}", userId);
 
         validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax(), request.recruitMethod());
+                request.budgetMin(), request.budgetMax(), request.recruitMethod());
 
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
@@ -69,7 +69,7 @@ public class PostService {
         LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
         RecruitMethod effectiveRecruitMethod = request.recruitMethod() != null ? request.recruitMethod() : post.getRecruitMethod();
         validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
-                request.budgetMin(), request.budgetMax(), request.preferredAgeMin(), request.preferredAgeMax(), effectiveRecruitMethod);
+                request.budgetMin(), request.budgetMax(), effectiveRecruitMethod);
 
         Destination destination = request.destinationId() != null
                 ? destinationRepository.getByIdOrThrow(request.destinationId())
@@ -136,7 +136,6 @@ public class PostService {
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                        Integer budgetMin, Integer budgetMax,
-                                       AgeRange preferredAgeMin, AgeRange preferredAgeMax,
                                        RecruitMethod recruitMethod) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
@@ -156,9 +155,6 @@ public class PostService {
         if (budgetMin != null && budgetMax != null && budgetMax < budgetMin) {
             throw new InvalidBudgetRangeException();
         }
-        if (preferredAgeMin != null && preferredAgeMax != null && preferredAgeMin.ordinal() > preferredAgeMax.ordinal()) {
-            throw InvalidAgeRangeException.maxLessThanMin();
-        }
     }
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
@@ -166,8 +162,8 @@ public class PostService {
 
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
+                request.budgetMin(), request.budgetMax(),
                 parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod());
     }
 
@@ -180,8 +176,8 @@ public class PostService {
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
-                request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
+                request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
+                request.budgetMin(), request.budgetMax(),
                 photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod());
     }
 

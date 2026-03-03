@@ -91,14 +91,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         if (preferredAge == null || preferredAge == AgeRange.UNKNOWN) {
             return null;
         }
-        return buildAgeRangeExpression(preferredAge);
-    }
-
-    private BooleanExpression buildAgeRangeExpression(AgeRange preferredAge) {
-        return post.preferredAgeMin.eq(preferredAge)
-                .or(post.preferredAgeMax.eq(preferredAge))
-                .or(post.preferredAgeMin.loe(preferredAge)
-                        .and(post.preferredAgeMax.goe(preferredAge)));
+        return post.preferredAges.any().eq(preferredAge);
     }
 
     private BooleanExpression destinationCondition(Long destinationId) {
