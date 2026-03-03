@@ -155,7 +155,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
                 request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                parsed.photoUrlsJson(), parsed.tagsJson());
+                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType());
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
@@ -169,7 +169,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 request.recruitDeadline(), request.preferredGender(), request.preferredAgeMin(),
                 request.preferredAgeMax(), request.budgetMin(), request.budgetMax(),
-                photoUrlsJson, tagsJson);
+                photoUrlsJson, tagsJson, request.recruitType());
     }
 
     private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {

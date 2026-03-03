@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
@@ -50,6 +51,9 @@ public record PostCreateRequest(
         List<String> photoUrls,
 
         @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
-        List<String> tags
+        List<String> tags,
+
+        @NotNull(message = "모집 방식은 필수입니다")
+        RecruitType recruitType
 ) {
 }

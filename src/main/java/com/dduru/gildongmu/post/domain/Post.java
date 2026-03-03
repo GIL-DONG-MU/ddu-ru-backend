@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
@@ -115,11 +116,15 @@ public class Post extends BaseTimeEntity {
     @Column(name = "deleted_by")
     private Long deletedBy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recruit_type", nullable = false)
+    private RecruitType recruitType;
+
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
+                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -137,12 +142,13 @@ public class Post extends BaseTimeEntity {
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
+        this.recruitType = recruitType != null ? recruitType : RecruitType.PUBLIC;
     }
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                                   LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
+                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType) {
 
         return Post.builder()
                 .user(user)
@@ -160,13 +166,14 @@ public class Post extends BaseTimeEntity {
                 .budgetMax(budgetMax)
                 .photoUrls(photoUrls)
                 .tags(tags)
+                .recruitType(recruitType)
                 .build();
     }
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                           LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
+                LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
+                Integer budgetMin, Integer budgetMax, String photoUrls, String tags, RecruitType recruitType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -182,8 +189,8 @@ public class Post extends BaseTimeEntity {
         if (budgetMax != null) this.budgetMax = budgetMax;
         if (photoUrls != null) this.photoUrls = photoUrls;
         if (tags != null) this.tags = tags;
-
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
+        if (recruitType != null) this.recruitType = recruitType;
     }
 
     public void softDelete(Long userId) {
