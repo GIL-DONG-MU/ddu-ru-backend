@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.profile.dto.request;
 
-import com.dduru.gildongmu.profile.validator.ValidNickname;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
 public record NicknameUpdateRequest(
         @Schema(
@@ -10,7 +10,7 @@ public record NicknameUpdateRequest(
                 minLength = 2,
                 maxLength = 14
         )
-        @ValidNickname
+        @NotBlank(message = "닉네임은 공백일 수 없습니다.")
         String nickname
 ) {
 }

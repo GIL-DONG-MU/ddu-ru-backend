@@ -2,15 +2,14 @@ package com.dduru.gildongmu.profile.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
-import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
-import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.profile.service.ProfileOnboardingService;
-import com.dduru.gildongmu.profile.validator.ValidNickname;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,7 +46,7 @@ public class ProfileController implements ProfileApiDocs {
     @Override
     @GetMapping("/nicknames/{nickname}/availability")
     public ResponseEntity<ApiResult<NicknameValidateResponse>> checkNickname(
-            @PathVariable @ValidNickname String nickname
+            @PathVariable String nickname
     ) {
         NicknameValidateResponse response = nicknameService.checkNickname(nickname);
         return ResponseEntity.ok(ApiResult.ok(response));
