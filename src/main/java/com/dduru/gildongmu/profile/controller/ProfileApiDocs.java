@@ -3,12 +3,11 @@ package com.dduru.gildongmu.profile.controller;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
-import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
-import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
-import com.dduru.gildongmu.profile.validator.ValidNickname;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
+import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,7 +47,7 @@ public interface ProfileApiDocs {
                     description = "유효성 체크할 닉네임",
                     example = "길동무"
             )
-            @ValidNickname String nickname
+            String nickname
     );
 
     @Operation(summary = "랜덤 닉네임 생성", description = "랜덤으로 사용 가능한 닉네임을 생성합니다. 형용사와 명사 조합에 랜덤 숫자를 추가하여 고유성을 보장합니다.")
@@ -84,6 +83,9 @@ public interface ProfileApiDocs {
     @ApiResponse(responseCode = "204", description = "프로필 이미지 및 소개글 수정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.NICKNAME_INVALID_LENGTH,
+            ErrorCode.NICKNAME_INVALID_CHARACTERS,
+            ErrorCode.NICKNAME_CONTAINS_BAD_WORD,
             ErrorCode.NICKNAME_ALREADY_TAKEN,
             ErrorCode.UNAUTHORIZED,
             ErrorCode.PROFILE_NOT_FOUND
