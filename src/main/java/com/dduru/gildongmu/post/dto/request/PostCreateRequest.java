@@ -41,6 +41,7 @@ public record PostCreateRequest(
         @NotNull(message = "선호하는 성별을 골라주세요")
         Gender preferredGender,
 
+        @NotNull(message = "선호 연령대는 필수입니다")
         @Size(max = 3, message = "선호 연령대는 최대 3개까지 선택할 수 있습니다")
         List<AgeRange> preferredAges,
 
