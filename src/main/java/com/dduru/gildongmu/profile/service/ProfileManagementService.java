@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.profile.service;
 
+import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
@@ -21,6 +22,7 @@ public class ProfileManagementService {
     private final ProfileRepository profileRepository;
     private final BgColorRepository bgColorRepository;
     private final AvatarProfileRepository avatarProfileRepository;
+    private final OnboardingService onboardingService;
 
     @Transactional
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
@@ -33,7 +35,7 @@ public class ProfileManagementService {
             case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());
         }
 
-        profileRepository.save(profile);
+        onboardingService.completeProfile(userId);
         log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
     }

@@ -3,18 +3,20 @@ package com.dduru.gildongmu.auth.service;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
+import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
+import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.Role;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class UserCreationService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final UserOnboardingRepository userOnboardingRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public UserCreationResult createNewUser(OauthUserInfo oauthUserInfo) {
@@ -30,7 +33,9 @@ public class UserCreationService {
 
         User user = userRepository.save(buildUser(oauthUserInfo));
 
-        saveProfile(user);
+        profileRepository.save(new Profile(user));
+
+        userOnboardingRepository.save(new UserOnboarding(user));
 
         log.info("신규 사용자 회원가입 완료 - userId: {}, provider: {}, email: {}",
                 user.getId(), oauthUserInfo.loginType(), oauthUserInfo.email());
@@ -82,21 +87,5 @@ public class UserCreationService {
                 .oauthType(oauthUserInfo.loginType())
                 .role(Role.USER)
                 .build();
-    }
-
-    private void saveProfile(User user) {
-        Profile profile = Profile.builder()
-                .user(user)
-                .nickname(null)
-                .gender(null)
-                .phoneNumber(null)
-                .birthday(null)
-                .avatar(null)
-                .bgColor(null)
-                .uploadedImageUrl(null)
-                .profileImageType(null)
-                .bio(null)
-                .build();
-        profileRepository.save(profile);
     }
 }
