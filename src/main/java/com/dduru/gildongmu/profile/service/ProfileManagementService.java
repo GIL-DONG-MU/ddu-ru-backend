@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.profile.service;
 
+import com.dduru.gildongmu.common.exception.BusinessException;
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -29,15 +31,32 @@ public class ProfileManagementService {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
         BgColor bgColor = bgColorRepository.getByIdOrThrow(request.bgColorId());
 
+        if (request.nickname() != null) {
+            applyNickname(profile, request.nickname());
+        }
+
         switch (request.profileImageType()) {
-            case UPLOADED -> profile.updateProfile(request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
-            case AVATAR -> profile.updateProfile("", ProfileImageType.AVATAR, bgColor, request.bio());
-            case DEFAULT -> profile.updateProfile("", ProfileImageType.DEFAULT, bgColor, request.bio());
+            case UPLOADED -> profile.updateProfile(
+                    request.nickname(), request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
+            case AVATAR -> profile.updateProfile(
+                    request.nickname(), "", ProfileImageType.AVATAR, bgColor, request.bio());
         }
 
         onboardingService.completeProfile(userId);
         log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
+    }
+
+    private void applyNickname(Profile profile, String nickname) {
+        if (nickname.equals(profile.getNickname())) {
+            return;
+        }
+
+        if (profileRepository.existsByNicknameWithLock(nickname)) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
+
+        profile.updateNickname(nickname);
     }
 
     @Transactional

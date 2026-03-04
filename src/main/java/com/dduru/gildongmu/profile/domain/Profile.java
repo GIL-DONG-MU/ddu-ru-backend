@@ -65,10 +65,7 @@ public class Profile extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void setupInitialProfile(String nickname, Gender gender, String phoneNumber, LocalDate birthday) {
-        if (nickname != null) {
-            this.nickname = nickname;
-        }
+    public void setupInitialProfile(Gender gender, String phoneNumber, LocalDate birthday) {
         if (gender != null) {
             this.gender = gender;
         }
@@ -80,8 +77,12 @@ public class Profile extends BaseTimeEntity {
         }
     }
 
-    public void updateProfile(String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
+    public void updateProfile(String nickname, String uploadedImageUrl, ProfileImageType profileImageType, BgColor bgColor, String bio) {
         validateUploadedImageUrlForType(profileImageType, uploadedImageUrl);
+
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
 
         if (uploadedImageUrl != null) {
             this.uploadedImageUrl = uploadedImageUrl;
