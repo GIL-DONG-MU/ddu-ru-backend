@@ -31,8 +31,6 @@ public class ProfileOnboardingService {
     public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
 
-        checkDuplicateNicknameWithLock(request.nickname());
-
         validateVerificationToken(request.verificationToken(), request.phoneNumber());
 
         if (profileRepository.existsByPhoneNumber(request.phoneNumber())) {
@@ -42,7 +40,6 @@ public class ProfileOnboardingService {
         LocalDate birthday = parseBirthDate(request.birthday());
 
         profile.setupInitialProfile(
-                request.nickname(),
                 request.gender(),
                 request.phoneNumber(),
                 birthday
@@ -50,7 +47,7 @@ public class ProfileOnboardingService {
 
         profileRepository.save(profile);
         onboardingService.completeOnboarding(userId);
-        log.debug("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
+        log.debug("프로필 초기 설정 완료: userId={}", userId);
     }
 
     private LocalDate parseBirthDate(String birthDateString) {
@@ -76,9 +73,4 @@ public class ProfileOnboardingService {
         }
     }
 
-    private void checkDuplicateNicknameWithLock(String nickname) {
-        if (profileRepository.existsByNicknameWithLock(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
-    }
 }

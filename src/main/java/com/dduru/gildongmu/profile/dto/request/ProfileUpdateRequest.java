@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record ProfileUpdateRequest(
+        @Schema(description = "닉네임", example = "용감한여행자1234")
+        String nickname,
+
         @Schema(description = "업로드된 프로필 이미지 URL", example = "https://example.amazonaws.com/images/uuid.png" )
         String uploadedImageUrl,
 
