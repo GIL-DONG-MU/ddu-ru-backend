@@ -3,8 +3,8 @@ package com.dduru.gildongmu.profile.service;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.dduru.gildongmu.profile.domain.Profile.validateNickname;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class NicknameService {
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
+        validateNickname(request.nickname());
         checkDuplicateNicknameWithLock(request.nickname());
 
         profile.updateNickname(request.nickname());
@@ -35,7 +38,8 @@ public class NicknameService {
 
     @Transactional(readOnly = true)
     public NicknameValidateResponse checkNickname(String nickname) {
-        checkDuplicateNickname(nickname);
+        validateNickname(nickname);
+        checkDuplicateNicknameWithLock(nickname);
 
         return NicknameValidateResponse.builder()
                 .sanitizedNickname(nickname)
@@ -68,12 +72,6 @@ public class NicknameService {
         String fallbackNickname = FALLBACK_NICKNAME_PREFIX + (System.currentTimeMillis() % FALLBACK_RANDOM_BOUND);
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
-    }
-
-    private void checkDuplicateNickname(String nickname) {
-        if (profileRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
     }
 
     private void checkDuplicateNicknameWithLock(String nickname) {
