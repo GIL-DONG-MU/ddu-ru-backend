@@ -8,7 +8,6 @@ import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -58,20 +57,8 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "bio", length = 60)
     private String bio;
 
-    @Builder
-    public Profile(User user, String nickname, Gender gender, String phoneNumber, LocalDate birthday,
-                   AvatarProfile avatar, BgColor bgColor, String uploadedImageUrl, ProfileImageType profileImageType, String bio
-    ) {
+    public Profile(User user) {
         this.user = user;
-        this.nickname = nickname;
-        this.gender = gender;
-        this.phoneNumber = phoneNumber;
-        this.birthday = birthday;
-        this.avatar = avatar;
-        this.bgColor = bgColor;
-        this.uploadedImageUrl = uploadedImageUrl;
-        this.profileImageType = profileImageType;
-        this.bio = bio;
     }
 
     public void updateNickname(String nickname) {

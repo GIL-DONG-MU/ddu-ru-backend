@@ -80,6 +80,7 @@ jobs:
             export KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
             export KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
             export GOOGLE_ANDROID_CLIENT_ID=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}
+            export GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
             export GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             export GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
             export GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}

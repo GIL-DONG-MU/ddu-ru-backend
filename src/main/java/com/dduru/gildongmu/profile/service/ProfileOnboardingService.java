@@ -3,6 +3,7 @@ package com.dduru.gildongmu.profile.service;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
@@ -18,12 +19,13 @@ import java.time.format.DateTimeParseException;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class ProfileSetupService {
+public class ProfileOnboardingService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ProfileRepository profileRepository;
+    private final OnboardingService onboardingService;
 
     @Transactional
     public void setupInitialProfile(Long userId, ProfileSetupRequest request) {
@@ -47,6 +49,7 @@ public class ProfileSetupService {
         );
 
         profileRepository.save(profile);
+        onboardingService.completeOnboarding(userId);
         log.debug("프로필 초기 설정 완료: userId={}, nickname={}", userId, request.nickname());
     }
 

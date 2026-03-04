@@ -9,7 +9,7 @@ import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
 import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
-import com.dduru.gildongmu.profile.service.ProfileSetupService;
+import com.dduru.gildongmu.profile.service.ProfileOnboardingService;
 import com.dduru.gildongmu.profile.validator.ValidNickname;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProfileController implements ProfileApiDocs {
 
     private final NicknameService nicknameService;
-    private final ProfileSetupService profileSetupService;
+    private final ProfileOnboardingService profileOnboardingService;
     private final ProfileManagementService profileManagementService;
 
     @Override
@@ -66,7 +66,7 @@ public class ProfileController implements ProfileApiDocs {
             @CurrentUser Long userId,
             @RequestBody @Valid ProfileSetupRequest request
     ) {
-        profileSetupService.setupInitialProfile(userId, request);
+        profileOnboardingService.setupInitialProfile(userId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
