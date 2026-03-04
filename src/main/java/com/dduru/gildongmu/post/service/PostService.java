@@ -74,11 +74,14 @@ public class PostService {
         validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
                 effectiveRecruitMethod, effectiveRecruitType, effectiveCompanionType);
 
+        LocalDate recruitDeadlineToSave = resolveRecruitDeadline(
+                effectiveRecruitMethod, effectiveRecruitDeadline, effectiveStartDate);
+
         Destination destination = request.destinationId() != null
                 ? destinationRepository.getByIdOrThrow(request.destinationId())
                 : null;
 
-        updatePost(post, destination, request);
+        updatePost(post, destination, request, recruitDeadlineToSave);
 
         log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
@@ -161,14 +164,23 @@ public class PostService {
 
     private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
         ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
+        LocalDate recruitDeadlineToSave = resolveRecruitDeadline(
+                request.recruitMethod(), request.recruitDeadline(), request.startDate());
 
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
+                recruitDeadlineToSave, request.preferredGender(), request.preferredAges(),
                 parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod(), request.companionType());
     }
 
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request) {
+    private LocalDate resolveRecruitDeadline(RecruitMethod method, LocalDate recruitDeadline, LocalDate startDate) {
+        if (method == RecruitMethod.ALWAYS && recruitDeadline == null) {
+            return startDate;
+        }
+        return recruitDeadline;
+    }
+
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadlineToSave) {
         Destination destinationForParse = destination != null ? destination : post.getDestination();
         String photoUrlsJson = request.photoUrls() != null
                 ? jsonConverter.convertListToJson(getFinalPhotoUrls(request.photoUrls(), destinationForParse))
@@ -177,7 +189,7 @@ public class PostService {
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                request.recruitDeadline(), request.preferredGender(), request.preferredAges(),
+                recruitDeadlineToSave, request.preferredGender(), request.preferredAges(),
                 photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod(), request.companionType());
     }
 
