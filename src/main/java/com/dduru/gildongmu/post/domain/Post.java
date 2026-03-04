@@ -237,6 +237,9 @@ public class Post extends BaseTimeEntity {
     }
 
     public int getDaysUntilRecruitDeadline() {
+        if (recruitDeadline == null) {
+            return Integer.MAX_VALUE;
+        }
         int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
         return Math.max(daysLeft, 0);
     }
@@ -258,6 +261,9 @@ public class Post extends BaseTimeEntity {
     }
 
     private boolean isRecruitDeadlinePassed() {
+        if (recruitDeadline == null) {
+            return false;
+        }
         return LocalDate.now().isAfter(recruitDeadline);
     }
 
