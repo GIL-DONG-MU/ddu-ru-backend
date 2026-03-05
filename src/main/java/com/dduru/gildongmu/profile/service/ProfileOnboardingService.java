@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,13 +39,13 @@ public class ProfileOnboardingService {
         profile.setupInitialProfile(
                 request.gender(),
                 request.phoneNumber(),
-                LocalDate.parse(request.birthday().trim(), DATE_FORMATTER)
+                parseBirthDate(request.birthday())
         );
 
         try {
             profileRepository.save(profile);
         } catch (DataIntegrityViolationException e) {
-            if (isNicknameDuplicateViolation(e)) {
+            if (isPhoneNumberDuplicateViolation(e)) {
                 log.warn("전화번호 중복으로 프로필 저장 실패: phoneNumber={}, userId={}", request.phoneNumber(), userId, e);
                 throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
             }
@@ -60,7 +61,7 @@ public class ProfileOnboardingService {
         }
     }
 
-/*    private LocalDate parseBirthDate(String birthDateString) {
+    private LocalDate parseBirthDate(String birthDateString) {
         if (birthDateString == null || birthDateString.trim().isEmpty()) {
             return null;
         }
@@ -71,7 +72,7 @@ public class ProfileOnboardingService {
             log.warn("생년월일 파싱 실패: {}", birthDateString, e);
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd 형식)");
         }
-    }*/
+    }
 
     private void validateVerificationToken(String verificationToken, String phoneNumber) {
         if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
@@ -79,7 +80,7 @@ public class ProfileOnboardingService {
         }
     }
 
-    private boolean isNicknameDuplicateViolation(DataIntegrityViolationException e){
+    private boolean isPhoneNumberDuplicateViolation(DataIntegrityViolationException e){
         if (e.getMostSpecificCause().getMessage().contains("phone_number")) {
             return true;
         }

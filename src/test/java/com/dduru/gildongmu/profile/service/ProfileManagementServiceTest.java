@@ -75,7 +75,7 @@ class ProfileManagementServiceTest {
 
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
         when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
-        when(profileRepository.existsByNicknameWithLock(request.nickname())).thenReturn(false);
+        when(profileRepository.existsByNickname(request.nickname())).thenReturn(false);
 
         // when
         profileManagementService.updateProfile(1L, request);
@@ -86,7 +86,7 @@ class ProfileManagementServiceTest {
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.UPLOADED);
         assertThat(profile.getBgColor()).isSameAs(bgColor);
         assertThat(profile.getBio()).isEqualTo("안녕하세요");
-        verify(profileRepository).existsByNicknameWithLock("뉴닉네임");
+        verify(profileRepository).existsByNickname("뉴닉네임");
         verify(onboardingService).completeProfile(1L);
     }
 
@@ -112,7 +112,7 @@ class ProfileManagementServiceTest {
 
         // then
         assertThat(profile.getNickname()).isEqualTo("동일닉네임");
-        verify(profileRepository, never()).existsByNicknameWithLock(any());
+        verify(profileRepository, never()).existsByNickname(any());
         verify(onboardingService).completeProfile(1L);
     }
 
@@ -129,7 +129,7 @@ class ProfileManagementServiceTest {
         );
 
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-        when(profileRepository.existsByNicknameWithLock(request.nickname())).thenReturn(true);
+        when(profileRepository.existsByNickname(request.nickname())).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> profileManagementService.updateProfile(1L, request))
@@ -137,7 +137,7 @@ class ProfileManagementServiceTest {
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.NICKNAME_ALREADY_TAKEN);
 
-        verify(profileRepository, times(1)).existsByNicknameWithLock("중복닉네임");
+        verify(profileRepository, times(1)).existsByNickname("중복닉네임");
         verify(bgColorRepository).getByIdOrThrow(1L);
         verify(onboardingService, never()).completeProfile(anyLong());
     }
@@ -157,7 +157,7 @@ class ProfileManagementServiceTest {
         BgColor bgColor = BgColor.builder().hexCode("#ffffff").displayOrder(2).build();
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
         when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
-        when(profileRepository.existsByNicknameWithLock(request.nickname())).thenReturn(false);
+        when(profileRepository.existsByNickname(request.nickname())).thenReturn(false);
 
         // when
         profileManagementService.updateProfile(1L, request);

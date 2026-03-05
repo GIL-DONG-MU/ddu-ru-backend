@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,12 +13,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Profile 닉네임 검증 테스트")
 class ProfileTest {
-    private final Profile profile = new Profile(User.builder()
-            .email("test@example.com")
-            .name("테스트")
-            .oauthId("oauth-id")
-            .oauthType(OauthType.KAKAO)
-            .build());
+    private Profile profile;
+
+    @BeforeEach
+    void setUp() {
+        profile = new Profile(User.builder()
+                .email("test@example.com")
+                .name("테스트")
+                .oauthId("oauth-id")
+                .oauthType(OauthType.KAKAO)
+                .build());
+    }
 
     @Test
     @DisplayName("유효한 닉네임이면 변경 성공")

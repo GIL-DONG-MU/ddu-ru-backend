@@ -138,7 +138,7 @@ class ProfileOnboardingServiceTest {
         verify(onboardingService, never()).completeOnboarding(anyLong());
     }
 
-/*    @Test
+    @Test
     @DisplayName("생년월일 형식이 잘못되면 INVALID_INPUT_VALUE 예외 발생")
     void setupInitialProfile_잘못된생일_예외발생() {
         // given
@@ -161,5 +161,5 @@ class ProfileOnboardingServiceTest {
 
         verify(profileRepository, never()).save(profile);
         verify(onboardingService, never()).completeOnboarding(anyLong());
-    }*/
+    }
 }
