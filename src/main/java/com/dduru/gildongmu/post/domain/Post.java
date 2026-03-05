@@ -240,7 +240,7 @@ public class Post extends BaseTimeEntity {
         if (recruitDeadline == null) {
             return Integer.MAX_VALUE;
         }
-        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
+        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline);
         return Math.max(daysLeft, 0);
     }
 
