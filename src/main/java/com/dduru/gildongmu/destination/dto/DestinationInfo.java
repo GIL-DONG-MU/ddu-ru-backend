@@ -9,7 +9,6 @@ public record DestinationInfo(
         String countryCode,
         String countryName,
         String city,
-        String region,
         String image
 ) {
     public static DestinationInfo from(Destination destination) {
@@ -18,7 +17,6 @@ public record DestinationInfo(
                 .countryCode(destination.getCountryCode())
                 .countryName(destination.getCountryName())
                 .city(destination.getCity())
-                .region(destination.getRegion())
                 .image(destination.getImage())
                 .build();
     }
