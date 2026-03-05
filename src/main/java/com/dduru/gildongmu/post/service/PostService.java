@@ -12,6 +12,7 @@ import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
@@ -177,8 +178,7 @@ public class PostService {
     private List<ParticipantInfo> buildParticipants(Post post) {
         List<ParticipantInfo> result = new ArrayList<>();
         result.add(ParticipantInfo.from(post.getUser(), true));
-        participationRepository.findByPostIdOrderByCreatedAtAsc(post.getId()).stream()
-                .filter(Participation::isApproved)
+        participationRepository.findByPostIdAndStatusOrderByCreatedAtAsc(post.getId(), ParticipationStatus.APPROVED).stream()
                 .map(p -> ParticipantInfo.from(p.getUser(), false))
                 .forEach(result::add);
         return result;
