@@ -24,10 +24,7 @@ public record PostDetailResponse(
         Integer recruitCount,
         LocalDate recruitDeadline,
         Gender preferredGender,
-        AgeRange preferredAgeMin,
-        AgeRange preferredAgeMax,
-        Integer budgetMin,
-        Integer budgetMax,
+        List<AgeRange> preferredAges,
         List<String> photoUrls,
         List<String> tags,
         int viewCount,
@@ -38,6 +35,7 @@ public record PostDetailResponse(
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
+        List<AgeRange> preferredAges = post.getPreferredAges();
         UserInfo authorInfo = UserInfo.from(post.getUser());
 
         return new PostDetailResponse(
@@ -54,10 +52,7 @@ public record PostDetailResponse(
                 post.getRecruitCount(),
                 post.getRecruitDeadline(),
                 post.getPreferredGender(),
-                post.getPreferredAgeMin(),
-                post.getPreferredAgeMax(),
-                post.getBudgetMin(),
-                post.getBudgetMax(),
+                preferredAges,
                 photoUrls,
                 tags,
                 post.getViewCount(),
