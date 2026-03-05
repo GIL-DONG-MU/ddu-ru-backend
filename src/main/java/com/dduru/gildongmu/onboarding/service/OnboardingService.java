@@ -4,9 +4,11 @@ import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.dto.response.OnboardingStatusResponse;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OnboardingService {
@@ -15,31 +17,34 @@ public class OnboardingService {
 
     @Transactional(readOnly = true)
     public OnboardingStatusResponse getStatus(Long userId) {
-        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-        return OnboardingStatusResponse.from(userOnboarding);
+        return OnboardingStatusResponse.from(getUserOnboarding(userId));
     }
 
     @Transactional
     public void completeOnboarding(Long userId) {
-        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-        userOnboarding.completeOnboarding();
+        getUserOnboarding(userId).completeOnboarding();
+        log.info("유저의 개인정보 입력이 완료되었습니다. {}", userId);
     }
 
     @Transactional
     public void completeSurvey(Long userId) {
-        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-        userOnboarding.completeSurvey();
+        getUserOnboarding(userId).completeSurvey();
+        log.info("유저의 설문조사가 완료되었습니다. {}", userId);
     }
 
     @Transactional
     public void skipSurvey(Long userId) {
-        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-        userOnboarding.skipSurvey();
+        getUserOnboarding(userId).skipSurvey();
+        log.info("유저의 설문조사가 스킵되었습니다. {}", userId);
     }
 
     @Transactional
     public void completeProfile(Long userId) {
-        UserOnboarding userOnboarding = userOnboardingRepository.getByUserIdOrThrow(userId);
-        userOnboarding.completeProfile();
+        getUserOnboarding(userId).completeProfile();
+        log.info("유저의 프로필 설정이 완료되었습니다. {}", userId);
+    }
+
+    private UserOnboarding getUserOnboarding(Long userId) {
+        return userOnboardingRepository.getByUserIdOrThrow(userId);
     }
 }
