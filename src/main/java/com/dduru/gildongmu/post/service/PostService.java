@@ -19,6 +19,7 @@ import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
+import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -43,6 +44,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final ParticipationRepository participationRepository;
+    private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
@@ -113,7 +115,8 @@ public class PostService {
 
         boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
         boolean hasApplied = currentUserId != null && participationRepository.existsByPostIdAndUserId(postId, currentUserId);
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied);
+        boolean hasLiked = currentUserId != null && postLikeRepository.existsByUserIdAndPostId(postId, currentUserId);
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied, hasLiked);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
