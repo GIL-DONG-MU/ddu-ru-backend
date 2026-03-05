@@ -22,9 +22,6 @@ public class Destination {
     @Column(name = "country_name", nullable = false, length = 100)
     private String countryName;
 
-    @Column(length = 100)
-    private String region;
-
     @Column(nullable = false, length = 100)
     private String city;
 
@@ -32,10 +29,9 @@ public class Destination {
     private String image;
 
     @Builder
-    public Destination(String countryCode, String countryName, String region, String city, String image) {
+    public Destination(String countryCode, String countryName, String city, String image) {
         this.countryCode = countryCode;
         this.countryName = countryName;
-        this.region = region;
         this.city = city;
         this.image = image;
     }
