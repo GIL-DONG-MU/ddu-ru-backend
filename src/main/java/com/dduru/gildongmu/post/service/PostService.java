@@ -12,6 +12,8 @@ import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
@@ -31,6 +33,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -115,8 +118,9 @@ public class PostService {
 
         boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
         boolean hasApplied = currentUserId != null && participationRepository.existsByPostIdAndUserId(postId, currentUserId);
-        boolean hasLiked = currentUserId != null && postLikeRepository.existsByUserIdAndPostId(postId, currentUserId);
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied, hasLiked);
+        boolean hasLiked = currentUserId != null && postLikeRepository.existsByUserIdAndPostId(currentUserId, postId);
+        List<ParticipantInfo> participants = buildParticipants(post);
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied, hasLiked, participants);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
@@ -145,6 +149,16 @@ public class PostService {
             throw PostAccessDeniedException.ownerOnly();
         }
         return post;
+    }
+
+    private List<ParticipantInfo> buildParticipants(Post post) {
+        List<ParticipantInfo> result = new ArrayList<>();
+        result.add(ParticipantInfo.from(post.getUser(), true));
+        participationRepository.findByPostIdOrderByCreatedAtAsc(post.getId()).stream()
+                .filter(Participation::isApproved)
+                .map(p -> ParticipantInfo.from(p.getUser(), false))
+                .forEach(result::add);
+        return result;
     }
 
     private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,

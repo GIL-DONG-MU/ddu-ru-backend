@@ -33,9 +33,10 @@ public record PostDetailResponse(
         UserInfo author,
         boolean isOwner,
         boolean hasApplied,
-        boolean hasLiked
+        boolean hasLiked,
+        List<ParticipantInfo> participants
 ) {
-    public static PostDetailResponse from(Post post, JsonConverter jsonConverter, boolean isOwner, boolean hasApplied, boolean hasLiked) {
+    public static PostDetailResponse from(Post post, JsonConverter jsonConverter, boolean isOwner, boolean hasApplied, boolean hasLiked, List<ParticipantInfo> participants) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         List<AgeRange> preferredAges = post.getPreferredAges();
@@ -64,7 +65,8 @@ public record PostDetailResponse(
                 authorInfo,
                 isOwner,
                 hasApplied,
-                hasLiked
+                hasLiked,
+                participants
         );
     }
 }
