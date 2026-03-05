@@ -29,8 +29,8 @@ class DestinationServiceTest {
     @DisplayName("인기 여행지 목록을 조회하면 지정된 도시 순서대로 반환한다")
     @Test
     void getPopularDestinations_returnsInOrder() {
-        Destination jeju = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").region("제주").build();
-        Destination busan = Destination.builder().countryCode("KR").countryName("대한민국").city("부산").region("경상").build();
+        Destination jeju = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").build();
+        Destination busan = Destination.builder().countryCode("KR").countryName("대한민국").city("부산").build();
         when(destinationRepository.findByCityIn(List.of("제주도", "부산", "강릉", "후쿠오카", "오사카")))
                 .thenReturn(List.of(busan, jeju));
 
@@ -63,7 +63,7 @@ class DestinationServiceTest {
     @Test
     void searchDestinations_withKeyword_returnsSearchResults() {
         String keyword = "제주";
-        Destination dest = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").region("제주").build();
+        Destination dest = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").build();
         when(destinationRepository.searchByKeyword(keyword)).thenReturn(List.of(dest));
 
         List<DestinationInfo> result = destinationService.searchDestinations(keyword);
