@@ -30,7 +30,8 @@ public interface PostApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({ErrorCode.POST_NOT_FOUND})
     ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(
-            @Parameter(description = "게시글 ID") Long postId
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")

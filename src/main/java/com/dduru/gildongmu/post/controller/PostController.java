@@ -33,8 +33,11 @@ public class PostController implements PostApiDocs {
 
     @Override
     @GetMapping("/{postId}")
-    public ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(@PathVariable Long postId) {
-        PostDetailResponse response = postService.recordViewAndGetDetail(postId);
+    public ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(
+            @PathVariable Long postId,
+            @CurrentUser Long userId
+    ) {
+        PostDetailResponse response = postService.recordViewAndGetDetail(postId, userId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 

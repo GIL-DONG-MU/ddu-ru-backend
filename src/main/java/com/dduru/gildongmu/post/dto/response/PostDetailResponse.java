@@ -30,9 +30,10 @@ public record PostDetailResponse(
         int viewCount,
         int likeCount,
         LocalDateTime createdAt,
-        UserInfo author
+        UserInfo author,
+        boolean isOwner
 ) {
-    public static PostDetailResponse from(Post post, JsonConverter jsonConverter) {
+    public static PostDetailResponse from(Post post, JsonConverter jsonConverter, boolean isOwner) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         List<AgeRange> preferredAges = post.getPreferredAges();
@@ -58,7 +59,8 @@ public record PostDetailResponse(
                 post.getViewCount(),
                 post.getLikeCount(),
                 post.getCreatedAt(),
-                authorInfo
+                authorInfo,
+                isOwner
         );
     }
 }

@@ -103,13 +103,14 @@ public class PostService {
         return postRepository.closeExpiredPostsByDate(today);
     }
 
-    public PostDetailResponse recordViewAndGetDetail(Long postId) {
+    public PostDetailResponse recordViewAndGetDetail(Long postId, Long currentUserId) {
         log.debug("게시글 상세 조회(조회수 증가) - postId={}", postId);
 
         postRepository.incrementViewCount(postId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
+        boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
