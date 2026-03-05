@@ -5,12 +5,15 @@ import com.dduru.gildongmu.participation.exception.ParticipationNotFoundExceptio
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
-    
+
     List<Participation> findByPostIdOrderByCreatedAtAsc(Long postId);
-    
+
     boolean existsByPostIdAndUserId(Long postId, Long userId);
+
+    Optional<Participation> findByPostIdAndUserId(Long postId, Long userId);
 
     default Participation getByIdOrThrow(Long id) {
         return findById(id)

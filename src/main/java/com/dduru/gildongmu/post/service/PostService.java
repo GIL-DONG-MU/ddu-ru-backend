@@ -12,14 +12,15 @@ import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
-import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
+import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
+import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
@@ -117,10 +118,17 @@ public class PostService {
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
         boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
-        boolean hasApplied = currentUserId != null && participationRepository.existsByPostIdAndUserId(postId, currentUserId);
         boolean hasLiked = currentUserId != null && postLikeRepository.existsByUserIdAndPostId(currentUserId, postId);
         List<ParticipantInfo> participants = buildParticipants(post);
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied, hasLiked, participants);
+        MyParticipationStatus myParticipationStatus = resolveMyParticipationStatus(postId, currentUserId, isOwner);
+        PostDetailResponse response = PostDetailResponse.from(
+                post,
+                jsonConverter,
+                isOwner,
+                hasLiked,
+                participants,
+                myParticipationStatus
+        );
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
@@ -149,6 +157,21 @@ public class PostService {
             throw PostAccessDeniedException.ownerOnly();
         }
         return post;
+    }
+
+    private MyParticipationStatus resolveMyParticipationStatus(Long postId, Long currentUserId, boolean isOwner) {
+        if (currentUserId == null || isOwner) {
+            return MyParticipationStatus.NONE;
+        }
+
+        return participationRepository.findByPostIdAndUserId(postId, currentUserId)
+                .map(Participation::getStatus)
+                .map(status -> switch (status) {
+                    case PENDING -> MyParticipationStatus.PENDING;
+                    case APPROVED -> MyParticipationStatus.APPROVED;
+                    case REJECTED -> MyParticipationStatus.REJECTED;
+                })
+                .orElse(MyParticipationStatus.NONE);
     }
 
     private List<ParticipantInfo> buildParticipants(Post post) {
