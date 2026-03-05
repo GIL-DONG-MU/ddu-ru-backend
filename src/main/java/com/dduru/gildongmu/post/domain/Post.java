@@ -3,7 +3,10 @@ package com.dduru.gildongmu.post.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
+import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
@@ -24,6 +27,8 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -56,36 +61,24 @@ public class Post extends BaseTimeEntity {
     private LocalDate endDate;
 
     @Column(name = "recruit_capacity", nullable = false)
-    @ColumnDefault("1")
-    private Integer recruitCapacity = 1;
+    private Integer recruitCapacity;
 
     @Column(name = "recruit_count", nullable = false)
     @ColumnDefault("0")
     private Integer recruitCount = 0;
 
-    @Column(name = "recruit_deadline", nullable = false)
+    @Column(name = "recruit_deadline")
     private LocalDate recruitDeadline;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_gender", nullable = false)
-    @ColumnDefault("'U'")
-    private Gender preferredGender = Gender.U;
+    private Gender preferredGender;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_preferred_ages", joinColumns = @JoinColumn(name = "post_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_min", nullable = false)
-    @ColumnDefault("'UNKNOWN'")
-    private AgeRange preferredAgeMin = AgeRange.UNKNOWN;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_age_max", nullable = false)
-    @ColumnDefault("'UNKNOWN'")
-    private AgeRange preferredAgeMax = AgeRange.UNKNOWN;
-
-    @Column(name = "budget_min")
-    private Integer budgetMin;
-
-    @Column(name = "budget_max")
-    private Integer budgetMax;
+    @Column(name = "age_range", nullable = false)
+    private List<AgeRange> preferredAges = new ArrayList<>();
 
     @Column(name = "photo_urls", columnDefinition = "JSON")
     private String photoUrls;
@@ -115,34 +108,46 @@ public class Post extends BaseTimeEntity {
     @Column(name = "deleted_by")
     private Long deletedBy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recruit_type", nullable = false)
+    private RecruitType recruitType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recruit_method", nullable = false)
+    private RecruitMethod recruitMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "companion_type")
+    private CompanionType companionType;
+
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
+                LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
         this.content = content;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.recruitCapacity = recruitCapacity != null ? recruitCapacity : 1;
+        this.recruitCapacity = recruitCapacity;
         this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
-        this.preferredGender = preferredGender != null ? preferredGender : Gender.U;
-        this.preferredAgeMin = preferredAgeMin != null ? preferredAgeMin : AgeRange.UNKNOWN;
-        this.preferredAgeMax = preferredAgeMax != null ? preferredAgeMax : AgeRange.UNKNOWN;
-        this.budgetMin = budgetMin;
-        this.budgetMax = budgetMax;
+        this.preferredGender = preferredGender;
+        this.preferredAges = preferredAges;
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
+        this.recruitType = recruitType;
+        this.recruitMethod = recruitMethod;
+        this.companionType = companionType;
     }
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender, AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                                  Integer budgetMin, Integer budgetMax, String photoUrls, String tags) {
+                                  LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                                  String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -154,19 +159,19 @@ public class Post extends BaseTimeEntity {
                 .recruitCapacity(recruitCapacity)
                 .recruitDeadline(recruitDeadline)
                 .preferredGender(preferredGender)
-                .preferredAgeMin(preferredAgeMin)
-                .preferredAgeMax(preferredAgeMax)
-                .budgetMin(budgetMin)
-                .budgetMax(budgetMax)
+                .preferredAges(preferredAges)
                 .photoUrls(photoUrls)
                 .tags(tags)
+                .recruitType(recruitType)
+                .recruitMethod(recruitMethod)
+                .companionType(companionType)
                 .build();
     }
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                           LocalDate recruitDeadline, Gender preferredGender,AgeRange preferredAgeMin, AgeRange preferredAgeMax,
-                           Integer budgetMin, Integer budgetMax, String photoUrls, String tags){
+                           LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                           String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -176,14 +181,13 @@ public class Post extends BaseTimeEntity {
         if (endDate != null) this.endDate = endDate;
         if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
         if (preferredGender != null) this.preferredGender = preferredGender;
-        if (preferredAgeMin != null) this.preferredAgeMin = preferredAgeMin;
-        if (preferredAgeMax != null) this.preferredAgeMax = preferredAgeMax;
-        if (budgetMin != null) this.budgetMin = budgetMin;
-        if (budgetMax != null) this.budgetMax = budgetMax;
+        if (preferredAges != null) this.preferredAges = preferredAges;
         if (photoUrls != null) this.photoUrls = photoUrls;
         if (tags != null) this.tags = tags;
-
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
+        if (recruitType != null) this.recruitType = recruitType;
+        if (recruitMethod != null) this.recruitMethod = recruitMethod;
+        if (companionType != null) this.companionType = companionType;
     }
 
     public void softDelete(Long userId) {
@@ -233,6 +237,9 @@ public class Post extends BaseTimeEntity {
     }
 
     public int getDaysUntilRecruitDeadline() {
+        if (recruitDeadline == null) {
+            return Integer.MAX_VALUE;
+        }
         int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
         return Math.max(daysLeft, 0);
     }
@@ -254,6 +261,9 @@ public class Post extends BaseTimeEntity {
     }
 
     private boolean isRecruitDeadlinePassed() {
+        if (recruitDeadline == null) {
+            return false;
+        }
         return LocalDate.now().isAfter(recruitDeadline);
     }
 
