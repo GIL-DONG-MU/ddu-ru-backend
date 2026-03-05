@@ -1,11 +1,11 @@
 package com.dduru.gildongmu.profile.validator;
 
-import org.springframework.stereotype.Component;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Component
-public class NicknameBadWordValidator {
+@NoArgsConstructor
+public final class NicknameBadWordValidator {
 
     private static final List<String> BAD_WORDS = List.of("쓰레기"); // TODO: 교체 예정
 

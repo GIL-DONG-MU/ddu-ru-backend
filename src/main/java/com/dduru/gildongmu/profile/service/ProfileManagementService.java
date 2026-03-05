@@ -63,7 +63,7 @@ public class ProfileManagementService {
             return;
         }
 
-        if (profileRepository.existsByNicknameWithLock(nickname)) {
+        if (profileRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
     }

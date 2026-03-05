@@ -31,7 +31,7 @@ public class NicknameService {
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
         validateNickname(request.nickname());
-        checkDuplicateNicknameWithLock(request.nickname());
+        checkDuplicateNickname(request.nickname());
 
         profile.updateNickname(request.nickname());
     }
@@ -39,7 +39,7 @@ public class NicknameService {
     @Transactional(readOnly = true)
     public NicknameValidateResponse checkNickname(String nickname) {
         validateNickname(nickname);
-        checkDuplicateNicknameWithLock(nickname);
+        checkDuplicateNickname(nickname);
 
         return NicknameValidateResponse.builder()
                 .sanitizedNickname(nickname)
@@ -74,8 +74,8 @@ public class NicknameService {
         return NicknameRandomResponse.of(fallbackNickname);
     }
 
-    private void checkDuplicateNicknameWithLock(String nickname) {
-        if (profileRepository.existsByNicknameWithLock(nickname)) {
+    private void checkDuplicateNickname(String nickname) {
+        if (profileRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
     }
