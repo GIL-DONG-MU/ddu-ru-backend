@@ -18,6 +18,7 @@ import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
+import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -41,6 +42,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
+    private final ParticipationRepository participationRepository;
     private final JsonConverter jsonConverter;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
@@ -110,7 +112,8 @@ public class PostService {
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
         boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner);
+        boolean hasApplied = currentUserId != null && participationRepository.existsByPostIdAndUserId(postId, currentUserId);
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, isOwner, hasApplied);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
