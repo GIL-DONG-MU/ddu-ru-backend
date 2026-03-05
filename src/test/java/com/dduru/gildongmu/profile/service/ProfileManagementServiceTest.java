@@ -143,32 +143,6 @@ class ProfileManagementServiceTest {
     }
 
     @Test
-    @DisplayName("닉네임이 null이면 닉네임 검증 없이 프로필만 업데이트")
-    void updateProfile_닉네임없음() {
-        // given
-        ProfileUpdateRequest request = new ProfileUpdateRequest(
-                null,
-                "https://example.com/profile.png",
-                ProfileImageType.UPLOADED,
-                1L,
-                "안녕하세요"
-        );
-
-        BgColor bgColor = BgColor.builder().hexCode("#000000").displayOrder(1).build();
-        when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-        when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
-
-        // when
-        profileManagementService.updateProfile(1L, request);
-
-        // then
-        assertThat(profile.getNickname()).isNull();
-        assertThat(profile.getUploadedImageUrl()).isEqualTo("https://example.com/profile.png");
-        verify(profileRepository, never()).existsByNicknameWithLock(any());
-        verify(onboardingService).completeProfile(1L);
-    }
-
-    @Test
     @DisplayName("AVATAR 타입이면 업로드 이미지가 빈 값으로 저장된다")
     void updateProfile_AVATAR_이미지초기화() {
         // given

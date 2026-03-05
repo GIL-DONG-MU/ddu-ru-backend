@@ -39,7 +39,7 @@ public class Profile extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", length = 20, unique = true)
     private String phoneNumber;
 
     @Column(name = "birthday")

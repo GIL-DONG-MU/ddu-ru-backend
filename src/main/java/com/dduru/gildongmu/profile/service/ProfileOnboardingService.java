@@ -9,12 +9,12 @@ import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,24 +33,34 @@ public class ProfileOnboardingService {
 
         validateVerificationToken(request.verificationToken(), request.phoneNumber());
 
-        if (profileRepository.existsByPhoneNumber(request.phoneNumber())) {
-            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
-        }
-
-        LocalDate birthday = parseBirthDate(request.birthday());
+        checkDuplicatePhoneNumber(request.phoneNumber());
 
         profile.setupInitialProfile(
                 request.gender(),
                 request.phoneNumber(),
-                birthday
+                LocalDate.parse(request.birthday().trim(), DATE_FORMATTER)
         );
 
-        profileRepository.save(profile);
+        try {
+            profileRepository.save(profile);
+        } catch (DataIntegrityViolationException e) {
+            if (isNicknameDuplicateViolation(e)) {
+                log.warn("전화번호 중복으로 프로필 저장 실패: phoneNumber={}, userId={}", request.phoneNumber(), userId, e);
+                throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+            }
+            throw e;
+        }
         onboardingService.completeOnboarding(userId);
         log.debug("프로필 초기 설정 완료: userId={}", userId);
     }
 
-    private LocalDate parseBirthDate(String birthDateString) {
+    private void checkDuplicatePhoneNumber(String phoneNumber) {
+        if (profileRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
+    }
+
+/*    private LocalDate parseBirthDate(String birthDateString) {
         if (birthDateString == null || birthDateString.trim().isEmpty()) {
             return null;
         }
@@ -61,16 +71,18 @@ public class ProfileOnboardingService {
             log.warn("생년월일 파싱 실패: {}", birthDateString, e);
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd 형식)");
         }
-    }
+    }*/
 
     private void validateVerificationToken(String verificationToken, String phoneNumber) {
-        if (verificationToken == null || verificationToken.trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN, "인증 토큰이 필요합니다.");
-        }
-
         if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않거나 만료된 인증 토큰입니다.");
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
 
+    private boolean isNicknameDuplicateViolation(DataIntegrityViolationException e){
+        if (e.getMostSpecificCause().getMessage().contains("phone_number")) {
+            return true;
+        }
+        return false;
+    }
 }
