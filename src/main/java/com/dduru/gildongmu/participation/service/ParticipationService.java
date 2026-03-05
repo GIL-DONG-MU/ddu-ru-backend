@@ -52,14 +52,13 @@ public class ParticipationService {
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
+        Post post = participation.getPost();
+        validatePostOwner(post, userId);
 
         if (participation.isApproved()) {
             log.info("이미 승인된 참여신청 - participationId: {}, postId: {}", participationId, postId);
             return;
         }
-
-        Post post = participation.getPost();
-        validatePostOwner(post, userId);
 
         post.approveParticipation(participation);
 
@@ -72,14 +71,13 @@ public class ParticipationService {
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
+        Post post = participation.getPost();
+        validatePostOwner(post, userId);
 
         if (participation.getStatus() == ParticipationStatus.REJECTED) {
             log.info("이미 거절된 참여신청 - participationId: {}, postId: {}", participationId, postId);
             return;
         }
-
-        Post post = participation.getPost();
-        validatePostOwner(post, userId);
 
         post.removeApprovedParticipation(participation);
         participation.reject();
