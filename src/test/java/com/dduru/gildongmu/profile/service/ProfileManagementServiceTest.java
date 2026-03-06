@@ -19,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -58,7 +57,6 @@ class ProfileManagementServiceTest {
                 .oauthType(OauthType.KAKAO)
                 .build();
         profile = new Profile(testUser);
-        ReflectionTestUtils.setField(profileManagementService, "defaultProfileImageUrl", "https://example.com/default.png");
     }
 
     @Test
@@ -190,9 +188,17 @@ class ProfileManagementServiceTest {
     }
 
     @Test
-    @DisplayName("DEFAULT 타입이면 기본 이미지가 저장된다")
-    void updateProfile_DEFAULT_기본이미지저장() {
+    @DisplayName("DEFAULT 타입으로 변경하면 업로드 이미지 URL은 저장되지 않는다")
+    void updateProfile_DEFAULT_업로드이미지미저장() {
         // given
+        profile.updateProfile(
+                "기존닉네임",
+                "https://example.com/uploaded.png",
+                ProfileImageType.UPLOADED,
+                null,
+                "이전 소개글"
+        );
+
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 "기본닉네임",
                 null,
@@ -209,7 +215,7 @@ class ProfileManagementServiceTest {
 
         // then
         assertThat(profile.getNickname()).isEqualTo("기본닉네임");
-        assertThat(profile.getUploadedImageUrl()).isEqualTo("https://example.com/default.png");
+        assertThat(profile.getUploadedImageUrl()).isNull();
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.DEFAULT);
         assertThat(profile.getBgColor()).isNull();
         verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
