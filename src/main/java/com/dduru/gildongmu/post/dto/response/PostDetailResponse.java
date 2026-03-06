@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
@@ -32,11 +33,11 @@ public record PostDetailResponse(
         LocalDateTime createdAt,
         UserInfo author
 ) {
-    public static PostDetailResponse from(Post post, JsonConverter jsonConverter) {
+    public static PostDetailResponse from(Post post, JsonConverter jsonConverter, ProfileImageResolver profileImageResolver) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         List<AgeRange> preferredAges = post.getPreferredAges();
-        UserInfo authorInfo = UserInfo.from(post.getUser());
+        UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         return new PostDetailResponse(
                 post.getId(),

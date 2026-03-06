@@ -3,6 +3,7 @@ package com.dduru.gildongmu.user.dto;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.user.domain.User;
 
@@ -20,18 +21,16 @@ public record UserInfo(
         LocalDate birthday,
         String nickname
 ) {
-    public static UserInfo from(User user) {
+    public static UserInfo from(User user, ProfileImageResolver profileImageResolver) {
         Profile profile = user.getProfile();
         ProfileImageType imageType = profile.getProfileImageType();
 
-        String profileImage = null;
+        String profileImage = profileImageResolver.resolve(profile);
         AvatarType avatarType = null;
         Long bgColorId = null;
         String bgColorHex = null;
 
-        if (imageType == ProfileImageType.UPLOADED || imageType == ProfileImageType.DEFAULT) {
-            profileImage = profile.getUploadedImageUrl();
-        } else if (imageType == ProfileImageType.AVATAR) {
+        if (imageType == ProfileImageType.AVATAR) {
             avatarType = profile.getAvatar() != null
                     ? profile.getAvatar().getAvatarType()
                     : null;

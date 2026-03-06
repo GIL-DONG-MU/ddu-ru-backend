@@ -84,7 +84,9 @@ public class Profile extends BaseTimeEntity {
 
         updateNickname(nickname);
 
-        if (uploadedImageUrl != null) {
+        if (profileImageType == ProfileImageType.DEFAULT) {
+            this.uploadedImageUrl = null;
+        } else if (uploadedImageUrl != null) {
             this.uploadedImageUrl = uploadedImageUrl;
         }
         if (profileImageType != null) {

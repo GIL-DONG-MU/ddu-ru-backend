@@ -13,7 +13,6 @@ import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,9 +25,6 @@ public class ProfileManagementService {
     private final BgColorRepository bgColorRepository;
     private final AvatarProfileRepository avatarProfileRepository;
     private final OnboardingService onboardingService;
-
-    @Value("${profile.default-image-url}")
-    private String defaultProfileImageUrl;
 
     @Transactional
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
@@ -72,7 +68,7 @@ public class ProfileManagementService {
             case AVATAR -> profile.updateProfile(
                     request.nickname(), "", ProfileImageType.AVATAR, bgColor, request.bio());
             case DEFAULT -> profile.updateProfile(
-                    request.nickname(), defaultProfileImageUrl, ProfileImageType.DEFAULT, null, request.bio()
+                    request.nickname(), null, ProfileImageType.DEFAULT, null, request.bio()
             );
         }
     }

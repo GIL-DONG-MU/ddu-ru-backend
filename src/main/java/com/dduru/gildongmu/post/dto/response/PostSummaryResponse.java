@@ -3,6 +3,7 @@ package com.dduru.gildongmu.post.dto.response;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
@@ -26,9 +27,9 @@ public record PostSummaryResponse(
         int likeCount,
         UserInfo author
 ) {
-    public static PostSummaryResponse from(Post post, JsonConverter jsonConverter) {
+    public static PostSummaryResponse from(Post post, JsonConverter jsonConverter, ProfileImageResolver profileImageResolver) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
-        UserInfo authorInfo = UserInfo.from(post.getUser());
+        UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         return new PostSummaryResponse(
                 post.getId(),

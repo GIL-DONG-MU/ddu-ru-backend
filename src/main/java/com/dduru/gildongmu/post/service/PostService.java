@@ -19,6 +19,7 @@ import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 - userId={}", userId);
@@ -109,7 +111,7 @@ public class PostService {
         postRepository.incrementViewCount(postId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
-        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter);
+        PostDetailResponse response = PostDetailResponse.from(post, jsonConverter, profileImageResolver);
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
