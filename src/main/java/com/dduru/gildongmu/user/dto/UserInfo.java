@@ -29,7 +29,7 @@ public record UserInfo(
         Long bgColorId = null;
         String bgColorHex = null;
 
-        if (imageType == ProfileImageType.UPLOADED) {
+        if (imageType == ProfileImageType.UPLOADED || imageType == ProfileImageType.DEFAULT) {
             profileImage = profile.getUploadedImageUrl();
         } else if (imageType == ProfileImageType.AVATAR) {
             avatarType = profile.getAvatar() != null
