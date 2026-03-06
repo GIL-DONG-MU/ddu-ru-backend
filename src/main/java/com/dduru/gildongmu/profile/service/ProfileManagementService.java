@@ -33,7 +33,7 @@ public class ProfileManagementService {
     @Transactional
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
-        BgColor bgColor = bgColorRepository.getByIdOrThrow(request.bgColorId());
+        BgColor bgColor = resolveBgColor(request);
 
         checkDuplicateNickname(profile, request.nickname());
 
@@ -51,6 +51,18 @@ public class ProfileManagementService {
 
         profile.updateAvatar(avatar);
         log.debug("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
+    }
+
+    private BgColor resolveBgColor(ProfileUpdateRequest request) {
+        if (request.profileImageType() != ProfileImageType.AVATAR) {
+            return null;
+        }
+
+        if (request.bgColorId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "AVATAR 타입에는 bgColorId가 필요합니다.");
+        }
+
+        return bgColorRepository.getByIdOrThrow(request.bgColorId());
     }
 
     private void updateProfileBasedOnProfileImageType(Profile profile, BgColor bgColor, ProfileUpdateRequest request) {
