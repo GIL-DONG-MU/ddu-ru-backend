@@ -55,6 +55,9 @@ coolsms:
   api-secret: dummy
   from-number: 01000000000
 
+profile:
+    default-image-url: http://example.com/default-profile.png
+
 logging:
   level:
     com.dduru.gildongmu: debug
