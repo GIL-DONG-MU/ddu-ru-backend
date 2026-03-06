@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -57,6 +58,7 @@ class ProfileManagementServiceTest {
                 .oauthType(OauthType.KAKAO)
                 .build();
         profile = new Profile(testUser);
+        ReflectionTestUtils.setField(profileManagementService, "defaultProfileImageUrl", "https://example.com/default.png");
     }
 
     @Test
@@ -67,14 +69,11 @@ class ProfileManagementServiceTest {
                 "뉴닉네임",
                 "https://example.com/profile.png",
                 ProfileImageType.UPLOADED,
-                1L,
+                null,
                 "안녕하세요"
         );
 
-        BgColor bgColor = BgColor.builder().hexCode("#000000").displayOrder(1).build();
-
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-        when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
         when(profileRepository.existsByNickname(request.nickname())).thenReturn(false);
 
         // when
@@ -84,9 +83,10 @@ class ProfileManagementServiceTest {
         assertThat(profile.getNickname()).isEqualTo("뉴닉네임");
         assertThat(profile.getUploadedImageUrl()).isEqualTo("https://example.com/profile.png");
         assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.UPLOADED);
-        assertThat(profile.getBgColor()).isSameAs(bgColor);
+        assertThat(profile.getBgColor()).isNull();
         assertThat(profile.getBio()).isEqualTo("안녕하세요");
         verify(profileRepository).existsByNickname("뉴닉네임");
+        verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
         verify(onboardingService).completeProfile(1L);
     }
 
@@ -99,13 +99,11 @@ class ProfileManagementServiceTest {
                 "동일닉네임",
                 "https://example.com/profile.png",
                 ProfileImageType.UPLOADED,
-                1L,
+                null,
                 "안녕하세요"
         );
 
-        BgColor bgColor = BgColor.builder().hexCode("#000000").displayOrder(1).build();
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-        when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
 
         // when
         profileManagementService.updateProfile(1L, request);
@@ -113,6 +111,7 @@ class ProfileManagementServiceTest {
         // then
         assertThat(profile.getNickname()).isEqualTo("동일닉네임");
         verify(profileRepository, never()).existsByNickname(any());
+        verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
         verify(onboardingService).completeProfile(1L);
     }
 
@@ -124,7 +123,7 @@ class ProfileManagementServiceTest {
                 "중복닉네임",
                 "https://example.com/profile.png",
                 ProfileImageType.UPLOADED,
-                1L,
+                null,
                 "안녕하세요"
         );
 
@@ -138,7 +137,7 @@ class ProfileManagementServiceTest {
                 .isEqualTo(ErrorCode.NICKNAME_ALREADY_TAKEN);
 
         verify(profileRepository, times(1)).existsByNickname("중복닉네임");
-        verify(bgColorRepository).getByIdOrThrow(1L);
+        verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
         verify(onboardingService, never()).completeProfile(anyLong());
     }
 
@@ -176,18 +175,44 @@ class ProfileManagementServiceTest {
                 "유효하지않은",
                 null,
                 ProfileImageType.UPLOADED,
-                1L,
+                null,
                 "안녕하세요"
         );
 
-        BgColor bgColor = BgColor.builder().hexCode("#000000").displayOrder(1).build();
         when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-        when(bgColorRepository.getByIdOrThrow(1L)).thenReturn(bgColor);
 
         // when & then
         assertThatThrownBy(() -> profileManagementService.updateProfile(1L, request))
                 .isInstanceOf(InvalidProfileImageUrlException.class);
 
+        verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
         verify(onboardingService, never()).completeProfile(anyLong());
+    }
+
+    @Test
+    @DisplayName("DEFAULT 타입이면 기본 이미지가 저장된다")
+    void updateProfile_DEFAULT_기본이미지저장() {
+        // given
+        ProfileUpdateRequest request = new ProfileUpdateRequest(
+                "기본닉네임",
+                null,
+                ProfileImageType.DEFAULT,
+                null,
+                "안녕하세요"
+        );
+
+        when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
+        when(profileRepository.existsByNickname(request.nickname())).thenReturn(false);
+
+        // when
+        profileManagementService.updateProfile(1L, request);
+
+        // then
+        assertThat(profile.getNickname()).isEqualTo("기본닉네임");
+        assertThat(profile.getUploadedImageUrl()).isEqualTo("https://example.com/default.png");
+        assertThat(profile.getProfileImageType()).isEqualTo(ProfileImageType.DEFAULT);
+        assertThat(profile.getBgColor()).isNull();
+        verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
+        verify(onboardingService).completeProfile(1L);
     }
 }
