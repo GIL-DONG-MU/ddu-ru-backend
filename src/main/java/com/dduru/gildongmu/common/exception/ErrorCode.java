@@ -6,13 +6,31 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
+    // 공통 (COMMON)
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력 값입니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
+    JSON_CONVERT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "JSON 변환 중 오류가 발생했습니다."),
+    NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다."),
+
     // 인증 (AUTH)
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 인증 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
     UNSUPPORTED_SOCIAL_LOGIN(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
     SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "소셜 로그인에 실패했습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 다른 소셜 계정으로 가입된 이메일입니다."),
+
+    // 휴대폰 인증 (VERIFICATION)
+    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
+    INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다."),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "재발송 제한 시간이 지나지 않았습니다."),
+    VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."),
+    VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.BAD_REQUEST, "검증 시도 횟수를 초과했습니다."),
+    ALREADY_VERIFIED(HttpStatus.CONFLICT, "이미 완료된 인증입니다."),
+    DAILY_SMS_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "일일 SMS 발송 한도를 초과했습니다."),
+    DUPLICATE_PHONE_NUMBER(HttpStatus.CONFLICT, "이미 가입된 전화번호입니다."),
+    SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스에 일시적인 오류가 발생했습니다."),
 
     // 닉네임 (NICKNAME)
     NICKNAME_NOT_BLANK(HttpStatus.BAD_REQUEST, "닉네임은 공백일 수 없습니다."),
@@ -22,6 +40,16 @@ public enum ErrorCode {
     NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "닉네임에 부적절한 단어가 포함되어 있습니다."),
     NICKNAME_ALREADY_TAKEN(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     NICKNAME_CONTAINS_EMOJI_OR_SYMBOL(HttpStatus.BAD_REQUEST, "닉네임에 이모지 또는 특수 기호는 사용할 수 없습니다."),
+
+    // 설문 (SURVEY)
+    SURVEY_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "설문 결과를 찾을 수 없습니다."),
+    AVATAR_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "아바타 프로필을 찾을 수 없습니다."),
+    SURVEY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "설문조사가 이미 완료된 상태에서는 스킵할 수 없습니다."),
+
+    // 프로필 (PROFILE)
+    BG_COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "배경색을 찾을 수 없습니다."),
+    INVALID_PROFILE_IMAGE_URL(HttpStatus.BAD_REQUEST, "프로필 이미지 URL이 유효하지 않습니다."),
+    USER_ONBOARDING_NOT_FOUND(HttpStatus.NOT_FOUND, "유저 온보딩 정보를 찾을 수 없습니다."),
 
     // 사용자 (USER)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
@@ -50,11 +78,6 @@ public enum ErrorCode {
     // 여행지 (DESTINATION)
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."),
 
-    // 프로필 (PROFILE)
-    BG_COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "배경색을 찾을 수 없습니다."),
-    INVALID_PROFILE_IMAGE_URL(HttpStatus.BAD_REQUEST, "프로필 이미지 URL이 유효하지 않습니다."),
-    USER_ONBOARDING_NOT_FOUND(HttpStatus.NOT_FOUND, "유저 온보딩 정보를 찾을 수 없습니다."),
-
     // 참여신청 (PARTICIPATION)
     PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "참여신청을 찾을 수 없습니다."),
     DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "이미 참여신청한 게시글입니다."),
@@ -65,29 +88,7 @@ public enum ErrorCode {
     // 파일 (FILE)
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
-    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다."),
-
-    // 설문 (SURVEY)
-    SURVEY_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "설문 결과를 찾을 수 없습니다."),
-    AVATAR_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "아바타 프로필을 찾을 수 없습니다."),
-
-    // 휴대폰 인증 (VERIFICATION)
-    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
-    INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다."),
-    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "재발송 제한 시간이 지나지 않았습니다."),
-    VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "인증 정보를 찾을 수 없습니다."),
-    VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.BAD_REQUEST, "검증 시도 횟수를 초과했습니다."),
-    ALREADY_VERIFIED(HttpStatus.CONFLICT, "이미 완료된 인증입니다."),
-    DAILY_SMS_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "일일 SMS 발송 한도를 초과했습니다."),
-    DUPLICATE_PHONE_NUMBER(HttpStatus.CONFLICT, "이미 가입된 전화번호입니다."),
-    SMS_PROVIDER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 서비스에 일시적인 오류가 발생했습니다."),
-
-    // 공통 (COMMON)
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력 값입니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
-    JSON_CONVERT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "JSON 변환 중 오류가 발생했습니다."),
-    NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다.");
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다.");
 
     private final int status;
     private final String message;
