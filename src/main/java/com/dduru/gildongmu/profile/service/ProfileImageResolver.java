@@ -18,7 +18,7 @@ public class ProfileImageResolver {
         return switch (profile.getProfileImageType()) {
             case DEFAULT -> defaultProfileImageUrl;
             case UPLOADED -> profile.getUploadedImageUrl();
-            case AVATAR -> null;
+            case AVATAR -> profile.getAvatar().getImageUrl();
         };
     }
 }
