@@ -52,9 +52,12 @@ public class ProfileManagementService {
     private void updateProfileBasedOnProfileImageType(Profile profile, BgColor bgColor, ProfileUpdateRequest request) {
         switch (request.profileImageType()) {
             case UPLOADED -> profile.updateProfile(
-                    request.nickname(), request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
+                    request.nickname(), request.uploadedImageUrl(), ProfileImageType.UPLOADED, null, request.bio());
             case AVATAR -> profile.updateProfile(
                     request.nickname(), "", ProfileImageType.AVATAR, bgColor, request.bio());
+            case DEFAULT -> profile.updateProfile(
+                    request.nickname(), null, ProfileImageType.DEFAULT, null, request.bio()
+            );
         }
     }
 
