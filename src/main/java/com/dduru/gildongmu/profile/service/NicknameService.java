@@ -3,8 +3,8 @@ package com.dduru.gildongmu.profile.service;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.profile.domain.Profile;
-import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
+import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.NicknameGenerator;
@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.dduru.gildongmu.profile.domain.Profile.validateNickname;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,13 +30,15 @@ public class NicknameService {
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
-        checkDuplicateNicknameWithLock(request.nickname());
+        validateNickname(request.nickname());
+        checkDuplicateNickname(request.nickname());
 
         profile.updateNickname(request.nickname());
     }
 
     @Transactional(readOnly = true)
     public NicknameValidateResponse checkNickname(String nickname) {
+        validateNickname(nickname);
         checkDuplicateNickname(nickname);
 
         return NicknameValidateResponse.builder()
@@ -72,12 +76,6 @@ public class NicknameService {
 
     private void checkDuplicateNickname(String nickname) {
         if (profileRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
-    }
-
-    private void checkDuplicateNicknameWithLock(String nickname) {
-        if (profileRepository.existsByNicknameWithLock(nickname)) {
             throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
         }
     }
