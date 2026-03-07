@@ -2,6 +2,7 @@ package com.dduru.gildongmu.profile.dto.request;
 
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,10 +18,13 @@ public record ProfileUpdateRequest(
         @NotNull
         ProfileImageType profileImageType,
 
-        @NotNull
         Long bgColorId,
 
         @Size(max = 60)
         String bio
 ) {
+    @AssertTrue(message = "AVATAR 타입에는 bgColorId가 필요합니다.")
+    public boolean isBgColorIdValid() {
+        return profileImageType != ProfileImageType.AVATAR || bgColorId != null;
+    }
 }

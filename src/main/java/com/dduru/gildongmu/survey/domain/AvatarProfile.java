@@ -25,6 +25,9 @@ public class AvatarProfile extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String description;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String personality;
 
@@ -38,9 +41,10 @@ public class AvatarProfile extends BaseTimeEntity {
     private String tags;
 
     @Builder
-    public AvatarProfile(AvatarType avatarType, String description, String personality, String strength, String tip, String tags) {
+    public AvatarProfile(AvatarType avatarType, String description, String imageUrl, String personality, String strength, String tip, String tags) {
         this.avatarType = avatarType;
         this.description = description;
+        this.imageUrl = imageUrl;
         this.personality = personality;
         this.strength = strength;
         this.tip = tip;

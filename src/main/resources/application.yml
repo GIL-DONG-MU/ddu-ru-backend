@@ -44,6 +44,9 @@ coolsms:
     api-secret: ${COOLSMS_API_SECRET}
     from-number: ${COOLSMS_FROM_NUMBER}
 
+profile:
+  default-image-url: ${PROFILE_DEFAULT_IMAGE_URL}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.comment.service;
 import com.dduru.gildongmu.comment.domain.Comment;
 import com.dduru.gildongmu.comment.dto.response.CommentResponse;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class CommentQueryService {
 
     private final CommentRepository commentRepository;
+    private final ProfileImageResolver profileImageResolver;
 
     public List<CommentResponse> retrieve(Long postId) {
         log.debug("댓글 목록 조회 시작 - postId: {}", postId);
@@ -42,7 +44,7 @@ public class CommentQueryService {
 
         List<CommentResponse> result = rootComments.stream()
                 .filter(comment -> !comment.isDeleted() || !comment.getChildren().isEmpty())
-                .map(CommentResponse::from)
+                .map(comment -> CommentResponse.from(comment, profileImageResolver))
                 .toList();
 
         log.info("댓글 목록 조회 완료 - postId: {}, 댓글 수: {}", postId, result.size());

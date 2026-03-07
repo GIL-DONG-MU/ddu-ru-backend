@@ -15,6 +15,7 @@ public record SurveyResponse(
         AvatarType avatarType,
         String avatarName,
         String avatarDescription,
+        String imageUrl,
         String personality,
         String strength,
         String tip,
@@ -22,7 +23,7 @@ public record SurveyResponse(
 ) {
     public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
         AvatarType avatarType = travelTendency.getAvatarType();
-        AvatarProfileResponse profile = avatarProfileService.getProfile(avatarType);
+        AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
         return new SurveyResponse(
                 travelTendency.getR().doubleValue(),
@@ -32,29 +33,31 @@ public record SurveyResponse(
                 avatarType.getCode(),
                 avatarType,
                 avatarType.getText(),
-                profile.description(),
-                profile.personality(),
-                profile.strength(),
-                profile.tip(),
-                profile.tags()
+                avatarProfile.description(),
+                avatarProfile.imageUrl(),
+                avatarProfile.personality(),
+                avatarProfile.strength(),
+                avatarProfile.tip(),
+                avatarProfile.tags()
         );
     }
 
     public static SurveyResponse of(
             double r, double w, double s, double p,
             AvatarType avatarType,
-            AvatarProfileResponse profile
+            AvatarProfileResponse avatarProfile
     ) {
         return new SurveyResponse(
                 r, w, s, p,
                 avatarType.getCode(),
                 avatarType,
                 avatarType.getText(),
-                profile.description(),
-                profile.personality(),
-                profile.strength(),
-                profile.tip(),
-                profile.tags()
+                avatarProfile.description(),
+                avatarProfile.imageUrl(),
+                avatarProfile.personality(),
+                avatarProfile.strength(),
+                avatarProfile.tip(),
+                avatarProfile.tags()
         );
     }
 }
