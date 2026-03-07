@@ -53,6 +53,8 @@ services:
       COOLSMS_API_KEY: ${COOLSMS_API_KEY}
       COOLSMS_API_SECRET: ${COOLSMS_API_SECRET}
       COOLSMS_FROM_NUMBER: ${COOLSMS_FROM_NUMBER}
+      # profile 설정
+      PROFILE_DEFAULT_IMAGE_URL: ${PROFILE_DEFAULT_IMAGE_URL}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]

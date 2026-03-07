@@ -1,6 +1,8 @@
 package com.dduru.gildongmu.comment.dto.response;
 
 import com.dduru.gildongmu.comment.domain.Comment;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +17,9 @@ public record CommentResponse(
         int likeCount,
         List<CommentResponse> children
 ) {
-    public static CommentResponse from(Comment comment) {
+    public static CommentResponse from(Comment comment, ProfileImageResolver profileImageResolver) {
         List<CommentResponse> childrenResponses = comment.getChildren().stream()
-                .map(CommentResponse::from)
+                .map(child -> from(child, profileImageResolver))
                 .collect(Collectors.toList());
 
         String content;
@@ -33,9 +35,10 @@ public record CommentResponse(
             author = "알 수 없음";
             authorProfileImage = null;
         } else {
+            Profile profile = comment.getUser().getProfile();
             content = comment.getContent();
-            author = comment.getUser().getProfile().getNickname();
-            authorProfileImage = comment.getUser().getProfile().getUploadedImageUrl();
+            author = profile.getNickname();
+            authorProfileImage = profileImageResolver.resolve(profile);
         }
 
         return new CommentResponse(

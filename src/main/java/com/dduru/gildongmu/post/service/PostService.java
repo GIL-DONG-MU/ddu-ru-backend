@@ -25,6 +25,7 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class PostService {
     private final ParticipationRepository participationRepository;
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 - userId={}", userId);
@@ -128,7 +130,8 @@ public class PostService {
                 isOwner,
                 hasLiked,
                 participants,
-                myParticipationStatus
+                myParticipationStatus,
+                profileImageResolver
         );
         log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;

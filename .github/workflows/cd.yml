@@ -92,6 +92,7 @@ jobs:
             export AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
             export AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}
             export AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}
+            export PROFILE_DEFAULT_IMAGE_URL=${{ secrets.PROFILE_DEFAULT_IMAGE_URL }}
             
             # CoolSMS 설정
             export COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}

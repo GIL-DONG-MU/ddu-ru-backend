@@ -29,34 +29,15 @@ public class ProfileManagementService {
     @Transactional
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
-        BgColor bgColor = bgColorRepository.getByIdOrThrow(request.bgColorId());
+        BgColor bgColor = resolveBgColor(request);
 
-        if (request.nickname() != null) {
-            applyNickname(profile, request.nickname());
-        }
+        checkDuplicateNickname(profile, request.nickname());
 
-        switch (request.profileImageType()) {
-            case UPLOADED -> profile.updateProfile(
-                    request.nickname(), request.uploadedImageUrl(), ProfileImageType.UPLOADED, bgColor, request.bio());
-            case AVATAR -> profile.updateProfile(
-                    request.nickname(), "", ProfileImageType.AVATAR, bgColor, request.bio());
-        }
+        updateProfileBasedOnProfileImageType(profile, bgColor, request);
 
         onboardingService.completeProfile(userId);
         log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
                 userId, request.profileImageType(), request.bgColorId());
-    }
-
-    private void applyNickname(Profile profile, String nickname) {
-        if (nickname.equals(profile.getNickname())) {
-            return;
-        }
-
-        if (profileRepository.existsByNicknameWithLock(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
-        }
-
-        profile.updateNickname(nickname);
     }
 
     @Transactional
@@ -66,5 +47,39 @@ public class ProfileManagementService {
 
         profile.updateAvatar(avatar);
         log.debug("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
+    }
+
+    private BgColor resolveBgColor(ProfileUpdateRequest request) {
+        if (request.profileImageType() != ProfileImageType.AVATAR) {
+            return null;
+        }
+
+        if (request.bgColorId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "AVATAR 타입에는 bgColorId가 필요합니다.");
+        }
+
+        return bgColorRepository.getByIdOrThrow(request.bgColorId());
+    }
+
+    private void updateProfileBasedOnProfileImageType(Profile profile, BgColor bgColor, ProfileUpdateRequest request) {
+        switch (request.profileImageType()) {
+            case UPLOADED -> profile.updateProfile(
+                    request.nickname(), request.uploadedImageUrl(), ProfileImageType.UPLOADED, null, request.bio());
+            case AVATAR -> profile.updateProfile(
+                    request.nickname(), "", ProfileImageType.AVATAR, bgColor, request.bio());
+            case DEFAULT -> profile.updateProfile(
+                    request.nickname(), null, ProfileImageType.DEFAULT, null, request.bio()
+            );
+        }
+    }
+
+    private void checkDuplicateNickname (Profile profile, String nickname) {
+        if (nickname.equals(profile.getNickname())) {
+            return;
+        }
+
+        if (profileRepository.existsByNickname(nickname)) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ import java.util.List;
 public class PostQueryService {
     private final PostRepository postRepository;
     private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
         log.debug("게시글 목록 조회 - size={}", request.size());
@@ -36,7 +38,7 @@ public class PostQueryService {
         }
 
         List<PostSummaryResponse> summaries = posts.stream()
-                .map(post -> PostSummaryResponse.from(post, jsonConverter))
+                .map(post -> PostSummaryResponse.from(post, jsonConverter, profileImageResolver))
                 .toList();
 
         log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", summaries.size(), hasNext);

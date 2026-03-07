@@ -10,6 +10,7 @@ import com.dduru.gildongmu.comment.exception.InvalidParentCommentException;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final ProfileImageResolver profileImageResolver;
 
     @Transactional
     public CommentResponse create(Long userId, Long postId, CommentCreateRequest request) {
@@ -38,7 +40,7 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         log.info("댓글 생성 완료 - commentId: {}, userId: {}, postId: {}", savedComment.getId(), userId, postId);
-        return CommentResponse.from(savedComment);
+        return CommentResponse.from(savedComment, profileImageResolver);
     }
 
     @Transactional

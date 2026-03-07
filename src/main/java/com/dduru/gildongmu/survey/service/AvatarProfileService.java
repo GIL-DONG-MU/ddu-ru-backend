@@ -38,6 +38,7 @@ public class AvatarProfileService {
         log.info("아바타 프로필 조회 완료 - avatarType: {}", avatarType);
         return new AvatarProfileResponse(
                 profile.getDescription(),
+                profile.getImageUrl(),
                 profile.getPersonality(),
                 profile.getStrength(),
                 profile.getTip(),

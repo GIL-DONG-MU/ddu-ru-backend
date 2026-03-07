@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
@@ -43,11 +44,12 @@ public record PostDetailResponse(
                                           boolean isOwner,
                                           boolean hasLiked,
                                           List<ParticipantInfo> participants,
-                                          MyParticipationStatus myParticipationStatus) {
+                                          MyParticipationStatus myParticipationStatus,
+                                          ProfileImageResolver profileImageResolver) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         List<AgeRange> preferredAges = post.getPreferredAges();
-        UserInfo authorInfo = UserInfo.from(post.getUser());
+        UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         long nightsLong = ChronoUnit.DAYS.between(post.getStartDate(), post.getEndDate());
         int nights = (int) nightsLong;
