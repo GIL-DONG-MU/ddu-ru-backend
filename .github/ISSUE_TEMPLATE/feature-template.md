@@ -2,7 +2,7 @@
 name: feature template
 about: feature 관련  이슈
 title: "[FEAT]"
-labels: ✨feature
+labels: ''
 assignees: ''
 
 ---
