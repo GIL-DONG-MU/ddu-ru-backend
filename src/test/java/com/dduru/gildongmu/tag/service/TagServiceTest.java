@@ -17,17 +17,22 @@ class TagServiceTest {
     @InjectMocks
     private TagService tagService;
 
-    @DisplayName("인기 태그 목록을 조회하면 고정된 목록을 반환한다")
+    @DisplayName("여행 태그 목록을 조회하면 고정된 10개 목록을 반환한다")
     @Test
-    void getPopularTags_returnsFixedList() {
+    void getPopularTags_returnsFixedTravelTagList() {
         List<String> result = tagService.getPopularTags();
 
         assertThat(result).containsExactly(
-                "힐링여행",
                 "맛집투어",
                 "사진명소",
+                "힐링",
                 "액티비티",
-                "자연"
+                "현지바이브",
+                "야경명소",
+                "카페투어",
+                "커피",
+                "쇼핑",
+                "뚜벅이"
         );
     }
 }

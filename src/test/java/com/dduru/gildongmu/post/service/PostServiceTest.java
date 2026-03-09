@@ -26,8 +26,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -59,13 +59,13 @@ class PostServiceTest {
 
     @DisplayName("게시글 생성 시 유효한 요청이면 생성 후 ID를 반환한다")
     @Test
-    void create_validRequest_returnsPostId() throws Exception {
+    void create_validRequest_returnsPostId() {
         Long userId = 1L;
         Long destinationId = 10L;
         User user = User.builder().email("a@a.com").name("user").oauthId("kakao-1").oauthType(OauthType.KAKAO).build();
-        setEntityId(user, 1L);
+        ReflectionTestUtils.setField(user, "id", 1L);
         Destination destination = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").build();
-        setEntityId(destination, destinationId);
+        ReflectionTestUtils.setField(destination, "id", destinationId);
 
         PostCreateRequest request = new PostCreateRequest(
                 destinationId,
@@ -89,7 +89,7 @@ class PostServiceTest {
         when(jsonConverter.convertListToJson(anyList())).thenReturn("[]");
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
             Post post = invocation.getArgument(0);
-            setEntityId(post, 100L);
+            ReflectionTestUtils.setField(post, "id", 100L);
             return post;
         });
 
@@ -185,13 +185,13 @@ class PostServiceTest {
 
     @DisplayName("게시글 수정 시 작성자가 아니면 예외가 발생한다")
     @Test
-    void update_notOwner_throwsPostAccessDeniedException() throws Exception {
+    void update_notOwner_throwsPostAccessDeniedException() {
         Long postId = 1L;
         Long ownerId = 10L;
         Long requesterId = 99L;
 
         User owner = User.builder().email("owner@a.com").name("owner").oauthId("kakao-10").oauthType(OauthType.KAKAO).build();
-        setEntityId(owner, ownerId);
+        ReflectionTestUtils.setField(owner, "id", ownerId);
         Post post = Post.builder()
                 .user(owner)
                 .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
@@ -202,7 +202,7 @@ class PostServiceTest {
                 .photoUrls("[]").tags("[]")
                 .recruitType(RecruitType.PRIVATE).recruitMethod(RecruitMethod.ALWAYS).companionType(null)
                 .build();
-        setEntityId(post, postId);
+        ReflectionTestUtils.setField(post, "id", postId);
 
         when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
 
@@ -211,11 +211,5 @@ class PostServiceTest {
 
         assertThatThrownBy(() -> postService.update(postId, requesterId, updateRequest))
                 .isInstanceOf(PostAccessDeniedException.class);
-    }
-
-    private static void setEntityId(Object entity, Long id) throws Exception {
-        Field idField = entity.getClass().getDeclaredField("id");
-        idField.setAccessible(true);
-        idField.set(entity, id);
     }
 }
