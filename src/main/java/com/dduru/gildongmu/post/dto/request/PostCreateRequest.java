@@ -42,10 +42,10 @@ public record PostCreateRequest(
         Gender preferredGender,
 
         @NotNull(message = "선호 연령대는 필수입니다")
-        @Size(max = 2, message = "동행 연령대는 최대 2개까지 선택할 수 있습니다")
+        @Size(max = 2, message = "선호 연령대는 최대 2개까지 선택할 수 있습니다")
         List<AgeRange> preferredAges,
 
-        @Size(max = 1, message = "사진은 1장만 업로드 가능합니다")
+        @Size(max = 1, message = "사진은 최대 1장까지 업로드 가능합니다")
         List<String> photoUrls,
 
         @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
