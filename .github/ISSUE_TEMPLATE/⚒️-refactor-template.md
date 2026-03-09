@@ -1,14 +1,11 @@
 ---
-name: refactor template
+name: "⚒️ refactor template"
 about: 구조 개선, 중복 제거, 책임 분리, 성능 개선 등 리팩토링 이슈
 title: "[REFACTOR]"
-labels: "\U0001F527 BE, ♻️ enhancement"
+labels: "\U0001F527 BE, ♻️ refactor"
 assignees: ''
 
 ---
-
-## 🎯 배경
-> 왜 리팩토링이 필요한지 작성해주세요.
 
 ## 🚨 현재 문제
 > 현재 코드나 구조의 어떤 점이 불편하거나 비효율적인지 작성해주세요.

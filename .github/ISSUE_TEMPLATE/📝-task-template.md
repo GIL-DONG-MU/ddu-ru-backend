@@ -1,8 +1,8 @@
 ---
-name: task template
-about: 기능 개발, 운영 작업, 설정 추가 등 일반 작업 이슈
+name: "\U0001F4DD task template"
+about: 운영 작업, 설정 추가 등 일반 작업 이슈
 title: "[TASK] "
-labels: "\U0001F5A5️ task"
+labels: "\U0001F527 BE, \U0001F5A5️ task"
 assignees: ''
 
 ---
@@ -18,9 +18,6 @@ assignees: ''
 - 프로필 이미지를 업로드하지 않은 경우 default 이미지로 대체
 - 앱/웹 클라이언트 모두 동일한 응답 스펙 사용
 -->
-
-## 🛠 작업 내용
-> 구현하거나 수정할 내용을 간단히 작성해주세요.
 
 ## ✅ 세부 작업
 > 필요한 작업을 체크리스트로 작성해주세요.
