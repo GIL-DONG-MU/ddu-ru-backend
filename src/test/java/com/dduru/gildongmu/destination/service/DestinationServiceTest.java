@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -49,12 +50,12 @@ class DestinationServiceTest {
 
     @DisplayName("최근 30일 집계가 있으면 점수 순 상위 10개 여행지를 반환한다")
     @Test
-    void getPopularDestinations_withData_returnsOrderedByScore() throws Exception {
+    void getPopularDestinations_withData_returnsOrderedByScore() {
         when(destinationRepository.findPopularDestinationIds(any())).thenReturn(List.of(2L, 1L));
         Destination first = Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build();
         Destination second = Destination.builder().countryCode("KR").countryName("대한민국").city("부산").build();
-        setEntityId(first, 2L);
-        setEntityId(second, 1L);
+        ReflectionTestUtils.setField(first, "id", 2L);
+        ReflectionTestUtils.setField(second, "id", 1L);
         when(destinationRepository.findAllById(List.of(2L, 1L))).thenReturn(List.of(second, first));
 
         List<DestinationInfo> result = destinationService.getPopularDestinations();
@@ -64,12 +65,6 @@ class DestinationServiceTest {
         assertThat(result.get(1).city()).isEqualTo("부산");
         verify(destinationRepository).findPopularDestinationIds(any());
         verify(destinationRepository).findAllById(List.of(2L, 1L));
-    }
-
-    private static void setEntityId(Object entity, Long id) throws Exception {
-        java.lang.reflect.Field idField = entity.getClass().getDeclaredField("id");
-        idField.setAccessible(true);
-        idField.set(entity, id);
     }
 
     @DisplayName("키워드가 없거나 공백이면 인기 여행지 목록을 반환한다")
