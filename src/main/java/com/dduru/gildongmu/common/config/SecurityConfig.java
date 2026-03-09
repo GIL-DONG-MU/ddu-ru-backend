@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -35,6 +36,8 @@ public class SecurityConfig {
                         /* API 권한 설정 */
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        // 게시글 목록 / 상세 조회만 비로그인 허용
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/*").permitAll()
                         .requestMatchers("/api/v1/verifications/**").authenticated()
                         .requestMatchers("/api/v1/surveys/questions").permitAll()
                         .requestMatchers("/login/page", "/test/login/oauth2/code/**").permitAll()

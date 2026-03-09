@@ -35,10 +35,16 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             throw new UnauthorizedException();
         }
 
+        Object principal = authentication.getPrincipal();
+
+        if ("anonymousUser".equals(principal)) {
+            return null;
+        }
+
         try {
-            return Long.parseLong(authentication.getPrincipal().toString());
+            return Long.parseLong(principal.toString());
         } catch (NumberFormatException e) {
-            log.warn("토큰 파싱 실패: principal 값({}) → NumberFormatException, details: {}", authentication.getPrincipal(), e.getMessage());
+            log.warn("토큰 파싱 실패: principal 값({}) → NumberFormatException, details: {}", principal, e.getMessage());
             throw new InvalidTokenException();
         }
     }

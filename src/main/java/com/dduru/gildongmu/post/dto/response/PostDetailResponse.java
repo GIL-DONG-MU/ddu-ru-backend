@@ -9,6 +9,7 @@ import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public record PostDetailResponse(
@@ -31,13 +32,42 @@ public record PostDetailResponse(
         int viewCount,
         int likeCount,
         LocalDateTime createdAt,
-        UserInfo author
+        UserInfo author,
+        boolean isOwner,
+        boolean hasLiked,
+        List<ParticipantInfo> participants,
+        MyParticipationStatus myParticipationStatus,
+        String tripDurationText,
+        String recruitDeadlineDDay
 ) {
-    public static PostDetailResponse from(Post post, JsonConverter jsonConverter, ProfileImageResolver profileImageResolver) {
+    public static PostDetailResponse from(Post post, JsonConverter jsonConverter,
+                                          boolean isOwner,
+                                          boolean hasLiked,
+                                          List<ParticipantInfo> participants,
+                                          MyParticipationStatus myParticipationStatus,
+                                          ProfileImageResolver profileImageResolver) {
         List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         List<AgeRange> preferredAges = post.getPreferredAges();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
+
+        long nightsLong = ChronoUnit.DAYS.between(post.getStartDate(), post.getEndDate());
+        int nights = (int) nightsLong;
+        int totalDays = nights + 1;
+        String tripDurationText = nights > 0
+                ? nights + "박 " + totalDays + "일"
+                : "당일 일정";
+
+        String recruitDeadlineDDay;
+        LocalDate deadline = post.getRecruitDeadline();
+        if (deadline == null) {
+            recruitDeadlineDDay = "상시 모집";
+        } else if (LocalDate.now().isAfter(deadline)) {
+            recruitDeadlineDDay = "마감";
+        } else {
+            int d = post.getDaysUntilRecruitDeadline();
+            recruitDeadlineDDay = (d == 0) ? "D-Day" : "D-" + d;
+        }
 
         return new PostDetailResponse(
                 post.getId(),
@@ -59,7 +89,13 @@ public record PostDetailResponse(
                 post.getViewCount(),
                 post.getLikeCount(),
                 post.getCreatedAt(),
-                authorInfo
+                authorInfo,
+                isOwner,
+                hasLiked,
+                participants,
+                myParticipationStatus,
+                tripDurationText,
+                recruitDeadlineDDay
         );
     }
 }

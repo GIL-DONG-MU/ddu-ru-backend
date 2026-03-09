@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.participation.service;
 
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
@@ -51,9 +52,13 @@ public class ParticipationService {
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
-
         Post post = participation.getPost();
         validatePostOwner(post, userId);
+
+        if (participation.isApproved()) {
+            log.info("이미 승인된 참여신청 - participationId: {}, postId: {}", participationId, postId);
+            return;
+        }
 
         post.approveParticipation(participation);
 
@@ -66,9 +71,13 @@ public class ParticipationService {
 
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
-
         Post post = participation.getPost();
         validatePostOwner(post, userId);
+
+        if (participation.getStatus() == ParticipationStatus.REJECTED) {
+            log.info("이미 거절된 참여신청 - participationId: {}, postId: {}", participationId, postId);
+            return;
+        }
 
         post.removeApprovedParticipation(participation);
         participation.reject();
