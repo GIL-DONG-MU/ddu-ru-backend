@@ -7,14 +7,6 @@ assignees: ''
 
 ---
 
----
-name: REFACTOR
-about: 구조 개선, 중복 제거, 책임 분리, 성능 개선 등 리팩토링 이슈
-title: "[REFACTOR] "
-labels: refactor
-assignees: ""
----
-
 ## 🎯 배경
 > 왜 리팩토링이 필요한지 작성해주세요.
 

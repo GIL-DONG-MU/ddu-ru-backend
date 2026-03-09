@@ -7,14 +7,6 @@ assignees: ''
 
 ---
 
----
-name: TASK
-about: 기능 개발, 운영 작업, 설정 추가 등 일반 작업 이슈
-title: "[TASK] "
-labels: task
-assignees: ""
----
-
 ## 🎯 목적
 > 이 작업을 왜 하는지 작성해주세요.
 
