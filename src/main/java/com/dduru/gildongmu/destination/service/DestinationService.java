@@ -22,9 +22,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DestinationService {
 
-    private static final int POPULAR_DAYS_CRITERIA = 30;
+    private static final int POPULAR_DAYS_LIMIT = 30;
 
-    /** 집계 데이터가 없을 때 반환하는 추천 여행지 10개 (도시명 순서 고정) */
     private static final List<String> FALLBACK_CITY_NAMES = List.of(
             "제주도", "부산", "강릉", "후쿠오카", "오사카",
             "서울", "도쿄", "교토", "방콕", "다낭"
@@ -33,8 +32,8 @@ public class DestinationService {
     private final DestinationRepository destinationRepository;
 
     public List<DestinationInfo> getPopularDestinations() {
-        log.debug("인기 여행지 목록 조회 (최근 {}일 기준)", POPULAR_DAYS_CRITERIA);
-        LocalDateTime since = LocalDateTime.now().minusDays(POPULAR_DAYS_CRITERIA);
+        log.debug("인기 여행지 목록 조회 (최근 {}일 기준)", POPULAR_DAYS_LIMIT);
+        LocalDateTime since = LocalDateTime.now().minusDays(POPULAR_DAYS_LIMIT);
         List<Long> ids = destinationRepository.findPopularDestinationIds(since);
 
         if (ids.isEmpty()) {
