@@ -27,4 +27,9 @@ public record ProfileUpdateRequest(
     public boolean isBgColorIdValid() {
         return profileImageType != ProfileImageType.AVATAR || bgColorId != null;
     }
+
+    @AssertTrue(message = "UPLOADED 타입에는 uploadedImageUrl이 필요합니다.")
+    public boolean isUploadedImageUrlValid() {
+        return profileImageType != ProfileImageType.UPLOADED || (uploadedImageUrl != null && !uploadedImageUrl.isBlank());
+    }
 }

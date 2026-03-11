@@ -30,7 +30,6 @@ public class NicknameService {
     @Transactional
     public void updateNickname(Long userId, NicknameUpdateRequest request) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
-        validateNickname(request.nickname());
         checkDuplicateNickname(request.nickname());
 
         profile.updateNickname(request.nickname());
