@@ -9,6 +9,7 @@ import com.dduru.gildongmu.auth.exception.*;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import com.dduru.gildongmu.user.domain.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class OauthAuthService {
         OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
 
         UserCreationResult result = userDomainService.findOrCreateUser(oauthUserInfo);
-        TokenPair tokens = generateTokens(result.user().getId());
+        TokenPair tokens = generateTokens(result.user());
         logLoginSuccess(result, oauthUserInfo);
         return LoginResponse.of(tokens.accessToken(), tokens.refreshToken(), result.isNewUser());
     }
@@ -39,7 +40,7 @@ public class OauthAuthService {
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         User user = userDomainService.getUserOrThrow(userId);
         validateRefreshTokenForRefresh(userId, refreshToken);
-        String newAccessToken = jwtTokenProvider.createToken(user.getId());
+        String newAccessToken = jwtTokenProvider.createToken(user.getId(), user.getRole());
         extendTokenExpirationSafely(userId);
         log.debug("Access Token 갱신 완료 - userId: {}", userId);
         return LoginResponse.of(newAccessToken, refreshToken, false);
@@ -59,8 +60,10 @@ public class OauthAuthService {
         }
     }
 
-    private TokenPair generateTokens(Long userId) {
-        String accessToken = jwtTokenProvider.createToken(userId);
+    private TokenPair generateTokens(User user) {
+        Long userId = user.getId();
+        Role role = user.getRole();
+        String accessToken = jwtTokenProvider.createToken(userId, role);
         String refreshToken = jwtTokenProvider.createRefreshToken(userId);
         try {
             refreshTokenService.saveRefreshToken(userId, refreshToken);

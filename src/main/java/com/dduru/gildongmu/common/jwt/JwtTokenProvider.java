@@ -1,6 +1,10 @@
 package com.dduru.gildongmu.common.jwt;
 
+import com.dduru.gildongmu.user.domain.User;
+import com.dduru.gildongmu.user.domain.enums.Role;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,7 +17,12 @@ import java.util.Date;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
+
+    private static final String ROLE_CLAIM = "role";
+
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -24,12 +33,13 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-expiration}")
     private long jwtRefreshExpirationMs;
 
-    public String createToken(Long userId) {
+    public String createToken(Long userId, Role role) {
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
 
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("type", "access")
+                .claim(ROLE_CLAIM, role.name())
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
@@ -53,12 +63,41 @@ public class JwtTokenProvider {
         return Long.valueOf(claims.getSubject());
     }
 
-    public Authentication getAuthentication(String token) {
+    public Authentication resolveAuthentication(String token, boolean adminApiRequest) {
+        if (adminApiRequest) {
+            return buildAuthenticationFromDatabase(token);
+        }
+        return buildAuthenticationFromJwtRoleOrDatabase(token);
+    }
+
+    private Authentication buildAuthenticationFromDatabase(String token) {
         Long userId = getUserIdFromToken(token);
+        return userRepository.findById(userId)
+                .map(User::getRole)
+                .map(role -> toAuthentication(userId, role))
+                .orElse(null);
+    }
+
+    private Authentication buildAuthenticationFromJwtRoleOrDatabase(String token) {
+        try {
+            Claims claims = getClaims(token);
+            String roleStr = claims.get(ROLE_CLAIM, String.class);
+            if (roleStr != null && !roleStr.isBlank()) {
+                Role role = Role.valueOf(roleStr.trim());
+                Long userId = Long.valueOf(claims.getSubject());
+                return toAuthentication(userId, role);
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT role 클레임 처리 실패, DB로 대체합니다: {}", e.getMessage());
+        }
+        return buildAuthenticationFromDatabase(token);
+    }
+
+    private static Authentication toAuthentication(Long userId, Role role) {
         return new UsernamePasswordAuthenticationToken(
                 userId.toString(),
                 null,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()))
         );
     }
 
