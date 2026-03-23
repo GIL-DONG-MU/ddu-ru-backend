@@ -93,9 +93,9 @@ src/
 
 1. 이 저장소를 Fork합니다
 2. 기능 issue를 생성합니다 (`#30`)
-3. 기능 브랜치를 생성합니다 (`git checkout -b feature/#30-feature-name`)
-4. 변경사항을 커밋합니다 (`git commit -m '[#30] feat(???): Add amazing feature'`)
-5. 브랜치에 Push합니다 (`git push origin feat/#30-feature-name`)
+3. 기능 브랜치를 생성합니다 (`git checkout -b feat/#30-어떤 기능-구현`)
+4. 변경사항을 커밋합니다 (`git commit -m '[#issue-num] feat(scope): 어떤 기능 구현'`)
+5. 브랜치에 Push합니다 (`git push origin feat/#30-어떤 기능-구현`)
 6. Pull Request를 생성합니다
 
 ## 📄 라이선스
