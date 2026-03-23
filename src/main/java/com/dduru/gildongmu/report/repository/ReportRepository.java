@@ -15,6 +15,9 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Query(
             value = """
                     SELECT r FROM Report r
+                    LEFT JOIN FETCH r.post
+                    LEFT JOIN FETCH r.user
+                    LEFT JOIN FETCH r.reviewer
                     WHERE (:status IS NULL OR r.status = :status)
                     """,
             countQuery = """
