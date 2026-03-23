@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "reports",
         uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"}))
@@ -41,6 +43,16 @@ public class Report extends BaseTimeEntity {
     @Column(name = "status", nullable = false, length = 20)
     private ReportStatus status = ReportStatus.RECEIVED;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewer_id")
+    private User reviewer;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @Column(name = "review_note", length = 1000)
+    private String reviewNote;
+
     @Builder
     public Report(User user, Post post, ReportReason reason, String description) {
         this.user = user;
@@ -56,5 +68,12 @@ public class Report extends BaseTimeEntity {
                 .reason(reason)
                 .description(description)
                 .build();
+    }
+
+    public void updateByAdmin(ReportStatus newStatus, User reviewer, String reviewNote) {
+        this.status = newStatus;
+        this.reviewer = reviewer;
+        this.reviewedAt = LocalDateTime.now();
+        this.reviewNote = reviewNote;
     }
 }

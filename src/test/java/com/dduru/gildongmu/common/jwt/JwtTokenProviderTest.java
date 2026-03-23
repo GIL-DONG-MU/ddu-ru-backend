@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.jwt;
 
+import com.dduru.gildongmu.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
@@ -8,13 +9,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class JwtTokenProviderTest {
 
     private static final String SECRET = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
 
     private JwtTokenProvider createProvider() {
-        JwtTokenProvider provider = new JwtTokenProvider();
+        JwtTokenProvider provider = new JwtTokenProvider(mock(UserRepository.class));
         ReflectionTestUtils.setField(provider, "jwtSecret", SECRET);
         ReflectionTestUtils.setField(provider, "jwtExpirationMs", 60_000);
         return provider;
