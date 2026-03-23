@@ -12,6 +12,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,20 +25,30 @@ public class ReportService {
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
 
-    public ReportCreateResponse create(Long postId, Long userId,ReportCreateRequest request) {
+    public ReportCreateResponse create(Long postId, Long userId, ReportCreateRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
         validateReport(post, userId);
 
         Report report = createReport(user, post, request);
-        Report savedReport = reportRepository.save(report);
+        Report savedReport = saveReportOrThrowDuplicate(report, postId, userId);
+        log.info("게시글 신고 생성 완료 - reportId: {}, postId: {}, userId: {}",
+                savedReport.getId(), postId, userId);
         return ReportCreateResponse.from(savedReport);
-
     }
 
     private Report createReport(User user, Post post, ReportCreateRequest request) {
         return Report.createReport(user, post, request.reason(), request.description());
 
+    }
+
+    private Report saveReportOrThrowDuplicate(Report report, Long postId, Long userId) {
+        try {
+            return reportRepository.save(report);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("중복 신고 동시성 충돌 - postId: {}, userId: {}", postId, userId);
+            throw new DuplicatePostReportException();
+        }
     }
 
     private void validateReport(Post post, Long userId) {
