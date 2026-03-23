@@ -32,6 +32,8 @@ public class ReportService {
 
         Report report = createReport(user, post, request);
         Report savedReport = saveReportOrThrowDuplicate(report, postId, userId);
+        log.info("게시글 신고 생성 완료 - reportId: {}, postId: {}, userId: {}",
+                savedReport.getId(), postId, userId);
         return ReportCreateResponse.from(savedReport);
     }
 
@@ -44,7 +46,7 @@ public class ReportService {
         try {
             return reportRepository.save(report);
         } catch (DataIntegrityViolationException e) {
-            log.info("중복 신고 동시성 충돌 - postId={}, userId={}", postId, userId);
+            log.warn("중복 신고 동시성 충돌 - postId: {}, userId: {}", postId, userId);
             throw new DuplicatePostReportException();
         }
     }
