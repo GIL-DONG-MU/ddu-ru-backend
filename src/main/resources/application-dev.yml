@@ -2,7 +2,8 @@ spring:
   config:
     activate:
       on-profile: dev
-  # Flyway가 classpath:db/migration 스크립트를 먼저 적용
+  flyway:
+    enabled: false
   datasource:
     url: jdbc:mysql://localhost:3307/dduru?characterEncoding=UTF-8&useUnicode=true&serverTimezone=Asia/Seoul
     username: root

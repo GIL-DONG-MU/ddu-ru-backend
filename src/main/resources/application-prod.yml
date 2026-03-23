@@ -2,11 +2,10 @@ spring:
   config:
     activate:
       on-profile: prod
+  # Flyway가 classpath:db/migration 스크립트를 먼저 적용
   flyway:
     enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 4
     validate-on-migrate: true
   datasource:
     url: jdbc:mysql://${RDS_ENDPOINT}:${RDS_PORT}/${RDS_DATABASE_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
