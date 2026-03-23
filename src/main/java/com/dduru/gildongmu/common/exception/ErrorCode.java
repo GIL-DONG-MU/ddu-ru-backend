@@ -85,6 +85,10 @@ public enum ErrorCode {
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글에는 참여신청할 수 없습니다."),
     PARTICIPATION_POST_MISMATCH(HttpStatus.BAD_REQUEST, "해당 참여신청은 해당 게시글에 속해있지 않습니다."),
 
+    // 신고 (REPORT)
+    SELF_POST_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글은 신고할 수 없습니다."),
+    DUPLICATE_POST_REPORT(HttpStatus.CONFLICT, "이미 신고한 게시글입니다."),
+
     // 파일 (FILE)
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
