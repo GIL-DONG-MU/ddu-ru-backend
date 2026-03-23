@@ -27,7 +27,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             String uri = request.getRequestURI();
-            boolean adminApi = uri != null && uri.contains("/api/v1/admin");
+            boolean adminApi = uri != null
+                    && (uri.equals("/api/v1/admin") || uri.startsWith("/api/v1/admin/"));
             Authentication authentication = jwtTokenProvider.resolveAuthentication(token, adminApi);
             if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
