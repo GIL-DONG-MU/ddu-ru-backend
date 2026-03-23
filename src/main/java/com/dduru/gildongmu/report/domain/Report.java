@@ -50,7 +50,7 @@ public class Report extends BaseTimeEntity {
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 
-    @Column(name = "review_note", length = 500)
+    @Column(name = "review_note", length = 1000)
     private String reviewNote;
 
     @Builder
