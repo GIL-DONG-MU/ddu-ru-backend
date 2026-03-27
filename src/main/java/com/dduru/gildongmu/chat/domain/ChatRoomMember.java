@@ -48,4 +48,12 @@ public class ChatRoomMember extends BaseTimeEntity {
         this.role = role;
         this.lastReadMessage = lastReadMessage;
     }
+
+    public static ChatRoomMember create(ChatRoom room, User user, ChatMemberRole role) {
+        return ChatRoomMember.builder()
+                .room(room)
+                .user(user)
+                .role(role)
+                .build();
+    }
 }

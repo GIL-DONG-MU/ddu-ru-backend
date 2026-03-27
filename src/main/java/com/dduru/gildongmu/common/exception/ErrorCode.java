@@ -94,7 +94,16 @@ public enum ErrorCode {
     // 파일 (FILE)
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
-    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다.");
+    INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다."),
+
+    // 채팅 (CHAT)
+    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+    CHAT_ROOM_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방 멤버를 찾을 수 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없습니다."),
+    CHAT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "채팅방 접근 권한이 없습니다."),
+    CHAT_ROOM_CLOSED(HttpStatus.BAD_REQUEST, "종료된 채팅방입니다."),
+    CHAT_ROOM_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "채팅방 정원을 초과했습니다."),
+    NOT_SELF_CHAT(HttpStatus.FORBIDDEN, "자신과의 채팅은 허용되지 않습니다.");
 
     private final int status;
     private final String message;
