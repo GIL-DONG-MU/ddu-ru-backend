@@ -1,8 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
@@ -29,9 +27,6 @@ public record PostUpdateRequest(
         @Max(value = 9, message = "모집 인원은 최대 9명까지 가능합니다 (호스트 제외)")
         Integer recruitCapacity,
 
-        @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
-        LocalDate recruitDeadline,
-
         Gender preferredGender,
 
         @Size(max = 2, message = "선호 연령대는 최대 2개까지 선택할 수 있습니다")
@@ -42,10 +37,6 @@ public record PostUpdateRequest(
 
         @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
         List<String> tags,
-
-        RecruitType recruitType,
-
-        RecruitMethod recruitMethod,
 
         CompanionType companionType
 ) {

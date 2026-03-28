@@ -5,8 +5,6 @@ import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
@@ -109,14 +107,6 @@ public class Post extends BaseTimeEntity {
     private Long deletedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recruit_type", nullable = false)
-    private RecruitType recruitType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "recruit_method", nullable = false)
-    private RecruitMethod recruitMethod;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "companion_type")
     private CompanionType companionType;
 
@@ -124,7 +114,7 @@ public class Post extends BaseTimeEntity {
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                 LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
+                String photoUrls, String tags, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -139,15 +129,13 @@ public class Post extends BaseTimeEntity {
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
-        this.recruitType = recruitType;
-        this.recruitMethod = recruitMethod;
         this.companionType = companionType;
     }
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                                   LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                                  String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
+                                  String photoUrls, String tags, CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -162,8 +150,6 @@ public class Post extends BaseTimeEntity {
                 .preferredAges(preferredAges)
                 .photoUrls(photoUrls)
                 .tags(tags)
-                .recruitType(recruitType)
-                .recruitMethod(recruitMethod)
                 .companionType(companionType)
                 .build();
     }
@@ -171,7 +157,7 @@ public class Post extends BaseTimeEntity {
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                            LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                           String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
+                           String photoUrls, String tags, CompanionType companionType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -185,8 +171,6 @@ public class Post extends BaseTimeEntity {
         if (photoUrls != null) this.photoUrls = photoUrls;
         if (tags != null) this.tags = tags;
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
-        if (recruitType != null) this.recruitType = recruitType;
-        if (recruitMethod != null) this.recruitMethod = recruitMethod;
         if (companionType != null) this.companionType = companionType;
     }
 
