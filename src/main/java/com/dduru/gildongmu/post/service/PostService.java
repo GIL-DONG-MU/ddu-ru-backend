@@ -74,6 +74,7 @@ public class PostService {
     }
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
+        // TODO: 게시글 수정 시 그룹 채팅방 maxCapacity를 recruitCapacity + 1로 동기화
         log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
         Post post = getPostAndValidateOwner(postId, userId);
