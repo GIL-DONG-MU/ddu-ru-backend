@@ -117,6 +117,52 @@ class PostServiceTest {
         assertThat(savedPost.getMaxAge()).isEqualTo(35);
     }
 
+    @DisplayName("게시글 생성 시 태그 앞뒤 공백은 JSON 직렬화 전에 제거된다")
+    @Test
+    @SuppressWarnings("unchecked")
+    void create_stripsWhitespaceFromTagsBeforeJson() {
+        Long userId = 1L;
+        Long destinationId = 10L;
+        User user = User.builder().email("a@a.com").name("user").oauthId("kakao-1").oauthType(OauthType.KAKAO).build();
+        ReflectionTestUtils.setField(user, "id", 1L);
+        Destination destination = Destination.builder().countryCode("KR").countryName("대한민국").city("제주도").build();
+        ReflectionTestUtils.setField(destination, "id", destinationId);
+
+        LocalDate startDate = LocalDate.now().plusDays(10);
+        LocalDate endDate = LocalDate.now().plusDays(12);
+
+        PostCreateRequest request = new PostCreateRequest(
+                destinationId,
+                "제목 다섯글자이상입니다",
+                "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
+                startDate,
+                endDate,
+                4,
+                Gender.M,
+                false,
+                25,
+                35,
+                null,
+                List.of("  제주  ", "부산"),
+                CompanionType.FULL
+        );
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(destinationRepository.getByIdOrThrow(destinationId)).thenReturn(destination);
+        when(jsonConverter.convertListToJson(any())).thenReturn("[\"제주\",\"부산\"]");
+        when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
+            Post post = invocation.getArgument(0);
+            ReflectionTestUtils.setField(post, "id", 1L);
+            return post;
+        });
+
+        postService.create(userId, request);
+
+        ArgumentCaptor<List<String>> tagCaptor = ArgumentCaptor.forClass(List.class);
+        verify(jsonConverter).convertListToJson(tagCaptor.capture());
+        assertThat(tagCaptor.getValue()).containsExactly("제주", "부산");
+    }
+
     @DisplayName("게시글 생성 시 연령 무관이면 isAgeAny이 true이고 min/max는 null이다")
     @Test
     void create_ageAny_savesFlagAndNullMinMax() {

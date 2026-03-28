@@ -154,7 +154,7 @@ public class PostService {
     private void validateCreateRequest(PostCreateRequest request) {
         validateDateRange(request.startDate(), request.endDate());
         validatePreferredAge(request.isAgeAny(), request.minAge(), request.maxAge());
-        TagValidator.validateOrThrow(request.tags());
+        TagValidator.validateOrThrow(normalizeTagList(request.tags()));
     }
 
     private void validateUpdateRequest(Post post, PostUpdateRequest request) {
@@ -165,7 +165,7 @@ public class PostService {
         }
 
         if (request.tags() != null) {
-            TagValidator.validateOrThrow(request.tags());
+            TagValidator.validateOrThrow(normalizeTagList(request.tags()));
         }
     }
 
@@ -272,7 +272,17 @@ public class PostService {
         return null;
     }
 
+    private List<String> normalizeTagList(List<String> tags) {
+        if (tags == null) {
+            return null;
+        }
+        return tags.stream().map(String::strip).toList();
+    }
+
     private String tagsToJson(List<String> tags) {
-        return tags == null ? null : jsonConverter.convertListToJson(tags);
+        if (tags == null) {
+            return null;
+        }
+        return jsonConverter.convertListToJson(normalizeTagList(tags));
     }
 }
