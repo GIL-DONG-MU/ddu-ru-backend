@@ -7,6 +7,7 @@ import com.dduru.gildongmu.comment.service.CommentQueryService;
 import com.dduru.gildongmu.comment.service.CommentService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Hidden
 @RestController
 @RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor

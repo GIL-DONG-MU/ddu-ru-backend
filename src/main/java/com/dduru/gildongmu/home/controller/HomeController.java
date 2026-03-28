@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.home.controller;
 
 import com.dduru.gildongmu.common.dto.ApiResult;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Hidden
 @RestController
 @RequiredArgsConstructor
 public class HomeController implements HomeApiDocs {
