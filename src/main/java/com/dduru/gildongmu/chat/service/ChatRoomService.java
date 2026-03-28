@@ -138,4 +138,24 @@ public class ChatRoomService {
                 .toList();
         chatRoomMemberRepository.saveAll(members);
     }
+
+    /**
+     * 게시글 저장 직후 호출. 글당 그룹 단톡 1개를 PENDING으로 만들고 작성자를 HOST로 둔다.
+     */
+    public void createPendingGroupRoomForPost(Post post, User author) {
+        ChatRoom room = chatRoomRepository.save(ChatRoom.createPendingGroupChat(post));
+        chatRoomMemberRepository.save(ChatRoomMember.create(room, author, ChatMemberRole.HOST));
+        log.info("그룹 채팅방 생성 - roomId={}, postId={}, hostId={}", room.getId(), post.getId(), author.getId());
+    }
+
+    /**
+     * 해당 방에 첫 메시지가 저장된 직후 호출하면 PENDING → ACTIVE 로 전환한다.
+     */
+    public void activateGroupChatOnFirstMessage(Long roomId) {
+        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
+        if (room.getRoomType() != ChatRoomType.GROUP) {
+            return;
+        }
+        room.activateIfPending();
+    }
 }

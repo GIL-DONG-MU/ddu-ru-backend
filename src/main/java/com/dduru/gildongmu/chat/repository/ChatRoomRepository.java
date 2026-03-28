@@ -20,8 +20,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             WHERE r.post.id = :postId
               AND r.roomType = :roomType
               AND r.status = :status
-              AND m1.user = :requester AND m1.memberStatus = com.dduru.gildongmu.chat.domain.enums.ChatMemberStatus.ACTIVE
-              AND m2.user = :target AND m2.memberStatus = com.dduru.gildongmu.chat.domain.enums.ChatMemberStatus.ACTIVE
+              AND m1.user = :requester
+              AND m2.user = :target
             """)
     Optional<ChatRoom> findPrivateRoomByPostAndUsers(
             @Param("postId") Long postId,

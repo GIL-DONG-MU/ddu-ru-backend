@@ -24,6 +24,7 @@ import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
+import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
@@ -53,6 +54,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
+    private final ChatRoomService chatRoomService;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 - userId={}", userId);
@@ -65,6 +67,7 @@ public class PostService {
 
         Post post = createPost(user, destination, request, request.photoUrls());
         Post savedPost = postRepository.save(post);
+        chatRoomService.createPendingGroupRoomForPost(savedPost, user);
 
         log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());

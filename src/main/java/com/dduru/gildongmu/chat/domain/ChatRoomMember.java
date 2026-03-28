@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.chat.domain;
 
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
-import com.dduru.gildongmu.chat.domain.enums.ChatMemberStatus;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
@@ -32,10 +31,6 @@ public class ChatRoomMember extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     private ChatMemberRole role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "member_status", nullable = false, length = 20)
-    private ChatMemberStatus memberStatus = ChatMemberStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_read_message_id")

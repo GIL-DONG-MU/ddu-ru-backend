@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.service;
 
+import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -54,6 +55,9 @@ class PostServiceTest {
     @Mock
     private JsonConverter jsonConverter;
 
+    @Mock
+    private ChatRoomService chatRoomService;
+
     @InjectMocks
     private PostService postService;
 
@@ -102,6 +106,7 @@ class PostServiceTest {
         assertThat(savedPost.getTitle()).isEqualTo(request.title());
         assertThat(savedPost.getRecruitType()).isEqualTo(RecruitType.PUBLIC);
         assertThat(savedPost.getCompanionType()).isEqualTo(CompanionType.FULL);
+        verify(chatRoomService).createPendingGroupRoomForPost(savedPost, user);
     }
 
     @DisplayName("게시글 생성 시 종료일이 시작일보다 이전이면 예외가 발생한다")

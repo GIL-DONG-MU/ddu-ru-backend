@@ -30,7 +30,7 @@ public class ChatRoom extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ChatRoomStatus status = ChatRoomStatus.ACTIVE;
+    private ChatRoomStatus status;
 
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;
@@ -40,26 +40,34 @@ public class ChatRoom extends BaseTimeEntity {
         this.post = post;
         this.roomType = roomType;
         this.maxCapacity = maxCapacity;
+        this.status = status != null ? status : ChatRoomStatus.ACTIVE;
     }
 
     public static ChatRoom forPrivateChat(Post post) {
         return newRoom(post, ChatRoomType.PRIVATE, 2);
     }
 
-    public static ChatRoom forGroupChat(Post post) {
+    public static ChatRoom createPendingGroupChat(Post post) {
         int capacity = post.getRecruitCapacity() + 1;
-        return newRoom(post, ChatRoomType.GROUP, capacity);
+        return newRoom(post, ChatRoomType.GROUP, capacity, ChatRoomStatus.PENDING);
     }
 
     public boolean canAccommodate(int participantCount) {
         return participantCount <= maxCapacity;
     }
 
-    private static ChatRoom newRoom(Post post, ChatRoomType roomType, int maxCapacity) {
+    public void activateIfPending() {
+        if (this.status == ChatRoomStatus.PENDING) {
+            this.status = ChatRoomStatus.ACTIVE;
+        }
+    }
+
+    private static ChatRoom newRoom(Post post, ChatRoomType roomType, int maxCapacity, ChatRoomStatus status) {
         return ChatRoom.builder()
                 .post(post)
                 .roomType(roomType)
                 .maxCapacity(maxCapacity)
+                .status(status)
                 .build();
     }
 }
