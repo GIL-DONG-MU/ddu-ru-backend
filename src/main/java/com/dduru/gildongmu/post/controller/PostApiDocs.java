@@ -39,8 +39,7 @@ public interface PostApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_POST_DATE,
-            ErrorCode.INVALID_BUDGET_RANGE,
-            ErrorCode.INVALID_AGE_RANGE,
+            ErrorCode.INVALID_PREFERRED_AGE,
             ErrorCode.DESTINATION_NOT_FOUND,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.UNAUTHORIZED
@@ -57,8 +56,7 @@ public interface PostApiDocs {
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.INVALID_POST_DATE,
-            ErrorCode.INVALID_BUDGET_RANGE,
-            ErrorCode.INVALID_AGE_RANGE,
+            ErrorCode.INVALID_PREFERRED_AGE,
             ErrorCode.DESTINATION_NOT_FOUND,
             ErrorCode.TRAVEL_ALREADY_STARTED,
             ErrorCode.TRAVEL_ALREADY_ENDED,
