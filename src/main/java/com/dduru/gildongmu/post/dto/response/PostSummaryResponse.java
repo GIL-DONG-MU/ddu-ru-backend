@@ -1,13 +1,11 @@
 package com.dduru.gildongmu.post.dto.response;
 
-import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public record PostSummaryResponse(
         Long id,
@@ -22,13 +20,13 @@ public record PostSummaryResponse(
         Integer recruitCapacity,
         Integer recruitCount,
         Gender preferredGender,
-        List<String> photoUrls,
+        String photoUrl,
         int viewCount,
         int likeCount,
         UserInfo author
 ) {
-    public static PostSummaryResponse from(Post post, JsonConverter jsonConverter, ProfileImageResolver profileImageResolver) {
-        List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+    public static PostSummaryResponse from(Post post, ProfileImageResolver profileImageResolver) {
+        String photoUrl = post.getPhotoUrl();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         return new PostSummaryResponse(
@@ -44,7 +42,7 @@ public record PostSummaryResponse(
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
                 post.getPreferredGender(),
-                photoUrls,
+                photoUrl,
                 post.getViewCount(),
                 post.getLikeCount(),
                 authorInfo

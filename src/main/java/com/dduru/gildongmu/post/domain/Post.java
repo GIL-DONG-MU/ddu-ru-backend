@@ -79,8 +79,8 @@ public class Post extends BaseTimeEntity {
     @Column(name = "max_age")
     private Integer maxAge;
 
-    @Column(name = "photo_urls", columnDefinition = "JSON")
-    private String photoUrls;
+    @Column(name = "photo_url", columnDefinition = "TEXT")
+    private String photoUrl;
 
     @Column(columnDefinition = "JSON")
     private String tags;
@@ -116,7 +116,7 @@ public class Post extends BaseTimeEntity {
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                 LocalDate recruitDeadline, Gender preferredGender,
                 boolean isAgeAny, Integer minAge, Integer maxAge,
-                String photoUrls, String tags, CompanionType companionType) {
+                String photoUrl, String tags, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -130,7 +130,7 @@ public class Post extends BaseTimeEntity {
         this.isAgeAny = isAgeAny;
         this.minAge = minAge;
         this.maxAge = maxAge;
-        this.photoUrls = photoUrls;
+        this.photoUrl = photoUrl;
         this.tags = tags;
         this.viewCount = 0;
         this.companionType = companionType;
@@ -140,7 +140,7 @@ public class Post extends BaseTimeEntity {
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                                   LocalDate recruitDeadline, Gender preferredGender,
                                   boolean isAgeAny, Integer minAge, Integer maxAge,
-                                  String photoUrls, String tags, CompanionType companionType) {
+                                  String photoUrl, String tags, CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -155,7 +155,7 @@ public class Post extends BaseTimeEntity {
                 .isAgeAny(isAgeAny)
                 .minAge(minAge)
                 .maxAge(maxAge)
-                .photoUrls(photoUrls)
+                .photoUrl(photoUrl)
                 .tags(tags)
                 .companionType(companionType)
                 .build();
@@ -165,7 +165,7 @@ public class Post extends BaseTimeEntity {
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                            LocalDate recruitDeadline, Gender preferredGender,
                            boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
-                           String photoUrls, String tags, CompanionType companionType) {
+                           boolean applyPhotoUrlPatch, String photoUrl, String tags, CompanionType companionType) {
         validateUpdatePermission();
 
         if (destination != null) this.destination = destination;
@@ -186,7 +186,9 @@ public class Post extends BaseTimeEntity {
                 this.maxAge = maxAge;
             }
         }
-        if (photoUrls != null) this.photoUrls = photoUrls;
+        if (applyPhotoUrlPatch) {
+            this.photoUrl = photoUrl;
+        }
         if (tags != null) this.tags = tags;
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
         if (companionType != null) this.companionType = companionType;
@@ -220,12 +222,6 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-    private void reopenIfParticipantRemoved() {
-        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-            this.status = PostStatus.OPEN;
-        }
-    }
-
     public void increaseLikeCount() {
         this.likeCount++;
     }
@@ -242,12 +238,21 @@ public class Post extends BaseTimeEntity {
         if (recruitDeadline == null) {
             return Integer.MAX_VALUE;
         }
-        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline);
-        return Math.max(daysLeft, 0);
+        return Math.max(daysFromToday(recruitDeadline), 0);
     }
 
     public int getDaysUntilTravelStart() {
-        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+        return daysFromToday(startDate);
+    }
+
+    private void reopenIfParticipantRemoved() {
+        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+            this.status = PostStatus.OPEN;
+        }
+    }
+
+    private static int daysFromToday(LocalDate target) {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), target);
     }
 
     private void validateUpdatePermission() {

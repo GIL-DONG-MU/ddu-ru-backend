@@ -24,7 +24,7 @@ public record AdminPostDetailResponse(
         boolean isAgeAny,
         Integer minAge,
         Integer maxAge,
-        List<String> photoUrls,
+        String photoUrl,
         List<String> tags,
         Long authorId,
         String authorName,
@@ -34,7 +34,7 @@ public record AdminPostDetailResponse(
         Long deletedBy
 ) {
     public static AdminPostDetailResponse from(Post post, JsonConverter jsonConverter) {
-        List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+        String photoUrl = post.getPhotoUrl();
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         return new AdminPostDetailResponse(
                 post.getId(),
@@ -51,7 +51,7 @@ public record AdminPostDetailResponse(
                 post.isAgeAny(),
                 post.getMinAge(),
                 post.getMaxAge(),
-                photoUrls,
+                photoUrl,
                 tags,
                 post.getUser().getId(),
                 post.getUser().getName(),

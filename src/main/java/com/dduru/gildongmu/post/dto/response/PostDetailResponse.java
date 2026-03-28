@@ -28,7 +28,7 @@ public record PostDetailResponse(
         boolean isAgeAny,
         Integer minAge,
         Integer maxAge,
-        List<String> photoUrls,
+        String photoUrl,
         List<String> tags,
         int viewCount,
         int likeCount,
@@ -47,7 +47,7 @@ public record PostDetailResponse(
                                           List<ParticipantInfo> participants,
                                           MyParticipationStatus myParticipationStatus,
                                           ProfileImageResolver profileImageResolver) {
-        List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+        String photoUrl = post.getPhotoUrl();
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
@@ -86,7 +86,7 @@ public record PostDetailResponse(
                 post.isAgeAny(),
                 post.getMinAge(),
                 post.getMaxAge(),
-                photoUrls,
+                photoUrl,
                 tags,
                 post.getViewCount(),
                 post.getLikeCount(),
