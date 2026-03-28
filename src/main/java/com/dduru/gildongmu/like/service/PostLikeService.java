@@ -33,10 +33,10 @@ public class PostLikeService {
 
         if (existingLike.isPresent()) {
             postLikeRepository.delete(existingLike.get());
-            post.decreaseLikeCount();
+            post.decreaseLikes();
         } else {
             postLikeRepository.save(PostLike.createPostLike(user, post));
-            post.increaseLikeCount();
+            post.increaseLikes();
         }
     }
 }

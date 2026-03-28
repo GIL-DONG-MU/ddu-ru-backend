@@ -166,32 +166,13 @@ public class Post extends BaseTimeEntity {
                            LocalDate recruitDeadline, Gender preferredGender,
                            boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
                            boolean applyPhotoUrlPatch, String photoUrl, String tags, CompanionType companionType) {
-        validateUpdatePermission();
+        validateUpdatable();
 
-        if (destination != null) this.destination = destination;
-        if (title != null) this.title = title;
-        if (content != null) this.content = content;
-        if (startDate != null) this.startDate = startDate;
-        if (endDate != null) this.endDate = endDate;
-        if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
-        if (preferredGender != null) this.preferredGender = preferredGender;
-        if (applyPreferredAgePatch) {
-            if (preferredAgeAny) {
-                this.isAgeAny = true;
-                this.minAge = null;
-                this.maxAge = null;
-            } else {
-                this.isAgeAny = false;
-                this.minAge = minAge;
-                this.maxAge = maxAge;
-            }
-        }
-        if (applyPhotoUrlPatch) {
-            this.photoUrl = photoUrl;
-        }
-        if (tags != null) this.tags = tags;
-        if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
-        if (companionType != null) this.companionType = companionType;
+        applyBasicChanges(destination, title, content, startDate, endDate, recruitDeadline,
+                preferredGender, tags, companionType);
+        applyPreferredAge(applyPreferredAgePatch, preferredAgeAny, minAge, maxAge);
+        applyPhotoUrl(applyPhotoUrlPatch, photoUrl);
+        applyRecruitCapacity(recruitCapacity);
     }
 
     public void softDelete(Long userId) {
@@ -200,33 +181,31 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public void updateStatus(PostStatus newStatus) {
-        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
-        }
+    public void changeStatus(PostStatus newStatus) {
+        validateStatusChange(newStatus);
         this.status = newStatus;
     }
 
     public void approveParticipation(Participation participation) {
         participation.approve();
-        this.incrementRecruitCount();
-        if (this.recruitCount >= this.recruitCapacity) {
-            this.updateStatus(PostStatus.FULL);
-        }
+        incrementRecruitCount();
+        closeIfRecruitmentFull();
     }
 
     public void removeApprovedParticipation(Participation participation) {
-        if (participation.isApproved()) {
-            this.decrementRecruitCount();
-            reopenIfParticipantRemoved();
+        if (!participation.isApproved()) {
+            return;
         }
+
+        decrementRecruitCount();
+        reopenIfCapacityAvailable();
     }
 
-    public void increaseLikeCount() {
+    public void increaseLikes() {
         this.likeCount++;
     }
 
-    public void decreaseLikeCount() {
+    public void decreaseLikes() {
         this.likeCount--;
     }
 
@@ -245,7 +224,81 @@ public class Post extends BaseTimeEntity {
         return daysFromToday(startDate);
     }
 
-    private void reopenIfParticipantRemoved() {
+    private void applyBasicChanges(Destination destination, String title, String content,
+                                   LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
+                                   Gender preferredGender, String tags, CompanionType companionType) {
+        if (destination != null) {
+            this.destination = destination;
+        }
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (startDate != null) {
+            this.startDate = startDate;
+        }
+        if (endDate != null) {
+            this.endDate = endDate;
+        }
+        if (recruitDeadline != null) {
+            this.recruitDeadline = recruitDeadline;
+        }
+        if (preferredGender != null) {
+            this.preferredGender = preferredGender;
+        }
+        if (tags != null) {
+            this.tags = tags;
+        }
+        if (companionType != null) {
+            this.companionType = companionType;
+        }
+    }
+
+    private void applyPreferredAge(boolean applyPreferredAgePatch, boolean preferredAgeAny,
+                                   Integer minAge, Integer maxAge) {
+        if (!applyPreferredAgePatch) {
+            return;
+        }
+
+        if (preferredAgeAny) {
+            this.isAgeAny = true;
+            this.minAge = null;
+            this.maxAge = null;
+            return;
+        }
+
+        this.isAgeAny = false;
+        this.minAge = minAge;
+        this.maxAge = maxAge;
+    }
+
+    private void applyPhotoUrl(boolean applyPhotoUrlPatch, String photoUrl) {
+        if (applyPhotoUrlPatch) {
+            this.photoUrl = photoUrl;
+        }
+    }
+
+    private void applyRecruitCapacity(Integer recruitCapacity) {
+        if (recruitCapacity != null) {
+            updateRecruitCapacity(recruitCapacity);
+        }
+    }
+
+    private void validateStatusChange(PostStatus newStatus) {
+        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
+            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
+        }
+    }
+
+    private void closeIfRecruitmentFull() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            changeStatus(PostStatus.FULL);
+        }
+    }
+
+    private void reopenIfCapacityAvailable() {
         if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
             this.status = PostStatus.OPEN;
         }
@@ -255,30 +308,27 @@ public class Post extends BaseTimeEntity {
         return (int) ChronoUnit.DAYS.between(LocalDate.now(), target);
     }
 
-    private void validateUpdatePermission() {
-        if (isRecruitDeadlinePassed()) {
+    private void validateUpdatable() {
+        if (hasRecruitDeadlinePassed()) {
             throw new RecruitDeadlinePassedException();
         }
-        if (isTravelEnded()) {
+        if (hasTravelEnded()) {
             throw new TravelAlreadyEndedException();
         }
-        if (isTravelStarted()) {
+        if (hasTravelStarted()) {
             throw new TravelAlreadyStartedException();
         }
     }
 
-    private boolean isRecruitDeadlinePassed() {
-        if (recruitDeadline == null) {
-            return false;
-        }
-        return LocalDate.now().isAfter(recruitDeadline);
+    private boolean hasRecruitDeadlinePassed() {
+        return recruitDeadline != null && LocalDate.now().isAfter(recruitDeadline);
     }
 
-    private boolean isTravelStarted() {
+    private boolean hasTravelStarted() {
         return LocalDate.now().isAfter(startDate);
     }
 
-    private boolean isTravelEnded() {
+    private boolean hasTravelEnded() {
         return LocalDate.now().isAfter(endDate);
     }
 

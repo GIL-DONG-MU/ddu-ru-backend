@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
@@ -22,7 +21,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class PostQueryService {
     private final PostRepository postRepository;
-    private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
@@ -38,11 +36,10 @@ public class PostQueryService {
         }
 
         List<PostSummaryResponse> summaries = posts.stream()
-                .map(post -> PostSummaryResponse.from(post, jsonConverter, profileImageResolver))
+                .map(post -> PostSummaryResponse.from(post, profileImageResolver))
                 .toList();
 
         log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", summaries.size(), hasNext);
         return PostListResponse.of(summaries, hasNext);
     }
-
 }
