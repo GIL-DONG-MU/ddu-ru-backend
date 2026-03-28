@@ -41,4 +41,16 @@ public class ChatRoom extends BaseTimeEntity {
         this.roomType = roomType;
         this.maxCapacity = maxCapacity;
     }
+
+    public static ChatRoom forPrivateChat(Post post) {
+        return newRoom(post, ChatRoomType.PRIVATE, 2);
+    }
+
+    private static ChatRoom newRoom(Post post, ChatRoomType roomType, int maxCapacity) {
+        return ChatRoom.builder()
+                .post(post)
+                .roomType(roomType)
+                .maxCapacity(maxCapacity)
+                .build();
+    }
 }

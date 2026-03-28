@@ -28,7 +28,7 @@ public class ChatController implements ChatApiDocs {
             @Valid @RequestBody PrivateChatRoomCreateRequest request
     ) {
         ChatRoomCreateResponse response = chatRoomService.createOrGetPrivateRoom(userId, request);
-        if (response.isCreated() == false) {
+        if (!response.isCreated()) {
             return ResponseEntity.ok(ApiResult.ok(response));
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
