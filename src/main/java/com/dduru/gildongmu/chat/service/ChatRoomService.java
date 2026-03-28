@@ -5,14 +5,16 @@ import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
-import com.dduru.gildongmu.chat.dto.request.GroupChatRoomCreateRequest;
-import com.dduru.gildongmu.chat.dto.request.PrivateChatRoomCreateRequest;
-import com.dduru.gildongmu.chat.dto.response.ChatRoomCreateResponse;
+import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
+import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
+import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.NotSelfChatException;
-import com.dduru.gildongmu.chat.exception.UnauthorizedChatRoomCreationException;
+import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.common.exception.BusinessException;
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.user.domain.User;
@@ -31,7 +33,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
@@ -39,46 +41,45 @@ public class ChatRoomService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    public ChatRoomCreateResponse createOrGetPrivateRoom(Long requesterId, PrivateChatRoomCreateRequest request) {
-        Post post = postRepository.getActiveByIdOrThrow(request.postId());
+    @Transactional
+    public PrivateChatRoomCreateResponse createOrGetPrivateRoom(Long requesterId, Long postId) {
+        Post post = postRepository.getActiveByIdOrThrow(postId);
         User target = post.getUser();
         User requester = userRepository.getByIdOrThrow(requesterId);
         validateNotSelfPrivateChat(requesterId, target.getId());
 
         return findExistingPrivateRoom(post, requester, target)
-                .map(room -> new ChatRoomCreateResponse(room.getId(), false))
+                .map(room -> new PrivateChatRoomCreateResponse(room.getId(), false))
                 .orElseGet(() -> createPrivateRoom(post, requester, target));
     }
 
-    public ChatRoomCreateResponse createGroupRoom(Long hostId, GroupChatRoomCreateRequest request) {
-        Post post = postRepository.getActiveByIdOrThrow(request.postId());
-        User host = userRepository.getByIdOrThrow(hostId);
-        validateGroupChatRoomHost(post.getUser().getId(), hostId);
+    @Transactional
+    public GroupChatInviteResponse inviteMembersToGroupRoom(Long requesterId, Long roomId, GroupChatInviteRequest request) {
+        ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomType(roomId, ChatRoomType.GROUP)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
-        List<Long> guestUserIds = distinctNonHostUserIds(request.memberUserIds(), hostId);
+        validateRequesterIsPostAuthor(chatRoom.getPost().getUser().getId(), requesterId);
+        validateGroupRoomIsActive(chatRoom);
 
-        boolean isNew = false;
+        List<Long> guestUserIds = distinctNonHostUserIds(request.inviteeUserIds(), requesterId);
+        List<Long> newGuestIds = resolveNewGuestUserIds(chatRoom.getId(), guestUserIds);
 
-        ChatRoom chatRoom = chatRoomRepository.findByPostIdAndRoomType(post.getId(), ChatRoomType.GROUP)
-                .orElse(null);
+        validateGroupRoomCapacity(chatRoom, newGuestIds);
 
-        if (chatRoom == null) {
-            chatRoom = ChatRoom.forGroupChat(post);
-            chatRoomRepository.save(chatRoom);
-            isNew = true;
-        }
+        saveNewGuestMembers(chatRoom, newGuestIds);
 
-        validateGroupRoomCapacity(chatRoom, guestUserIds.size() + 1);
-
-        chatRoomMemberRepository.save(ChatRoomMember.create(chatRoom, host, ChatMemberRole.HOST));
-        saveAllGuestMembers(chatRoom, guestUserIds);
-
-        return new ChatRoomCreateResponse(chatRoom.getId(), isNew);
+        return new GroupChatInviteResponse(chatRoom.getId(), newGuestIds.size());
     }
 
-    private void validateGroupChatRoomHost(Long postUserId, Long hostId) {
-        if (!postUserId.equals(hostId)) {
-            throw new UnauthorizedChatRoomCreationException();
+    private static void validateGroupRoomIsActive(ChatRoom room) {
+        if (room.getStatus() == ChatRoomStatus.CLOSED || room.getStatus() == ChatRoomStatus.DELETED) {
+            throw new BusinessException(ErrorCode.CHAT_ROOM_CLOSED);
+        }
+    }
+
+    private static void validateRequesterIsPostAuthor(Long postUserId, Long requesterId) {
+        if (!postUserId.equals(requesterId)) {
+            throw new GroupChatRoomInviteAccessDeniedException();
         }
     }
 
@@ -92,12 +93,12 @@ public class ChatRoomService {
         );
     }
 
-    private ChatRoomCreateResponse createPrivateRoom(Post post, User requester, User target) {
+    private PrivateChatRoomCreateResponse createPrivateRoom(Post post, User requester, User target) {
         ChatRoom room = ChatRoom.forPrivateChat(post);
         chatRoomRepository.save(room);
         savePrivateRoomMembers(room, requester, target);
         log.info("1:1 채팅방 생성 - roomId={}, postId={}, users=[{}, {}]", room.getId(), post.getId(), requester.getId(), target.getId());
-        return new ChatRoomCreateResponse(room.getId(), true);
+        return new PrivateChatRoomCreateResponse(room.getId(), true);
     }
 
     private void savePrivateRoomMembers(ChatRoom room, User requester, User target) {
@@ -123,20 +124,32 @@ public class ChatRoomService {
         return new ArrayList<>(orderedUnique);
     }
 
-    private static void validateGroupRoomCapacity(ChatRoom room, int totalParticipants) {
-        if (!room.canAccommodate(totalParticipants)) {
+    private void validateGroupRoomCapacity(ChatRoom room, List<Long> newGuestIds) {
+        int memberCount = chatRoomMemberRepository.countByRoom_Id(room.getId());
+        int totalAfterInvite = memberCount + newGuestIds.size();
+
+        if (!room.canAccommodate(totalAfterInvite)) {
             throw new ChatRoomCapacityExceededException();
         }
     }
 
-    private void saveAllGuestMembers(ChatRoom room, List<Long> guestUserIds) {
-        List<ChatRoomMember> members = guestUserIds.stream()
-                .map(userId -> {
-                    User user = userRepository.getByIdOrThrow(userId);
-                    return ChatRoomMember.create(room, user, ChatMemberRole.GUEST);
-                })
+    private List<Long> resolveNewGuestUserIds(Long roomId, List<Long> guestUserIds) {
+        List<Long> newIds = new ArrayList<>();
+        for (Long userId : guestUserIds) {
+            userRepository.getByIdOrThrow(userId);
+            if (chatRoomMemberRepository.findByRoom_IdAndUser_Id(roomId, userId).isEmpty()) {
+                newIds.add(userId);
+            }
+        }
+        return newIds;
+    }
+
+    private void saveNewGuestMembers(ChatRoom room, List<Long> newGuestUserIds) {
+        List<ChatRoomMember> created = newGuestUserIds.stream()
+                .map(userId
+                        -> ChatRoomMember.create(room, userRepository.getByIdOrThrow(userId), ChatMemberRole.GUEST))
                 .toList();
-        chatRoomMemberRepository.saveAll(members);
+        chatRoomMemberRepository.saveAll(created);
     }
 
     /**
