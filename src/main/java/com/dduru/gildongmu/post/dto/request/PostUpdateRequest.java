@@ -34,7 +34,7 @@ public record PostUpdateRequest(
 
         String photoUrl,
 
-        @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
+        @Size(max = 4, message = "태그는 최대 4개까지 가능합니다")
         List<String> tags,
 
         CompanionType companionType

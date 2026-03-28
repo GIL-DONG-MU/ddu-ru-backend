@@ -40,6 +40,7 @@ public interface PostApiDocs {
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_POST_DATE,
             ErrorCode.INVALID_PREFERRED_AGE,
+            ErrorCode.INVALID_POST_TAGS,
             ErrorCode.DESTINATION_NOT_FOUND,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.UNAUTHORIZED
@@ -57,6 +58,7 @@ public interface PostApiDocs {
             ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.INVALID_POST_DATE,
             ErrorCode.INVALID_PREFERRED_AGE,
+            ErrorCode.INVALID_POST_TAGS,
             ErrorCode.DESTINATION_NOT_FOUND,
             ErrorCode.TRAVEL_ALREADY_STARTED,
             ErrorCode.TRAVEL_ALREADY_ENDED,

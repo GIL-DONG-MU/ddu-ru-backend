@@ -68,6 +68,7 @@ public enum ErrorCode {
     RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "모집 정원을 초과할 수 없습니다."),
     RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "모집 인원이 0 이하가 될 수 없습니다."),
     INVALID_POST_STATUS(HttpStatus.BAD_REQUEST, "모집이 완료된 게시글은 모집 상태를 변경할 수 없습니다."),
+    INVALID_POST_TAGS(HttpStatus.BAD_REQUEST, "태그 형식이 올바르지 않습니다."),
 
     // 댓글 (COMMENT)
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
