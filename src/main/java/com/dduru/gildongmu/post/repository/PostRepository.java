@@ -26,4 +26,9 @@ public interface PostRepository extends JpaRepository<Post, Long>,PostRepository
         return findActiveById(id)
                 .orElseThrow(() -> PostNotFoundException.of(id));
     }
+
+    default Post getByIdOrThrow(Long id) {
+        return findById(id)
+                .orElseThrow(() -> PostNotFoundException.of(id));
+    }
 }
