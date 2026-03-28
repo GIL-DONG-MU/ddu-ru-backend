@@ -105,7 +105,8 @@ public enum ErrorCode {
     CHAT_ROOM_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "채팅방 정원을 초과했습니다."),
     CHAT_NOT_GROUP_ROOM(HttpStatus.BAD_REQUEST, "그룹 채팅방이 아닙니다."),
     CHAT_INVITE_HOST_ONLY(HttpStatus.FORBIDDEN, "방장만 멤버를 초대할 수 있습니다."),
-    NOT_SELF_CHAT(HttpStatus.FORBIDDEN, "자신과의 채팅은 허용되지 않습니다.");
+    NOT_SELF_CHAT(HttpStatus.FORBIDDEN, "자신과의 채팅은 허용되지 않습니다."),
+    UNAUTHORIZED_CHAT_ROOM_CREATION(HttpStatus.UNAUTHORIZED, "게시글 작성자만 그룹 채팅방을 생성할 수 있습니다.");
 
     private final int status;
     private final String message;

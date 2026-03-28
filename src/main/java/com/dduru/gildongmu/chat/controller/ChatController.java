@@ -42,6 +42,9 @@ public class ChatController implements ChatApiDocs {
             @Valid @RequestBody GroupChatRoomCreateRequest request
     ) {
         ChatRoomCreateResponse response = chatRoomService.createGroupRoom(userId, request);
+        if (!response.isCreated()) {
+            return ResponseEntity.ok(ApiResult.ok(response));
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 }

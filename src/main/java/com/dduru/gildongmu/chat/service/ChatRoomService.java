@@ -10,6 +10,7 @@ import com.dduru.gildongmu.chat.dto.request.PrivateChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.NotSelfChatException;
+import com.dduru.gildongmu.chat.exception.UnauthorizedChatRoomCreationException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -52,16 +53,33 @@ public class ChatRoomService {
     public ChatRoomCreateResponse createGroupRoom(Long hostId, GroupChatRoomCreateRequest request) {
         Post post = postRepository.getActiveByIdOrThrow(request.postId());
         User host = userRepository.getByIdOrThrow(hostId);
+        validateGroupChatRoomHost(post.getUser().getId(), hostId);
+
         List<Long> guestUserIds = distinctNonHostUserIds(request.memberUserIds(), hostId);
 
-        ChatRoom room = ChatRoom.forGroupChat(post);
-        validateGroupRoomCapacity(room, guestUserIds.size() + 1);
+        boolean isNew = false;
 
-        chatRoomRepository.save(room);
-        chatRoomMemberRepository.save(ChatRoomMember.create(room, host, ChatMemberRole.HOST));
-        saveAllGuestMembers(room, guestUserIds);
+        ChatRoom chatRoom = chatRoomRepository.findByPostIdAndRoomType(post.getId(), ChatRoomType.GROUP)
+                .orElse(null);
 
-        return new ChatRoomCreateResponse(room.getId(), true);
+        if (chatRoom == null) {
+            chatRoom = ChatRoom.forGroupChat(post);
+            chatRoomRepository.save(chatRoom);
+            isNew = true;
+        }
+
+        validateGroupRoomCapacity(chatRoom, guestUserIds.size() + 1);
+
+        chatRoomMemberRepository.save(ChatRoomMember.create(chatRoom, host, ChatMemberRole.HOST));
+        saveAllGuestMembers(chatRoom, guestUserIds);
+
+        return new ChatRoomCreateResponse(chatRoom.getId(), isNew);
+    }
+
+    private void validateGroupChatRoomHost(Long postUserId, Long hostId) {
+        if (!postUserId.equals(hostId)) {
+            throw new UnauthorizedChatRoomCreationException();
+        }
     }
 
     private Optional<ChatRoom> findExistingPrivateRoom(Post post, User requester, User target) {
