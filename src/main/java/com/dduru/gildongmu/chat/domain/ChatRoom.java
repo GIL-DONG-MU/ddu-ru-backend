@@ -46,6 +46,15 @@ public class ChatRoom extends BaseTimeEntity {
         return newRoom(post, ChatRoomType.PRIVATE, 2);
     }
 
+    public static ChatRoom forGroupChat(Post post) {
+        int capacity = post.getRecruitCapacity() + 1;
+        return newRoom(post, ChatRoomType.GROUP, capacity);
+    }
+
+    public boolean canAccommodate(int participantCount) {
+        return participantCount <= maxCapacity;
+    }
+
     private static ChatRoom newRoom(Post post, ChatRoomType roomType, int maxCapacity) {
         return ChatRoom.builder()
                 .post(post)

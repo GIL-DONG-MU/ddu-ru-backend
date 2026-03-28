@@ -5,8 +5,10 @@ import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.dto.request.GroupChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.request.PrivateChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomCreateResponse;
+import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.NotSelfChatException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
@@ -19,8 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -42,6 +47,21 @@ public class ChatRoomService {
         return findExistingPrivateRoom(post, requester, target)
                 .map(room -> new ChatRoomCreateResponse(room.getId(), false))
                 .orElseGet(() -> createPrivateRoom(post, requester, target));
+    }
+
+    public ChatRoomCreateResponse createGroupRoom(Long hostId, GroupChatRoomCreateRequest request) {
+        Post post = postRepository.getActiveByIdOrThrow(request.postId());
+        User host = userRepository.getByIdOrThrow(hostId);
+        List<Long> guestUserIds = distinctNonHostUserIds(request.memberUserIds(), hostId);
+
+        ChatRoom room = ChatRoom.forGroupChat(post);
+        validateGroupRoomCapacity(room, guestUserIds.size() + 1);
+
+        chatRoomRepository.save(room);
+        chatRoomMemberRepository.save(ChatRoomMember.create(room, host, ChatMemberRole.HOST));
+        saveAllGuestMembers(room, guestUserIds);
+
+        return new ChatRoomCreateResponse(room.getId(), true);
     }
 
     private Optional<ChatRoom> findExistingPrivateRoom(Post post, User requester, User target) {
@@ -73,5 +93,31 @@ public class ChatRoomService {
         if (requesterId.equals(targetUserId)) {
             throw new NotSelfChatException();
         }
+    }
+
+    private static List<Long> distinctNonHostUserIds(List<Long> userIds, Long hostUserId) {
+        Set<Long> orderedUnique = new LinkedHashSet<>();
+        for (Long id : userIds) {
+            if (id != null && !id.equals(hostUserId)) {
+                orderedUnique.add(id);
+            }
+        }
+        return new ArrayList<>(orderedUnique);
+    }
+
+    private static void validateGroupRoomCapacity(ChatRoom room, int totalParticipants) {
+        if (!room.canAccommodate(totalParticipants)) {
+            throw new ChatRoomCapacityExceededException();
+        }
+    }
+
+    private void saveAllGuestMembers(ChatRoom room, List<Long> guestUserIds) {
+        List<ChatRoomMember> members = guestUserIds.stream()
+                .map(userId -> {
+                    User user = userRepository.getByIdOrThrow(userId);
+                    return ChatRoomMember.create(room, user, ChatMemberRole.GUEST);
+                })
+                .toList();
+        chatRoomMemberRepository.saveAll(members);
     }
 }

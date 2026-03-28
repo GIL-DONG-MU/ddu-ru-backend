@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.chat.controller;
 
+import com.dduru.gildongmu.chat.dto.request.GroupChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.request.PrivateChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.ChatRoomService;
@@ -31,6 +32,16 @@ public class ChatController implements ChatApiDocs {
         if (!response.isCreated()) {
             return ResponseEntity.ok(ApiResult.ok(response));
         }
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
+    }
+
+    @Override
+    @PostMapping("/group")
+    public ResponseEntity<ApiResult<ChatRoomCreateResponse>> createGroupRoom(
+            @CurrentUser Long userId,
+            @Valid @RequestBody GroupChatRoomCreateRequest request
+    ) {
+        ChatRoomCreateResponse response = chatRoomService.createGroupRoom(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 }

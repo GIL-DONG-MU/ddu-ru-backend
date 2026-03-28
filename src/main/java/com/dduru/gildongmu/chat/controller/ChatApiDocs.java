@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.chat.controller;
 
+import com.dduru.gildongmu.chat.dto.request.GroupChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.request.PrivateChatRoomCreateRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomCreateResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
@@ -26,5 +27,18 @@ public interface ChatApiDocs {
     ResponseEntity<ApiResult<ChatRoomCreateResponse>> createPrivateRoom(
             @Parameter(hidden = true) Long userId,
             @Valid PrivateChatRoomCreateRequest request
+    );
+
+    @Operation(summary = "그룹 채팅방 생성", description = "그룹(1:N) 채팅방을 생성합니다.")
+    @ApiResponse(responseCode = "201", description = "성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.CHAT_ROOM_CAPACITY_EXCEEDED
+    })
+    ResponseEntity<ApiResult<ChatRoomCreateResponse>> createGroupRoom(
+            @Parameter(hidden = true) Long userId,
+            @Valid GroupChatRoomCreateRequest request
     );
 }
