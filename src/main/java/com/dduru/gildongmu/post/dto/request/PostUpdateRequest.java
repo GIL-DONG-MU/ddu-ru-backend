@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
 
@@ -29,8 +28,9 @@ public record PostUpdateRequest(
 
         Gender preferredGender,
 
-        @Size(max = 2, message = "선호 연령대는 최대 2개까지 선택할 수 있습니다")
-        List<AgeRange> preferredAges,
+        Boolean isAgeAny,
+        Integer minAge,
+        Integer maxAge,
 
         @Size(max = 1, message = "사진은 최대 1장까지 업로드 가능합니다")
         List<String> photoUrls,

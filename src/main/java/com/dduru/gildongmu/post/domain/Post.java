@@ -12,7 +12,6 @@ import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
@@ -25,15 +24,13 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -72,11 +69,15 @@ public class Post extends BaseTimeEntity {
     @Column(name = "preferred_gender", nullable = false)
     private Gender preferredGender;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "post_preferred_ages", joinColumns = @JoinColumn(name = "post_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "age_range", nullable = false)
-    private List<AgeRange> preferredAges = new ArrayList<>();
+    @Column(name = "is_age_any", nullable = false)
+    @ColumnDefault("false")
+    private boolean isAgeAny;
+
+    @Column(name = "min_age")
+    private Integer minAge;
+
+    @Column(name = "max_age")
+    private Integer maxAge;
 
     @Column(name = "photo_urls", columnDefinition = "JSON")
     private String photoUrls;
@@ -113,7 +114,8 @@ public class Post extends BaseTimeEntity {
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                LocalDate recruitDeadline, Gender preferredGender,
+                boolean isAgeAny, Integer minAge, Integer maxAge,
                 String photoUrls, String tags, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
@@ -125,7 +127,9 @@ public class Post extends BaseTimeEntity {
         this.recruitCount = 0;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender;
-        this.preferredAges = preferredAges;
+        this.isAgeAny = isAgeAny;
+        this.minAge = minAge;
+        this.maxAge = maxAge;
         this.photoUrls = photoUrls;
         this.tags = tags;
         this.viewCount = 0;
@@ -134,7 +138,8 @@ public class Post extends BaseTimeEntity {
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                                  LocalDate recruitDeadline, Gender preferredGender,
+                                  boolean isAgeAny, Integer minAge, Integer maxAge,
                                   String photoUrls, String tags, CompanionType companionType) {
 
         return Post.builder()
@@ -147,7 +152,9 @@ public class Post extends BaseTimeEntity {
                 .recruitCapacity(recruitCapacity)
                 .recruitDeadline(recruitDeadline)
                 .preferredGender(preferredGender)
-                .preferredAges(preferredAges)
+                .isAgeAny(isAgeAny)
+                .minAge(minAge)
+                .maxAge(maxAge)
                 .photoUrls(photoUrls)
                 .tags(tags)
                 .companionType(companionType)
@@ -156,7 +163,8 @@ public class Post extends BaseTimeEntity {
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                           LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
+                           LocalDate recruitDeadline, Gender preferredGender,
+                           boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
                            String photoUrls, String tags, CompanionType companionType) {
         validateUpdatePermission();
 
@@ -167,7 +175,17 @@ public class Post extends BaseTimeEntity {
         if (endDate != null) this.endDate = endDate;
         if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
         if (preferredGender != null) this.preferredGender = preferredGender;
-        if (preferredAges != null) this.preferredAges = preferredAges;
+        if (applyPreferredAgePatch) {
+            if (preferredAgeAny) {
+                this.isAgeAny = true;
+                this.minAge = null;
+                this.maxAge = null;
+            } else {
+                this.isAgeAny = false;
+                this.minAge = minAge;
+                this.maxAge = maxAge;
+            }
+        }
         if (photoUrls != null) this.photoUrls = photoUrls;
         if (tags != null) this.tags = tags;
         if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);

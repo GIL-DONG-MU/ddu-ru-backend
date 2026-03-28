@@ -3,7 +3,6 @@ package com.dduru.gildongmu.admin.post.dto.response;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 
 import java.time.LocalDate;
@@ -22,7 +21,9 @@ public record AdminPostDetailResponse(
         Integer recruitCount,
         LocalDate recruitDeadline,
         Gender preferredGender,
-        List<AgeRange> preferredAges,
+        boolean isAgeAny,
+        Integer minAge,
+        Integer maxAge,
         List<String> photoUrls,
         List<String> tags,
         Long authorId,
@@ -47,7 +48,9 @@ public record AdminPostDetailResponse(
                 post.getRecruitCount(),
                 post.getRecruitDeadline(),
                 post.getPreferredGender(),
-                post.getPreferredAges(),
+                post.isAgeAny(),
+                post.getMinAge(),
+                post.getMaxAge(),
                 photoUrls,
                 tags,
                 post.getUser().getId(),
