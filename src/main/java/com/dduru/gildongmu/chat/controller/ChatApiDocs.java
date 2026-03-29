@@ -17,8 +17,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Tag(name = "Chat", description = "채팅 API")
 public interface ChatApiDocs {
 
-    @Operation(summary = "1:1 채팅방 생성/조회", description = "게시글 단위로 1:1 채팅방을 생성하거나 기존 방을 조회합니다.")
-    @ApiResponse(responseCode = "201", description = "신규 생성")
+    @Operation(summary = "1:1 채팅방 생성/조회", description = "게시글 단위로 1:1 채팅방을 생성(201)하거나 이미 있을 시 기존 방을 조회(200)해서 리턴합니다.")
+    @ApiResponse(responseCode = "200", description = "기존 채팅방 조회")
+    @ApiResponse(responseCode = "201", description = "신규 채팅방 생성")
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.USER_NOT_FOUND,
@@ -36,7 +37,6 @@ public interface ChatApiDocs {
     )
     @ApiResponse(responseCode = "200", description = "성공")
     @ApiErrorResponses({
-            ErrorCode.POST_NOT_FOUND,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.UNAUTHORIZED,
             ErrorCode.CHAT_ROOM_NOT_FOUND,
