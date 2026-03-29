@@ -19,12 +19,14 @@ import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -50,8 +52,8 @@ class PostServiceTest {
     @Mock
     private DestinationRepository destinationRepository;
 
-    @Mock
-    private JsonConverter jsonConverter;
+    @Spy
+    private JsonConverter jsonConverter = new JsonConverter(new ObjectMapper());
 
     @Mock
     private ParticipationService participationService;
@@ -96,7 +98,6 @@ class PostServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(destinationRepository.getByIdOrThrow(destinationId)).thenReturn(destination);
-        when(jsonConverter.convertListToJson(any())).thenReturn("[]");
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
             Post post = invocation.getArgument(0);
             ReflectionTestUtils.setField(post, "id", 100L);
@@ -117,10 +118,10 @@ class PostServiceTest {
         assertThat(savedPost.getMaxAge()).isEqualTo(35);
     }
 
-    @DisplayName("게시글 생성 시 태그 앞뒤 공백은 JSON 직렬화 전에 제거된다")
+    @DisplayName("게시글 생성 시 태그 JSON 변환은 JsonConverter에 위임되며 원본 리스트가 전달된다")
     @Test
     @SuppressWarnings("unchecked")
-    void create_stripsWhitespaceFromTagsBeforeJson() {
+    void create_passesRawTagsToJsonConverter() {
         Long userId = 1L;
         Long destinationId = 10L;
         User user = User.builder().email("a@a.com").name("user").oauthId("kakao-1").oauthType(OauthType.KAKAO).build();
@@ -149,7 +150,6 @@ class PostServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(destinationRepository.getByIdOrThrow(destinationId)).thenReturn(destination);
-        when(jsonConverter.convertListToJson(any())).thenReturn("[\"제주\",\"부산\"]");
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
             Post post = invocation.getArgument(0);
             ReflectionTestUtils.setField(post, "id", 1L);
@@ -159,8 +159,8 @@ class PostServiceTest {
         postService.create(userId, request);
 
         ArgumentCaptor<List<String>> tagCaptor = ArgumentCaptor.forClass(List.class);
-        verify(jsonConverter).convertListToJson(tagCaptor.capture());
-        assertThat(tagCaptor.getValue()).containsExactly("제주", "부산");
+        verify(jsonConverter).convertTagListToJson(tagCaptor.capture());
+        assertThat(tagCaptor.getValue()).containsExactly("  제주  ", "부산");
     }
 
     @DisplayName("게시글 생성 시 연령 무관이면 isAgeAny이 true이고 min/max는 null이다")
@@ -194,7 +194,6 @@ class PostServiceTest {
 
         when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
         when(destinationRepository.getByIdOrThrow(destinationId)).thenReturn(destination);
-        when(jsonConverter.convertListToJson(any())).thenReturn("[]");
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         postService.create(userId, request);
