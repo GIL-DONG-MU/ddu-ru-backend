@@ -84,7 +84,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 startDate,
                 endDate,
-                4,
+                5,
                 Gender.M,
                 false,
                 25,
@@ -137,7 +137,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 startDate,
                 endDate,
-                4,
+                5,
                 Gender.M,
                 false,
                 25,
@@ -182,7 +182,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 startDate,
                 endDate,
-                4,
+                5,
                 Gender.M,
                 true,
                 null,
@@ -207,7 +207,7 @@ class PostServiceTest {
         assertThat(saved.getMaxAge()).isNull();
     }
 
-    @DisplayName("게시글 생성 시 연령 무관인데 min/max를내면 예외가 발생한다")
+    @DisplayName("게시글 생성 시 연령 무관인데 min/max를 넣으면 예외가 발생한다")
     @Test
     void create_ageAnyWithMinMax_throws() {
         Long userId = 1L;
@@ -217,7 +217,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 LocalDate.now().plusDays(10),
                 LocalDate.now().plusDays(12),
-                4,
+                5,
                 Gender.M,
                 true,
                 20,
@@ -244,7 +244,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 startDate,
                 endDate,
-                4,
+                5,
                 Gender.M,
                 true,
                 null,
@@ -269,7 +269,7 @@ class PostServiceTest {
                 "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
                 LocalDate.now().plusDays(10),
                 LocalDate.now().plusDays(12),
-                4,
+                5,
                 Gender.M,
                 false,
                 25,
@@ -297,7 +297,7 @@ class PostServiceTest {
                 .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
                 .title("제목").content("내용내용내용내용내용내용내용내용")
                 .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(3))
-                .recruitCapacity(4).recruitDeadline(LocalDate.now().plusDays(1))
+                .recruitCapacity(5).recruitDeadline(LocalDate.now().plusDays(1))
                 .preferredGender(Gender.M).isAgeAny(false).minAge(20).maxAge(30)
                 .photoUrl(null).tags("[]")
                 .companionType(CompanionType.FULL)

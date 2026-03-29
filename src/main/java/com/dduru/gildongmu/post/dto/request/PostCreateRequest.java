@@ -28,8 +28,8 @@ public record PostCreateRequest(
         LocalDate endDate,
 
         @NotNull(message = "모집 인원은 필수입니다")
-        @Min(value = 1, message = "모집 인원은 최소 1명 이상이어야 합니다 (호스트 제외)")
-        @Max(value = 9, message = "모집 인원은 최대 9명까지 가능합니다 (호스트 제외)")
+        @Min(value = 2, message = "모집 인원은 최소 2명 이상이어야 합니다 (호스트 포함)")
+        @Max(value = 10, message = "모집 인원은 최대 10명까지 가능합니다 (호스트 포함)")
         Integer recruitCapacity,
 
         @NotNull(message = "선호하는 성별을 골라주세요")

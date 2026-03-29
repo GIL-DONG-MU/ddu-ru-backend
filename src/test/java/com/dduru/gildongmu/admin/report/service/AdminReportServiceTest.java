@@ -118,7 +118,7 @@ class AdminReportServiceTest {
                 .content("신고 대상 게시글 본문은 충분한 길이로 작성합니다.")
                 .startDate(LocalDate.now().plusDays(1))
                 .endDate(LocalDate.now().plusDays(2))
-                .recruitCapacity(4)
+                .recruitCapacity(5)
                 .recruitDeadline(LocalDate.now().plusDays(1))
                 .preferredGender(Gender.M)
                 .isAgeAny(false)

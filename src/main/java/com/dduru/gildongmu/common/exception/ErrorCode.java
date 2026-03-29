@@ -66,7 +66,7 @@ public enum ErrorCode {
     TRAVEL_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "이미 종료된 여행입니다."),
     RECRUIT_DEADLINE_PASSED(HttpStatus.BAD_REQUEST, "모집 마감된 게시글은 수정할 수 없습니다."),
     RECRUIT_COUNT_EXCEED_CAPACITY(HttpStatus.BAD_REQUEST, "모집 정원을 초과할 수 없습니다."),
-    RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "모집 인원이 0 이하가 될 수 없습니다."),
+    RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "모집된 인원이 1명 미만이 될 수 없습니다."),
     INVALID_POST_STATUS(HttpStatus.BAD_REQUEST, "모집이 완료된 게시글은 모집 상태를 변경할 수 없습니다."),
     INVALID_POST_TAGS(HttpStatus.BAD_REQUEST, "태그 형식이 올바르지 않습니다."),
 

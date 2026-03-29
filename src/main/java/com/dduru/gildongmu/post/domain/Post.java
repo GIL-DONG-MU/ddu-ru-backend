@@ -59,8 +59,8 @@ public class Post extends BaseTimeEntity {
     private Integer recruitCapacity;
 
     @Column(name = "recruit_count", nullable = false)
-    @ColumnDefault("0")
-    private Integer recruitCount = 0;
+    @ColumnDefault("1")
+    private Integer recruitCount = 1;
 
     @Column(name = "recruit_deadline")
     private LocalDate recruitDeadline;
@@ -124,7 +124,7 @@ public class Post extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.recruitCapacity = recruitCapacity;
-        this.recruitCount = 0;
+        this.recruitCount = 1;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender;
         this.isAgeAny = isAgeAny;
@@ -133,6 +133,9 @@ public class Post extends BaseTimeEntity {
         this.photoUrl = photoUrl;
         this.tags = tags;
         this.viewCount = 0;
+        this.likeCount = 0;
+        this.status = PostStatus.OPEN;
+        this.isDeleted = false;
         this.companionType = companionType;
     }
 
@@ -347,7 +350,7 @@ public class Post extends BaseTimeEntity {
     }
 
     private void decrementRecruitCount() {
-        if (this.recruitCount <= 0) {
+        if (this.recruitCount <= 1) {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;

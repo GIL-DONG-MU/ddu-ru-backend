@@ -14,3 +14,8 @@ UPDATE posts SET is_age_any = TRUE WHERE min_age IS NULL AND max_age IS NULL;
 -- 단일 썸네일 URL (JSON 배열 photo_urls 제거)
 ALTER TABLE posts ADD COLUMN photo_url TEXT NULL;
 ALTER TABLE posts DROP COLUMN photo_urls;
+
+-- 모집 정원·현재 인원: 호스트 1명을 포함한 총원 기준으로 통일
+-- 이전 의미: recruit_capacity = 최대 '게스트' 수, recruit_count = 승인된 게스트 수(호스트 미포함)
+UPDATE posts SET recruit_capacity = recruit_capacity + 1;
+UPDATE posts SET recruit_count = recruit_count + 1;

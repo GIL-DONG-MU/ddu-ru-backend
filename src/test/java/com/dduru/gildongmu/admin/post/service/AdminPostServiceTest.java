@@ -128,7 +128,7 @@ class AdminPostServiceTest {
                 .content("내용내용내용내용내용내용내용내용")
                 .startDate(LocalDate.now().plusDays(1))
                 .endDate(LocalDate.now().plusDays(3))
-                .recruitCapacity(4)
+                .recruitCapacity(5)
                 .recruitDeadline(LocalDate.now().plusDays(1))
                 .preferredGender(Gender.M)
                 .isAgeAny(false)
