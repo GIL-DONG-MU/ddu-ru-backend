@@ -47,7 +47,7 @@ public interface ChatApiDocs {
     })
     ResponseEntity<ApiResult<GroupChatInviteResponse>> inviteMembersToGroupRoom(
             @Parameter(hidden = true) Long userId,
-            @Parameter(description = "게시글 ID", required = true) @PathVariable Long postId,
+            @Parameter(description = "채팅방 ID", required = true) @PathVariable Long roomId,
             @Valid GroupChatInviteRequest request
     );
 }
