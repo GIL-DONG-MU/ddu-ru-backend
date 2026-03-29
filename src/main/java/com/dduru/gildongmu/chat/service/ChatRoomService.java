@@ -48,9 +48,12 @@ public class ChatRoomService {
         User requester = userRepository.getByIdOrThrow(requesterId);
         validateNotSelfPrivateChat(requesterId, target.getId());
 
-        return findExistingPrivateRoom(post, requester, target)
-                .map(room -> new PrivateChatRoomCreateResponse(room.getId(), false))
-                .orElseGet(() -> createPrivateRoom(post, requester, target));
+        Optional<ChatRoom> existingRoom = findExistingPrivateRoom(post, requester, target);
+        if (existingRoom.isPresent()) {
+            return new PrivateChatRoomCreateResponse(existingRoom.get().getId(), false);
+        }
+        Long newRoomId = createPrivateRoom(post, requester, target);
+        return new PrivateChatRoomCreateResponse(newRoomId, true);
     }
 
     @Transactional
@@ -93,12 +96,12 @@ public class ChatRoomService {
         );
     }
 
-    private PrivateChatRoomCreateResponse createPrivateRoom(Post post, User requester, User target) {
+    private Long createPrivateRoom(Post post, User requester, User target) {
         ChatRoom room = ChatRoom.forPrivateChat(post);
         chatRoomRepository.save(room);
         savePrivateRoomMembers(room, requester, target);
         log.info("1:1 채팅방 생성 - roomId={}, postId={}, users=[{}, {}]", room.getId(), post.getId(), requester.getId(), target.getId());
-        return new PrivateChatRoomCreateResponse(room.getId(), true);
+        return room.getId();
     }
 
     private void savePrivateRoomMembers(ChatRoom room, User requester, User target) {
