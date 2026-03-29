@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.post.dto.request;
 
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -13,7 +12,7 @@ public record PostListRequest(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
         Gender preferredGender,
-        AgeRange preferredAge,
+        Integer preferredAge,
         Long destinationId,
         Boolean isRecruitOpen
 ) {

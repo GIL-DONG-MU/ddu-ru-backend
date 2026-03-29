@@ -10,6 +10,8 @@ import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
+import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.user.domain.User;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -37,7 +40,7 @@ public class ParticipationService {
         Post post =  postRepository.getActiveByIdOrThrow(postId);
         User user = userRepository.getByIdOrThrow(userId);
 
-        validateParticipation(post, user);
+        validateCanParticipate(post, user);
 
         Participation participation = Participation.createParticipation(post, user, request.message());
         Participation savedParticipation = participationRepository.save(participation);
@@ -92,7 +95,7 @@ public class ParticipationService {
         validateParticipationBelongsToPost(participation, postId);
 
         Post post = participation.getPost();
-        validateParticipationAccess(participation, userId);
+        validateApplicant(participation, userId);
 
         post.removeApprovedParticipation(participation);
         participationRepository.delete(participation);
@@ -111,7 +114,33 @@ public class ParticipationService {
         return rows.stream().map(ParticipationResponse::from).toList();
     }
 
-    private void validateParticipation(Post post, User user) {
+    @Transactional(readOnly = true)
+    public List<ParticipantInfo> getParticipantsForPostDetail(Post post) {
+        List<ParticipantInfo> participants = new ArrayList<>();
+        participants.add(ParticipantInfo.from(post.getUser(), true));
+        participationRepository.findByPostIdAndStatusOrderByCreatedAtAsc(post.getId(), ParticipationStatus.APPROVED).stream()
+                .map(p -> ParticipantInfo.from(p.getUser(), false))
+                .forEach(participants::add);
+        return participants;
+    }
+
+    @Transactional(readOnly = true)
+    public MyParticipationStatus getMyParticipationStatus(Long postId, Long currentUserId, boolean isOwner) {
+        if (currentUserId == null || isOwner) {
+            return MyParticipationStatus.NONE;
+        }
+
+        return participationRepository.findByPostIdAndUserId(postId, currentUserId)
+                .map(Participation::getStatus)
+                .map(status -> switch (status) {
+                    case PENDING -> MyParticipationStatus.PENDING;
+                    case APPROVED -> MyParticipationStatus.APPROVED;
+                    case REJECTED -> MyParticipationStatus.REJECTED;
+                })
+                .orElse(MyParticipationStatus.NONE);
+    }
+
+    private void validateCanParticipate(Post post, User user) {
         if (post.getUser().getId().equals(user.getId())) {
             throw new SelfParticipationNotAllowedException();
         }
@@ -129,7 +158,7 @@ public class ParticipationService {
         }
     }
 
-    private void validateParticipationAccess(Participation participation, Long userId) {
+    private void validateApplicant(Participation participation, Long userId) {
         if (!participation.getUser().getId().equals(userId)) {
             throw PostAccessDeniedException.applicantOnly();
         }

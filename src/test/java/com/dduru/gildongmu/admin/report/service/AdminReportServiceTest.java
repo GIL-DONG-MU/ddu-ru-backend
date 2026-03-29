@@ -5,9 +5,7 @@ import com.dduru.gildongmu.admin.report.dto.response.AdminReportListResponse;
 import com.dduru.gildongmu.admin.report.dto.response.AdminReportResponse;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.report.domain.Report;
 import com.dduru.gildongmu.report.domain.enums.ReportReason;
@@ -120,15 +118,15 @@ class AdminReportServiceTest {
                 .content("신고 대상 게시글 본문은 충분한 길이로 작성합니다.")
                 .startDate(LocalDate.now().plusDays(1))
                 .endDate(LocalDate.now().plusDays(2))
-                .recruitCapacity(4)
+                .recruitCapacity(5)
                 .recruitDeadline(LocalDate.now().plusDays(1))
                 .preferredGender(Gender.M)
-                .preferredAges(List.of(AgeRange.AGE_20s))
-                .photoUrls("[]")
+                .isAgeAny(false)
+                .photoUrl(null)
                 .tags("[]")
-                .recruitType(RecruitType.PRIVATE)
-                .recruitMethod(RecruitMethod.ALWAYS)
-                .companionType(null)
+                .minAge(20)
+                .maxAge(30)
+                .companionType(CompanionType.FULL)
                 .build();
         ReflectionTestUtils.setField(post, "id", postId);
         return post;

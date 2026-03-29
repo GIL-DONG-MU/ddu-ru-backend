@@ -15,12 +15,4 @@ public class InvalidPostDateException extends BusinessException {
     public static InvalidPostDateException endBeforeStart() {
         return new InvalidPostDateException("여행 종료일은 시작일과 같거나 이후여야 합니다");
     }
-
-    public static InvalidPostDateException deadlineAfterStart() {
-        return new InvalidPostDateException("모집 마감일은 여행 시작일과 같거나 이전이어야 합니다");
-    }
-
-    public static InvalidPostDateException invalidRecruitPeriod() {
-        return new InvalidPostDateException("모집 기간은 1일 이상 30일 이하여야 합니다");
-    }
 }

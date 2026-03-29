@@ -79,7 +79,7 @@ public class PostController implements PostApiDocs {
             @CurrentUser Long userId,
             @Valid @RequestBody PostStatusUpdateRequest request
     ) {
-        postService.updateStatus(postId, userId, request);
+        postService.changeStatus(postId, userId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

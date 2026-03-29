@@ -4,11 +4,9 @@ import com.dduru.gildongmu.admin.post.dto.response.AdminPostDetailResponse;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.exception.PostNotFoundException;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -130,15 +128,15 @@ class AdminPostServiceTest {
                 .content("내용내용내용내용내용내용내용내용")
                 .startDate(LocalDate.now().plusDays(1))
                 .endDate(LocalDate.now().plusDays(3))
-                .recruitCapacity(4)
+                .recruitCapacity(5)
                 .recruitDeadline(LocalDate.now().plusDays(1))
                 .preferredGender(Gender.M)
-                .preferredAges(List.of(AgeRange.AGE_20s))
-                .photoUrls("[]")
+                .isAgeAny(false)
+                .photoUrl(null)
                 .tags("[]")
-                .recruitType(RecruitType.PRIVATE)
-                .recruitMethod(RecruitMethod.ALWAYS)
-                .companionType(null)
+                .minAge(20)
+                .maxAge(30)
+                .companionType(CompanionType.FULL)
                 .build();
         ReflectionTestUtils.setField(post, "id", postId);
 

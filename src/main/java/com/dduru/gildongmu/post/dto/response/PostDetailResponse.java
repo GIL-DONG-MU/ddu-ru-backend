@@ -2,7 +2,6 @@ package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
@@ -26,8 +25,10 @@ public record PostDetailResponse(
         Integer recruitCount,
         LocalDate recruitDeadline,
         Gender preferredGender,
-        List<AgeRange> preferredAges,
-        List<String> photoUrls,
+        boolean isAgeAny,
+        Integer minAge,
+        Integer maxAge,
+        String photoUrl,
         List<String> tags,
         int viewCount,
         int likeCount,
@@ -46,9 +47,8 @@ public record PostDetailResponse(
                                           List<ParticipantInfo> participants,
                                           MyParticipationStatus myParticipationStatus,
                                           ProfileImageResolver profileImageResolver) {
-        List<String> photoUrls = jsonConverter.convertJsonToList(post.getPhotoUrls());
+        String photoUrl = post.getPhotoUrl();
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
-        List<AgeRange> preferredAges = post.getPreferredAges();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         long nightsLong = ChronoUnit.DAYS.between(post.getStartDate(), post.getEndDate());
@@ -83,8 +83,10 @@ public record PostDetailResponse(
                 post.getRecruitCount(),
                 post.getRecruitDeadline(),
                 post.getPreferredGender(),
-                preferredAges,
-                photoUrls,
+                post.isAgeAny(),
+                post.getMinAge(),
+                post.getMaxAge(),
+                photoUrl,
                 tags,
                 post.getViewCount(),
                 post.getLikeCount(),

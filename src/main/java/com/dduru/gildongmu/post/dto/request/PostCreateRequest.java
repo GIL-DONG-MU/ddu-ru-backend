@@ -1,9 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
 
@@ -31,32 +28,25 @@ public record PostCreateRequest(
         LocalDate endDate,
 
         @NotNull(message = "모집 인원은 필수입니다")
-        @Min(value = 1, message = "모집 인원은 최소 1명 이상이어야 합니다 (호스트 제외)")
-        @Max(value = 9, message = "모집 인원은 최대 9명까지 가능합니다 (호스트 제외)")
+        @Min(value = 2, message = "모집 인원은 최소 2명 이상이어야 합니다 (호스트 포함)")
+        @Max(value = 10, message = "모집 인원은 최대 10명까지 가능합니다 (호스트 포함)")
         Integer recruitCapacity,
-
-        @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
-        LocalDate recruitDeadline,
 
         @NotNull(message = "선호하는 성별을 골라주세요")
         Gender preferredGender,
 
-        @NotNull(message = "선호 연령대는 필수입니다")
-        @Size(max = 2, message = "선호 연령대는 최대 2개까지 선택할 수 있습니다")
-        List<AgeRange> preferredAges,
+        @NotNull(message = "선호 연령 설정 여부는 필수입니다")
+        Boolean isAgeAny,
 
-        @Size(max = 1, message = "사진은 최대 1장까지 업로드 가능합니다")
-        List<String> photoUrls,
+        Integer minAge,
+        Integer maxAge,
 
-        @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
+        String photoUrl,
+
+        @Size(max = 4, message = "태그는 최대 4개까지 가능합니다")
         List<String> tags,
 
-        @NotNull(message = "모집 공개 방식은 필수입니다")
-        RecruitType recruitType,
-
-        @NotNull(message = "모집 기간 방식은 필수입니다")
-        RecruitMethod recruitMethod,
-
+        @NotNull(message = "동행 방식은 필수입니다")
         CompanionType companionType
 ) {
 }

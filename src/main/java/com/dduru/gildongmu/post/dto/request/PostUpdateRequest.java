@@ -1,9 +1,6 @@
 package com.dduru.gildongmu.post.dto.request;
 
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import jakarta.validation.constraints.*;
 
@@ -25,27 +22,20 @@ public record PostUpdateRequest(
         @FutureOrPresent(message = "여행 종료일은 오늘 이후여야 합니다")
         LocalDate endDate,
 
-        @Min(value = 1, message = "모집 인원은 최소 1명 이상이어야 합니다 (호스트 제외)")
-        @Max(value = 9, message = "모집 인원은 최대 9명까지 가능합니다 (호스트 제외)")
+        @Min(value = 2, message = "모집 인원은 최소 2명 이상이어야 합니다 (호스트 포함)")
+        @Max(value = 10, message = "모집 인원은 최대 10명까지 가능합니다 (호스트 포함)")
         Integer recruitCapacity,
-
-        @FutureOrPresent(message = "모집 마감일은 오늘 이후여야 합니다")
-        LocalDate recruitDeadline,
 
         Gender preferredGender,
 
-        @Size(max = 2, message = "선호 연령대는 최대 2개까지 선택할 수 있습니다")
-        List<AgeRange> preferredAges,
+        Boolean isAgeAny,
+        Integer minAge,
+        Integer maxAge,
 
-        @Size(max = 1, message = "사진은 최대 1장까지 업로드 가능합니다")
-        List<String> photoUrls,
+        String photoUrl,
 
-        @Size(max = 10, message = "태그는 최대 10개까지 가능합니다")
+        @Size(max = 4, message = "태그는 최대 4개까지 가능합니다")
         List<String> tags,
-
-        RecruitType recruitType,
-
-        RecruitMethod recruitMethod,
 
         CompanionType companionType
 ) {

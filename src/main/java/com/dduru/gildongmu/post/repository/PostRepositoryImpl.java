@@ -3,7 +3,6 @@ package com.dduru.gildongmu.post.repository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -87,11 +86,17 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return post.preferredGender.eq(preferredGender);
     }
 
-    private BooleanExpression ageRangeCondition(AgeRange preferredAge) {
-        if (preferredAge == null || preferredAge == AgeRange.UNKNOWN) {
+    private BooleanExpression ageRangeCondition(Integer preferredAge) {
+        if (preferredAge == null) {
             return null;
         }
-        return post.preferredAges.any().eq(preferredAge);
+        BooleanExpression ageAny = post.isAgeAny.eq(true);
+        BooleanExpression inRange = post.isAgeAny.eq(false)
+                .and(post.minAge.isNotNull())
+                .and(post.maxAge.isNotNull())
+                .and(post.minAge.loe(preferredAge))
+                .and(post.maxAge.goe(preferredAge));
+        return ageAny.or(inRange);
     }
 
     private BooleanExpression destinationCondition(Long destinationId) {

@@ -5,8 +5,6 @@ import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
@@ -14,7 +12,6 @@ import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
 import com.dduru.gildongmu.post.exception.RecruitCountExceedCapacityException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyEndedException;
 import com.dduru.gildongmu.post.exception.TravelAlreadyStartedException;
-import com.dduru.gildongmu.profile.domain.enums.AgeRange;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
@@ -27,15 +24,13 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -64,8 +59,8 @@ public class Post extends BaseTimeEntity {
     private Integer recruitCapacity;
 
     @Column(name = "recruit_count", nullable = false)
-    @ColumnDefault("0")
-    private Integer recruitCount = 0;
+    @ColumnDefault("1")
+    private Integer recruitCount = 1;
 
     @Column(name = "recruit_deadline")
     private LocalDate recruitDeadline;
@@ -74,14 +69,18 @@ public class Post extends BaseTimeEntity {
     @Column(name = "preferred_gender", nullable = false)
     private Gender preferredGender;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "post_preferred_ages", joinColumns = @JoinColumn(name = "post_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "age_range", nullable = false)
-    private List<AgeRange> preferredAges = new ArrayList<>();
+    @Column(name = "is_age_any", nullable = false)
+    @ColumnDefault("false")
+    private boolean isAgeAny;
 
-    @Column(name = "photo_urls", columnDefinition = "JSON")
-    private String photoUrls;
+    @Column(name = "min_age")
+    private Integer minAge;
+
+    @Column(name = "max_age")
+    private Integer maxAge;
+
+    @Column(name = "photo_url", columnDefinition = "TEXT")
+    private String photoUrl;
 
     @Column(columnDefinition = "JSON")
     private String tags;
@@ -109,22 +108,15 @@ public class Post extends BaseTimeEntity {
     private Long deletedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "recruit_type", nullable = false)
-    private RecruitType recruitType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "recruit_method", nullable = false)
-    private RecruitMethod recruitMethod;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "companion_type")
     private CompanionType companionType;
 
     @Builder
     public Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
+                LocalDate recruitDeadline, Gender preferredGender,
+                boolean isAgeAny, Integer minAge, Integer maxAge,
+                String photoUrl, String tags, CompanionType companionType) {
         this.user = user;
         this.destination = destination;
         this.title = title;
@@ -132,22 +124,26 @@ public class Post extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.recruitCapacity = recruitCapacity;
-        this.recruitCount = 0;
+        this.recruitCount = 1;
         this.recruitDeadline = recruitDeadline;
         this.preferredGender = preferredGender;
-        this.preferredAges = preferredAges;
-        this.photoUrls = photoUrls;
+        this.isAgeAny = isAgeAny;
+        this.minAge = minAge;
+        this.maxAge = maxAge;
+        this.photoUrl = photoUrl;
         this.tags = tags;
         this.viewCount = 0;
-        this.recruitType = recruitType;
-        this.recruitMethod = recruitMethod;
+        this.likeCount = 0;
+        this.status = PostStatus.OPEN;
+        this.isDeleted = false;
         this.companionType = companionType;
     }
 
     public static Post createPost(User user, Destination destination, String title, String content,
                                   LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                                  LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                                  String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod,  CompanionType companionType) {
+                                  LocalDate recruitDeadline, Gender preferredGender,
+                                  boolean isAgeAny, Integer minAge, Integer maxAge,
+                                  String photoUrl, String tags, CompanionType companionType) {
 
         return Post.builder()
                 .user(user)
@@ -159,35 +155,27 @@ public class Post extends BaseTimeEntity {
                 .recruitCapacity(recruitCapacity)
                 .recruitDeadline(recruitDeadline)
                 .preferredGender(preferredGender)
-                .preferredAges(preferredAges)
-                .photoUrls(photoUrls)
+                .isAgeAny(isAgeAny)
+                .minAge(minAge)
+                .maxAge(maxAge)
+                .photoUrl(photoUrl)
                 .tags(tags)
-                .recruitType(recruitType)
-                .recruitMethod(recruitMethod)
                 .companionType(companionType)
                 .build();
     }
 
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
-                           LocalDate recruitDeadline, Gender preferredGender, List<AgeRange> preferredAges,
-                           String photoUrls, String tags, RecruitType recruitType, RecruitMethod recruitMethod, CompanionType companionType) {
-        validateUpdatePermission();
+                           LocalDate recruitDeadline, Gender preferredGender,
+                           boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
+                           boolean applyPhotoUrlPatch, String photoUrl, String tags, CompanionType companionType) {
+        validateUpdatable();
 
-        if (destination != null) this.destination = destination;
-        if (title != null) this.title = title;
-        if (content != null) this.content = content;
-        if (startDate != null) this.startDate = startDate;
-        if (endDate != null) this.endDate = endDate;
-        if (recruitDeadline != null) this.recruitDeadline = recruitDeadline;
-        if (preferredGender != null) this.preferredGender = preferredGender;
-        if (preferredAges != null) this.preferredAges = preferredAges;
-        if (photoUrls != null) this.photoUrls = photoUrls;
-        if (tags != null) this.tags = tags;
-        if (recruitCapacity != null) updateRecruitCapacity(recruitCapacity);
-        if (recruitType != null) this.recruitType = recruitType;
-        if (recruitMethod != null) this.recruitMethod = recruitMethod;
-        if (companionType != null) this.companionType = companionType;
+        applyBasicChanges(destination, title, content, startDate, endDate, recruitDeadline,
+                preferredGender, tags, companionType);
+        applyPreferredAge(applyPreferredAgePatch, preferredAgeAny, minAge, maxAge);
+        applyPhotoUrl(applyPhotoUrlPatch, photoUrl);
+        applyRecruitCapacity(recruitCapacity);
     }
 
     public void softDelete(Long userId) {
@@ -196,39 +184,31 @@ public class Post extends BaseTimeEntity {
         this.deletedBy = userId;
     }
 
-    public void updateStatus(PostStatus newStatus) {
-        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
-        }
+    public void changeStatus(PostStatus newStatus) {
+        validateStatusChange(newStatus);
         this.status = newStatus;
     }
 
     public void approveParticipation(Participation participation) {
         participation.approve();
-        this.incrementRecruitCount();
-        if (this.recruitCount >= this.recruitCapacity) {
-            this.updateStatus(PostStatus.FULL);
-        }
+        incrementRecruitCount();
+        closeIfRecruitmentFull();
     }
 
     public void removeApprovedParticipation(Participation participation) {
-        if (participation.isApproved()) {
-            this.decrementRecruitCount();
-            reopenIfParticipantRemoved();
+        if (!participation.isApproved()) {
+            return;
         }
+
+        decrementRecruitCount();
+        reopenIfCapacityAvailable();
     }
 
-    private void reopenIfParticipantRemoved() {
-        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-            this.status = PostStatus.OPEN;
-        }
-    }
-
-    public void increaseLikeCount() {
+    public void increaseLikes() {
         this.likeCount++;
     }
 
-    public void decreaseLikeCount() {
+    public void decreaseLikes() {
         this.likeCount--;
     }
 
@@ -240,38 +220,118 @@ public class Post extends BaseTimeEntity {
         if (recruitDeadline == null) {
             return Integer.MAX_VALUE;
         }
-        int daysLeft = (int) ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline);
-        return Math.max(daysLeft, 0);
+        return Math.max(daysFromToday(recruitDeadline), 0);
     }
 
     public int getDaysUntilTravelStart() {
-        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+        return daysFromToday(startDate);
     }
 
-    private void validateUpdatePermission() {
-        if (isRecruitDeadlinePassed()) {
+    private void applyBasicChanges(Destination destination, String title, String content,
+                                   LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
+                                   Gender preferredGender, String tags, CompanionType companionType) {
+        if (destination != null) {
+            this.destination = destination;
+        }
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (startDate != null) {
+            this.startDate = startDate;
+        }
+        if (endDate != null) {
+            this.endDate = endDate;
+        }
+        if (recruitDeadline != null) {
+            this.recruitDeadline = recruitDeadline;
+        }
+        if (preferredGender != null) {
+            this.preferredGender = preferredGender;
+        }
+        if (tags != null) {
+            this.tags = tags;
+        }
+        if (companionType != null) {
+            this.companionType = companionType;
+        }
+    }
+
+    private void applyPreferredAge(boolean applyPreferredAgePatch, boolean preferredAgeAny,
+                                   Integer minAge, Integer maxAge) {
+        if (!applyPreferredAgePatch) {
+            return;
+        }
+
+        if (preferredAgeAny) {
+            this.isAgeAny = true;
+            this.minAge = null;
+            this.maxAge = null;
+            return;
+        }
+
+        this.isAgeAny = false;
+        this.minAge = minAge;
+        this.maxAge = maxAge;
+    }
+
+    private void applyPhotoUrl(boolean applyPhotoUrlPatch, String photoUrl) {
+        if (applyPhotoUrlPatch) {
+            this.photoUrl = photoUrl;
+        }
+    }
+
+    private void applyRecruitCapacity(Integer recruitCapacity) {
+        if (recruitCapacity != null) {
+            updateRecruitCapacity(recruitCapacity);
+        }
+    }
+
+    private void validateStatusChange(PostStatus newStatus) {
+        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
+            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
+        }
+    }
+
+    private void closeIfRecruitmentFull() {
+        if (this.recruitCount >= this.recruitCapacity) {
+            changeStatus(PostStatus.FULL);
+        }
+    }
+
+    private void reopenIfCapacityAvailable() {
+        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
+            this.status = PostStatus.OPEN;
+        }
+    }
+
+    private static int daysFromToday(LocalDate target) {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), target);
+    }
+
+    private void validateUpdatable() {
+        if (hasRecruitDeadlinePassed()) {
             throw new RecruitDeadlinePassedException();
         }
-        if (isTravelEnded()) {
+        if (hasTravelEnded()) {
             throw new TravelAlreadyEndedException();
         }
-        if (isTravelStarted()) {
+        if (hasTravelStarted()) {
             throw new TravelAlreadyStartedException();
         }
     }
 
-    private boolean isRecruitDeadlinePassed() {
-        if (recruitDeadline == null) {
-            return false;
-        }
-        return LocalDate.now().isAfter(recruitDeadline);
+    private boolean hasRecruitDeadlinePassed() {
+        return recruitDeadline != null && LocalDate.now().isAfter(recruitDeadline);
     }
 
-    private boolean isTravelStarted() {
+    private boolean hasTravelStarted() {
         return LocalDate.now().isAfter(startDate);
     }
 
-    private boolean isTravelEnded() {
+    private boolean hasTravelEnded() {
         return LocalDate.now().isAfter(endDate);
     }
 
@@ -290,7 +350,7 @@ public class Post extends BaseTimeEntity {
     }
 
     private void decrementRecruitCount() {
-        if (this.recruitCount <= 0) {
+        if (this.recruitCount <= 1) {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;
