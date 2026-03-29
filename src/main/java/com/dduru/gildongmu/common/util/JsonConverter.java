@@ -30,6 +30,20 @@ public class JsonConverter {
         }
     }
 
+    public String convertTagListToJson(List<String> tags) {
+        if (tags == null) {
+            return null;
+        }
+        return convertListToJson(normalizeTagList(tags));
+    }
+
+    public List<String> normalizeTagList(List<String> tags) {
+        if (tags == null) {
+            return null;
+        }
+        return tags.stream().map(String::strip).toList();
+    }
+
     public List<String> convertJsonToList(String json) {
         if (json == null || json.trim().isEmpty()) {
             return Collections.emptyList();

@@ -4,25 +4,20 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.post.domain.enums.RecruitMethod;
-import com.dduru.gildongmu.post.domain.enums.RecruitType;
-import com.dduru.gildongmu.post.dto.ParsedPostData;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
-import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
+import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
-import com.dduru.gildongmu.post.exception.InvalidRecruitSettingsException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
-import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.repository.ParticipationRepository;
+import com.dduru.gildongmu.tag.service.TagValidator;
+import com.dduru.gildongmu.participation.service.ParticipationService;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.post.repository.PostRepository;
@@ -36,9 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -47,10 +39,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class PostService {
+    private static final int MIN_PREFERRED_AGE = 20;
+    private static final int MAX_PREFERRED_AGE = 100;
+
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
-    private final ParticipationRepository participationRepository;
+    private final ParticipationService participationService;
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
@@ -59,13 +54,12 @@ public class PostService {
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 - userId={}", userId);
 
-        validateBusinessRules(request.startDate(), request.endDate(), request.recruitDeadline(),
-                request.recruitMethod(), request.recruitType(), request.companionType());
+        validateCreateRequest(request);
 
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
 
-        Post post = createPost(user, destination, request, request.photoUrls());
+        Post post = createPost(user, destination, request);
         Post savedPost = postRepository.save(post);
         chatRoomService.createPendingGroupRoomForPost(savedPost, user);
 
@@ -77,26 +71,13 @@ public class PostService {
         // TODO: 게시글 수정 시 그룹 채팅방 maxCapacity를 recruitCapacity + 1로 동기화
         log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
-        Post post = getPostAndValidateOwner(postId, userId);
+        Post post = getOwnedPost(postId, userId);
+        validateUpdateRequest(post, request);
 
-        LocalDate effectiveStartDate = request.startDate() != null ? request.startDate() : post.getStartDate();
-        LocalDate effectiveEndDate = request.endDate() != null ? request.endDate() : post.getEndDate();
-        LocalDate effectiveRecruitDeadline = request.recruitDeadline() != null ? request.recruitDeadline() : post.getRecruitDeadline();
-        RecruitMethod effectiveRecruitMethod = request.recruitMethod() != null ? request.recruitMethod() : post.getRecruitMethod();
-        RecruitType effectiveRecruitType = request.recruitType() != null ? request.recruitType() : post.getRecruitType();
-        CompanionType effectiveCompanionType = request.companionType() != null ? request.companionType() : post.getCompanionType();
+        Destination destination = getDestinationOrNull(request);
+        LocalDate recruitDeadline = calculateRecruitDeadline(getEndDateOrCurrent(post, request));
 
-        validateBusinessRules(effectiveStartDate, effectiveEndDate, effectiveRecruitDeadline,
-                effectiveRecruitMethod, effectiveRecruitType, effectiveCompanionType);
-
-        LocalDate recruitDeadlineToSave = resolveRecruitDeadline(
-                effectiveRecruitMethod, effectiveRecruitDeadline, effectiveStartDate);
-
-        Destination destination = request.destinationId() != null
-                ? destinationRepository.getByIdOrThrow(request.destinationId())
-                : null;
-
-        updatePost(post, destination, request, recruitDeadlineToSave);
+        updatePost(post, destination, request, recruitDeadline);
 
         log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
@@ -104,7 +85,7 @@ public class PostService {
     public void delete(Long postId, Long userId) {
         log.debug("게시글 삭제 - postId={}, userId={}", postId, userId);
 
-        Post post = getPostAndValidateOwner(postId, userId);
+        Post post = getOwnedPost(postId, userId);
 
         post.softDelete(userId);
 
@@ -113,9 +94,7 @@ public class PostService {
 
     public int closeExpiredPosts() {
         log.debug("만료 게시글 상태 업데이트 - 실행");
-        LocalDate today = LocalDate.now();
-
-        return postRepository.closeExpiredPostsByDate(today);
+        return postRepository.closeExpiredPostsByDate(LocalDate.now());
     }
 
     public PostDetailResponse recordViewAndGetDetail(Long postId, Long currentUserId) {
@@ -124,10 +103,11 @@ public class PostService {
         postRepository.incrementViewCount(postId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
-        boolean isOwner = currentUserId != null && currentUserId.equals(post.getUser().getId());
-        boolean hasLiked = currentUserId != null && postLikeRepository.existsByUserIdAndPostId(currentUserId, postId);
-        List<ParticipantInfo> participants = buildParticipants(post);
-        MyParticipationStatus myParticipationStatus = resolveMyParticipationStatus(postId, currentUserId, isOwner);
+        boolean isOwner = isOwner(post, currentUserId);
+        boolean hasLiked = hasLiked(postId, currentUserId);
+
+        List<ParticipantInfo> participants = participationService.getParticipantsForPostDetail(post);
+        MyParticipationStatus myParticipationStatus = participationService.getMyParticipationStatus(postId, currentUserId, isOwner);
         PostDetailResponse response = PostDetailResponse.from(
                 post,
                 jsonConverter,
@@ -141,14 +121,14 @@ public class PostService {
         return response;
     }
 
-    public void updateStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
+    public void changeStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
         log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
 
-        Post post = getPostAndValidateOwner(postId, userId);
+        Post post = getOwnedPost(postId, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
         try {
-            post.updateStatus(newStatus);
+            post.changeStatus(newStatus);
         } catch (InvalidPostStatusException e) {
             log.warn("게시글 모집 상태 변경 불가 - postId={}, userId={}, currentStatus={}, requestedStatus={}",
                     postId, userId, post.getStatus(), newStatus);
@@ -158,7 +138,7 @@ public class PostService {
         log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
     }
 
-    private Post getPostAndValidateOwner(Long postId, Long userId) {
+    private Post getOwnedPost(Long postId, Long userId) {
         Post post = postRepository.getActiveByIdOrThrow(postId);
         if (!post.getUser().getId().equals(userId)) {
             log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
@@ -167,104 +147,136 @@ public class PostService {
         return post;
     }
 
-    private MyParticipationStatus resolveMyParticipationStatus(Long postId, Long currentUserId, boolean isOwner) {
-        if (currentUserId == null || isOwner) {
-            return MyParticipationStatus.NONE;
+    private boolean isOwner(Post post, Long currentUserId) {
+        return currentUserId != null && currentUserId.equals(post.getUser().getId());
+    }
+
+    private boolean hasLiked(Long postId, Long currentUserId) {
+        return currentUserId != null && postLikeRepository.existsByUserIdAndPostId(currentUserId, postId);
+    }
+
+    private void validateCreateRequest(PostCreateRequest request) {
+        validateDateRange(request.startDate(), request.endDate());
+        validatePreferredAge(request.isAgeAny(), request.minAge(), request.maxAge());
+        TagValidator.validateOrThrow(jsonConverter.normalizeTagList(request.tags()));
+    }
+
+    private void validateUpdateRequest(Post post, PostUpdateRequest request) {
+        validateDateRange(getStartDateOrCurrent(post, request), getEndDateOrCurrent(post, request));
+
+        if (hasAgePatch(request)) {
+            validatePreferredAge(Boolean.TRUE.equals(request.isAgeAny()), request.minAge(), request.maxAge());
         }
 
-        return participationRepository.findByPostIdAndUserId(postId, currentUserId)
-                .map(Participation::getStatus)
-                .map(status -> switch (status) {
-                    case PENDING -> MyParticipationStatus.PENDING;
-                    case APPROVED -> MyParticipationStatus.APPROVED;
-                    case REJECTED -> MyParticipationStatus.REJECTED;
-                })
-                .orElse(MyParticipationStatus.NONE);
+        if (request.tags() != null) {
+            TagValidator.validateOrThrow(jsonConverter.normalizeTagList(request.tags()));
+        }
     }
 
-    private List<ParticipantInfo> buildParticipants(Post post) {
-        List<ParticipantInfo> result = new ArrayList<>();
-        result.add(ParticipantInfo.from(post.getUser(), true));
-        participationRepository.findByPostIdAndStatusOrderByCreatedAtAsc(post.getId(), ParticipationStatus.APPROVED).stream()
-                .map(p -> ParticipantInfo.from(p.getUser(), false))
-                .forEach(result::add);
-        return result;
+    private void validatePreferredAge(boolean isAgeAny, Integer minAge, Integer maxAge) {
+        if (isAgeAny) {
+            if (minAge != null || maxAge != null) {
+                throw InvalidPreferredAgeException.conflictWithAgeAny();
+            }
+            return;
+        }
+
+        validatePreferredAgeRange(minAge, maxAge);
     }
 
-    private void validateBusinessRules(LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
-                                       RecruitMethod recruitMethod, RecruitType recruitType, CompanionType companionType) {
+    private void validatePreferredAgeRange(Integer minAge, Integer maxAge) {
+        if (minAge == null || maxAge == null) {
+            throw InvalidPreferredAgeException.incompleteRange();
+        }
+
+        if (minAge < MIN_PREFERRED_AGE || maxAge > MAX_PREFERRED_AGE || minAge > maxAge) {
+            throw InvalidPreferredAgeException.outOfBounds(MIN_PREFERRED_AGE, MAX_PREFERRED_AGE);
+        }
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
             throw InvalidPostDateException.endBeforeStart();
         }
-        if (recruitMethod == RecruitMethod.PERIOD) {
-            if (recruitDeadline == null) {
-                throw InvalidPostDateException.invalidRecruitPeriod();
-            }
-            if (recruitDeadline.isAfter(startDate)) {
-                throw InvalidPostDateException.deadlineAfterStart();
-            }
-            long recruitPeriodDays = ChronoUnit.DAYS.between(LocalDate.now(), recruitDeadline) + 1;
-            if (recruitPeriodDays < 1 || recruitPeriodDays > 30) {
-                throw InvalidPostDateException.invalidRecruitPeriod();
-            }
-        }
-        if (recruitType == RecruitType.PUBLIC && companionType == null) {
-            throw new InvalidRecruitSettingsException();
-        }
     }
 
-    private Post createPost(User user, Destination destination, PostCreateRequest request, List<String> photoUrls) {
-        ParsedPostData parsed = parsePostData(photoUrls, request.tags(), destination);
-        LocalDate recruitDeadlineToSave = resolveRecruitDeadline(
-                request.recruitMethod(), request.recruitDeadline(), request.startDate());
+    private LocalDate getStartDateOrCurrent(Post post, PostUpdateRequest request) {
+        return request.startDate() != null ? request.startDate() : post.getStartDate();
+    }
+
+    private LocalDate getEndDateOrCurrent(Post post, PostUpdateRequest request) {
+        return request.endDate() != null ? request.endDate() : post.getEndDate();
+    }
+
+    private boolean hasAgePatch(PostUpdateRequest request) {
+        return request.isAgeAny() != null || request.minAge() != null || request.maxAge() != null;
+    }
+
+    private LocalDate calculateRecruitDeadline(LocalDate endDate) {
+        return endDate.minusDays(1);
+    }
+
+    private Destination getDestinationOrNull(PostUpdateRequest request) {
+        if (request.destinationId() == null) {
+            return null;
+        }
+        return destinationRepository.getByIdOrThrow(request.destinationId());
+    }
+
+    private Post createPost(User user, Destination destination, PostCreateRequest request) {
+        boolean isAgeAny = request.isAgeAny();
+        LocalDate recruitDeadline = calculateRecruitDeadline(request.endDate());
 
         return Post.createPost(user, destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                recruitDeadlineToSave, request.preferredGender(), request.preferredAges(),
-                parsed.photoUrlsJson(), parsed.tagsJson(), request.recruitType(), request.recruitMethod(), request.companionType());
-    }
-
-    private LocalDate resolveRecruitDeadline(RecruitMethod method, LocalDate recruitDeadline, LocalDate startDate) {
-        if (method == RecruitMethod.ALWAYS && recruitDeadline == null) {
-            return startDate;
-        }
-        return recruitDeadline;
-    }
-
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadlineToSave) {
-        Destination destinationForParse = destination != null ? destination : post.getDestination();
-        String photoUrlsJson = request.photoUrls() != null
-                ? jsonConverter.convertListToJson(getFinalPhotoUrls(request.photoUrls(), destinationForParse))
-                : null;
-        String tagsJson = request.tags() != null ? jsonConverter.convertListToJson(request.tags()) : null;
-
-        post.updatePost(destination, request.title(), request.content(),
-                request.startDate(), request.endDate(), request.recruitCapacity(),
-                recruitDeadlineToSave, request.preferredGender(), request.preferredAges(),
-                photoUrlsJson, tagsJson, request.recruitType(), request.recruitMethod(), request.companionType());
-    }
-
-    private ParsedPostData parsePostData(List<String> photoUrls, List<String> tags, Destination destination) {
-        List<String> finalPhotoUrls = getFinalPhotoUrls(photoUrls, destination);
-
-        return new ParsedPostData(
-                jsonConverter.convertListToJson(finalPhotoUrls),
-                jsonConverter.convertListToJson(tags)
+                recruitDeadline, request.preferredGender(), isAgeAny,
+                isAgeAny ? null : request.minAge(),
+                isAgeAny ? null : request.maxAge(),
+                resolvePhotoUrl(request.photoUrl(), destination),
+                tagsToJson(request.tags()),
+                request.companionType()
         );
     }
 
-    private List<String> getFinalPhotoUrls(List<String> photoUrls, Destination destination) {
-        if (photoUrls != null && !photoUrls.isEmpty()) {
-            log.debug("이미지 소스 - 업로드, count={}", photoUrls.size());
-            return photoUrls;
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadline) {
+        boolean applyPreferredAgePatch = hasAgePatch(request);
+        boolean preferredAgeAny = applyPreferredAgePatch && Boolean.TRUE.equals(request.isAgeAny());
+
+        Integer minAge = preferredAgeAny ? null : request.minAge();
+        Integer maxAge = preferredAgeAny ? null : request.maxAge();
+
+        boolean applyPhotoUrlPatch = request.photoUrl() != null;
+        Destination destinationForPhoto = destination != null ? destination : post.getDestination();
+
+        String photoUrl = applyPhotoUrlPatch
+                ? resolvePhotoUrl(request.photoUrl(), destinationForPhoto)
+                : null;
+
+        String tagsJson = request.tags() != null ? tagsToJson(request.tags()) : null;
+
+        post.updatePost(destination, request.title(), request.content(),
+                request.startDate(), request.endDate(), request.recruitCapacity(),
+                recruitDeadline, request.preferredGender(), applyPreferredAgePatch,
+                preferredAgeAny, minAge, maxAge,
+                applyPhotoUrlPatch, photoUrl, tagsJson, request.companionType());
+    }
+
+    private String resolvePhotoUrl(String photoUrl, Destination destination) {
+        if (StringUtils.hasText(photoUrl)) {
+            log.debug("이미지 소스 - 업로드");
+            return photoUrl.trim();
         }
 
-        if (StringUtils.hasText(destination.getImage())) {
+        if (destination != null && StringUtils.hasText(destination.getImage())) {
             log.debug("이미지 소스 - 목적지 기본, destination={}", destination.getCity());
-            return List.of(destination.getImage());
+            return destination.getImage();
         }
 
         log.debug("이미지 소스 - 없음");
-        return Collections.emptyList();
+        return null;
+    }
+
+    private String tagsToJson(List<String> tags) {
+        return jsonConverter.convertTagListToJson(tags);
     }
 }
