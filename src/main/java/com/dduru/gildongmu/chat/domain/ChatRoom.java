@@ -40,7 +40,7 @@ public class ChatRoom extends BaseTimeEntity {
         this.post = post;
         this.roomType = roomType;
         this.maxCapacity = maxCapacity;
-        this.status = status != null ? status : ChatRoomStatus.ACTIVE;
+        this.status = status != null ? status : ChatRoomStatus.PENDING;
     }
 
     public static ChatRoom forPrivateChat(Post post) {
