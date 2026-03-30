@@ -22,10 +22,10 @@ public record GroupChatInviteResponse(
     }
 
     public static GroupChatInviteResponse empty(Long roomId, InviteTargetsResult resolution) {
-        return new GroupChatInviteResponse(roomId, 0, resolution.notFoundUserIds(), resolution.alreadyMemberUserIds());
+        return new GroupChatInviteResponse(roomId, 0, resolution.missingUserIds(), resolution.alreadyMemberUserIds());
     }
 
     public static GroupChatInviteResponse success(Long roomId, int size, InviteTargetsResult resolution) {
-        return new GroupChatInviteResponse(roomId, size, resolution.notFoundUserIds(), resolution.alreadyMemberUserIds());
+        return new GroupChatInviteResponse(roomId, size, resolution.missingUserIds(), resolution.alreadyMemberUserIds());
     }
 }
