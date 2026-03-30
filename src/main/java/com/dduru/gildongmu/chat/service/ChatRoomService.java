@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.chat.service;
 
-import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
@@ -8,6 +7,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
+import com.dduru.gildongmu.chat.dto.response.InviteTargetsResult;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
@@ -62,20 +62,22 @@ public class ChatRoomService {
         ChatRoom chatRoom = getActiveGroupRoomOrThrow(roomId);
         validateHostAuthority(chatRoom.getPost().getUser().getId(), requesterId);
 
-        List<Long> sanitizedIds = distinctNonHostUserIds(request.inviteeUserIds(), requesterId);
-        if (sanitizedIds.isEmpty()) {
-            return new GroupChatInviteResponse(chatRoom.getId(), 0);
+        List<Long> nonHostInviteeUserIds = distinctNonHostUserIds(request.inviteeUserIds(), requesterId);
+        if (nonHostInviteeUserIds.isEmpty()) {
+            return GroupChatInviteResponse.empty(chatRoom.getId());
         }
 
-        List<User> newGuests = resolveInviteTargets(chatRoom.getId(), sanitizedIds);
+        InviteTargetsResult resolution = resolveInviteTargets(chatRoom.getId(), nonHostInviteeUserIds);
+
+        List<User> newGuests = resolution.newGuests();
         if (newGuests.isEmpty()) {
-            return new GroupChatInviteResponse(chatRoom.getId(), 0);
+            return GroupChatInviteResponse.empty(chatRoom.getId(), resolution);
         }
 
         validateGroupRoomCapacity(chatRoom, newGuests.size());
         saveNewGuestMembers(chatRoom, newGuests);
 
-        return new GroupChatInviteResponse(chatRoom.getId(), newGuests.size());
+        return GroupChatInviteResponse.success(chatRoom.getId(), newGuests.size(), resolution);
     }
 
     /**
@@ -157,34 +159,42 @@ public class ChatRoomService {
                 .toList();
     }
 
-    private List<User> resolveInviteTargets(Long roomId, List<Long> requestedUserIds) {
+    private InviteTargetsResult resolveInviteTargets(Long roomId, List<Long> requestedUserIds) {
         List<User> users = userRepository.findAllById(requestedUserIds);
 
-        if (users.size() != requestedUserIds.size()) {
-            Set<Long> foundIds = users.stream()
-                    .map(User::getId)
-                    .collect(Collectors.toSet());
-            validateAllUsersExist(requestedUserIds, foundIds);
+        // 일부 id가 존재하지 않아도, 나머지 유효한 사용자만 초대되도록 부분 성공 처리한다.
+        Set<Long> foundIds = users.stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        List<Long> missingUserIds = requestedUserIds.stream()
+                .filter(id -> !foundIds.contains(id))
+                .distinct()
+                .toList();
+
+        if (!missingUserIds.isEmpty()) {
+            log.warn("그룹 초대에서 존재하지 않는 사용자 id가 포함됨. roomId={}, missingIds={}",
+                    roomId, missingUserIds);
+        }
+
+        if (foundIds.isEmpty()) {
+            return new InviteTargetsResult(List.of(), missingUserIds, List.of());
         }
 
         Set<Long> existingMemberIds = new HashSet<>(
-                chatRoomMemberRepository.findExistingUserIdsByRoomIdAndUserIdIn(roomId, requestedUserIds)
+                chatRoomMemberRepository.findExistingUserIdsByRoomIdAndUserIdIn(roomId, foundIds)
         );
 
-        return users.stream()
+        List<Long> alreadyMemberUserIds = requestedUserIds.stream()
+                .filter(existingMemberIds::contains)
+                .distinct()
+                .toList();
+
+        List<User> newGuests = users.stream()
                 .filter(user -> !existingMemberIds.contains(user.getId()))
                 .toList();
-    }
 
-    private void validateAllUsersExist(List<Long> requestedIds, Set<Long> foundIds) {
-        Long missingId = requestedIds.stream()
-                .filter(id -> !foundIds.contains(id))
-                .findFirst()
-                .orElse(null);
-
-        if (missingId != null) {
-            throw UserNotFoundException.of(missingId);
-        }
+        return new InviteTargetsResult(newGuests, missingUserIds, alreadyMemberUserIds);
     }
 
     private void validateGroupRoomCapacity(ChatRoom room, int newGuestCount) {
