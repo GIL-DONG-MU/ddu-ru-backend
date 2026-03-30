@@ -101,12 +101,11 @@ public enum ErrorCode {
     CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없습니다."),
     CHAT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "채팅방 접근 권한이 없습니다."),
     CHAT_ROOM_CLOSED(HttpStatus.BAD_REQUEST, "종료된 채팅방입니다."),
-    CHAT_ROOM_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "채팅방 정원을 초과했습니다."),
+    CHAT_ROOM_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "현재 채팅방 정원을 초과했습니다."),
     CHAT_NOT_GROUP_ROOM(HttpStatus.BAD_REQUEST, "그룹 채팅방이 아닙니다."),
     CHAT_INVITE_HOST_ONLY(HttpStatus.FORBIDDEN, "방장만 멤버를 초대할 수 있습니다."),
     NOT_SELF_CHAT(HttpStatus.FORBIDDEN, "자신과의 채팅은 허용되지 않습니다."),
     CHAT_ROOM_INVITE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 그룹 채팅 멤버를 추가할 수 있습니다.");
-
     private final int status;
     private final String message;
 

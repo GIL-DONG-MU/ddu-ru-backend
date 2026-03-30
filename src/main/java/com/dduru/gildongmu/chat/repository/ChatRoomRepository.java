@@ -36,4 +36,20 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     }
 
     Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
+
+    /**
+     * LAZY 연관(post.user) 접근 시 추가 쿼리가 발생할 수 있어 fetch join으로 함께 로딩한다.
+     */
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            JOIN FETCH r.post p
+            JOIN FETCH p.user u
+            WHERE r.id = :roomId
+              AND r.roomType = :roomType
+            """)
+    Optional<ChatRoom> findByIdAndRoomTypeWithPostUser(
+            @Param("roomId") Long roomId,
+            @Param("roomType") ChatRoomType roomType
+    );
 }
