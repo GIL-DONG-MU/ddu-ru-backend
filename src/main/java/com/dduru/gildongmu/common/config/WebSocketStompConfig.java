@@ -30,7 +30,7 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // 단일 인스턴스 기준 기본 브로커. 확장 시 broker relay 또는 Redis 기반 fan-out으로 교체한다.
         registry.enableSimpleBroker("/topic", "/queue");
-        registry.setApplicationDestinationPrefixes("/pub");
+        registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
     }
 
