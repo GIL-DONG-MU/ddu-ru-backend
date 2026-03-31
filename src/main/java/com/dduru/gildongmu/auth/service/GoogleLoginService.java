@@ -46,14 +46,9 @@ public class GoogleLoginService implements OauthService {
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
-        log.debug("구글 ID Token 검증 시작");
-        
         GoogleIdToken token = verifyToken(idToken);
         GoogleIdToken.Payload payload = token.getPayload();
-        OauthUserInfo userInfo = extractUserInfo(payload);
-        
-        log.debug("구글 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
-        return userInfo;
+        return extractUserInfo(payload);
     }
 
     private GoogleIdToken verifyToken(String idToken) throws InvalidTokenException {

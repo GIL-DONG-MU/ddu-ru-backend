@@ -39,8 +39,8 @@ public class UserDomainService {
         try {
             return userCreationService.createNewUser(oauthUserInfo);
         } catch (DataIntegrityViolationException e) {
-            log.warn("사용자 생성 중 중복 키 위반 - oauthId: {}, oauthType: {}, email: {}",
-                    oauthUserInfo.oauthId(), oauthUserInfo.loginType(), oauthUserInfo.email());
+            log.warn("사용자 생성 중 중복 키 위반 - oauthId: {}, oauthType: {}",
+                    oauthUserInfo.oauthId(), oauthUserInfo.loginType());
             
             return userCreationService.findExistingUserOrThrow(oauthUserInfo);
         }

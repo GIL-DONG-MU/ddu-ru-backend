@@ -26,7 +26,6 @@ public class OauthAuthService {
     private final UserDomainService userDomainService;
 
     public LoginResponse processTokenLogin(String provider, LoginRequest request) {
-        log.debug("OAuth 로그인 시작 - provider: {}", provider);
         OauthService oauthService = oauthFactory.getOauthService(OauthType.fromValue(provider));
         OauthUserInfo oauthUserInfo = oauthService.verifyIdToken(request.idToken());
 
@@ -37,24 +36,19 @@ public class OauthAuthService {
     }
 
     public LoginResponse refreshAccessToken(String refreshToken) {
-        log.debug("Access Token 갱신 시작");
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         User user = userDomainService.getUserOrThrow(userId);
         validateRefreshTokenForRefresh(userId, refreshToken);
         String newAccessToken = jwtTokenProvider.createToken(user.getId(), user.getRole());
         extendTokenExpirationSafely(userId);
-        log.debug("Access Token 갱신 완료 - userId: {}", userId);
         return LoginResponse.of(newAccessToken, refreshToken, false);
     }
 
     public void logout(Long userId) {
-        log.debug("로그아웃 시작 - userId: {}", userId);
         try {
             boolean deleted = refreshTokenService.deleteRefreshToken(userId);
             if (deleted) {
                 log.info("로그아웃 성공 - userId: {}", userId);
-            } else {
-                log.debug("로그아웃 처리 (토큰이 이미 없음) - userId: {}", userId);
             }
         } catch (InternalServerException e) {
             log.warn("로그아웃 중 Redis 오류 (사용자에게는 성공 처리) - userId: {}", userId, e);
@@ -83,7 +77,6 @@ public class OauthAuthService {
         try {
             boolean matches = refreshTokenService.validateRefreshToken(userId, refreshToken);
             if (!matches) {
-                log.warn("저장된 refresh token과 불일치 - userId: {}", userId);
                 throw new InvalidTokenException();
             }
         } catch (InternalServerException e) {
@@ -101,14 +94,12 @@ public class OauthAuthService {
     }
 
     private void logLoginSuccess(UserCreationResult result, OauthUserInfo oauthUserInfo) {
-        User user = result.user();
         if (result.isNewUser()) {
-            log.info("신규 사용자 로그인 성공 - userId: {}, provider: {}, email: {}", 
-                    user.getId(), oauthUserInfo.loginType(), oauthUserInfo.email());
-        } else {
-            log.info("기존 사용자 로그인 성공 - userId: {}, provider: {}", 
-                    user.getId(), oauthUserInfo.loginType());
+            return;
         }
+        User user = result.user();
+        log.info("기존 사용자 로그인 성공 - userId: {}, provider: {}",
+                user.getId(), oauthUserInfo.loginType());
     }
 
     private void deleteExpiredTokenSafely(Long userId) {
