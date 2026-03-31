@@ -1,9 +1,8 @@
 package com.dduru.gildongmu.onboarding.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
+import com.dduru.gildongmu.onboarding.exception.SurveyAlreadyCompletedException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -48,7 +47,7 @@ public class UserOnboarding extends BaseTimeEntity {
 
     public void skipSurvey(){
         if (this.surveyStatus == SurveyStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.SURVEY_ALREADY_COMPLETED);
+            throw new SurveyAlreadyCompletedException();
         }
         this.surveyStatus = SurveyStatus.SKIPPED;
     }

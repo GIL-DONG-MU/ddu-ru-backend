@@ -11,6 +11,6 @@ public interface UserOnboardingRepository extends JpaRepository<UserOnboarding, 
 
     default UserOnboarding getByUserIdOrThrow(Long userId) {
         return findByUser_Id(userId)
-                .orElseThrow(() -> UserOnboardingNotFoundException.of(userId));
+                .orElseThrow(UserOnboardingNotFoundException::new);
     }
 }
