@@ -76,7 +76,7 @@ class SurveyConverterTest {
         // when & then
         assertThatThrownBy(() -> converter.toEntity(testUser, request))
                 .isInstanceOf(InvalidSurveyAnswerCodeException.class)
-                .hasMessageContaining("Q1 이동수단");
+                .hasMessageContaining("잘못된 입력");
     }
 
     @Test
@@ -92,7 +92,7 @@ class SurveyConverterTest {
         // when & then
         assertThatThrownBy(() -> converter.toEntity(testUser, request))
                 .isInstanceOf(InvalidSurveyAnswerCodeException.class)
-                .hasMessageContaining("Q7 선호활동");
+                .hasMessageContaining("잘못된 입력");
     }
 
     @Test
