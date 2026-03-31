@@ -28,7 +28,7 @@ class StompErrorHandlerTest {
 
         Message<byte[]> errorMessage = stompErrorHandler.handleClientMessageProcessingError(
                 clientMessage,
-                new UnauthorizedException("인증이 필요합니다.")
+                new UnauthorizedException()
         );
 
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(errorMessage);
@@ -39,7 +39,7 @@ class StompErrorHandlerTest {
         assertThat(accessor.getContentType()).isEqualTo(MimeTypeUtils.APPLICATION_JSON);
         assertThat(payload.get("status").asInt()).isEqualTo(401);
         assertThat(payload.get("data").get("errorCode").asText()).isEqualTo("UNAUTHORIZED");
-        assertThat(payload.get("data").get("message").asText()).isEqualTo("인증이 필요합니다.");
+        assertThat(payload.get("data").get("message").asText()).isEqualTo("인증되지 않은 사용자입니다.");
     }
 
     @Test
@@ -53,7 +53,7 @@ class StompErrorHandlerTest {
 
         Message<byte[]> errorMessage = fallbackHandler.handleClientMessageProcessingError(
                 connectMessage("receipt-456"),
-                new UnauthorizedException("인증이 필요합니다.")
+                new UnauthorizedException()
         );
 
         JsonNode payload = objectMapper.readTree(errorMessage.getPayload());
