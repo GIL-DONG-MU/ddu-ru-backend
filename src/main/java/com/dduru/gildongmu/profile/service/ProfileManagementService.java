@@ -12,11 +12,9 @@ import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ProfileManagementService {
@@ -36,8 +34,6 @@ public class ProfileManagementService {
         updateProfileBasedOnProfileImageType(profile, bgColor, request);
 
         onboardingService.completeProfile(userId);
-        log.debug("프로필 업데이트 완료: userId={}, profileImageType={}, bgColorId={}",
-                userId, request.profileImageType(), request.bgColorId());
     }
 
     @Transactional
@@ -46,7 +42,6 @@ public class ProfileManagementService {
         AvatarProfile avatar = avatarProfileRepository.getByIdOrThrow(avatarId);
 
         profile.updateAvatar(avatar);
-        log.debug("아바타 업데이트 완료: userId={}, avatarId={}", userId, avatarId);
     }
 
     private BgColor resolveBgColor(ProfileUpdateRequest request) {

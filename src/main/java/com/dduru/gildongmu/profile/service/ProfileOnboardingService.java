@@ -47,13 +47,11 @@ public class ProfileOnboardingService {
             profileRepository.save(profile);
         } catch (DataIntegrityViolationException e) {
             if (isPhoneNumberDuplicateViolation(e)) {
-                log.warn("전화번호 중복으로 프로필 저장 실패: phoneNumber={}, userId={}", request.phoneNumber(), userId, e);
                 throw new DuplicatePhoneNumberException();
             }
             throw e;
         }
         onboardingService.completeOnboarding(userId);
-        log.debug("프로필 초기 설정 완료: userId={}", userId);
     }
 
     private void checkDuplicatePhoneNumber(String phoneNumber) {
@@ -70,7 +68,6 @@ public class ProfileOnboardingService {
         try {
             return LocalDate.parse(birthDateString.trim(), DATE_FORMATTER);
         } catch (DateTimeParseException e) {
-            log.warn("생년월일 파싱 실패: {}", birthDateString, e);
             throw InvalidBirthDateFormatException.invalidFormat();
         }
     }

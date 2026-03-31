@@ -60,11 +60,8 @@ public class NicknameService {
             String nickname = baseNickname + randomNumber;
 
             if (!profileRepository.existsByNickname(nickname)) {
-                log.info("랜덤 닉네임 생성: {}", nickname);
                 return NicknameRandomResponse.of(nickname);
             }
-
-            log.debug("해당 닉네임이 이미 존재합니다: {}, 새로운 숫자를 부여하겠습니다.", nickname);
         }
 
         String fallbackNickname = FALLBACK_NICKNAME_PREFIX + (System.currentTimeMillis() % FALLBACK_RANDOM_BOUND);
