@@ -18,6 +18,6 @@ public enum OauthType {
                 return type;
             }
         }
-        throw UnsupportedOauthTypeException.of(value);
+        throw new UnsupportedOauthTypeException();
     }
 }
