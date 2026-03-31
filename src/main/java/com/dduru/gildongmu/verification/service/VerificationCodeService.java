@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.verification.service;
 
+import com.dduru.gildongmu.common.exception.InternalServerException;
 import com.dduru.gildongmu.verification.dto.VerificationData;
 import com.dduru.gildongmu.verification.exception.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,7 +84,7 @@ public class VerificationCodeService {
 
         if (!canResend(phoneNumber)) {
             rollbackDailyLimit(phoneNumber);
-            throw new ResendLimitExceededException("잠시 후 다시 시도해주세요.");
+            throw new ResendLimitExceededException();
         }
 
         String code = useAdminCode ? adminCode : generateCode();
@@ -145,27 +146,27 @@ public class VerificationCodeService {
             );
         } catch (JsonProcessingException e) {
             log.error("인증 데이터 저장 실패: phoneNumber={}", phoneNumber, e);
-            throw new VerificationCreationException("인증 정보 저장에 실패했습니다.");
+            throw new InternalServerException();
         }
     }
 
     private VerificationData getVerificationDataFromRedis(String redisKey) {
         String jsonData = redisTemplate.opsForValue().get(redisKey);
         if (jsonData == null) {
-            throw new VerificationNotFoundException("인증 정보를 찾을 수 없습니다.");
+            throw new VerificationNotFoundException();
         }
 
         try {
             return objectMapper.readValue(jsonData, VerificationData.class);
         } catch (JsonProcessingException e) {
             log.error("인증 데이터 파싱 실패: redisKey={}", redisKey, e);
-            throw new VerificationNotFoundException("인증 정보를 찾을 수 없습니다.");
+            throw new VerificationNotFoundException();
         }
     }
 
     private void validateVerificationStatus(VerificationData data) {
         if (STATUS_VERIFIED.equals(data.status())) {
-            throw new AlreadyVerifiedException("이미 완료된 인증입니다.");
+            throw new AlreadyVerifiedException();
         }
     }
 
@@ -174,11 +175,11 @@ public class VerificationCodeService {
         
         if (newCount > MAX_VERIFICATION_ATTEMPTS) {
             redisTemplate.delete(redisKey);
-            throw new VerificationAttemptsExceededException("검증 시도 횟수를 초과했습니다.");
+            throw new VerificationAttemptsExceededException();
         }
         
         incrementAttemptCount(redisKey, data);
-        throw new InvalidVerificationCodeException("인증번호가 일치하지 않습니다.");
+        throw new InvalidVerificationCodeException();
     }
 
     private void markAsVerified(String redisKey, VerificationData data, String phoneNumber) {
@@ -194,7 +195,7 @@ public class VerificationCodeService {
             redisTemplate.opsForValue().set(redisKey, verifiedJson, Duration.ofMinutes(VERIFIED_EXPIRATION_MINUTES));
         } catch (JsonProcessingException e) {
             log.error("인증 데이터 업데이트 실패: phoneNumber={}", phoneNumber, e);
-            throw new VerificationCreationException("인증 상태 저장에 실패했습니다.");
+            throw new InternalServerException();
         }
     }
 
@@ -211,7 +212,7 @@ public class VerificationCodeService {
             redisTemplate.opsForValue().set(redisKey, updatedJson, Duration.ofMinutes(EXPIRATION_MINUTES));
         } catch (JsonProcessingException e) {
             log.error("인증 데이터 업데이트 실패: redisKey={}", redisKey, e);
-            throw new VerificationCreationException("인증 시도 횟수 업데이트에 실패했습니다.");
+            throw new InternalServerException();
         }
     }
 
@@ -237,7 +238,7 @@ public class VerificationCodeService {
             String.valueOf(DAILY_LIMIT_TTL_SECONDS));
 
         if (result < 0) {
-            throw new DailySmsLimitExceededException("일일 발송 한도를 초과했습니다.");
+            throw new DailySmsLimitExceededException();
         }
     }
 

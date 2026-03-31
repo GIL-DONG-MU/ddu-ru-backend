@@ -41,7 +41,7 @@ public class SmsService {
             logSuccess(response, phoneNumber);
         } catch (Exception e) {
             log.error("CoolSMS 발송 중 예상치 못한 오류 발생: phoneNumber={}", phoneNumber, e);
-            throw new SmsSendFailedException("SMS 발송 처리 중 오류가 발생했습니다.");
+            throw new SmsSendFailedException();
         }
     }
 
@@ -61,7 +61,7 @@ public class SmsService {
     private void validateResponse(SingleMessageSentResponse response, String phoneNumber) {
         if (response == null) {
             log.error("CoolSMS 발송 실패: 응답이 null입니다. phoneNumber={}", phoneNumber);
-            throw new SmsSendFailedException("SMS 발송에 실패했습니다.");
+            throw new SmsSendFailedException();
         }
 
         String statusCode = response.getStatusCode();
@@ -69,7 +69,7 @@ public class SmsService {
             String statusMessage = response.getStatusMessage();
             log.error("CoolSMS 발송 실패: statusCode={}, statusMessage={}, phoneNumber={}", 
                     statusCode, statusMessage, phoneNumber);
-            throw new SmsSendFailedException("SMS 발송에 실패했습니다: " + statusMessage);
+            throw new SmsSendFailedException();
         }
     }
 

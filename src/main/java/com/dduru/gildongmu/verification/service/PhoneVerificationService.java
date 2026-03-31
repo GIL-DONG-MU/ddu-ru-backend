@@ -37,7 +37,7 @@ public class PhoneVerificationService {
         } catch (Exception e) {
             verificationCodeService.rollbackVerificationCreation(phoneNumber);
             log.error("Verification code 메서드 처리 실패", e);
-            throw new SmsSendFailedException("SMS 발송 실패 등 서비스 처리 중 문제 발생");
+            throw new SmsSendFailedException();
         }
 
         return VerificationSendResponse.builder()
@@ -72,7 +72,7 @@ public class PhoneVerificationService {
 
     private void validatePhoneNumber(String phoneNumber) {
         if (profileRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new DuplicatePhoneNumberException("이미 가입된 전화번호입니다. 로그인해주세요.");
+            throw new DuplicatePhoneNumberException();
         }
     }
 
@@ -83,7 +83,7 @@ public class PhoneVerificationService {
             smsService.sendSms(phoneNumber, message);
         } catch (Exception e) {
             log.error("SMS 발송 실패: phoneNumber={}", phoneNumber, e);
-            throw new SmsProviderException("SMS 발송 서비스에 일시적인 오류가 발생했습니다.");
+            throw new SmsProviderException();
         }
     }
 
