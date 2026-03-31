@@ -3,8 +3,8 @@ package com.dduru.gildongmu.chat.exception;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
-public class ChatRoomNotFoundException extends BusinessException {
-    public ChatRoomNotFoundException() {
-        super(ErrorCode.CHAT_ROOM_NOT_FOUND);
+public class ChatRoomClosedException extends BusinessException {
+    public ChatRoomClosedException() {
+        super(ErrorCode.CHAT_ROOM_CLOSED);
     }
 }

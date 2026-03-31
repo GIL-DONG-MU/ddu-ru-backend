@@ -9,11 +9,11 @@ import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
 import com.dduru.gildongmu.chat.dto.response.InviteTargetsResult;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
+import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
+import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -61,14 +61,14 @@ public class GroupChatRoomService {
 
     private ChatRoom getActiveGroupRoomOrThrow(Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomTypeWithPostUser(roomId, ChatRoomType.GROUP)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+                .orElseThrow(ChatRoomNotFoundException::new);
         validateGroupRoomIsActive(chatRoom);
         return chatRoom;
     }
 
     private static void validateGroupRoomIsActive(ChatRoom room) {
         if (room.getStatus() == ChatRoomStatus.CLOSED || room.getStatus() == ChatRoomStatus.DELETED) {
-            throw new BusinessException(ErrorCode.CHAT_ROOM_CLOSED);
+            throw new ChatRoomClosedException();
         }
     }
 
@@ -158,4 +158,3 @@ public class GroupChatRoomService {
         chatRoomMemberRepository.saveAll(created);
     }
 }
-
