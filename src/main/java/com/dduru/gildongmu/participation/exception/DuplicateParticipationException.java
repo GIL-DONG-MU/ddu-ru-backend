@@ -7,8 +7,4 @@ public class DuplicateParticipationException extends BusinessException {
     public DuplicateParticipationException() {
         super(ErrorCode.DUPLICATE_PARTICIPATION);
     }
-
-    public DuplicateParticipationException(String message) {
-        super(ErrorCode.DUPLICATE_PARTICIPATION, message);
-    }
 }
