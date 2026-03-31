@@ -30,7 +30,7 @@ public class AvatarProfileService {
         AvatarProfile profile = avatarProfileRepository.findByAvatarType(avatarType)
                 .orElseThrow(() -> {
                     log.error("아바타 프로필을 찾을 수 없음 - avatarType: {}", avatarType);
-                    return AvatarProfileNotFoundException.of(avatarType);
+                    return new AvatarProfileNotFoundException();
                 });
 
         List<String> tags = jsonConverter.convertJsonToList(profile.getTags());

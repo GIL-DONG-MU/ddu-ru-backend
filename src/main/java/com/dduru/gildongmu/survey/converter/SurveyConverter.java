@@ -40,7 +40,7 @@ public class SurveyConverter {
     private <E extends Enum<E> & CodedEnum> E toEnum(
             Class<E> enumClass, Integer code, String questionName) {
         return EnumUtils.fromCode(enumClass, code)
-                .orElseThrow(() -> InvalidSurveyAnswerCodeException.of(questionName, code));
+                .orElseThrow(InvalidSurveyAnswerCodeException::new);
     }
 
     private <E extends Enum<E> & CodedEnum> List<E> toEnumList(

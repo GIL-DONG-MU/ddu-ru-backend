@@ -12,6 +12,6 @@ public interface AvatarProfileRepository extends JpaRepository<AvatarProfile, Lo
 
     default AvatarProfile getByIdOrThrow(Long id) {
         return findById(id)
-                .orElseThrow(() -> AvatarProfileNotFoundException.of(id));
+                .orElseThrow(AvatarProfileNotFoundException::new);
     }
 }
