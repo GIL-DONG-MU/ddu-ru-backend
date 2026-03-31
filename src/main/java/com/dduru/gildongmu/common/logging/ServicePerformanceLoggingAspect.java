@@ -25,7 +25,7 @@ public class ServicePerformanceLoggingAspect {
         if (elapsedMs >= warnThresholdMs) {
             log.warn("SLOW SERVICE - method: {}, elapsedMs: {}", method, elapsedMs);
         } else {
-            log.info("SERVICE OK - method: {}, elapsedMs: {}", method, elapsedMs);
+            log.debug("SERVICE OK - method: {}, elapsedMs: {}", method, elapsedMs);
         }
         return result;
     }
