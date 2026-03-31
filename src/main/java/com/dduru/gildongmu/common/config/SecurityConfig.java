@@ -38,6 +38,7 @@ public class SecurityConfig {
                         /* API 권한 설정 */
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         // 게시글 목록 / 상세 조회만 비로그인 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/*").permitAll()
                         .requestMatchers("/api/v1/verifications/**").authenticated()
