@@ -47,7 +47,7 @@ public class CommentService {
     public void delete(Long userId, Long postId, Long commentId) {
         log.debug("댓글 삭제 시작 - userId: {}, postId: {}, commentId: {}", userId, postId, commentId);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
-                .orElseThrow(() -> CommentNotFoundException.of(commentId));
+                .orElseThrow(CommentNotFoundException::new);
 
         validateCommentBelongsToPost(comment, postId);
         validatePermission(comment, userId);
@@ -59,7 +59,7 @@ public class CommentService {
     public void update(Long userId, Long postId, Long commentId, CommentUpdateRequest request) {
         log.debug("댓글 수정 시작 - userId: {}, postId: {}, commentId: {}, request: {}", userId, postId, commentId, request);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
-                .orElseThrow(() -> CommentNotFoundException.of(commentId));
+                .orElseThrow(CommentNotFoundException::new);
 
         validateCommentBelongsToPost(comment, postId);
         validatePermission(comment, userId);
@@ -70,14 +70,14 @@ public class CommentService {
 
     private void validateCommentBelongsToPost(Comment comment, Long postId) {
         if (!comment.getPost().getId().equals(postId)) {
-            throw InvalidParentCommentException.of(postId, comment.getPost().getId());
+            throw new InvalidParentCommentException();
         }
     }
 
     private void validatePermission(Comment comment, Long userId) {
         if (!comment.getUser().getId().equals(userId)) {
             log.warn("댓글 권한 없음 - commentId: {}, userId: {}, ownerId: {}", comment.getId(), userId, comment.getUser().getId());
-            throw CommentAccessDeniedException.ownerOnly();
+            throw new CommentAccessDeniedException();
         }
     }
 
@@ -87,10 +87,10 @@ public class CommentService {
         }
 
         Comment parent = commentRepository.findById(parentId)
-                .orElseThrow(() -> CommentNotFoundException.of(parentId));
+                .orElseThrow(CommentNotFoundException::new);
 
         if (!Objects.equals(parent.getPost().getId(), postId)) {
-            throw InvalidParentCommentException.of(postId, parent.getPost().getId());
+            throw new InvalidParentCommentException();
         }
 
         return parent;
