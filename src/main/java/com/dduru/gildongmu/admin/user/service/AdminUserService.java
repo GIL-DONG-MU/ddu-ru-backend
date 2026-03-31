@@ -25,7 +25,7 @@ public class AdminUserService {
 
     public AdminUserDetailResponse findById(Long userId) {
         User user = userRepository.findWithProfileById(userId)
-                .orElseThrow(() -> UserNotFoundException.of(userId));
+                .orElseThrow(UserNotFoundException::new);
         return AdminUserDetailResponse.from(user);
     }
 }
