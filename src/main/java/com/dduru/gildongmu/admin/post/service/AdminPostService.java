@@ -19,19 +19,15 @@ public class AdminPostService {
     private final JsonConverter jsonConverter;
 
     public AdminPostDetailResponse getDetail(Long postId) {
-        log.debug("관리자 게시글 상세 조회 - postId={}", postId);
         Post post = postRepository.getByIdOrThrow(postId);
         return AdminPostDetailResponse.from(post, jsonConverter);
     }
 
     @Transactional
     public void delete(Long postId, Long adminUserId) {
-        log.debug("관리자 게시글 삭제 - postId={}, adminUserId={}", postId, adminUserId);
-
         Post post = postRepository.getByIdOrThrow(postId);
 
         if (post.isDeleted()) {
-            log.debug("이미 삭제된 게시글 - postId={}, adminUserId={}", postId, adminUserId);
             return;
         }
 
