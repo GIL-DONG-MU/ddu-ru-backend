@@ -30,7 +30,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         }
 
         return switch (accessor.getCommand()) {
-            case CONNECT -> authenticate(message, accessor);
+            case CONNECT, STOMP -> authenticate(message, accessor);
             case SEND, SUBSCRIBE, UNSUBSCRIBE -> requireAuthenticated(message, accessor);
             default -> message;
         };
