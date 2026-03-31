@@ -47,6 +47,11 @@ coolsms:
 profile:
   default-image-url: ${PROFILE_DEFAULT_IMAGE_URL}
 
+app:
+  logging:
+    performance:
+      warn-threshold-ms: 300
+
 springdoc:
   api-docs:
     path: /v3/api-docs
