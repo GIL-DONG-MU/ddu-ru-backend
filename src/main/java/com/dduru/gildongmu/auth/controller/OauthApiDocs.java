@@ -24,7 +24,6 @@ public interface OauthApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.UNSUPPORTED_SOCIAL_LOGIN,
-            ErrorCode.SOCIAL_LOGIN_FAILED,
             ErrorCode.INVALID_TOKEN,
             ErrorCode.DUPLICATE_EMAIL
     })
@@ -37,13 +36,12 @@ public interface OauthApiDocs {
     @ApiResponse(responseCode = "200", description = "토큰 갱신 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
-            ErrorCode.INVALID_TOKEN,
-            ErrorCode.EXPIRED_TOKEN
+            ErrorCode.INVALID_TOKEN
     })
     ResponseEntity<ApiResult<LoginResponse>> refreshAccessToken(@Valid RefreshTokenRequest request);
 
     @Operation(summary = "로그아웃", description = "사용자 로그아웃을 처리합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "204", description = "로그아웃 성공", content = @Content())
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED, ErrorCode.INVALID_TOKEN, ErrorCode.EXPIRED_TOKEN})
+    @ApiErrorResponses({ErrorCode.UNAUTHORIZED, ErrorCode.INVALID_TOKEN})
     ResponseEntity<ApiResult<Void>> logout(@Parameter(hidden = true) Long userId);
 }

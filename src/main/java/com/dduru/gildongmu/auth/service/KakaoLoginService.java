@@ -51,7 +51,7 @@ public class KakaoLoginService implements OauthService {
         String[] chunks = idToken.split("\\.");
         if (chunks.length != 3) {
             log.warn("카카오 ID Token 형식 오류 - tokenParts: {}", chunks.length);
-            throw new InvalidTokenException("잘못된 카카오 ID Token 형식입니다. (JWT 형식이 아닙니다)");
+            throw new InvalidTokenException();
         }
 
         try {
@@ -60,10 +60,10 @@ public class KakaoLoginService implements OauthService {
             return objectMapper.readTree(payload);
         } catch (IllegalArgumentException e) {
             log.warn("카카오 ID Token 디코딩 실패 - payload segment 손상, message: {}", e.getMessage());
-            throw new InvalidTokenException("카카오 ID Token의 payload를 디코딩할 수 없습니다.");
+            throw new InvalidTokenException();
         } catch (Exception e) {
             log.warn("카카오 ID Token 파싱 실패 - message: {}", e.getMessage(), e);
-            throw new InvalidTokenException("카카오 ID Token의 payload를 파싱할 수 없습니다.");
+            throw new InvalidTokenException();
         }
     }
 
@@ -71,12 +71,12 @@ public class KakaoLoginService implements OauthService {
         JsonNode audNode = payload.path("aud");
         if (audNode.isMissingNode()) {
             log.warn("카카오 토큰에 aud 필드 없음");
-            throw new InvalidTokenException("카카오 ID Token에 audience(aud)가 없습니다.");
+            throw new InvalidTokenException();
         }
         String aud = audNode.asText();
         if (!kakaoClientId.equals(aud) && !kakaoRestClientId.equals(aud)) {
             log.warn("카카오 토큰 audience 불일치 - aud: {}", aud);
-            throw new InvalidTokenException("잘못된 카카오 클라이언트 ID입니다.");
+            throw new InvalidTokenException();
         }
     }
 
@@ -84,7 +84,7 @@ public class KakaoLoginService implements OauthService {
         JsonNode subNode = payload.path("sub");
         if (subNode.isMissingNode()) {
             log.warn("카카오 토큰에 sub 필드 없음");
-            throw new InvalidTokenException("카카오 ID Token에 subject(sub)가 없습니다.");
+            throw new InvalidTokenException();
         }
         return OauthUserInfo.builder()
                 .oauthId(subNode.asText())

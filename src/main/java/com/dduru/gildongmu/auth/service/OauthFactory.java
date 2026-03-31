@@ -24,7 +24,7 @@ public class OauthFactory {
     public OauthService getOauthService(OauthType loginType) {
         OauthService service = oauthServices.get(loginType);
         if (service == null) {
-            throw UnsupportedOauthTypeException.of(loginType.name());
+            throw new UnsupportedOauthTypeException();
         }
         return service;
     }

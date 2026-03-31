@@ -64,7 +64,7 @@ public class UserCreationService {
     private UserCreationResult handleEmailDuplicateOrThrow(OauthUserInfo oauthUserInfo) {
         if (userRepository.existsByEmail(oauthUserInfo.email())) {
             log.warn("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
-            throw DuplicateEmailException.of(oauthUserInfo.email());
+            throw new DuplicateEmailException();
         }
         log.error("사용자 생성 중 예상치 못한 데이터 무결성 위반 - oauthId: {}, oauthType: {}, email: {}",
                 oauthUserInfo.oauthId(), oauthUserInfo.loginType(), oauthUserInfo.email());
@@ -75,7 +75,7 @@ public class UserCreationService {
     private void validateEmailNotDuplicate(String email) {
         if (userRepository.existsByEmail(email)) {
             log.warn("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", email);
-            throw DuplicateEmailException.of(email);
+            throw new DuplicateEmailException();
         }
     }
 
