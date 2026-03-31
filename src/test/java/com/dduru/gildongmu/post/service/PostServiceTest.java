@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -65,9 +64,6 @@ class PostServiceTest {
     @Mock
     private ProfileImageResolver profileImageResolver;
 
-    @Mock
-    private ChatRoomService chatRoomService;
-
     @InjectMocks
     private PostService postService;
 
@@ -116,7 +112,6 @@ class PostServiceTest {
         Post savedPost = postCaptor.getValue();
         assertThat(savedPost.getTitle()).isEqualTo(request.title());
         assertThat(savedPost.getCompanionType()).isEqualTo(CompanionType.FULL);
-        verify(chatRoomService).createPendingGroupRoomForPost(savedPost, user);
         assertThat(savedPost.getRecruitDeadline()).isEqualTo(endDate.minusDays(1));
         assertThat(savedPost.isAgeAny()).isFalse();
         assertThat(savedPost.getMinAge()).isEqualTo(25);
