@@ -41,6 +41,10 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             MDC.put("clientIp", resolveClientIp(request));
             MDC.put("userAgent", userAgent);
             MDC.put("userId", "-");
+            String existingUserId = MDC.get("userId");
+            if (!StringUtils.hasText(existingUserId)) {
+                MDC.put("userId", "-");
+            }
 
             filterChain.doFilter(request, response);
         } finally {
