@@ -14,6 +14,6 @@ public interface BgColorRepository extends JpaRepository<BgColor, Long> {
 
     default BgColor getByIdOrThrow(Long id) {
         return findById(id)
-                .orElseThrow(() -> BgColorNotFoundException.of(id));
+                .orElseThrow(BgColorNotFoundException::new);
     }
 }

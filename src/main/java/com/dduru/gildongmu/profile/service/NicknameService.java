@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.profile.service;
 
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.profile.exception.NicknameAlreadyTakenException;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
@@ -75,7 +74,7 @@ public class NicknameService {
 
     private void checkDuplicateNickname(String nickname) {
         if (profileRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+            throw new NicknameAlreadyTakenException();
         }
     }
 }
