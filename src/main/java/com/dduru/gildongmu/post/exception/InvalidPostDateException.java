@@ -5,14 +5,6 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 
 public class InvalidPostDateException extends BusinessException {
     public InvalidPostDateException() {
-        super(ErrorCode.INVALID_POST_DATE, "잘못된 날짜 설정입니다");
-    }
-
-    public InvalidPostDateException(String message) {
-        super(ErrorCode.INVALID_POST_DATE, message);
-    }
-
-    public static InvalidPostDateException endBeforeStart() {
-        return new InvalidPostDateException("여행 종료일은 시작일과 같거나 이후여야 합니다");
+        super(ErrorCode.INVALID_POST_DATE);
     }
 }

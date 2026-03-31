@@ -7,8 +7,4 @@ public class RecruitCountBelowZeroException extends BusinessException {
     public RecruitCountBelowZeroException() {
         super(ErrorCode.RECRUIT_COUNT_BELOW_ZERO);
     }
-
-    public RecruitCountBelowZeroException(String message) {
-        super(ErrorCode.RECRUIT_COUNT_BELOW_ZERO, message);
-    }
 }

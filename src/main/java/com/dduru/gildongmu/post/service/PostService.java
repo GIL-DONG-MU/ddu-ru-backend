@@ -19,7 +19,6 @@ import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.tag.service.TagValidator;
 import com.dduru.gildongmu.participation.service.ParticipationService;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
-import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
@@ -49,7 +48,6 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
-    private final ChatRoomService chatRoomService;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         log.debug("게시글 생성 - userId={}", userId);
@@ -61,14 +59,12 @@ public class PostService {
 
         Post post = createPost(user, destination, request);
         Post savedPost = postRepository.save(post);
-        chatRoomService.createPendingGroupRoomForPost(savedPost, user);
 
         log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());
     }
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
-        // TODO: 게시글 수정 시 그룹 채팅방 maxCapacity를 recruitCapacity + 1로 동기화
         log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
 
         Post post = getOwnedPost(postId, userId);
@@ -142,7 +138,7 @@ public class PostService {
         Post post = postRepository.getActiveByIdOrThrow(postId);
         if (!post.getUser().getId().equals(userId)) {
             log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
-            throw PostAccessDeniedException.ownerOnly();
+            throw new PostAccessDeniedException();
         }
         return post;
     }
@@ -196,7 +192,7 @@ public class PostService {
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
-            throw InvalidPostDateException.endBeforeStart();
+            throw new InvalidPostDateException();
         }
     }
 

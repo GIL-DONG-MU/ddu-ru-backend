@@ -4,7 +4,6 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
 public class InvalidTagsException extends BusinessException {
-
     public InvalidTagsException(String message) {
         super(ErrorCode.INVALID_POST_TAGS, message);
     }
@@ -18,7 +17,6 @@ public class InvalidTagsException extends BusinessException {
     }
 
     public static InvalidTagsException invalidLengthOrCharacters() {
-        return new InvalidTagsException(
-                "태그는 한글 음절 기준 최대 4자, 영문·숫자만 사용할 때는 최대 7자이며, 한글·영문·숫자만 사용할 수 있습니다");
+        return new InvalidTagsException("태그는 한글 음절 기준 최대 4자, 영문·숫자만 사용할 때는 최대 7자이며, 한글·영문·숫자만 사용할 수 있습니다");
     }
 }

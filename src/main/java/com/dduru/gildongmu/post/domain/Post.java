@@ -291,7 +291,7 @@ public class Post extends BaseTimeEntity {
 
     private void validateStatusChange(PostStatus newStatus) {
         if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw InvalidPostStatusException.cannotTransition(this.status, newStatus);
+            throw new InvalidPostStatusException();
         }
     }
 
@@ -337,7 +337,7 @@ public class Post extends BaseTimeEntity {
 
     private void updateRecruitCapacity(Integer newCapacity) {
         if (newCapacity < this.recruitCount) {
-            throw InvalidRecruitCapacityException.insufficientCapacity(this.recruitCount, newCapacity);
+            throw new InvalidRecruitCapacityException();
         }
         this.recruitCapacity = newCapacity;
     }
