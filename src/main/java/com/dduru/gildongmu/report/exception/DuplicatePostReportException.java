@@ -8,8 +8,4 @@ public class DuplicatePostReportException extends BusinessException {
     public DuplicatePostReportException() {
         super(ErrorCode.DUPLICATE_POST_REPORT);
     }
-
-    public DuplicatePostReportException(String message) {
-        super(ErrorCode.DUPLICATE_POST_REPORT, message);
-    }
 }
