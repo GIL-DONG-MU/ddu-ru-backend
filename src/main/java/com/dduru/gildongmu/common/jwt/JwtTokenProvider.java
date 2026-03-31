@@ -179,7 +179,7 @@ public class JwtTokenProvider {
             
             String phoneNumber = claims.get("phone_number", String.class);
             if (phoneNumber == null || !phoneNumber.equals(expectedPhoneNumber)) {
-                log.warn("전화번호가 일치하지 않습니다. 토큰: {}, 요청: {}", phoneNumber, expectedPhoneNumber);
+                log.warn("전화번호가 일치하지 않습니다.");
                 return false;
             }
             

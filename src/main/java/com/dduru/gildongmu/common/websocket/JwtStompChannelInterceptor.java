@@ -54,8 +54,6 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         }
 
         accessor.setUser(authentication);
-        log.debug("WebSocket CONNECT 인증 완료 - userId={}, sessionId={}",
-                authentication.getName(), accessor.getSessionId());
         return message;
     }
 
