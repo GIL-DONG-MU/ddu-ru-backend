@@ -16,9 +16,7 @@ public enum ErrorCode {
 
     // 인증 (AUTH)
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 인증 토큰입니다."),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
     UNSUPPORTED_SOCIAL_LOGIN(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
-    SOCIAL_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "소셜 로그인에 실패했습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 다른 소셜 계정으로 가입된 이메일입니다."),
 
@@ -59,7 +57,7 @@ public enum ErrorCode {
     // 게시글 (POST)
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
     POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글에 대한 접근 권한이 없습니다."),
-    INVALID_POST_DATE(HttpStatus.BAD_REQUEST, "잘못된 날짜 설정입니다."),
+    INVALID_POST_DATE(HttpStatus.BAD_REQUEST, "여행 종료일은 시작일과 같거나 이후여야 합니다"),
     INVALID_PREFERRED_AGE(HttpStatus.BAD_REQUEST, "선호 연령 설정이 올바르지 않습니다."),
     INVALID_RECRUIT_CAPACITY(HttpStatus.BAD_REQUEST, "잘못된 모집 인원 설정입니다."),
     TRAVEL_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "이미 시작된 여행입니다."),
@@ -73,7 +71,7 @@ public enum ErrorCode {
     // 댓글 (COMMENT)
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
     INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "부모 댓글이 현재 게시글에 속해있지 않습니다."),
-    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "댓글에 대한 접근 권한이 없습니다."),
+    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "댓글 작성자만 접근할 수 있습니다."),
 
     // 여행지 (DESTINATION)
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."),
