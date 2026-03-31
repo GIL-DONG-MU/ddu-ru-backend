@@ -90,7 +90,7 @@ public class S3Service {
     private void validateFileExtension(String fileName) {
         String extension = StringUtils.getFilenameExtension(fileName);
         if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
-            throw new InvalidFileExtensionException("허용되지 않는 파일 확장자입니다. 허용 확장자: " + ALLOWED_EXTENSIONS);
+            throw InvalidFileExtensionException.invalidExtension(ALLOWED_EXTENSIONS);
         }
     }
 
