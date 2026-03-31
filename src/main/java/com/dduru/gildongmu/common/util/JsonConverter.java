@@ -49,7 +49,7 @@ public class JsonConverter {
             return Collections.emptyList();
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+            return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
             log.error("JSON을 리스트로 변환 실패 - JSON: {}", json, e);
             throw new JsonConvertException();

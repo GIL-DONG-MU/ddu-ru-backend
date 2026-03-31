@@ -82,9 +82,6 @@ public class ProfileOnboardingService {
     }
 
     private boolean isPhoneNumberDuplicateViolation(DataIntegrityViolationException e){
-        if (e.getMostSpecificCause().getMessage().contains("phone_number")) {
-            return true;
-        }
-        return false;
+        return e.getMostSpecificCause().getMessage().contains("phone_number");
     }
 }

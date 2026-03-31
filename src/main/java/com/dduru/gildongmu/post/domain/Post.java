@@ -134,7 +134,6 @@ public class Post extends BaseTimeEntity {
         this.tags = tags;
         this.viewCount = 0;
         this.likeCount = 0;
-        this.status = PostStatus.OPEN;
         this.isDeleted = false;
         this.companionType = companionType;
     }

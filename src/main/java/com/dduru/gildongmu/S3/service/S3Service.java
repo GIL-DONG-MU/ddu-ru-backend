@@ -96,6 +96,6 @@ public class S3Service {
 
     private String generateFileName(String originalFilename) {
         String extension = StringUtils.getFilenameExtension(originalFilename);
-        return UUID.randomUUID().toString() + "." + extension;
+        return UUID.randomUUID() + "." + extension;
     }
 }
