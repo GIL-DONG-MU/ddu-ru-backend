@@ -8,7 +8,6 @@ import com.dduru.gildongmu.survey.dto.response.SurveyQuestionResponse;
 import com.dduru.gildongmu.survey.repository.SurveyQuestionOptionRepository;
 import com.dduru.gildongmu.survey.repository.SurveyQuestionRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -35,19 +33,15 @@ public class SurveyQuestionService {
     private final CacheManager cacheManager;
 
     public SurveyQuestionListResponse getSurveyQuestions() {
-        log.debug("설문 문항 리스트 조회 시작");
-
         String cacheKey = buildCacheKey();
         SurveyQuestionListResponse cached = getCached(cacheKey);
         if (cached != null) {
-            log.debug("설문 문항 리스트 캐시 히트 - cacheKey: {}", cacheKey);
             return cached;
         }
 
         SurveyQuestionListResponse response = fetchFromDb();
         putCache(cacheKey, response);
 
-        log.info("설문 문항 리스트 조회 완료 - count: {}, cacheKey: {}", response.count(), cacheKey);
         return response;
     }
 

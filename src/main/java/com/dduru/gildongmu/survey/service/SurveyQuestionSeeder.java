@@ -42,7 +42,6 @@ public class SurveyQuestionSeeder implements ApplicationRunner {
         }
 
         if (surveyQuestionRepository.count() > 0) {
-            log.debug("설문 문항 데이터가 이미 존재합니다. 시딩을 건너뜁니다.");
             return;
         }
 
