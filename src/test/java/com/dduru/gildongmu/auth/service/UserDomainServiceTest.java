@@ -161,7 +161,7 @@ class UserDomainServiceTest {
         when(userRepository.findByOauthIdAndOauthType("other-oauth-789", OauthType.KAKAO))
                 .thenReturn(Optional.empty());
         when(userCreationService.createNewUser(oauthUserInfo))
-                .thenThrow(DuplicateEmailException.of("duplicate@example.com"));
+                .thenThrow(new DuplicateEmailException());
 
         // when & then
         assertThatThrownBy(() -> userDomainService.findOrCreateUser(oauthUserInfo))
