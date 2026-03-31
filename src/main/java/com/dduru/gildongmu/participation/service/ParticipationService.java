@@ -35,8 +35,6 @@ public class ParticipationService {
     private final UserRepository userRepository;
 
     public ParticipationResponse participate(Long postId, Long userId, ParticipationRequest request) {
-        log.debug("참여신청 시작 - postId: {}, userId: {}", postId, userId);
-
         Post post =  postRepository.getActiveByIdOrThrow(postId);
         User user = userRepository.getByIdOrThrow(userId);
 
@@ -51,8 +49,6 @@ public class ParticipationService {
     }
 
     public void approveParticipation(Long postId, Long participationId, Long userId) {
-        log.debug("참여신청 승인 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
-
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
         Post post = participation.getPost();
@@ -70,8 +66,6 @@ public class ParticipationService {
     }
 
     public void rejectParticipation(Long postId, Long participationId, Long userId) {
-        log.debug("참여신청 거절 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
-
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
         Post post = participation.getPost();
@@ -89,8 +83,6 @@ public class ParticipationService {
     }
 
     public void cancelParticipation(Long postId, Long participationId, Long userId) {
-        log.debug("참여신청 취소 시작 - postId: {}, participationId: {}, userId: {}", postId, participationId, userId);
-
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         validateParticipationBelongsToPost(participation, postId);
 
