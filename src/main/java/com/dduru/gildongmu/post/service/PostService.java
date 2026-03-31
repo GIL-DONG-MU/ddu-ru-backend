@@ -52,8 +52,6 @@ public class PostService {
     private final ProfileImageResolver profileImageResolver;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
-        log.debug("게시글 생성 - userId={}", userId);
-
         validateCreateRequest(request);
 
         User user = userRepository.getByIdOrThrow(userId);
@@ -68,8 +66,6 @@ public class PostService {
     }
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
-        log.debug("게시글 수정 - postId={}, userId={}", postId, userId);
-
         Post post = getOwnedPost(postId, userId);
         validateUpdateRequest(post, request);
 
@@ -82,8 +78,6 @@ public class PostService {
     }
 
     public void delete(Long postId, Long userId) {
-        log.debug("게시글 삭제 - postId={}, userId={}", postId, userId);
-
         Post post = getOwnedPost(postId, userId);
 
         post.softDelete(userId);
@@ -92,13 +86,10 @@ public class PostService {
     }
 
     public int closeExpiredPosts() {
-        log.debug("만료 게시글 상태 업데이트 - 실행");
         return postRepository.closeExpiredPostsByDate(LocalDate.now());
     }
 
     public PostDetailResponse recordViewAndGetDetail(Long postId, Long currentUserId) {
-        log.debug("게시글 상세 조회(조회수 증가) - postId={}", postId);
-
         postRepository.incrementViewCount(postId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
@@ -116,13 +107,10 @@ public class PostService {
                 myParticipationStatus,
                 profileImageResolver
         );
-        log.debug("게시글 상세 조회 완료 - postId={}", postId);
         return response;
     }
 
     public void changeStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
-        log.debug("게시글 모집 상태 변경 - postId={}, userId={}", postId, userId);
-
         Post post = getOwnedPost(postId, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
@@ -140,7 +128,6 @@ public class PostService {
     private Post getOwnedPost(Long postId, Long userId) {
         Post post = postRepository.getActiveByIdOrThrow(postId);
         if (!post.getUser().getId().equals(userId)) {
-            log.warn("게시글 권한 없음 - postId={}, userId={}", post.getId(), userId);
             throw new PostAccessDeniedException();
         }
         return post;
@@ -262,16 +249,13 @@ public class PostService {
 
     private String resolvePhotoUrl(String photoUrl, Destination destination) {
         if (StringUtils.hasText(photoUrl)) {
-            log.debug("이미지 소스 - 업로드");
             return photoUrl.trim();
         }
 
         if (destination != null && StringUtils.hasText(destination.getImage())) {
-            log.debug("이미지 소스 - 목적지 기본, destination={}", destination.getCity());
             return destination.getImage();
         }
 
-        log.debug("이미지 소스 - 없음");
         return null;
     }
 
