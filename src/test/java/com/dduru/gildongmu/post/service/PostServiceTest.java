@@ -1,8 +1,11 @@
 package com.dduru.gildongmu.post.service;
 
+import com.dduru.gildongmu.chat.service.ChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.like.repository.PostLikeRepository;
+import com.dduru.gildongmu.participation.service.ParticipationService;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
@@ -11,8 +14,6 @@ import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
-import com.dduru.gildongmu.like.repository.PostLikeRepository;
-import com.dduru.gildongmu.participation.service.ParticipationService;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
@@ -64,6 +65,9 @@ class PostServiceTest {
     @Mock
     private ProfileImageResolver profileImageResolver;
 
+    @Mock
+    private ChatRoomService chatRoomService;
+
     @InjectMocks
     private PostService postService;
 
@@ -112,6 +116,7 @@ class PostServiceTest {
         Post savedPost = postCaptor.getValue();
         assertThat(savedPost.getTitle()).isEqualTo(request.title());
         assertThat(savedPost.getCompanionType()).isEqualTo(CompanionType.FULL);
+        verify(chatRoomService).createPendingGroupRoomForPost(savedPost, user);
         assertThat(savedPost.getRecruitDeadline()).isEqualTo(endDate.minusDays(1));
         assertThat(savedPost.isAgeAny()).isFalse();
         assertThat(savedPost.getMinAge()).isEqualTo(25);
