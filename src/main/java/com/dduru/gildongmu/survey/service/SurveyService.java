@@ -72,7 +72,7 @@ public class SurveyService {
 
         User user = userRepository.getByIdOrThrow(userId);
         TravelTendency travelTendency = travelTendencyRepository.findByUser(user)
-                .orElseThrow(SurveyResultNotFoundException::of);
+                .orElseThrow(SurveyResultNotFoundException::new);
 
         log.info("설문 결과 조회 완료 - userId: {}, avatarType: {}", userId, travelTendency.getAvatarType());
         return SurveyResponse.from(travelTendency, avatarProfileService);

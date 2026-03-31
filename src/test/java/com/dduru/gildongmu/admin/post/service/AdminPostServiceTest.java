@@ -64,7 +64,7 @@ class AdminPostServiceTest {
     @Test
     void getDetail_postNotFound_throwsPostNotFoundException() {
         Long postId = 999L;
-        when(postRepository.getByIdOrThrow(postId)).thenThrow(PostNotFoundException.of(postId));
+        when(postRepository.getByIdOrThrow(postId)).thenThrow(new PostNotFoundException());
 
         assertThatThrownBy(() -> adminPostService.getDetail(postId))
                 .isInstanceOf(PostNotFoundException.class)

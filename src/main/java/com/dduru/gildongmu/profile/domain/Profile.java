@@ -1,11 +1,13 @@
 package com.dduru.gildongmu.profile.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.exception.InvalidProfileImageUrlException;
+import com.dduru.gildongmu.profile.exception.NicknameContainsBadWordException;
+import com.dduru.gildongmu.profile.exception.NicknameInvalidCharactersException;
+import com.dduru.gildongmu.profile.exception.NicknameInvalidLengthException;
+import com.dduru.gildongmu.profile.exception.NicknameNotBlankException;
 import com.dduru.gildongmu.profile.validator.NicknameBadWordValidator;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.user.domain.User;
@@ -111,25 +113,25 @@ public class Profile extends BaseTimeEntity {
 
     public static void validateNickname(String nickname) {
         if (nickname == null || nickname.isBlank()) {
-            throw new BusinessException(ErrorCode.NICKNAME_NOT_BLANK);
+            throw new NicknameNotBlankException();
         }
 
         if (nickname.length() < 2 || nickname.length() > 14) {
-            throw new BusinessException(ErrorCode.NICKNAME_INVALID_LENGTH);
+            throw new NicknameInvalidLengthException();
         }
 
         if (!NICKNAME_PATTERN.matcher(nickname).matches()) {
-            throw new BusinessException(ErrorCode.NICKNAME_INVALID_CHARACTERS);
+            throw new NicknameInvalidCharactersException();
         }
 
         if (!NicknameBadWordValidator.validate(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_CONTAINS_BAD_WORD);
+            throw new NicknameContainsBadWordException();
         }
     }
 
     private void validateUploadedImageUrlForType(ProfileImageType profileImageType, String uploadedImageUrl) {
         if (profileImageType == ProfileImageType.UPLOADED && (uploadedImageUrl == null || uploadedImageUrl.isBlank())) {
-            throw InvalidProfileImageUrlException.uploadedTypeRequiresUrl();
+            throw new InvalidProfileImageUrlException();
         }
     }
 }

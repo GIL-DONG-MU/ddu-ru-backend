@@ -60,13 +60,13 @@ class PostServiceTest {
     private ParticipationService participationService;
 
     @Mock
+    private ChatRoomService chatRoomService;
+
+    @Mock
     private PostLikeRepository postLikeRepository;
 
     @Mock
     private ProfileImageResolver profileImageResolver;
-
-    @Mock
-    private ChatRoomService chatRoomService;
 
     @InjectMocks
     private PostService postService;

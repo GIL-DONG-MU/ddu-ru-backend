@@ -154,19 +154,19 @@ public class ParticipationService {
 
     private void validatePostOwner(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
-            throw PostAccessDeniedException.ownerOnly();
+            throw new PostAccessDeniedException();
         }
     }
 
     private void validateApplicant(Participation participation, Long userId) {
         if (!participation.getUser().getId().equals(userId)) {
-            throw PostAccessDeniedException.applicantOnly();
+            throw new PostAccessDeniedException();
         }
     }
 
     private void validateParticipationBelongsToPost(Participation participation, Long postId) {
         if (!participation.getPost().getId().equals(postId)) {
-            throw new ParticipationPostMismatchException(participation.getId(), postId);
+            throw new ParticipationPostMismatchException();
         }
     }
 }

@@ -7,8 +7,4 @@ public class RecruitCountExceedCapacityException extends BusinessException {
     public RecruitCountExceedCapacityException() {
         super(ErrorCode.RECRUIT_COUNT_EXCEED_CAPACITY);
     }
-
-    public RecruitCountExceedCapacityException(String message) {
-        super(ErrorCode.RECRUIT_COUNT_EXCEED_CAPACITY, message);
-    }
 }

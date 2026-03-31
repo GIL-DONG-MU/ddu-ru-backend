@@ -33,7 +33,7 @@ public class AdminReportService {
     @Transactional
     public AdminReportResponse update(Long reportId, Long reviewerId, AdminReportUpdateRequest request) {
         Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> ReportNotFoundException.of(reportId));
+                .orElseThrow(ReportNotFoundException::new);
         User reviewer = userRepository.getByIdOrThrow(reviewerId);
         report.updateByAdmin(request.status(), reviewer, request.reviewNote());
         log.info("신고 처리 완료 - reportId={}, status={}, reviewerId={}", reportId, request.status(), reviewerId);

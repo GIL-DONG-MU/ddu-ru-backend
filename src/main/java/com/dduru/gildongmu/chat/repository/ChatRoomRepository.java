@@ -32,7 +32,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     default ChatRoom getByIdOrThrow(Long roomId) {
-        return findById(roomId).orElseThrow(() -> ChatRoomNotFoundException.of(roomId));
+        return findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
 
     Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);

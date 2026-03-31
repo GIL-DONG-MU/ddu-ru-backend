@@ -61,12 +61,12 @@ public class GoogleLoginService implements OauthService {
             GoogleIdToken token = verifier.verify(idToken);
             if (token == null) {
                 log.warn("구글 ID Token 검증 실패 - verifier가 null 반환");
-                throw new InvalidTokenException("유효하지 않은 구글 ID Token입니다.");
+                throw new InvalidTokenException();
             }
             return token;
         } catch (GeneralSecurityException | IOException e) {
             log.warn("구글 ID Token 검증 중 예외 발생 - message: {}", e.getMessage(), e);
-            throw new InvalidTokenException("구글 ID Token 검증 중 오류가 발생했습니다.");
+            throw new InvalidTokenException();
         }
     }
 

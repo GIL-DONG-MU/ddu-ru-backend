@@ -6,6 +6,7 @@ import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.TokenPair;
 import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.*;
+import com.dduru.gildongmu.common.exception.InternalServerException;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -55,7 +56,7 @@ public class OauthAuthService {
             } else {
                 log.debug("로그아웃 처리 (토큰이 이미 없음) - userId: {}", userId);
             }
-        } catch (RefreshTokenException e) {
+        } catch (InternalServerException e) {
             log.warn("로그아웃 중 Redis 오류 (사용자에게는 성공 처리) - userId: {}", userId, e);
         }
     }
@@ -67,7 +68,7 @@ public class OauthAuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken(userId);
         try {
             refreshTokenService.saveRefreshToken(userId, refreshToken);
-        } catch (RefreshTokenException e) {
+        } catch (InternalServerException e) {
             log.error("로그인 중 Refresh token 저장 실패 - userId: {}, 사용자에게는 로그인 성공 처리", userId, e);
         }
         return new TokenPair(accessToken, refreshToken);
@@ -83,11 +84,11 @@ public class OauthAuthService {
             boolean matches = refreshTokenService.validateRefreshToken(userId, refreshToken);
             if (!matches) {
                 log.warn("저장된 refresh token과 불일치 - userId: {}", userId);
-                throw new InvalidTokenException("유효하지 않은 refresh token입니다.");
+                throw new InvalidTokenException();
             }
-        } catch (RefreshTokenException e) {
+        } catch (InternalServerException e) {
             log.error("Redis 접근 실패로 토큰 검증 불가 - userId: {}", userId, e);
-            throw new TokenRefreshFailedException("토큰 검증 중 서버 오류가 발생했습니다.");
+            throw new InternalServerException();
         }
     }
 
@@ -95,7 +96,7 @@ public class OauthAuthService {
         if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             log.warn("JWT refresh token 검증 실패 - userId: {}", userId);
             deleteExpiredTokenSafely(userId);
-            throw new InvalidTokenException("만료되거나 유효하지 않은 refresh token입니다.");
+            throw new InvalidTokenException();
         }
     }
 
@@ -113,7 +114,7 @@ public class OauthAuthService {
     private void deleteExpiredTokenSafely(Long userId) {
         try {
             refreshTokenService.deleteRefreshToken(userId);
-        } catch (RefreshTokenException e) {
+        } catch (InternalServerException e) {
             log.warn("만료된 refresh token 삭제 실패 - userId: {}", userId, e);
         }
     }
@@ -121,7 +122,7 @@ public class OauthAuthService {
     private void extendTokenExpirationSafely(Long userId) {
         try {
             refreshTokenService.refreshTokenExpiration(userId);
-        } catch (RefreshTokenException e) {
+        } catch (InternalServerException e) {
             log.warn("Refresh token 만료 연장 실패 - userId: {}", userId, e);
         }
     }

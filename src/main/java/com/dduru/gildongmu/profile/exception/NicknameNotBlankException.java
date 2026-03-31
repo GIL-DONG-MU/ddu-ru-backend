@@ -3,8 +3,8 @@ package com.dduru.gildongmu.profile.exception;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
-public class ProfileNotFoundException extends BusinessException {
-    public ProfileNotFoundException() {
-        super(ErrorCode.PROFILE_NOT_FOUND);
+public class NicknameNotBlankException extends BusinessException {
+    public NicknameNotBlankException() {
+        super(ErrorCode.NICKNAME_NOT_BLANK);
     }
 }

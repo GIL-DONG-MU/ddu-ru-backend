@@ -24,10 +24,10 @@ public class PostLikeService {
     @Transactional
     public void togglePostLike(Long userId, Long postId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> UserNotFoundException.of(userId));
+                .orElseThrow(UserNotFoundException::new);
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> PostNotFoundException.of(postId));
+                .orElseThrow(PostNotFoundException::new);
 
         Optional<PostLike> existingLike = postLikeRepository.findByUserIdAndPostId(userId, postId);
 

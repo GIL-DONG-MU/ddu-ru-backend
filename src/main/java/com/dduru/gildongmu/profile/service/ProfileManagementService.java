@@ -1,12 +1,12 @@
 package com.dduru.gildongmu.profile.service;
 
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.exception.AvatarBgColorRequiredException;
+import com.dduru.gildongmu.profile.exception.NicknameAlreadyTakenException;
 import com.dduru.gildongmu.profile.repository.BgColorRepository;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
@@ -55,7 +55,7 @@ public class ProfileManagementService {
         }
 
         if (request.bgColorId() == null) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "AVATAR 타입에는 bgColorId가 필요합니다.");
+            throw new AvatarBgColorRequiredException();
         }
 
         return bgColorRepository.getByIdOrThrow(request.bgColorId());
@@ -79,7 +79,7 @@ public class ProfileManagementService {
         }
 
         if (profileRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_TAKEN);
+            throw new NicknameAlreadyTakenException();
         }
     }
 }

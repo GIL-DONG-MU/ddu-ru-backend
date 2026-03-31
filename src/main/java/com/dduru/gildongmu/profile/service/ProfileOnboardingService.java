@@ -1,12 +1,13 @@
 package com.dduru.gildongmu.profile.service;
 
-import com.dduru.gildongmu.common.exception.BusinessException;
-import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.auth.exception.InvalidTokenException;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
+import com.dduru.gildongmu.profile.exception.InvalidBirthDateFormatException;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.verification.exception.DuplicatePhoneNumberException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,7 +48,7 @@ public class ProfileOnboardingService {
         } catch (DataIntegrityViolationException e) {
             if (isPhoneNumberDuplicateViolation(e)) {
                 log.warn("전화번호 중복으로 프로필 저장 실패: phoneNumber={}, userId={}", request.phoneNumber(), userId, e);
-                throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+                throw new DuplicatePhoneNumberException();
             }
             throw e;
         }
@@ -57,7 +58,7 @@ public class ProfileOnboardingService {
 
     private void checkDuplicatePhoneNumber(String phoneNumber) {
         if (profileRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+            throw new DuplicatePhoneNumberException();
         }
     }
 
@@ -70,20 +71,17 @@ public class ProfileOnboardingService {
             return LocalDate.parse(birthDateString.trim(), DATE_FORMATTER);
         } catch (DateTimeParseException e) {
             log.warn("생년월일 파싱 실패: {}", birthDateString, e);
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd 형식)");
+            throw InvalidBirthDateFormatException.invalidFormat();
         }
     }
 
     private void validateVerificationToken(String verificationToken, String phoneNumber) {
         if (!jwtTokenProvider.validateVerificationToken(verificationToken, phoneNumber)) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            throw new InvalidTokenException();
         }
     }
 
     private boolean isPhoneNumberDuplicateViolation(DataIntegrityViolationException e){
-        if (e.getMostSpecificCause().getMessage().contains("phone_number")) {
-            return true;
-        }
-        return false;
+        return e.getMostSpecificCause().getMessage().contains("phone_number");
     }
 }

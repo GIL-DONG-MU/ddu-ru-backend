@@ -247,7 +247,7 @@ class SurveyServiceTest {
     @DisplayName("존재하지_않는_사용자_예외발생")
     void 존재하지_않는_사용자_예외발생() {
         // given
-        when(userRepository.getByIdOrThrow(999L)).thenThrow(UserNotFoundException.of(999L));
+        when(userRepository.getByIdOrThrow(999L)).thenThrow(new UserNotFoundException());
 
         // when & then
         assertThatThrownBy(() -> surveyService.submitSurvey(999L, testRequest))

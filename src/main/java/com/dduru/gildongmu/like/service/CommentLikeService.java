@@ -24,10 +24,10 @@ public class CommentLikeService {
     @Transactional
     public void toggleLike(Long userId, Long commentId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> UserNotFoundException.of(userId));
+                .orElseThrow(UserNotFoundException::new);
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> CommentNotFoundException.of(commentId));
+                .orElseThrow(CommentNotFoundException::new);
 
         Optional<CommentLike> existingLike = commentLikeRepository.findByUserIdAndCommentId(userId, commentId);
 

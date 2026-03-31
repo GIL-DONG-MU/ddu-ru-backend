@@ -7,8 +7,4 @@ public class RecruitmentClosedException extends BusinessException {
     public RecruitmentClosedException() {
         super(ErrorCode.RECRUITMENT_CLOSED);
     }
-
-    public RecruitmentClosedException(String message) {
-        super(ErrorCode.RECRUITMENT_CLOSED, message);
-    }
 }

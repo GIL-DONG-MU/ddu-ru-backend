@@ -17,7 +17,7 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
     default Profile getByUserIdOrThrow(Long userId) {
         return findByUser_Id(userId)
-                .orElseThrow(() -> ProfileNotFoundException.of(userId));
+                .orElseThrow(ProfileNotFoundException::new);
     }
     
     boolean existsByNickname(String nickname);

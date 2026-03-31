@@ -35,7 +35,7 @@ public class S3Service {
     public List<ImageUploadResponse> preparePostImageUpload(List<String> fileNames) {
         log.debug("Presigned URL 생성 시작(posts) - 파일 개수: {}", fileNames.size());
         List<ImageUploadResponse> responses = fileNames.stream()
-                .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR, true))
+                .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR))
                 .toList();
         log.debug("Presigned URL 생성 완료(posts) - 파일 개수: {}", responses.size());
         return responses;
@@ -45,7 +45,7 @@ public class S3Service {
     public List<ImageUploadResponse> prepareProfileImageUpload(List<String> fileNames) {
         log.debug("Presigned URL 생성 시작(profiles) - 파일 개수: {}", fileNames.size());
         List<ImageUploadResponse> responses = fileNames.stream()
-                .map(fileName -> prepareUploadInternal(fileName, S3_PROFILES_DIR, true))
+                .map(fileName -> prepareUploadInternal(fileName, S3_PROFILES_DIR))
                 .toList();
         log.debug("Presigned URL 생성 완료{} 파일 개수: {}", S3_PROFILES_DIR, responses.size());
         return responses;
@@ -60,9 +60,9 @@ public class S3Service {
         return responses;
     }*/
 
-    private ImageUploadResponse prepareUploadInternal(String fileName, String directory, boolean useUuid) {
+    private ImageUploadResponse prepareUploadInternal(String fileName, String directory) {
         validateFileExtension(fileName);
-        String finalFileName = useUuid ? generateFileName(fileName) : fileName;
+        String finalFileName = generateFileName(fileName);
         String key = directory + finalFileName;
         return presignPut(key);
     }
@@ -90,12 +90,12 @@ public class S3Service {
     private void validateFileExtension(String fileName) {
         String extension = StringUtils.getFilenameExtension(fileName);
         if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
-            throw new InvalidFileExtensionException("허용되지 않는 파일 확장자입니다. 허용 확장자: " + ALLOWED_EXTENSIONS);
+            throw InvalidFileExtensionException.invalidExtension(ALLOWED_EXTENSIONS);
         }
     }
 
     private String generateFileName(String originalFilename) {
         String extension = StringUtils.getFilenameExtension(originalFilename);
-        return UUID.randomUUID().toString() + "." + extension;
+        return UUID.randomUUID() + "." + extension;
     }
 }

@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserDomainService 테스트")
+@DisplayName("UserDomainService")
 class UserDomainServiceTest {
 
     @Mock
@@ -38,13 +38,13 @@ class UserDomainServiceTest {
     private UserDomainService userDomainService;
 
     @Test
-    @DisplayName("userId로 사용자 조회 성공")
-    void getUserOrThrow_성공() {
+    @DisplayName("getUserOrThrow returns user when found")
+    void getUserOrThrow_returnsUser_whenFound() {
         // given
         Long userId = 1L;
         User user = User.builder()
                 .email("test@example.com")
-                .name("테스트")
+                .name("Test User")
                 .oauthId("oauth-123")
                 .oauthType(OauthType.KAKAO)
                 .build();
@@ -63,8 +63,8 @@ class UserDomainServiceTest {
     }
 
     @Test
-    @DisplayName("userId로 사용자 조회 시 없으면 UserNotFoundException 발생")
-    void getUserOrThrow_사용자없음_예외발생() {
+    @DisplayName("getUserOrThrow throws UserNotFoundException when user missing")
+    void getUserOrThrow_throwsUserNotFoundException_whenMissing() {
         // given
         Long userId = 999L;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
@@ -77,19 +77,19 @@ class UserDomainServiceTest {
     }
 
     @Test
-    @DisplayName("기존 OAuth 사용자 조회 시 UserCreationResult 반환 (isNewUser false)")
-    void findOrCreateUser_기존사용자_성공() {
+    @DisplayName("findOrCreateUser returns existing user (isNewUser false)")
+    void findOrCreateUser_returnsExistingUser() {
         // given
         OauthUserInfo oauthUserInfo = OauthUserInfo.builder()
                 .oauthId("oauth-123")
                 .email("existing@example.com")
-                .name("기존사용자")
+                .name("Existing User")
                 .loginType(OauthType.KAKAO)
                 .build();
 
         User existingUser = User.builder()
                 .email("existing@example.com")
-                .name("기존사용자")
+                .name("Existing User")
                 .oauthId("oauth-123")
                 .oauthType(OauthType.KAKAO)
                 .build();
@@ -111,19 +111,19 @@ class UserDomainServiceTest {
     }
 
     @Test
-    @DisplayName("신규 OAuth 사용자 생성 성공 (isNewUser true)")
-    void findOrCreateUser_신규사용자_생성성공() {
+    @DisplayName("findOrCreateUser creates new user (isNewUser true)")
+    void findOrCreateUser_createsNewUser() {
         // given
         OauthUserInfo oauthUserInfo = OauthUserInfo.builder()
                 .oauthId("new-oauth-456")
                 .email("new@example.com")
-                .name("신규사용자")
+                .name("New User")
                 .loginType(OauthType.GOOGLE)
                 .build();
 
         User savedUser = User.builder()
                 .email("new@example.com")
-                .name("신규사용자")
+                .name("New User")
                 .oauthId("new-oauth-456")
                 .oauthType(OauthType.GOOGLE)
                 .build();
@@ -148,20 +148,20 @@ class UserDomainServiceTest {
     }
 
     @Test
-    @DisplayName("이미 가입된 이메일로 다른 OAuth 가입 시 DuplicateEmailException 발생")
-    void findOrCreateUser_이메일중복_예외발생() {
+    @DisplayName("findOrCreateUser throws DuplicateEmailException when email already taken")
+    void findOrCreateUser_throwsDuplicateEmailException() {
         // given
         OauthUserInfo oauthUserInfo = OauthUserInfo.builder()
                 .oauthId("other-oauth-789")
                 .email("duplicate@example.com")
-                .name("다른제공자")
+                .name("Other Provider")
                 .loginType(OauthType.KAKAO)
                 .build();
 
         when(userRepository.findByOauthIdAndOauthType("other-oauth-789", OauthType.KAKAO))
                 .thenReturn(Optional.empty());
         when(userCreationService.createNewUser(oauthUserInfo))
-                .thenThrow(DuplicateEmailException.of("duplicate@example.com"));
+                .thenThrow(new DuplicateEmailException());
 
         // when & then
         assertThatThrownBy(() -> userDomainService.findOrCreateUser(oauthUserInfo))

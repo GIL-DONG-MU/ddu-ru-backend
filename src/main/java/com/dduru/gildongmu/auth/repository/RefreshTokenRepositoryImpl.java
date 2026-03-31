@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.auth.repository;
 
-import com.dduru.gildongmu.auth.exception.RefreshTokenException;
+import com.dduru.gildongmu.common.exception.InternalServerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +28,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             redisTemplate.opsForValue().set(key(userId), refreshToken, refreshTtl);
         } catch (Exception e) {
             log.error("Refresh token 저장 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 저장 실패");
+            throw new InternalServerException();
         }
     }
 
@@ -38,7 +38,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             return Optional.ofNullable(redisTemplate.opsForValue().get(key(userId)));
         } catch (Exception e) {
             log.error("Refresh token 조회 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 조회 실패");
+            throw new InternalServerException();
         }
     }
 
@@ -48,7 +48,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             return redisTemplate.delete(key(userId));
         } catch (Exception e) {
             log.error("Refresh token 삭제 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 삭제 실패");
+            throw new InternalServerException();
         }
     }
 
@@ -61,7 +61,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             }
         } catch (Exception e) {
             log.error("Refresh token 만료 연장 실패 - userId: {}", userId, e);
-            throw new RefreshTokenException("Refresh token 만료 연장 실패");
+            throw new InternalServerException();
         }
     }
 

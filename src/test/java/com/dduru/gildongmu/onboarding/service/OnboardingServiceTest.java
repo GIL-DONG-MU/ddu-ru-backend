@@ -96,12 +96,12 @@ class OnboardingServiceTest {
     void getStatus_온보딩레코드없음_예외발생() {
         // given
         Long userId = 999L;
-        when(userOnboardingRepository.getByUserIdOrThrow(userId)).thenThrow(UserOnboardingNotFoundException.of(userId));
+        when(userOnboardingRepository.getByUserIdOrThrow(userId)).thenThrow(new UserOnboardingNotFoundException());
 
         // when & then
         assertThatThrownBy(() -> onboardingService.getStatus(userId))
                 .isInstanceOf(UserOnboardingNotFoundException.class)
-                .hasMessage("userId= " + userId);
+                .hasMessage("유저 온보딩 정보를 찾을 수 없습니다.");
 
         verify(userOnboardingRepository).getByUserIdOrThrow(userId);
     }
@@ -157,12 +157,12 @@ class OnboardingServiceTest {
     void skipSurvey_온보딩레코드없음_예외발생() {
         // given
         Long userId = 999L;
-        when(userOnboardingRepository.getByUserIdOrThrow(userId)).thenThrow(UserOnboardingNotFoundException.of(userId));
+        when(userOnboardingRepository.getByUserIdOrThrow(userId)).thenThrow(new UserOnboardingNotFoundException());
 
         // when & then
         assertThatThrownBy(() -> onboardingService.skipSurvey(userId))
                 .isInstanceOf(UserOnboardingNotFoundException.class)
-                .hasMessage("userId= " + userId);
+                .hasMessage("유저 온보딩 정보를 찾을 수 없습니다.");
 
         verify(userOnboardingRepository).getByUserIdOrThrow(userId);
     }

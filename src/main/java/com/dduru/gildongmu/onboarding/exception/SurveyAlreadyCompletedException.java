@@ -3,8 +3,8 @@ package com.dduru.gildongmu.onboarding.exception;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
-public class UserOnboardingNotFoundException extends BusinessException {
-    public UserOnboardingNotFoundException() {
-        super(ErrorCode.USER_ONBOARDING_NOT_FOUND);
+public class SurveyAlreadyCompletedException extends BusinessException {
+    public SurveyAlreadyCompletedException() {
+        super(ErrorCode.SURVEY_ALREADY_COMPLETED);
     }
 }
