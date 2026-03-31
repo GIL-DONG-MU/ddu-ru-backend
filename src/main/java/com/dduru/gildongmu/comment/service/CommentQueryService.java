@@ -5,7 +5,6 @@ import com.dduru.gildongmu.comment.dto.response.CommentResponse;
 import com.dduru.gildongmu.comment.repository.CommentRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,7 +22,6 @@ public class CommentQueryService {
     private final ProfileImageResolver profileImageResolver;
 
     public List<CommentResponse> retrieve(Long postId) {
-        log.debug("댓글 목록 조회 시작 - postId: {}", postId);
         List<Comment> comments = commentRepository.findCommentsByPostId(postId);
 
         Map<Long, Comment> commentMap = comments.stream()
@@ -47,7 +44,6 @@ public class CommentQueryService {
                 .map(comment -> CommentResponse.from(comment, profileImageResolver))
                 .toList();
 
-        log.info("댓글 목록 조회 완료 - postId: {}, 댓글 수: {}", postId, result.size());
         return result;
     }
 }

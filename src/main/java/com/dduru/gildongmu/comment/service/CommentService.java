@@ -31,7 +31,6 @@ public class CommentService {
 
     @Transactional
     public CommentResponse create(Long userId, Long postId, CommentCreateRequest request) {
-        log.debug("댓글 생성 시작 - userId: {}, postId: {}, request: {}", userId, postId, request);
         User user = userRepository.getByIdOrThrow(userId);
         Post post = postRepository.getActiveByIdOrThrow(postId);
         Comment parent = getValidParentComment(request.parentId(), postId);
@@ -45,7 +44,6 @@ public class CommentService {
 
     @Transactional
     public void delete(Long userId, Long postId, Long commentId) {
-        log.debug("댓글 삭제 시작 - userId: {}, postId: {}, commentId: {}", userId, postId, commentId);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
@@ -57,7 +55,6 @@ public class CommentService {
 
     @Transactional
     public void update(Long userId, Long postId, Long commentId, CommentUpdateRequest request) {
-        log.debug("댓글 수정 시작 - userId: {}, postId: {}, commentId: {}, request: {}", userId, postId, commentId, request);
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
@@ -76,7 +73,6 @@ public class CommentService {
 
     private void validatePermission(Comment comment, Long userId) {
         if (!comment.getUser().getId().equals(userId)) {
-            log.warn("댓글 권한 없음 - commentId: {}, userId: {}, ownerId: {}", comment.getId(), userId, comment.getUser().getId());
             throw new CommentAccessDeniedException();
         }
     }
