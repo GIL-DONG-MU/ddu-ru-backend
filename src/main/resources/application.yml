@@ -47,6 +47,11 @@ coolsms:
 profile:
   default-image-url: ${PROFILE_DEFAULT_IMAGE_URL}
 
+app:
+  logging:
+    performance:
+      warn-threshold-ms: 300
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -64,3 +69,7 @@ springdoc:
     urls-primary-name: public
   default-consumes-media-type: application/json;charset=UTF-8
   default-produces-media-type: application/json;charset=UTF-8
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [reqId=%X{requestId:-} ip=%X{clientIp:-} method=%X{method:-} uri=%X{uri:-} userId=%X{userId:-} ua=%X{userAgent:-}] %msg%n"

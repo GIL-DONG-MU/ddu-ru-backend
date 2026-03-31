@@ -92,7 +92,6 @@ public class VerificationCodeService {
         saveVerificationData(phoneNumber, data);
 
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
-        log.info("인증번호 생성 및 저장 완료: phoneNumber={}", phoneNumber);
         
         return new VerificationCreateResult(code, expiresAt);
     }
@@ -107,8 +106,7 @@ public class VerificationCodeService {
             handleInvalidCode(redisKey, data);
         }
 
-        markAsVerified(redisKey, data, phoneNumber);
-        log.info("인증번호 검증 성공: phoneNumber={}", phoneNumber);
+        markAsVerified(redisKey, data);
     }
 
     public void rollbackVerificationCreation(String phoneNumber) {
@@ -117,8 +115,6 @@ public class VerificationCodeService {
         
         redisTemplate.delete(authKey);
         redisTemplate.opsForValue().decrement(dailyLimitKey);
-        
-        log.info("인증 생성 롤백 완료: phoneNumber={}", phoneNumber);
     }
 
     public void setResendLimit(String phoneNumber) {
@@ -145,7 +141,7 @@ public class VerificationCodeService {
                     Duration.ofMinutes(EXPIRATION_MINUTES)
             );
         } catch (JsonProcessingException e) {
-            log.error("인증 데이터 저장 실패: phoneNumber={}", phoneNumber, e);
+            log.error("인증 데이터 저장 실패", e);
             throw new InternalServerException();
         }
     }
@@ -182,7 +178,7 @@ public class VerificationCodeService {
         throw new InvalidVerificationCodeException();
     }
 
-    private void markAsVerified(String redisKey, VerificationData data, String phoneNumber) {
+    private void markAsVerified(String redisKey, VerificationData data) {
         VerificationData verifiedData = VerificationData.builder()
                 .code(data.code())
                 .phone(data.phone())
@@ -194,7 +190,7 @@ public class VerificationCodeService {
             String verifiedJson = objectMapper.writeValueAsString(verifiedData);
             redisTemplate.opsForValue().set(redisKey, verifiedJson, Duration.ofMinutes(VERIFIED_EXPIRATION_MINUTES));
         } catch (JsonProcessingException e) {
-            log.error("인증 데이터 업데이트 실패: phoneNumber={}", phoneNumber, e);
+            log.error("인증 데이터 업데이트 실패", e);
             throw new InternalServerException();
         }
     }
@@ -245,7 +241,6 @@ public class VerificationCodeService {
     private void rollbackDailyLimit(String phoneNumber) {
         String dailyLimitKey = DAILY_LIMIT_KEY_PREFIX + phoneNumber;
         redisTemplate.opsForValue().decrement(dailyLimitKey);
-        log.debug("일일 한도 롤백 완료: phoneNumber={}", phoneNumber);
     }
 
     public record VerificationCreateResult(String code, LocalDateTime expiresAt) {

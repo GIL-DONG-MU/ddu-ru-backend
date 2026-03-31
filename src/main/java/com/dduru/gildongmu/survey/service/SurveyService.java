@@ -41,8 +41,6 @@ public class SurveyService {
     private final OnboardingService onboardingService;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
-        log.debug("설문조사 제출 시작 - userId: {}", userId);
-
         User user = userRepository.getByIdOrThrow(userId);
         Survey survey = saveOrUpdateSurvey(user, request);
 
@@ -68,13 +66,9 @@ public class SurveyService {
 
     @Transactional(readOnly = true)
     public SurveyResponse getMySurveyResult(Long userId) {
-        log.debug("설문 결과 조회 시작 - userId: {}", userId);
-
         User user = userRepository.getByIdOrThrow(userId);
         TravelTendency travelTendency = travelTendencyRepository.findByUser(user)
                 .orElseThrow(SurveyResultNotFoundException::new);
-
-        log.info("설문 결과 조회 완료 - userId: {}, avatarType: {}", userId, travelTendency.getAvatarType());
         return SurveyResponse.from(travelTendency, avatarProfileService);
     }
 
@@ -108,10 +102,7 @@ public class SurveyService {
     private void saveAvatarIdToProfile(Long userId, AvatarType avatarType) {
         avatarProfileRepository.findByAvatarType(avatarType)
                 .ifPresentOrElse(
-                        avatarProfile -> {
-                            profileManagementService.updateAvatar(userId, avatarProfile.getId());
-                            log.debug("아바타 ID 저장 완료 - userId: {}, avatarId: {}", userId, avatarProfile.getId());
-                        },
+                        avatarProfile -> profileManagementService.updateAvatar(userId, avatarProfile.getId()),
                         () -> log.warn("아바타 프로필을 찾을 수 없어 Profile에 저장하지 않음 - userId: {}, avatarType: {}", userId, avatarType)
                 );
     }

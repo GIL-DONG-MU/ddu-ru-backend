@@ -3,6 +3,7 @@ package com.dduru.gildongmu.auth.service;
 import com.dduru.gildongmu.auth.dto.OauthUserInfo;
 import com.dduru.gildongmu.auth.dto.UserCreationResult;
 import com.dduru.gildongmu.auth.exception.DuplicateEmailException;
+import com.dduru.gildongmu.auth.exception.UserCreationIntegrityException;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -37,8 +38,8 @@ public class UserCreationService {
 
         userOnboardingRepository.save(new UserOnboarding(user));
 
-        log.info("신규 사용자 회원가입 완료 - userId: {}, provider: {}, email: {}",
-                user.getId(), oauthUserInfo.loginType(), oauthUserInfo.email());
+        log.info("신규 사용자 회원가입 완료 - userId: {}, provider: {}",
+                user.getId(), oauthUserInfo.loginType());
 
         return new UserCreationResult(user, true);
     }
@@ -54,27 +55,18 @@ public class UserCreationService {
                 oauthUserInfo.oauthId(),
                 oauthUserInfo.loginType()
         )
-        .map(user -> {
-            log.debug("기존 사용자 재조회 (race condition 처리) - userId: {}, provider: {}",
-                    user.getId(), oauthUserInfo.loginType());
-            return new UserCreationResult(user, false);
-        });
+        .map(user -> new UserCreationResult(user, false));
     }
 
     private UserCreationResult handleEmailDuplicateOrThrow(OauthUserInfo oauthUserInfo) {
         if (userRepository.existsByEmail(oauthUserInfo.email())) {
-            log.warn("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", oauthUserInfo.email());
             throw new DuplicateEmailException();
         }
-        log.error("사용자 생성 중 예상치 못한 데이터 무결성 위반 - oauthId: {}, oauthType: {}, email: {}",
-                oauthUserInfo.oauthId(), oauthUserInfo.loginType(), oauthUserInfo.email());
-        throw new RuntimeException("사용자 생성 중 데이터 무결성 위반 - oauthId: " +
-                oauthUserInfo.oauthId() + ", email: " + oauthUserInfo.email());
+        throw new UserCreationIntegrityException();
     }
 
     private void validateEmailNotDuplicate(String email) {
         if (userRepository.existsByEmail(email)) {
-            log.warn("이미 존재하는 이메일로 다른 OAuth 제공자 가입 시도: {}", email);
             throw new DuplicateEmailException();
         }
     }

@@ -7,7 +7,6 @@ import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,8 +22,6 @@ public class PostQueryService {
     private final ProfileImageResolver profileImageResolver;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
-        log.debug("게시글 목록 조회 - size={}", request.size());
-
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
 
@@ -39,7 +35,6 @@ public class PostQueryService {
                 .map(post -> PostSummaryResponse.from(post, profileImageResolver))
                 .toList();
 
-        log.debug("게시글 목록 조회 완료 - count={}, hasNext={}", summaries.size(), hasNext);
         return PostListResponse.of(summaries, hasNext);
     }
 }

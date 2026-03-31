@@ -27,14 +27,9 @@ public class KakaoLoginService implements OauthService {
 
     @Override
     public OauthUserInfo verifyIdToken(String idToken) {
-        log.debug("카카오 ID Token 검증 시작");
-        
         JsonNode payload = parseIdTokenPayload(idToken);
         validateAudience(payload);
-        OauthUserInfo userInfo = extractUserInfo(payload);
-        
-        log.debug("카카오 ID Token 검증 완료 - oauthId: {}", userInfo.oauthId());
-        return userInfo;
+        return extractUserInfo(payload);
     }
 
     @Override

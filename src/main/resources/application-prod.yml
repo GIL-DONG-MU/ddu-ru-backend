@@ -34,7 +34,7 @@ logging:
     root: info
     com.dduru.gildongmu: info
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [reqId=%X{requestId:-} ip=%X{clientIp:-} method=%X{method:-} uri=%X{uri:-} userId=%X{userId:-}] %msg%n"
 
 management:
   endpoints:

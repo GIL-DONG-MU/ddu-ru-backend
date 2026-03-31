@@ -19,6 +19,7 @@ public enum ErrorCode {
     UNSUPPORTED_SOCIAL_LOGIN(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 다른 소셜 계정으로 가입된 이메일입니다."),
+    USER_CREATION_INTEGRITY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 생성 중 예상치 못한 데이터 무결성 오류가 발생했습니다."),
 
     // 휴대폰 인증 (VERIFICATION)
     SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS 발송에 실패했습니다."),
