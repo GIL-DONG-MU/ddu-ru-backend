@@ -22,6 +22,6 @@ public interface DestinationRepository extends JpaRepository<Destination, Long>,
 
     default Destination getByIdOrThrow(Long id) {
         return findById(id)
-                .orElseThrow(() -> DestinationNotFoundException.of(id));
+                .orElseThrow(DestinationNotFoundException::new);
     }
 }
