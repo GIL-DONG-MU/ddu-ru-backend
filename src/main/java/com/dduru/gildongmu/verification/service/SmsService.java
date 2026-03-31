@@ -37,10 +37,9 @@ public class SmsService {
             Message message = createMessage(phoneNumber, messageText);
             SingleMessageSentResponse response = sendMessage(message);
 
-            validateResponse(response, phoneNumber);
-            logSuccess(response, phoneNumber);
+            validateResponse(response);
         } catch (Exception e) {
-            log.error("CoolSMS 발송 중 예상치 못한 오류 발생: phoneNumber={}", phoneNumber, e);
+            log.error("CoolSMS 발송 중 예상치 못한 오류 발생", e);
             throw new SmsSendFailedException();
         }
     }
@@ -58,23 +57,18 @@ public class SmsService {
         return this.messageService.sendOne(request);
     }
 
-    private void validateResponse(SingleMessageSentResponse response, String phoneNumber) {
+    private void validateResponse(SingleMessageSentResponse response) {
         if (response == null) {
-            log.error("CoolSMS 발송 실패: 응답이 null입니다. phoneNumber={}", phoneNumber);
+            log.error("CoolSMS 발송 실패: 응답이 null입니다.");
             throw new SmsSendFailedException();
         }
 
         String statusCode = response.getStatusCode();
         if (!statusCode.equals("2000")) {
             String statusMessage = response.getStatusMessage();
-            log.error("CoolSMS 발송 실패: statusCode={}, statusMessage={}, phoneNumber={}", 
-                    statusCode, statusMessage, phoneNumber);
+            log.error("CoolSMS 발송 실패: statusCode={}, statusMessage={}",
+                    statusCode, statusMessage);
             throw new SmsSendFailedException();
         }
-    }
-
-    private void logSuccess(SingleMessageSentResponse response, String phoneNumber) {
-        log.info("CoolSMS 발송 성공: phoneNumber={}, messageId={}, statusCode={}", 
-                phoneNumber, response.getMessageId(), response.getStatusCode());
     }
 }

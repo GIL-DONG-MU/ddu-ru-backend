@@ -63,7 +63,6 @@ public class PhoneVerificationService {
                 verificationCodeService.createVerificationWithAdminCode(phoneNumber, code);
 
         verificationCodeService.setResendLimit(phoneNumber);
-        log.info("[ADMIN] 인증번호 발송 스킵 - phoneNumber={}, 고정코드={}", phoneNumber, code);
 
         return VerificationSendResponse.builder()
                 .expiresAt(result.expiresAt())
@@ -82,7 +81,7 @@ public class PhoneVerificationService {
         try {
             smsService.sendSms(phoneNumber, message);
         } catch (Exception e) {
-            log.error("SMS 발송 실패: phoneNumber={}", phoneNumber, e);
+            log.error("SMS 발송 실패", e);
             throw new SmsProviderException();
         }
     }
