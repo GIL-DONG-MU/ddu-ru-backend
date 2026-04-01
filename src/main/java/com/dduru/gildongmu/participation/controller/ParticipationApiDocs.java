@@ -5,6 +5,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 @Tag(name = "Participations", description = "동행 게시글 참여 관리 API")
 @SecurityRequirement(name = "JWT")
@@ -32,5 +35,17 @@ public interface ParticipationApiDocs {
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID") Long postId,
             @Valid ParticipationRequest request
+    );
+
+    @Operation(summary = "게시글 참여자 목록 조회", description = "게시글에 참여한 사용자 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "참여자 목록 조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<List<ParticipationResponse>>> getPostParticipants(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "게시글 ID") Long postId
     );
 }
