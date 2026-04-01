@@ -3,12 +3,15 @@ package com.dduru.gildongmu.participation.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
+import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
 import com.dduru.gildongmu.participation.service.ParticipationCommandService;
 import com.dduru.gildongmu.participation.service.ParticipationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +49,16 @@ public class ParticipationController implements ParticipationApiDocs {
             @PathVariable Long postId
     ) {
         List<ParticipationResponse> participants = participationCommandService.retrieveParticipantsByPost(userId, postId);
+        return ResponseEntity.ok(ApiResult.ok(participants));
+    }
+
+    @Override
+    @GetMapping("/participations")
+    public ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
+            @CurrentUser Long userId,
+            @ParameterObject ParticipationRetrieveRequest request
+    ) {
+        List<ParticipationRetrieveResponse> participants = participationCommandService.retrieveAllParticipants(userId, request);
         return ResponseEntity.ok(ApiResult.ok(participants));
     }
 }

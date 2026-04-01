@@ -1,7 +1,9 @@
 package com.dduru.gildongmu.participation.service;
 
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
@@ -22,18 +24,25 @@ public class ParticipationCommandService {
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
 
-
     @Transactional(readOnly = true)
     public List<ParticipationResponse> retrieveParticipantsByPost(Long userId, Long postId) {
         Post post =  postRepository.getActiveByIdOrThrow(postId);
 
         validatePostOwner(post, userId);
 
-        List<Participation> applicants = participationRepository.findByPostIdOrderByCreatedAtAsc(postId);
+        List<Participation> participations = participationRepository.findByPostIdOrderByCreatedAtDesc(postId);
 
-        return applicants.stream()
+        return participations.stream()
                 .map(ParticipationResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParticipationRetrieveResponse> retrieveAllParticipants(Long userId, ParticipationRetrieveRequest request) {
+        if (request.status() == null) {
+            return participationRepository.findAllParticipantByCreatedAtDesc(userId);
+        }
+        return participationRepository.findAllParticipantByStatusAndCreatedAtDesc(userId, request.status());
     }
 
     private static void validatePostOwner(Post post, Long userId) {
