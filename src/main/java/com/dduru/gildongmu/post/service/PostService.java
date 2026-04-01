@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.chat.service.ChatRoomService;
+import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -46,10 +46,10 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final ParticipationService participationService;
-    private final ChatRoomService chatRoomService;
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
+    private final GroupChatRoomService groupChatRoomService;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
@@ -59,7 +59,7 @@ public class PostService {
 
         Post post = createPost(user, destination, request);
         Post savedPost = postRepository.save(post);
-        chatRoomService.createPendingGroupRoomForPost(savedPost, user);
+        groupChatRoomService.createPendingRoomForPost(savedPost, user);
 
         log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());

@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.post.service;
 
-import com.dduru.gildongmu.chat.service.ChatRoomService;
+import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -60,7 +60,7 @@ class PostServiceTest {
     private ParticipationService participationService;
 
     @Mock
-    private ChatRoomService chatRoomService;
+    private GroupChatRoomService groupchatRoomService;
 
     @Mock
     private PostLikeRepository postLikeRepository;
@@ -116,7 +116,7 @@ class PostServiceTest {
         Post savedPost = postCaptor.getValue();
         assertThat(savedPost.getTitle()).isEqualTo(request.title());
         assertThat(savedPost.getCompanionType()).isEqualTo(CompanionType.FULL);
-        verify(chatRoomService).createPendingGroupRoomForPost(savedPost, user);
+        verify(groupchatRoomService).createPendingRoomForPost(savedPost, user);
         assertThat(savedPost.getRecruitDeadline()).isEqualTo(endDate.minusDays(1));
         assertThat(savedPost.isAgeAny()).isFalse();
         assertThat(savedPost.getMinAge()).isEqualTo(25);

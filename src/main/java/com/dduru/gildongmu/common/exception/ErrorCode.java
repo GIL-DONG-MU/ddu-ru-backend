@@ -80,9 +80,10 @@ public enum ErrorCode {
     // 참여신청 (PARTICIPATION)
     PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "참여신청을 찾을 수 없습니다."),
     DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "이미 참여신청한 게시글입니다."),
-    RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "모집이 마감되었거나 정원이 찼습니다."),
+    RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "모집이 마감된 게시글입니다."),
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글에는 참여신청할 수 없습니다."),
     PARTICIPATION_POST_MISMATCH(HttpStatus.BAD_REQUEST, "해당 참여신청은 해당 게시글에 속해있지 않습니다."),
+    INVALID_PARTICIPATION_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 참여신청 상태입니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
