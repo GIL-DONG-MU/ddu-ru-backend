@@ -1,9 +1,10 @@
 package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
-import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
-import com.dduru.gildongmu.chat.service.ChatRoomService;
+import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
+import com.dduru.gildongmu.chat.service.GroupChatRoomService;
+import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import jakarta.validation.Valid;
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/chat")
 public class ChatController implements ChatApiDocs {
 
-    private final ChatRoomService chatRoomService;
+    private final GroupChatRoomService groupChatRoomService;
+    private final PrivateChatRoomService privateChatRoomService;
 
     @Override
     @PostMapping("/posts/{postId}/private")
@@ -29,7 +31,7 @@ public class ChatController implements ChatApiDocs {
             @CurrentUser Long userId,
             @PathVariable Long postId
     ) {
-        PrivateChatRoomCreateResponse response = chatRoomService.createOrGetPrivateRoom(userId, postId);
+        PrivateChatRoomCreateResponse response = privateChatRoomService.createOrGetRoom(userId, postId);
         if (!response.isCreated()) {
             return ResponseEntity.ok(ApiResult.ok(response));
         }
@@ -43,7 +45,7 @@ public class ChatController implements ChatApiDocs {
             @PathVariable Long roomId,
             @Valid @RequestBody GroupChatInviteRequest request
     ) {
-        GroupChatInviteResponse response = chatRoomService.inviteMembersToGroupRoom(userId, roomId, request);
+        GroupChatInviteResponse response = groupChatRoomService.inviteMembers(userId, roomId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

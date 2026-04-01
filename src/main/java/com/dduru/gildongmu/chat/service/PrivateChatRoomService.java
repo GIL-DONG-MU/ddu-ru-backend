@@ -33,22 +33,26 @@ public class PrivateChatRoomService {
     private final UserRepository userRepository;
 
     @Transactional
-    public PrivateChatRoomCreateResponse createOrGetPrivateRoom(Long requesterId, Long postId) {
+    public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Long postId) {
         Post post = postRepository.getActiveByIdOrThrow(postId);
-        User target = post.getUser();
-        User requester = userRepository.getByIdOrThrow(requesterId);
-        validateNotSelfPrivateChat(requesterId, target.getId());
+        return createOrGetRoom(requesterId, post, post.getUser().getId());
+    }
 
-        Optional<ChatRoom> existingRoom = findExistingPrivateRoom(post, requester, target);
+    private PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Post post, Long targetUserId) {
+        User requester = userRepository.getByIdOrThrow(requesterId);
+        User target = userRepository.getByIdOrThrow(targetUserId);
+        validateNotSelfChat(requesterId, targetUserId);
+
+        Optional<ChatRoom> existingRoom = findExistingRoom(post, requester, target);
         if (existingRoom.isPresent()) {
             return new PrivateChatRoomCreateResponse(existingRoom.get().getId(), false);
         }
 
-        Long newRoomId = createPrivateRoom(post, requester, target);
+        Long newRoomId = createRoom(post, requester, target);
         return new PrivateChatRoomCreateResponse(newRoomId, true);
     }
 
-    private Optional<ChatRoom> findExistingPrivateRoom(Post post, User requester, User target) {
+    private Optional<ChatRoom> findExistingRoom(Post post, User requester, User target) {
         return chatRoomRepository.findPrivateRoomByPostAndUsers(
                 post.getId(),
                 ChatRoomType.PRIVATE,
@@ -58,26 +62,25 @@ public class PrivateChatRoomService {
         );
     }
 
-    private Long createPrivateRoom(Post post, User requester, User target) {
+    private Long createRoom(Post post, User requester, User target) {
         ChatRoom room = ChatRoom.forPrivateChat(post);
         chatRoomRepository.save(room);
-        savePrivateRoomMembers(room, requester, target);
+        saveRoomMembers(room, requester, target);
         log.info("1:1 채팅방 생성 - roomId={}, postId={}, users=[{}, {}]", room.getId(), post.getId(),
                 requester.getId(), target.getId());
         return room.getId();
     }
 
-    private void savePrivateRoomMembers(ChatRoom room, User requester, User target) {
+    private void saveRoomMembers(ChatRoom room, User requester, User target) {
         chatRoomMemberRepository.saveAll(List.of(
                 ChatRoomMember.create(room, requester, ChatMemberRole.HOST),
                 ChatRoomMember.create(room, target, ChatMemberRole.GUEST)
         ));
     }
 
-    private static void validateNotSelfPrivateChat(Long requesterId, Long targetUserId) {
+    private static void validateNotSelfChat(Long requesterId, Long targetUserId) {
         if (requesterId.equals(targetUserId)) {
             throw new NotSelfChatException();
         }
     }
 }
-
