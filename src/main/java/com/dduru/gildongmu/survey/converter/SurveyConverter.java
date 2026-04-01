@@ -17,24 +17,39 @@ public class SurveyConverter {
 
     public Survey toEntity(User user, SurveyRequest request) {
         ParsedSurveyData parsed = parseRequest(request);
-        return Survey.createSurvey(user, parsed.q1(), parsed.q2(), parsed.q3(), parsed.q4(), parsed.q5(),
-                parsed.q6(), parsed.q7(), parsed.q8(), parsed.q9(), parsed.q10(), parsed.q11());
+        return Survey.createSurvey(user,
+                parsed.rhythmQ1(), parsed.rhythmQ2(), parsed.rhythmQ3(),
+                parsed.consumptionQ1(), parsed.consumptionQ2(), parsed.consumptionQ3(),
+                parsed.energyQ1(), parsed.energyQ2(), parsed.energyQ3(),
+                parsed.decisionQ1(), parsed.decisionQ2(), parsed.decisionQ3(),
+                parsed.recordStyle(),
+                parsed.activityTags());
     }
 
     public ParsedSurveyData parseRequest(SurveyRequest request) {
-        Question1Transport q1 = toEnum(Question1Transport.class, request.q1());
-        Question2Waiting q2 = toEnum(Question2Waiting.class, request.q2());
-        Question3Stay q3 = toEnum(Question3Stay.class, request.q3());
-        Question4Wakeup q4 = toEnum(Question4Wakeup.class, request.q4());
-        Question5Expense q5 = toEnum(Question5Expense.class, request.q5());
-        Question6Spend q6 = toEnum(Question6Spend.class, request.q6());
-        List<Question7Interest> q7 = toEnumList(Question7Interest.class, request.q7());
-        Question8Planning q8 = toEnum(Question8Planning.class, request.q8());
-        Question9Menu q9 = toEnum(Question9Menu.class, request.q9());
-        Question10Companion q10 = toEnum(Question10Companion.class, request.q10());
-        Question11Photo q11 = toEnum(Question11Photo.class, request.q11());
+        RhythmQuestion1 rhythmQ1 = toEnum(RhythmQuestion1.class, request.rhythmQ1());
+        RhythmQuestion2 rhythmQ2 = toEnum(RhythmQuestion2.class, request.rhythmQ2());
+        RhythmQuestion3 rhythmQ3 = toEnum(RhythmQuestion3.class, request.rhythmQ3());
+        List<ActivityTag> activityTags = toEnumList(ActivityTag.class, request.activityTags());
+        ConsumptionQuestion1 consumptionQ1 = toEnum(ConsumptionQuestion1.class, request.consumptionQ1());
+        ConsumptionQuestion2 consumptionQ2 = toEnum(ConsumptionQuestion2.class, request.consumptionQ2());
+        ConsumptionQuestion3 consumptionQ3 = toEnum(ConsumptionQuestion3.class, request.consumptionQ3());
+        EnergyQuestion1 energyQ1 = toEnum(EnergyQuestion1.class, request.energyQ1());
+        EnergyQuestion2 energyQ2 = toEnum(EnergyQuestion2.class, request.energyQ2());
+        EnergyQuestion3 energyQ3 = toEnum(EnergyQuestion3.class, request.energyQ3());
+        DecisionQuestion1 decisionQ1 = toEnum(DecisionQuestion1.class, request.decisionQ1());
+        DecisionQuestion2 decisionQ2 = toEnum(DecisionQuestion2.class, request.decisionQ2());
+        DecisionQuestion3 decisionQ3 = toEnum(DecisionQuestion3.class, request.decisionQ3());
+        RecordStyleQuestion recordStyle = toEnum(RecordStyleQuestion.class, request.recordStyle());
 
-        return new ParsedSurveyData(q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11);
+        return new ParsedSurveyData(
+                rhythmQ1, rhythmQ2, rhythmQ3,
+                consumptionQ1, consumptionQ2, consumptionQ3,
+                energyQ1, energyQ2, energyQ3,
+                decisionQ1, decisionQ2, decisionQ3,
+                recordStyle,
+                activityTags
+        );
     }
 
     private <E extends Enum<E> & CodedEnum> E toEnum(Class<E> enumClass, Integer code) {
@@ -49,17 +64,20 @@ public class SurveyConverter {
     }
 
     public record ParsedSurveyData(
-            Question1Transport q1,
-            Question2Waiting q2,
-            Question3Stay q3,
-            Question4Wakeup q4,
-            Question5Expense q5,
-            Question6Spend q6,
-            List<Question7Interest> q7,
-            Question8Planning q8,
-            Question9Menu q9,
-            Question10Companion q10,
-            Question11Photo q11
+            RhythmQuestion1 rhythmQ1,
+            RhythmQuestion2 rhythmQ2,
+            RhythmQuestion3 rhythmQ3,
+            ConsumptionQuestion1 consumptionQ1,
+            ConsumptionQuestion2 consumptionQ2,
+            ConsumptionQuestion3 consumptionQ3,
+            EnergyQuestion1 energyQ1,
+            EnergyQuestion2 energyQ2,
+            EnergyQuestion3 energyQ3,
+            DecisionQuestion1 decisionQ1,
+            DecisionQuestion2 decisionQ2,
+            DecisionQuestion3 decisionQ3,
+            RecordStyleQuestion recordStyle,
+            List<ActivityTag> activityTags
     ) {
     }
 }

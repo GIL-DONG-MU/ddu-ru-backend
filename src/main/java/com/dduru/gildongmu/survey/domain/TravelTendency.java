@@ -25,48 +25,56 @@ public class TravelTendency extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(nullable = false, precision = 3, scale = 1)
-    private BigDecimal r;
+    @Column(name = "rhythm_score", nullable = false, precision = 3, scale = 1)
+    private BigDecimal rhythmScore;
 
-    @Column(nullable = false, precision = 3, scale = 1)
-    private BigDecimal w;
+    @Column(name = "energy_score", nullable = false, precision = 3, scale = 1)
+    private BigDecimal energyScore;
 
-    @Column(nullable = false, precision = 3, scale = 1)
-    private BigDecimal s;
+    @Column(name = "consumption_score", nullable = false, precision = 3, scale = 1)
+    private BigDecimal consumptionScore;
 
-    @Column(nullable = false, precision = 3, scale = 1)
-    private BigDecimal p;
+    @Column(name = "decision_score", nullable = false, precision = 3, scale = 1)
+    private BigDecimal decisionScore;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "avatar_type", nullable = false)
     private AvatarType avatarType;
 
     @Builder
-    public TravelTendency(User user, BigDecimal r, BigDecimal w, BigDecimal s, BigDecimal p, AvatarType avatarType) {
+    public TravelTendency(User user,
+                          BigDecimal rhythmScore, BigDecimal energyScore,
+                          BigDecimal consumptionScore, BigDecimal decisionScore,
+                          AvatarType avatarType) {
         this.user = user;
-        this.r = r;
-        this.w = w;
-        this.s = s;
-        this.p = p;
+        this.rhythmScore = rhythmScore;
+        this.energyScore = energyScore;
+        this.consumptionScore = consumptionScore;
+        this.decisionScore = decisionScore;
         this.avatarType = avatarType;
     }
 
-    public static TravelTendency create(User user, BigDecimal r, BigDecimal w, BigDecimal s, BigDecimal p, AvatarType avatarType) {
+    public static TravelTendency create(User user,
+                                        BigDecimal rhythmScore, BigDecimal energyScore,
+                                        BigDecimal consumptionScore, BigDecimal decisionScore,
+                                        AvatarType avatarType) {
         return TravelTendency.builder()
                 .user(user)
-                .r(r)
-                .w(w)
-                .s(s)
-                .p(p)
+                .rhythmScore(rhythmScore)
+                .energyScore(energyScore)
+                .consumptionScore(consumptionScore)
+                .decisionScore(decisionScore)
                 .avatarType(avatarType)
                 .build();
     }
 
-    public void update(BigDecimal r, BigDecimal w, BigDecimal s, BigDecimal p, AvatarType avatarType) {
-        this.r = r;
-        this.w = w;
-        this.s = s;
-        this.p = p;
+    public void update(BigDecimal rhythmScore, BigDecimal energyScore,
+                       BigDecimal consumptionScore, BigDecimal decisionScore,
+                       AvatarType avatarType) {
+        this.rhythmScore = rhythmScore;
+        this.energyScore = energyScore;
+        this.consumptionScore = consumptionScore;
+        this.decisionScore = decisionScore;
         this.avatarType = avatarType;
     }
 }

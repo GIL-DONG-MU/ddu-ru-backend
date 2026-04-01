@@ -7,10 +7,10 @@ import com.dduru.gildongmu.survey.service.AvatarProfileService;
 import java.util.List;
 
 public record SurveyResponse(
-        Double r,
-        Double w,
-        Double s,
-        Double p,
+        Double rhythmScore,
+        Double energyScore,
+        Double consumptionScore,
+        Double decisionScore,
         Integer avatarCode,
         AvatarType avatarType,
         String avatarName,
@@ -26,10 +26,10 @@ public record SurveyResponse(
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
         return new SurveyResponse(
-                travelTendency.getR().doubleValue(),
-                travelTendency.getW().doubleValue(),
-                travelTendency.getS().doubleValue(),
-                travelTendency.getP().doubleValue(),
+                travelTendency.getRhythmScore().doubleValue(),
+                travelTendency.getEnergyScore().doubleValue(),
+                travelTendency.getConsumptionScore().doubleValue(),
+                travelTendency.getDecisionScore().doubleValue(),
                 avatarType.getCode(),
                 avatarType,
                 avatarType.getText(),
@@ -43,12 +43,18 @@ public record SurveyResponse(
     }
 
     public static SurveyResponse of(
-            double r, double w, double s, double p,
+            double rhythmScore,
+            double energyScore,
+            double consumptionScore,
+            double decisionScore,
             AvatarType avatarType,
             AvatarProfileResponse avatarProfile
     ) {
         return new SurveyResponse(
-                r, w, s, p,
+                rhythmScore,
+                energyScore,
+                consumptionScore,
+                decisionScore,
                 avatarType.getCode(),
                 avatarType,
                 avatarType.getText(),
