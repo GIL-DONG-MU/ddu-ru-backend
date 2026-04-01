@@ -66,6 +66,7 @@ docker-compose up -d
 
 - **[배포 가이드](README.Docker.md)**: Docker 및 프로덕션 배포 방법
 - **[DB 마이그레이션 (Flyway)](FLYWAY.md)**: 스키마 마이그레이션 사용 방법
+ - **[동행 신청 / 그룹 채팅 설계](PARTICIPATION_GROUP_CHAT_FLOW.md)**: 신청, 연락, 수락, 거절, 그룹방 흐름 설계
 - **API 문서**: http://localhost:8080/swagger-ui.html
 
 ## 🏗 프로젝트 구조
