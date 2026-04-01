@@ -128,6 +128,7 @@ public class ParticipationService {
                     case PENDING -> MyParticipationStatus.PENDING;
                     case APPROVED -> MyParticipationStatus.APPROVED;
                     case REJECTED -> MyParticipationStatus.REJECTED;
+                    case CONTACTING -> MyParticipationStatus.CONTACTING;
                 })
                 .orElse(MyParticipationStatus.NONE);
     }
@@ -136,7 +137,7 @@ public class ParticipationService {
         if (post.getUser().getId().equals(user.getId())) {
             throw new SelfParticipationNotAllowedException();
         }
-        if (!post.isRecruitOpen()) {
+        if (post.isClosed()) {
             throw new RecruitmentClosedException();
         }
         if (participationRepository.existsByPostIdAndUserId(post.getId(), user.getId())) {
