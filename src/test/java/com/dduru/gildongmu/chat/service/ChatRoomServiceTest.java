@@ -96,7 +96,7 @@ class ChatRoomServiceTest {
         ChatRoom savedRoom = roomCaptor.getValue();
         assertThat(savedRoom.getRoomType()).isEqualTo(ChatRoomType.GROUP);
         assertThat(savedRoom.getStatus()).isEqualTo(ChatRoomStatus.PENDING);
-        assertThat(savedRoom.getMaxCapacity()).isEqualTo(4);
+        assertThat(savedRoom.getMaxCapacity()).isEqualTo(3);
 
         ArgumentCaptor<ChatRoomMember> memberCaptor = ArgumentCaptor.forClass(ChatRoomMember.class);
         verify(chatRoomMemberRepository).save(memberCaptor.capture());
