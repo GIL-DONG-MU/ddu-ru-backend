@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
@@ -11,7 +12,8 @@ public record PostSummaryResponse(
         Long id,
         String title,
         String content,
-        boolean isRecruitOpen,
+        PostStatus status,
+        boolean isFull,
         int daysUntilRecruitDeadline,
         int daysUntilTravelStart,
         LocalDate startDate,
@@ -33,7 +35,8 @@ public record PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.isRecruitOpen(),
+                post.getStatus(),
+                post.isFull(),
                 post.getDaysUntilRecruitDeadline(),
                 post.getDaysUntilTravelStart(),
                 post.getStartDate(),

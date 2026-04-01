@@ -5,7 +5,6 @@ import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
@@ -184,14 +183,12 @@ public class Post extends BaseTimeEntity {
     }
 
     public void changeStatus(PostStatus newStatus) {
-        validateStatusChange(newStatus);
         this.status = newStatus;
     }
 
     public void approveParticipation(Participation participation) {
         participation.approve();
         incrementRecruitCount();
-        closeIfRecruitmentFull();
     }
 
     public void removeApprovedParticipation(Participation participation) {
@@ -200,7 +197,6 @@ public class Post extends BaseTimeEntity {
         }
 
         decrementRecruitCount();
-        reopenIfCapacityAvailable();
     }
 
     public void increaseLikes() {
@@ -211,8 +207,12 @@ public class Post extends BaseTimeEntity {
         this.likeCount--;
     }
 
-    public boolean isRecruitOpen() {
-        return status == PostStatus.OPEN;
+    public boolean isFull() {
+        return this.recruitCount >= this.recruitCapacity;
+    }
+
+    public boolean isClosed(){
+        return this.status == PostStatus.CLOSED;
     }
 
     public int getDaysUntilRecruitDeadline() {
@@ -285,24 +285,6 @@ public class Post extends BaseTimeEntity {
     private void applyRecruitCapacity(Integer recruitCapacity) {
         if (recruitCapacity != null) {
             updateRecruitCapacity(recruitCapacity);
-        }
-    }
-
-    private void validateStatusChange(PostStatus newStatus) {
-        if (this.status == PostStatus.FULL && newStatus == PostStatus.OPEN) {
-            throw new InvalidPostStatusException();
-        }
-    }
-
-    private void closeIfRecruitmentFull() {
-        if (this.recruitCount >= this.recruitCapacity) {
-            changeStatus(PostStatus.FULL);
-        }
-    }
-
-    private void reopenIfCapacityAvailable() {
-        if (this.status == PostStatus.FULL && this.recruitCount < this.recruitCapacity) {
-            this.status = PostStatus.OPEN;
         }
     }
 
