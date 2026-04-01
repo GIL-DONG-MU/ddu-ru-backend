@@ -14,6 +14,7 @@ import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,8 @@ public class GroupChatRoomService {
     private final UserRepository userRepository;
 
     @Transactional
-    public GroupChatInviteResponse inviteMembersToGroupRoom(Long requesterId, Long roomId, GroupChatInviteRequest request) {
-        ChatRoom chatRoom = getActiveGroupRoomOrThrow(roomId);
+    public GroupChatInviteResponse inviteMembers(Long requesterId, Long roomId, GroupChatInviteRequest request) {
+        ChatRoom chatRoom = getActiveRoomOrThrow(roomId);
         validateHostAuthority(chatRoom.getPost().getUser().getId(), requesterId);
 
         List<Long> inviteeUserIds = distinctNonHostUserIds(request.inviteeUserIds(), requesterId);
@@ -53,20 +54,40 @@ public class GroupChatRoomService {
             return GroupChatInviteResponse.empty(chatRoom.getId(), resolution);
         }
 
-        validateGroupRoomCapacity(chatRoom, newGuests.size());
+        validateRoomCapacity(chatRoom, newGuests.size());
         saveNewGuestMembers(chatRoom, newGuests);
 
         return GroupChatInviteResponse.success(chatRoom.getId(), newGuests.size(), resolution);
     }
 
-    private ChatRoom getActiveGroupRoomOrThrow(Long roomId) {
+    /**
+     * 게시글 저장 직후 호출. 글당 그룹 단톡 1개를 PENDING으로 만들고 작성자를 HOST로 둔다.
+     */
+    public void createPendingRoomForPost(Post post, User author) {
+        ChatRoom room = chatRoomRepository.save(ChatRoom.createPendingGroupChat(post));
+        chatRoomMemberRepository.save(ChatRoomMember.create(room, author, ChatMemberRole.HOST));
+        log.info("그룹 채팅방 생성 - roomId={}, postId={}, hostId={}", room.getId(), post.getId(), author.getId());
+    }
+
+    /**
+     * 해당 방에 첫 메시지가 저장된 직후 호출하면 PENDING → ACTIVE 로 전환한다.
+     */
+    public void activateChatOnFirstMessage(Long roomId) {
+        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
+        if (room.getRoomType() != ChatRoomType.GROUP) {
+            return;
+        }
+        room.activateIfPending();
+    }
+
+    private ChatRoom getActiveRoomOrThrow(Long roomId) {
         ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomTypeWithPostUser(roomId, ChatRoomType.GROUP)
                 .orElseThrow(ChatRoomNotFoundException::new);
-        validateGroupRoomIsActive(chatRoom);
+        validateRoomIsActive(chatRoom);
         return chatRoom;
     }
 
-    private static void validateGroupRoomIsActive(ChatRoom room) {
+    private static void validateRoomIsActive(ChatRoom room) {
         if (room.getStatus() == ChatRoomStatus.CLOSED || room.getStatus() == ChatRoomStatus.DELETED) {
             throw new ChatRoomClosedException();
         }
@@ -142,7 +163,7 @@ public class GroupChatRoomService {
                 .toList();
     }
 
-    private void validateGroupRoomCapacity(ChatRoom room, int newGuestCount) {
+    private void validateRoomCapacity(ChatRoom room, int newGuestCount) {
         int currentMemberCount = chatRoomMemberRepository.countByRoom(room);
         int totalAfterInvite = currentMemberCount + newGuestCount;
 
