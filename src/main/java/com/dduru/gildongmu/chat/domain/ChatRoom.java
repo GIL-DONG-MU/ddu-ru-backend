@@ -48,7 +48,7 @@ public class ChatRoom extends BaseTimeEntity {
     }
 
     public static ChatRoom createPendingGroupChat(Post post) {
-        int capacity = post.getRecruitCapacity() + 1;
+        int capacity = post.getRecruitCapacity();
         return newRoom(post, ChatRoomType.GROUP, capacity, ChatRoomStatus.PENDING);
     }
 

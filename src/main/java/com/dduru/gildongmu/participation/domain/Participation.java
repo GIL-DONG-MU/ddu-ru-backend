@@ -38,6 +38,9 @@ public class Participation extends BaseTimeEntity {
     @Column(name = "message", length = 500)
     private String message;
 
+    @Column(name = "contacted_at")
+    private LocalDateTime contactedAt;
+
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
@@ -65,9 +68,26 @@ public class Participation extends BaseTimeEntity {
         this.approvedAt = LocalDateTime.now();
     }
 
+    public void contact() {
+        this.status = ParticipationStatus.CONTACTING;
+        this.contactedAt = LocalDateTime.now();
+    }
+
     public void reject() {
         this.status = ParticipationStatus.REJECTED;
         this.rejectedAt = LocalDateTime.now();
+    }
+
+    public boolean isPending() {
+        return status == ParticipationStatus.PENDING;
+    }
+
+    public boolean isContacting() {
+        return status == ParticipationStatus.CONTACTING;
+    }
+
+    public boolean isRejected() {
+        return status == ParticipationStatus.REJECTED;
     }
 
     public boolean isApproved() {
