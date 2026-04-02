@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 @SecurityRequirement(name = "JWT")
 public interface SurveyApiDocs {
 
-    @Operation(summary = "설문조사 제출", description = "11개 질문의 선택지를 제출하고 성향 점수 및 아바타를 매칭합니다.")
+    @Operation(summary = "설문조사 제출", description = "주요 4축(각 3문항)·활동 취향·기록 스타일을 제출하고 성향 점수 및 아바타를 매칭합니다.")
     @ApiResponse(responseCode = "201", description = "설문 제출 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
@@ -36,7 +36,7 @@ public interface SurveyApiDocs {
     })
     ResponseEntity<ApiResult<SurveyResponse>> getMySurveyResult(@Parameter(hidden = true) Long userId);
 
-    @Operation(summary = "설문 문항 리스트 조회", description = "설문조사 11개 문항과 선택지를 조회합니다. 인증 없이 접근 가능합니다.")
+    @Operation(summary = "설문 문항 리스트 조회", description = "설문 문항과 선택지를 조회합니다. 인증 없이 접근 가능합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE
