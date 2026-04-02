@@ -4,6 +4,7 @@ import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
+import com.dduru.gildongmu.survey.converter.ParsedSurveyData;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.TravelTendency;
@@ -11,6 +12,7 @@ import com.dduru.gildongmu.survey.domain.enums.*;
 import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
+import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -78,55 +80,66 @@ class SurveyServiceTest {
                 .build();
 
         testRequest = new SurveyRequest(
-                1, 1, 1, 1, 1, 1,
+                1, 1, 1,
                 List.of(1, 2, 3),
-                1, 1, 1, 1
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+                1
         );
+
+        ReflectionTestUtils.setField(testUser, "id", 1L);
 
         testSurvey = Survey.createSurvey(
                 testUser,
-                Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT,
-                Question3Stay.HOTEL,
-                Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS,
-                Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.EXHIBITION, Question7Interest.NATURE),
-                Question8Planning.DETAILED,
-                Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL,
-                Question11Photo.LIFETIME_SHOT
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUTE_TIME_SET,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
     }
 
     @Test
     @DisplayName("새로운_설문_제출_성공")
     void 새로운_설문_제출_성공() {
-        // given
-        SurveyConverter.ParsedSurveyData parsedData = new SurveyConverter.ParsedSurveyData(
-                Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT,
-                Question3Stay.HOTEL,
-                Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS,
-                Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.EXHIBITION, Question7Interest.NATURE),
-                Question8Planning.DETAILED,
-                Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL,
-                Question11Photo.LIFETIME_SHOT
+        ParsedSurveyData parsedData = new ParsedSurveyData(
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUTE_TIME_SET,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
 
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(surveyRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
         when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
-        when(surveyConverter.toEntity(testUser, testRequest)).thenReturn(testSurvey);
+        when(surveyConverter.toEntity(testUser, parsedData)).thenReturn(testSurvey);
         when(surveyRepository.save(any(Survey.class))).thenReturn(testSurvey);
 
-        TravelTendencyCalculator.TendencyScores scores =
-                new TravelTendencyCalculator.TendencyScores(5.5, 6.0, 7.0, 4.5);
+        TendencyScoreResponse scores =
+                new TendencyScoreResponse(5.5, 4.5, 6.0, 7.0);
         when(tendencyCalculator.calculate(testSurvey)).thenReturn(scores);
-        when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_SWEET);
+        when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
+                .thenReturn(AvatarType.TTUR_SWEET);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명", "https://example.com/avatar-sweet.png", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
@@ -145,17 +158,15 @@ class SurveyServiceTest {
         ReflectionTestUtils.setField(avatarProfile, "id", 1L);
         when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_SWEET)).thenReturn(Optional.of(avatarProfile));
 
-        when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
         when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // when
         SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
 
-        // then
-        assertThat(response.r()).isEqualTo(5.5);
-        assertThat(response.w()).isEqualTo(6.0);
-        assertThat(response.s()).isEqualTo(7.0);
-        assertThat(response.p()).isEqualTo(4.5);
+        assertThat(response.rhythmScore()).isEqualTo(5.5);
+        assertThat(response.energyScore()).isEqualTo(4.5);
+        assertThat(response.consumptionScore()).isEqualTo(6.0);
+        assertThat(response.decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
         assertThat(response.imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
         assertThat(response.personality()).isEqualTo("성격");
@@ -169,44 +180,50 @@ class SurveyServiceTest {
     @Test
     @DisplayName("기존_설문_업데이트_성공")
     void 기존_설문_업데이트_성공() {
-        // given
         Survey existingSurvey = Survey.createSurvey(
                 testUser,
-                Question1Transport.TAXI,
-                Question2Waiting.MOVE_ELSEWHERE,
-                Question3Stay.JUST_SLEEP,
-                Question4Wakeup.RELAXED,
-                Question5Expense.POOLED,
-                Question6Spend.SPLURGE,
-                List.of(Question7Interest.FOOD, Question7Interest.SHOPPING, Question7Interest.ACTIVITY),
-                Question8Planning.ON_SITE,
-                Question9Menu.CHALLENGE,
-                Question10Companion.WELCOME,
-                Question11Photo.EYES_ONLY
+                RhythmQuestion1.IMPULSE_SIDE_TRIP,
+                RhythmQuestion2.PACK_LAST_MINUTE,
+                RhythmQuestion3.ROUGH_LIST_ONLY,
+                ConsumptionQuestion1.FLEX_OK,
+                ConsumptionQuestion2.SAVE_TIME_TAXI,
+                ConsumptionQuestion3.INVEST_EXPERIENCE,
+                EnergyQuestion1.PACKED_DAY,
+                EnergyQuestion2.BREAKFAST_SPRINT,
+                EnergyQuestion3.FILL_WITH_SPOTS,
+                DecisionQuestion1.LEAD_OR_ORGANIZE,
+                DecisionQuestion2.PROPOSE_FIRST,
+                DecisionQuestion3.DRIVE_CONCLUSION,
+                RecordStyleQuestion.SHOOT_NOW,
+                List.of(ActivityTag.FOOD, ActivityTag.SHOPPING, ActivityTag.ACTIVITY)
         );
 
-        SurveyConverter.ParsedSurveyData parsedData = new SurveyConverter.ParsedSurveyData(
-                Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT,
-                Question3Stay.HOTEL,
-                Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS,
-                Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.EXHIBITION, Question7Interest.NATURE),
-                Question8Planning.DETAILED,
-                Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL,
-                Question11Photo.LIFETIME_SHOT
+        ParsedSurveyData parsedData = new ParsedSurveyData(
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUTE_TIME_SET,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
 
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(surveyRepository.findByUser(testUser)).thenReturn(Optional.of(existingSurvey));
+        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.of(existingSurvey));
         when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
 
-        TravelTendencyCalculator.TendencyScores scores =
-                new TravelTendencyCalculator.TendencyScores(6.0, 7.5, 8.0, 5.0);
+        TendencyScoreResponse scores =
+                new TendencyScoreResponse(6.0, 5.0, 7.5, 8.0);
         when(tendencyCalculator.calculate(existingSurvey)).thenReturn(scores);
-        when(avatarMatcher.match(scores.r(), scores.w(), scores.s())).thenReturn(AvatarType.TTUR_PADO);
+        when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
+                .thenReturn(AvatarType.TTUR_PADO);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명2", "https://example.com/avatar-pado.png", "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
@@ -228,17 +245,15 @@ class SurveyServiceTest {
         TravelTendency existingTendency = TravelTendency.create(
                 testUser,
                 BigDecimal.valueOf(5.0),
+                BigDecimal.valueOf(4.0),
                 BigDecimal.valueOf(6.0),
                 BigDecimal.valueOf(7.0),
-                BigDecimal.valueOf(4.0),
                 AvatarType.TTUR_SWEET
         );
-        when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.of(existingTendency));
+        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(existingTendency));
 
-        // when
         SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
 
-        // then
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_PADO);
         verify(surveyRepository, never()).save(any(Survey.class));
     }
@@ -246,10 +261,8 @@ class SurveyServiceTest {
     @Test
     @DisplayName("존재하지_않는_사용자_예외발생")
     void 존재하지_않는_사용자_예외발생() {
-        // given
         when(userRepository.getByIdOrThrow(999L)).thenThrow(new UserNotFoundException());
 
-        // when & then
         assertThatThrownBy(() -> surveyService.submitSurvey(999L, testRequest))
                 .isInstanceOf(UserNotFoundException.class);
 
@@ -260,32 +273,28 @@ class SurveyServiceTest {
     @Test
     @DisplayName("설문_결과_조회_성공")
     void 설문_결과_조회_성공() {
-        // given
         TravelTendency travelTendency = TravelTendency.create(
                 testUser,
                 BigDecimal.valueOf(5.5),
+                BigDecimal.valueOf(4.5),
                 BigDecimal.valueOf(6.0),
                 BigDecimal.valueOf(7.0),
-                BigDecimal.valueOf(4.5),
                 AvatarType.TTUR_SWEET
         );
 
-        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.of(travelTendency));
+        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(travelTendency));
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "설명", "https://example.com/avatar-sweet.png", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
-        // when
         SurveyResponse response = surveyService.getMySurveyResult(1L);
 
-        // then
-        assertThat(response.r()).isEqualTo(5.5);
-        assertThat(response.w()).isEqualTo(6.0);
-        assertThat(response.s()).isEqualTo(7.0);
-        assertThat(response.p()).isEqualTo(4.5);
+        assertThat(response.rhythmScore()).isEqualTo(5.5);
+        assertThat(response.energyScore()).isEqualTo(4.5);
+        assertThat(response.consumptionScore()).isEqualTo(6.0);
+        assertThat(response.decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
         assertThat(response.avatarCode()).isEqualTo(4);
         assertThat(response.imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
@@ -294,11 +303,8 @@ class SurveyServiceTest {
     @Test
     @DisplayName("설문_결과_없을때_예외발생")
     void 설문_결과_없을때_예외발생() {
-        // given
-        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(travelTendencyRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
 
-        // when & then
         assertThatThrownBy(() -> surveyService.getMySurveyResult(1L))
                 .isInstanceOf(SurveyResultNotFoundException.class);
     }
