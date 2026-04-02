@@ -4,8 +4,6 @@ import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 public record SurveyResponse(
@@ -45,18 +43,15 @@ public record SurveyResponse(
     }
 
     public static SurveyResponse of(
-            double rhythmScore,
-            double energyScore,
-            double consumptionScore,
-            double decisionScore,
+            TendencyScoreResponse scores,
             AvatarType avatarType,
             AvatarProfileResponse avatarProfile
     ) {
         return new SurveyResponse(
-                roundToOneDecimal(rhythmScore),
-                roundToOneDecimal(energyScore),
-                roundToOneDecimal(consumptionScore),
-                roundToOneDecimal(decisionScore),
+                scores.rhythmScore(),
+                scores.energyScore(),
+                scores.consumptionScore(),
+                scores.decisionScore(),
                 avatarType.getCode(),
                 avatarType,
                 avatarType.getText(),
@@ -69,7 +64,4 @@ public record SurveyResponse(
         );
     }
 
-    private static double roundToOneDecimal(double value) {
-        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
-    }
 }
