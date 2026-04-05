@@ -6,6 +6,12 @@ set -e # 에러 발생시 스크립트 중단
 
 echo "🚀 DDU-RU Backend ECR 배포 시작..."
 
+echo "🧾 배포 컨텍스트 확인"
+echo "AWS_REGION=${AWS_REGION}"
+echo "ECR_REGISTRY=${ECR_REGISTRY}"
+echo "ECR_REPOSITORY=${ECR_REPOSITORY}"
+echo "IMAGE_TAG=${IMAGE_TAG}"
+
 echo "🔐 ECR에 Docker 로그인..."
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
@@ -28,10 +34,8 @@ echo "⏳ 서비스 상태 확인 중..."
 MAX_RETRIES=12
 RETRY_INTERVAL=5
 for i in $(seq 1 $MAX_RETRIES); do
-  # nginx를 통해 health check (HTTP 또는 HTTPS)
-  if curl -fs http://localhost/actuator/health > /dev/null 2>&1 || curl -fs https://localhost/actuator/health > /dev/null 2>&1; then
+  if docker exec app-app-1 curl -fs http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
     echo "✅ 애플리케이션이 정상적으로 실행 중입니다!"
-    echo "🎉 ECR 배포 스크립트 완료!"
     exit 0
   fi
   echo "Attempt $i/$MAX_RETRIES: 아직 실행되지 않았습니다. $RETRY_INTERVAL초 후 재시도..."
