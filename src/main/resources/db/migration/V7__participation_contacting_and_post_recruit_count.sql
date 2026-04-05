@@ -29,10 +29,15 @@ ALTER TABLE participations
         COMMENT 'PENDING, CONTACTING, APPROVED, REJECTED';
 
 ALTER TABLE participations
-    ADD COLUMN IF NOT EXISTS contacted_at DATETIME(6) NULL AFTER message;
+    ADD COLUMN contacted_at DATETIME(6) NULL AFTER message;
 
+SELECT COUNT(*) AS null_count
+FROM posts
+WHERE recruit_count IS NULL;
 ALTER TABLE posts
     MODIFY COLUMN recruit_count INT NOT NULL DEFAULT 1;
+
+
 
 UPDATE posts
 SET status = 'OPEN'
