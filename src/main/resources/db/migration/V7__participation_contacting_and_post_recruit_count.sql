@@ -24,24 +24,24 @@ CREATE TABLE IF NOT EXISTS participations (
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE participations
-    MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-        COMMENT 'PENDING, CONTACTING, APPROVED, REJECTED';
+# ALTER TABLE participations
+#     MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+#         COMMENT 'PENDING, CONTACTING, APPROVED, REJECTED';
 
-ALTER TABLE participations
-    ADD COLUMN IF NOT EXISTS contacted_at DATETIME(6) NULL AFTER message;
-
-ALTER TABLE posts
-    MODIFY COLUMN recruit_count INT NOT NULL DEFAULT 1;
+# ALTER TABLE participations
+#     ADD COLUMN contacted_at DATETIME(6) NULL AFTER message;
 
 UPDATE posts
 SET status = 'OPEN'
 WHERE status = 'FULL';
 
-UPDATE posts p
-SET recruit_count = (
-    SELECT COUNT(*) + 1
-    FROM participations pa
-    WHERE pa.post_id = p.id
-      AND pa.status = 'APPROVED'
-);
+ALTER TABLE posts
+    MODIFY COLUMN status ENUM('OPEN', 'CLOSED') NOT NULL DEFAULT 'OPEN';
+
+# UPDATE posts p
+# SET recruit_count = (
+#     SELECT COUNT(*) + 1
+#     FROM participations pa
+#     WHERE pa.post_id = p.id
+#       AND pa.status = 'APPROVED'
+# );
