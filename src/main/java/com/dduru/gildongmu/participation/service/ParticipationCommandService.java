@@ -24,6 +24,9 @@ public class ParticipationCommandService {
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
 
+    /**
+     * 게시글 참여자 조회 - 현재는 사용안할 예정 (조회는 아래 retrieveAllParticipants로 사용)
+     */
     @Transactional(readOnly = true)
     public List<ParticipationResponse> retrieveParticipantsByPost(Long userId, Long postId) {
         Post post =  postRepository.getActiveByIdOrThrow(postId);
@@ -39,10 +42,7 @@ public class ParticipationCommandService {
 
     @Transactional(readOnly = true)
     public List<ParticipationRetrieveResponse> retrieveAllParticipants(Long userId, ParticipationRetrieveRequest request) {
-        if (request.status() == null) {
-            return participationRepository.findAllParticipantByCreatedAtDesc(userId);
-        }
-        return participationRepository.findAllParticipantByStatusAndCreatedAtDesc(userId, request.status());
+        return participationRepository.findReceivedRequestsByStatus(userId, request.status());
     }
 
     private static void validatePostOwner(Post post, Long userId) {
