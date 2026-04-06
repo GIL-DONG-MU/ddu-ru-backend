@@ -31,8 +31,7 @@ public interface SurveyApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.SURVEY_RESULT_NOT_FOUND,
-            ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_NOT_FOUND
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<SurveyResponse>> getMySurveyResult(@Parameter(hidden = true) Long userId);
 
