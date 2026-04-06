@@ -44,9 +44,16 @@ public class ParticipationService {
         if (post.getUser().getId().equals(user.getId())) {
             throw new SelfParticipationNotAllowedException();
         }
-        if (post.isClosed()) {
-            throw new RecruitmentClosedException();
+
+        // TODO: 인원이 다 찼을 시 Post 상태가 자동으로 Closed로 변경되도록 구현 예정, 혹은 에러 처리를 다르게 하기 위해 isFull과 isClosed를 분리해서 관리할지 고민 필요
+        if (post.isFull()) {
+            throw RecruitmentClosedException.isFulled();
         }
+
+        if (post.isClosed()) {
+            throw RecruitmentClosedException.isClosed();
+        }
+
         if (participationRepository.existsByPostIdAndUserId(post.getId(), user.getId())) {
             throw new DuplicateParticipationException();
         }
