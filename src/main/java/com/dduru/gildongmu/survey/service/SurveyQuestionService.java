@@ -49,9 +49,9 @@ public class SurveyQuestionService {
         writeToCache(cacheKey, response);
         return response;
     }
-
+    
     private String buildCacheKey() {
-        return "db:" + resolveCacheFingerprint();
+        return "db:v" + QUESTIONNAIRE_VERSION + ":" + resolveCacheFingerprint();
     }
 
     private Cache getCacheOrNull() {
