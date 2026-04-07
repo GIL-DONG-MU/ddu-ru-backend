@@ -33,6 +33,28 @@ public class ParticipationCommandService {
     private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
 
+    public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
+        Participation participation = participationRepository.getByIdOrThrow(participationId);
+        Post post = participation.getPost();
+
+        validatePostOwner(post, userId);
+        validatePostIsOpen(post);
+        validateParticipationStatus(participation);
+
+        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participation.getUser().getId());
+
+        updateStatusToContactingIfNew(participation);
+
+        loggingStatusChange(participation);
+
+        return new ParticipationContactResponse(
+                participation.getId(),
+                room.roomId(),
+                room.isCreated(),
+                participation.getStatus()
+        );
+    }
+
     /**
      * 게시글 참여자 조회 - 현재는 사용안할 예정 (조회는 아래 retrieveAllParticipants로 사용)
      */
@@ -54,28 +76,6 @@ public class ParticipationCommandService {
         return participationRepository.findReceivedRequestsByStatus(userId, request.status()).stream()
                 .map(queryResult -> ParticipationRetrieveResponse.from(queryResult, profileImageResolver))
                 .toList();
-    }
-
-    public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
-
-        validatePostOwner(post, userId);
-        validatePostIsOpen(post);
-        validateParticipationStatus(participation);
-
-        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participation.getUser().getId());
-
-        updateStatusToContactingIfNew(participation);
-
-        loggingStatusChange(participation);
-
-        return new ParticipationContactResponse(
-                participation.getId(),
-                room.roomId(),
-                room.isCreated(),
-                participation.getStatus()
-        );
     }
 
     private static void updateStatusToContactingIfNew(Participation participation) {

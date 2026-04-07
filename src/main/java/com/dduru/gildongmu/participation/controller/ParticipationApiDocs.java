@@ -41,6 +41,24 @@ public interface ParticipationApiDocs {
             @Valid ParticipationRequest request
     );
 
+    @Operation(summary = "참여 신청 연락 시작", description = "방장이 신청자와 1:1 채팅을 시작하고 상태를 연락중으로 변경합니다.")
+    @ApiResponse(responseCode = "200", description = "연락 시작 성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.RECRUITMENT_CLOSED,
+            ErrorCode.INVALID_PARTICIPATION_STATUS,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId
+    );
+
     @Operation(summary = "게시글 신청자 목록 조회", description = "해당 게시글에 대해 들어온 신청 목록을 최신순으로 조회합니다. 대기, 연락중, 승인, 거절 상태가 모두 포함됩니다.")
     @ApiResponse(responseCode = "200", description = "신청자 목록 조회 성공")
     @ApiErrorResponses({
@@ -62,23 +80,5 @@ public interface ParticipationApiDocs {
     ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
             @Parameter(hidden = true) Long userId,
             @Valid @ParameterObject ParticipationRetrieveRequest request
-    );
-
-    @Operation(summary = "참여 신청 연락 시작", description = "방장이 신청자와 1:1 채팅을 시작하고 상태를 연락중으로 변경합니다.")
-    @ApiResponse(responseCode = "200", description = "연락 시작 성공")
-    @ApiErrorResponses({
-            ErrorCode.POST_NOT_FOUND,
-            ErrorCode.PARTICIPATION_NOT_FOUND,
-            ErrorCode.POST_ACCESS_DENIED,
-            ErrorCode.PARTICIPATION_POST_MISMATCH,
-            ErrorCode.RECRUITMENT_CLOSED,
-            ErrorCode.INVALID_PARTICIPATION_STATUS,
-            ErrorCode.USER_NOT_FOUND,
-            ErrorCode.UNAUTHORIZED
-    })
-    ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
-            @Parameter(hidden = true) Long userId,
-            @Parameter(description = "게시글 ID") Long postId,
-            @Parameter(description = "동행 참여 신청 ID") Long participationId
     );
 }

@@ -44,6 +44,17 @@ public class ParticipationController implements ParticipationApiDocs {
     }
 
     @Override
+    @PostMapping("/participations/{participationId}/contact")
+    public ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long postId,
+            @PathVariable Long participationId
+    ) {
+        ParticipationContactResponse response = participationCommandService.contactParticipation(userId, participationId);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
     @GetMapping("/posts/{postId}/participations")
     public ResponseEntity<ApiResult<List<ParticipationResponse>>> getPostParticipants(
             @CurrentUser Long userId,
@@ -61,16 +72,5 @@ public class ParticipationController implements ParticipationApiDocs {
     ) {
         List<ParticipationRetrieveResponse> participants = participationCommandService.retrieveAllParticipants(userId, request);
         return ResponseEntity.ok(ApiResult.ok(participants));
-    }
-
-    @Override
-    @PostMapping("/participations/{participationId}/contact")
-    public ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
-            @CurrentUser Long userId,
-            @PathVariable Long postId,
-            @PathVariable Long participationId
-    ) {
-        ParticipationContactResponse response = participationCommandService.contactParticipation(userId, participationId);
-        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }
