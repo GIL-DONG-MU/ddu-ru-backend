@@ -5,6 +5,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
@@ -61,5 +62,23 @@ public interface ParticipationApiDocs {
     ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
             @Parameter(hidden = true) Long userId,
             @Valid @ParameterObject ParticipationRetrieveRequest request
+    );
+
+    @Operation(summary = "참여 신청 연락 시작", description = "방장이 신청자와 1:1 채팅을 시작하고 상태를 연락중으로 변경합니다.")
+    @ApiResponse(responseCode = "200", description = "연락 시작 성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.RECRUITMENT_CLOSED,
+            ErrorCode.INVALID_PARTICIPATION_STATUS,
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId
     );
 }
