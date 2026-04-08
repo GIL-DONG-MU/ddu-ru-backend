@@ -32,6 +32,6 @@ public class AvatarMatcher {
         if (!isSocial && !isFlex) return AvatarType.TTUR_MALLANG;
         if (!isSocial) return AvatarType.TTUR_BONGBONG;
         if (!isFlex) return AvatarType.TTUR_BEOMI;
-        return AvatarType.TTUR_BANGUL;
+        return AvatarType.TTUR_MARU;
     }
 }

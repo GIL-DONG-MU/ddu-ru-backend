@@ -102,8 +102,8 @@ UPDATE avatar_profiles SET avatar_type = 'TTUR_BONGBONG' WHERE avatar_type = 'TT
 UPDATE travel_tendencies SET avatar_type = 'TTUR_BONGBONG' WHERE avatar_type = 'TTUR_BLAZE';
 UPDATE avatar_profiles SET avatar_type = 'TTUR_BEOMI' WHERE avatar_type = 'TTUR_VIVID';
 UPDATE travel_tendencies SET avatar_type = 'TTUR_BEOMI' WHERE avatar_type = 'TTUR_VIVID';
-UPDATE avatar_profiles SET avatar_type = 'TTUR_BANGUL' WHERE avatar_type = 'TTUR_SURGE';
-UPDATE travel_tendencies SET avatar_type = 'TTUR_BANGUL' WHERE avatar_type = 'TTUR_SURGE';
+UPDATE avatar_profiles SET avatar_type = 'TTUR_MARU' WHERE avatar_type = 'TTUR_SURGE';
+UPDATE travel_tendencies SET avatar_type = 'TTUR_MARU' WHERE avatar_type = 'TTUR_SURGE';
 
 -- 기존 8행(레거시 row): 코드 치환 직후 avatar_type 기준으로 최종 캐릭터 카피 반영 — body는 앱 본문(문단 + 빈 줄 반복), image_url은 TTUR_* 슬러그(ttur-{소문자}.png)
 UPDATE avatar_profiles SET display_name = '포근', description = '계획 없이 떠나는 여행은 왠지 불안해요!', tags = '["꼼꼼함","여유로움","안정감"]', body = CONCAT('즉흥적인 변수보다 미리 짜둔 계획 안에서 안정감을 느끼는 타입이에요.', '\n\n', '바쁘게 몰아치는 여행보다 여유로운 흐름을 선호하지만, 자연스럽게 그 흐름을 만들어가는 건 바로 본인이에요.', '\n\n', '예산도 꼼꼼히 따지면서 알차고 안정적인 여행을 설계하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-pogun.png', modified_at = NOW() WHERE avatar_type = 'TTUR_POGUN';
@@ -126,7 +126,7 @@ VALUES
     ('TTUR_MALLANG', '말랑', '부담 없이 가요, 근데 가성비는 챙겨요!', CONCAT('빡빡한 계획 없이 느긋하게 즐기면서도 가성비는 놓치지 않는 타입이에요.', '\n\n', '분위기에 따라 자연스럽게 방향을 제시하며 부담 없는 여행을 만들어가요.', '\n\n', '여유롭지만 흐름을 슬쩍 잡아주는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-mallang.png', '["유연함","편안함","가성비"]', NOW(), NOW()),
     ('TTUR_BONGBONG', '봉봉', '어디든 좋아요, 같이 가면 그게 최고!', CONCAT('가볍고 편안하게 즉흥적으로 움직이며 예산도 슬기롭게 챙기는 타입이에요.', '\n\n', '주도하기보다는 흐름에 자연스럽게 녹아들며 주변 사람들과 편하게 어울려요.', '\n\n', '어디서든 부담 없이 함께할 수 있는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-bongbong.png', '["친화력","따뜻함","편안함"]', NOW(), NOW()),
     ('TTUR_BEOMI', '범이', '일단 출발! 방법은 가면서 찾아요!', CONCAT('상황에 맞게 빠르게 판단하고 가성비 있게 부지런히 움직이는 타입이에요.', '\n\n', '계획보다는 현장에서 직접 결론을 내리고 이끌어가는 걸 좋아해요.', '\n\n', '에너지 넘치게 여행을 주도하는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-beomi.png', '["추진력","순발력","활발함"]', NOW(), NOW()),
-    ('TTUR_BANGUL', '방울', '에너지 넘치게, 근데 예산은 지켜요!', CONCAT('에너지 넘치게 즉흥적으로 움직이면서도 예산은 현명하게 챙기는 타입이에요.', '\n\n', '직접 이끌기보다는 빠르게 적응하며 어떤 상황에서도 분위기에 잘 녹아들어요.', '\n\n', '활발하게 움직이며 자연스럽게 어울리는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-bangul.png', '["에너지","적응력","가성비"]', NOW(), NOW());
+    ('TTUR_MARU', '마루', '에너지 넘치게, 근데 예산은 지켜요!', CONCAT('에너지 넘치게 즉흥적으로 움직이면서도 예산은 현명하게 챙기는 타입이에요.', '\n\n', '직접 이끌기보다는 빠르게 적응하며 어떤 상황에서도 분위기에 잘 녹아들어요.', '\n\n', '활발하게 움직이며 자연스럽게 어울리는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-maru.png', '["에너지","적응력","가성비"]', NOW(), NOW());
 
 -- SurveyQuestionSeeder의 v2 문항/옵션 시드를 SQL로 이관
 -- 레거시/기존 데이터를 정리한 뒤 v2(14문항)로 재시드

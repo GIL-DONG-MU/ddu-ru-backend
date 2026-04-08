@@ -29,7 +29,7 @@ class AvatarMatcherTest {
             "6.0, 6.0, 4.0, 4.0, TTUR_MALLANG",
             "6.0, 6.0, 6.0, 4.0, TTUR_BONGBONG",
             "6.0, 6.0, 4.0, 6.0, TTUR_BEOMI",
-            "6.0, 6.0, 6.0, 6.0, TTUR_BANGUL"
+            "6.0, 6.0, 6.0, 6.0, TTUR_MARU"
     })
     @DisplayName("4축 조합별 아바타 매칭")
     void 사축_조합별_아바타_매칭(double rhythm, double energy, double consumption, double decision, AvatarType expected) {
@@ -39,7 +39,7 @@ class AvatarMatcherTest {
 
     @ParameterizedTest(name = "[{index}] r={0}, e={1}, c={2}, d={3} -> {4}")
     @CsvSource({
-            "5.0, 5.0, 5.0, 5.0, TTUR_BANGUL",
+            "5.0, 5.0, 5.0, 5.0, TTUR_MARU",
             "4.9, 4.9, 4.9, 4.9, TTUR_POGUN",
             "4.9, 5.0, 4.9, 4.9, TTUR_SPARK",
             "5.0, 4.9, 4.9, 5.0, TTUR_SWEET"

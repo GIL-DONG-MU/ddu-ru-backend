@@ -22,7 +22,7 @@ public enum AvatarType implements CodedEnum {
     TTUR_MALLANG(13),
     TTUR_BONGBONG(14),
     TTUR_BEOMI(15),
-    TTUR_BANGUL(16);
+    TTUR_MARU(16);
 
     private final int code;
 }
