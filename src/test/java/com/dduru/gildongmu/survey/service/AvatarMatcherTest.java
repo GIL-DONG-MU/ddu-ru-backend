@@ -14,22 +14,22 @@ class AvatarMatcherTest {
 
     @ParameterizedTest(name = "[{index}] r={0}, e={1}, c={2}, d={3} -> {4}")
     @CsvSource({
-            "4.0, 4.0, 4.0, 4.0, TTUR_POGUNI",
-            "4.0, 4.0, 6.0, 4.0, TTUR_MOOD",
-            "4.0, 4.0, 4.0, 6.0, TTUR_MALLANGI",
-            "4.0, 4.0, 6.0, 6.0, TTUR_SWEET",
-            "6.0, 4.0, 4.0, 4.0, TTUR_POPO",
-            "6.0, 4.0, 6.0, 4.0, TTUR_SPARKLE",
-            "6.0, 4.0, 4.0, 6.0, TTUR_GLIMMING",
-            "6.0, 4.0, 6.0, 6.0, TTUR_PADO",
-            "4.0, 6.0, 4.0, 4.0, TTUR_DASHI",
-            "4.0, 6.0, 6.0, 4.0, TTUR_FLARE",
-            "4.0, 6.0, 4.0, 6.0, TTUR_BOUNCY",
-            "4.0, 6.0, 6.0, 6.0, TTUR_PEPPI",
-            "6.0, 6.0, 4.0, 4.0, TTUR_JETTI",
-            "6.0, 6.0, 6.0, 4.0, TTUR_BLAZE",
-            "6.0, 6.0, 4.0, 6.0, TTUR_VIVID",
-            "6.0, 6.0, 6.0, 6.0, TTUR_SURGE"
+            "4.0, 4.0, 4.0, 4.0, TTUR_POGUN",
+            "4.0, 4.0, 6.0, 4.0, TTUR_POSEUL",
+            "4.0, 4.0, 4.0, 6.0, TTUR_TTORANG",
+            "4.0, 4.0, 6.0, 6.0, TTUR_DASOM",
+            "6.0, 4.0, 4.0, 4.0, TTUR_MUDI",
+            "6.0, 4.0, 6.0, 4.0, TTUR_SODAM",
+            "6.0, 4.0, 4.0, 6.0, TTUR_SWEET",
+            "6.0, 4.0, 6.0, 6.0, TTUR_BANJJAK",
+            "4.0, 6.0, 4.0, 4.0, TTUR_SPARK",
+            "4.0, 6.0, 6.0, 4.0, TTUR_LUNA",
+            "4.0, 6.0, 4.0, 6.0, TTUR_GLIM",
+            "4.0, 6.0, 6.0, 6.0, TTUR_HARAM",
+            "6.0, 6.0, 4.0, 4.0, TTUR_MALLANG",
+            "6.0, 6.0, 6.0, 4.0, TTUR_BONGBONG",
+            "6.0, 6.0, 4.0, 6.0, TTUR_BEOMI",
+            "6.0, 6.0, 6.0, 6.0, TTUR_BANGUL"
     })
     @DisplayName("4축 조합별 아바타 매칭")
     void 사축_조합별_아바타_매칭(double rhythm, double energy, double consumption, double decision, AvatarType expected) {
@@ -39,10 +39,10 @@ class AvatarMatcherTest {
 
     @ParameterizedTest(name = "[{index}] r={0}, e={1}, c={2}, d={3} -> {4}")
     @CsvSource({
-            "5.0, 5.0, 5.0, 5.0, TTUR_SURGE",
-            "4.9, 4.9, 4.9, 4.9, TTUR_POGUNI",
-            "4.9, 5.0, 4.9, 4.9, TTUR_DASHI",
-            "5.0, 4.9, 4.9, 5.0, TTUR_GLIMMING"
+            "5.0, 5.0, 5.0, 5.0, TTUR_BANGUL",
+            "4.9, 4.9, 4.9, 4.9, TTUR_POGUN",
+            "4.9, 5.0, 4.9, 4.9, TTUR_SPARK",
+            "5.0, 4.9, 4.9, 5.0, TTUR_SWEET"
     })
     @DisplayName("임계값 5.0 경계 매칭")
     void 임계값_경계_매칭(double rhythm, double energy, double consumption, double decision, AvatarType expected) {

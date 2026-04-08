@@ -32,7 +32,7 @@ class ProfileImageResolverTest {
         profile.updateProfile("테스트닉", null, ProfileImageType.AVATAR, null, "소개");
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
-                .avatarType(AvatarType.TTUR_SWEET)
+                .avatarType(AvatarType.TTUR_DASOM)
                 .displayName("뚜르 스윗")
                 .oneLineDescription("설명")
                 .body("본문")

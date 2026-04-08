@@ -139,7 +139,7 @@ class SurveyServiceTest {
                 new TendencyScoreResponse(5.5, 4.5, 6.0, 7.0);
         when(tendencyCalculator.calculate(testSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
-                .thenReturn(AvatarType.TTUR_SWEET);
+                .thenReturn(AvatarType.TTUR_DASOM);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "뚜르 스윗",
@@ -148,10 +148,10 @@ class SurveyServiceTest {
                 "성격\n\n강점\n\n팁",
                 "https://example.com/avatar-sweet.png"
         );
-        when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_DASOM)).thenReturn(profile);
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
-                .avatarType(AvatarType.TTUR_SWEET)
+                .avatarType(AvatarType.TTUR_DASOM)
                 .displayName("뚜르 스윗")
                 .oneLineDescription("설명")
                 .body("성격\n\n강점\n\n팁")
@@ -159,7 +159,7 @@ class SurveyServiceTest {
                 .tags("[]")
                 .build();
         ReflectionTestUtils.setField(avatarProfile, "id", 1L);
-        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_SWEET)).thenReturn(Optional.of(avatarProfile));
+        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_DASOM)).thenReturn(Optional.of(avatarProfile));
 
         when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
         when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -170,12 +170,14 @@ class SurveyServiceTest {
         assertThat(response.energyScore()).isEqualTo(4.5);
         assertThat(response.consumptionScore()).isEqualTo(6.0);
         assertThat(response.decisionScore()).isEqualTo(7.0);
-        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
         assertThat(response.avatar().characterName()).isEqualTo("뚜르 스윗");
         assertThat(response.avatar().oneLineDescription()).isEqualTo("설명");
         assertThat(response.avatar().tags()).containsExactly("태그1", "태그2", "태그3");
         assertThat(response.avatar().description()).isEqualTo("성격\n\n강점\n\n팁");
         assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
+        assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
+        assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
 
         verify(surveyRepository).save(any(Survey.class));
         verify(travelTendencyRepository).save(any(TravelTendency.class));
@@ -227,7 +229,7 @@ class SurveyServiceTest {
                 new TendencyScoreResponse(6.0, 5.0, 7.5, 8.0);
         when(tendencyCalculator.calculate(existingSurvey)).thenReturn(scores);
         when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
-                .thenReturn(AvatarType.TTUR_PADO);
+                .thenReturn(AvatarType.TTUR_BANJJAK);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "뚜르 파도",
@@ -236,10 +238,10 @@ class SurveyServiceTest {
                 "성격2\n\n강점2\n\n팁2",
                 "https://example.com/avatar-pado.png"
         );
-        when(avatarProfileService.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_BANJJAK)).thenReturn(profile);
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
-                .avatarType(AvatarType.TTUR_PADO)
+                .avatarType(AvatarType.TTUR_BANJJAK)
                 .displayName("뚜르 파도")
                 .oneLineDescription("설명2")
                 .body("성격2\n\n강점2\n\n팁2")
@@ -247,7 +249,7 @@ class SurveyServiceTest {
                 .tags("[]")
                 .build();
         ReflectionTestUtils.setField(avatarProfile, "id", 2L);
-        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_PADO)).thenReturn(Optional.of(avatarProfile));
+        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_BANJJAK)).thenReturn(Optional.of(avatarProfile));
 
         TravelTendency existingTendency = TravelTendency.create(
                 testUser,
@@ -255,13 +257,15 @@ class SurveyServiceTest {
                 BigDecimal.valueOf(4.0),
                 BigDecimal.valueOf(6.0),
                 BigDecimal.valueOf(7.0),
-                AvatarType.TTUR_SWEET
+                AvatarType.TTUR_DASOM
         );
         when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(existingTendency));
 
         SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
 
-        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_PADO);
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_BANJJAK);
+        assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
+        assertThat(response.avatarLabel()).isEqualTo("뚜르 파도-A");
         verify(surveyRepository, never()).save(any(Survey.class));
     }
 
@@ -286,10 +290,11 @@ class SurveyServiceTest {
                 BigDecimal.valueOf(4.5),
                 BigDecimal.valueOf(6.0),
                 BigDecimal.valueOf(7.0),
-                AvatarType.TTUR_SWEET
+                AvatarType.TTUR_DASOM
         );
 
         when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(travelTendency));
+        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.of(testSurvey));
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "뚜르 스윗",
@@ -298,7 +303,7 @@ class SurveyServiceTest {
                 "성격\n\n강점\n\n팁",
                 "https://example.com/avatar-sweet.png"
         );
-        when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
+        when(avatarProfileService.getProfile(AvatarType.TTUR_DASOM)).thenReturn(profile);
 
         SurveyResponse response = surveyService.getMySurveyResult(1L);
 
@@ -306,9 +311,11 @@ class SurveyServiceTest {
         assertThat(response.energyScore()).isEqualTo(4.5);
         assertThat(response.consumptionScore()).isEqualTo(6.0);
         assertThat(response.decisionScore()).isEqualTo(7.0);
-        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
         assertThat(response.avatarCode()).isEqualTo(4);
         assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
+        assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
+        assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
     }
 
     @Test

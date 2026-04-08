@@ -60,6 +60,7 @@ class SurveyConverterTest {
         assertThat(survey.getEnergyQ1()).isEqualTo(EnergyQuestion1.RELAXED_DAY);
         assertThat(survey.getDecisionQ1()).isEqualTo(DecisionQuestion1.DELEGATE_ROLE);
         assertThat(survey.getRecordStyle()).isEqualTo(RecordStyleQuestion.EYES_FIRST);
+        assertThat(survey.getRecordStyle().getStyleType()).isEqualTo(RecordStyleType.A);
     }
 
     @Test
@@ -118,5 +119,6 @@ class SurveyConverterTest {
                 ActivityTag.FESTIVAL
         );
         assertThat(survey.getRecordStyle()).isEqualTo(RecordStyleQuestion.SHOOT_NOW);
+        assertThat(survey.getRecordStyle().getStyleType()).isEqualTo(RecordStyleType.B);
     }
 }
