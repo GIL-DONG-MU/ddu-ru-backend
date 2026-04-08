@@ -2,6 +2,7 @@ package com.dduru.gildongmu.survey.dto.response;
 
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.domain.enums.RecordStyleType;
 import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
 public record SurveyResponse(
@@ -11,9 +12,15 @@ public record SurveyResponse(
         Double decisionScore,
         Integer avatarCode,
         AvatarType avatarType,
+        RecordStyleType recordStyleType,
+        String avatarLabel,
         AvatarProfileResponse avatar
 ) {
-    public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
+    public static SurveyResponse from(
+            TravelTendency travelTendency,
+            RecordStyleType recordStyleType,
+            AvatarProfileService avatarProfileService
+    ) {
         AvatarType avatarType = travelTendency.getAvatarType();
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
@@ -24,6 +31,8 @@ public record SurveyResponse(
                 travelTendency.getDecisionScore().doubleValue(),
                 avatarType.getCode(),
                 avatarType,
+                recordStyleType,
+                avatarLabel(avatarProfile, recordStyleType),
                 avatarProfile
         );
     }
@@ -31,6 +40,7 @@ public record SurveyResponse(
     public static SurveyResponse of(
             TendencyScoreResponse scores,
             AvatarType avatarType,
+            RecordStyleType recordStyleType,
             AvatarProfileResponse avatarProfile
     ) {
         return new SurveyResponse(
@@ -40,7 +50,13 @@ public record SurveyResponse(
                 scores.decisionScore(),
                 avatarType.getCode(),
                 avatarType,
+                recordStyleType,
+                avatarLabel(avatarProfile, recordStyleType),
                 avatarProfile
         );
+    }
+
+    private static String avatarLabel(AvatarProfileResponse avatar, RecordStyleType recordStyleType) {
+        return avatar.characterName() + "-" + recordStyleType.name();
     }
 }

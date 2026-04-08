@@ -61,7 +61,7 @@ public class SurveyService {
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}", userId, avatarType);
-        return SurveyResponse.of(scores, avatarType, avatarProfile);
+        return SurveyResponse.of(scores, avatarType, survey.getRecordStyle().getStyleType(), avatarProfile);
     }
 
     public void skipSurvey(Long userId) {
@@ -73,7 +73,9 @@ public class SurveyService {
     public SurveyResponse getMySurveyResult(Long userId) {
         TravelTendency travelTendency = travelTendencyRepository.findByUser_Id(userId)
                 .orElseThrow(SurveyResultNotFoundException::new);
-        return SurveyResponse.from(travelTendency, avatarProfileService);
+        Survey survey = surveyRepository.findByUser_Id(userId)
+                .orElseThrow(SurveyResultNotFoundException::new);
+        return SurveyResponse.from(travelTendency, survey.getRecordStyle().getStyleType(), avatarProfileService);
     }
 
     private Survey saveOrUpdateSurvey(User user, SurveyRequest request) {
