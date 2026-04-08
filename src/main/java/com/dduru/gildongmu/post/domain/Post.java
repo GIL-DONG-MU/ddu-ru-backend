@@ -3,6 +3,7 @@ package com.dduru.gildongmu.post.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
@@ -187,6 +188,9 @@ public class Post extends BaseTimeEntity {
     }
 
     public void approveParticipation(Participation participation) {
+        if (participation.isApproved()) {
+            return;
+        }
         participation.approve();
         incrementRecruitCount();
     }
@@ -211,8 +215,17 @@ public class Post extends BaseTimeEntity {
         return this.recruitCount >= this.recruitCapacity;
     }
 
-    public boolean isClosed(){
+    public boolean isClosed() {
         return this.status == PostStatus.CLOSED;
+    }
+
+    public void validateIsOpen() {
+        if (isFull()) {
+            throw RecruitmentClosedException.isFulled();
+        }
+        if (isClosed()) {
+            throw RecruitmentClosedException.isClosed();
+        }
     }
 
     public int getDaysUntilRecruitDeadline() {

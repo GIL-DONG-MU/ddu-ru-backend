@@ -74,7 +74,7 @@ public class PrivateChatRoomService {
         ));
     }
 
-    private static void validateNotSelfChat(Long requesterId, Long targetUserId) {
+    static void validateNotSelfChat(Long requesterId, Long targetUserId) {
         if (requesterId.equals(targetUserId)) {
             throw new NotSelfChatException();
         }

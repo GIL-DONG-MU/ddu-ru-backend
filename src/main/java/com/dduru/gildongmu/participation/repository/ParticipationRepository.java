@@ -2,15 +2,9 @@ package com.dduru.gildongmu.participation.repository;
 
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.exception.ParticipationNotFoundException;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
 public interface ParticipationRepository extends JpaRepository<Participation, Long>, ParticipationRepositoryCustom {
-
-    @EntityGraph(attributePaths = "user")
-    List<Participation> findByPostIdOrderByCreatedAtDesc(Long postId);
 
     boolean existsByPostIdAndUserId(Long postId, Long userId);
 

@@ -4,7 +4,6 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
-import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -27,10 +26,12 @@ public class ParticipationService {
     private final UserRepository userRepository;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
-        Post post =  postRepository.getActiveByIdOrThrow(postId);
+        Post post = postRepository.getActiveByIdOrThrow(postId);
         User user = userRepository.getByIdOrThrow(userId);
 
-        validateCanParticipate(post, user);
+        validateNotSelfParticipate(post.getUser().getId(), userId);
+        post.validateIsOpen();
+        checkDuplicateParticipation(post, user);
 
         Participation participation = Participation.createParticipation(post, user, request.message());
         participationRepository.save(participation);
@@ -40,20 +41,13 @@ public class ParticipationService {
         return new ParticipationCreateResponse(participation.getId(), participation.getStatus());
     }
 
-    private void validateCanParticipate(Post post, User user) {
-        if (post.getUser().getId().equals(user.getId())) {
+    private static void validateNotSelfParticipate(Long authorId, Long participantId) {
+        if (authorId.equals(participantId)) {
             throw new SelfParticipationNotAllowedException();
         }
+    }
 
-        // TODO: 인원이 다 찼을 시 Post 상태가 자동으로 Closed로 변경되도록 구현 예정, 혹은 에러 처리를 다르게 하기 위해 isFull과 isClosed를 분리해서 관리할지 고민 필요
-        if (post.isFull()) {
-            throw RecruitmentClosedException.isFulled();
-        }
-
-        if (post.isClosed()) {
-            throw RecruitmentClosedException.isClosed();
-        }
-
+    private void checkDuplicateParticipation(Post post, User user) {
         if (participationRepository.existsByPostIdAndUserId(post.getId(), user.getId())) {
             throw new DuplicateParticipationException();
         }

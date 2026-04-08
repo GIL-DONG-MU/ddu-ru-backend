@@ -1,18 +1,18 @@
 package com.dduru.gildongmu.participation.service;
 
+import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
+import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
-import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
 import com.dduru.gildongmu.participation.exception.InvalidParticipationStatusException;
-import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
-import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,8 @@ import java.util.List;
 public class ParticipationCommandService {
 
     private final PrivateChatRoomService privateChatRoomService;
+    private final GroupChatRoomService groupChatRoomService;
     private final ParticipationRepository participationRepository;
-    private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
@@ -38,7 +38,7 @@ public class ParticipationCommandService {
         Post post = participation.getPost();
 
         validatePostOwner(post, userId);
-        validatePostIsOpen(post);
+        post.validateIsOpen();
         validateParticipationStatus(participation);
 
         PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participation.getUser().getId());
@@ -55,20 +55,26 @@ public class ParticipationCommandService {
         );
     }
 
-    /**
-     * 게시글 참여자 조회 - 현재는 사용안할 예정 (조회는 아래 retrieveAllParticipants로 사용)
-     */
-    @Transactional(readOnly = true)
-    public List<ParticipationResponse> retrieveParticipantsByPost(Long userId, Long postId) {
-        Post post =  postRepository.getActiveByIdOrThrow(postId);
+    public ParticipationApproveResponse approveParticipation(Long userId, Long participationId) {
+        Participation participation = participationRepository.getByIdOrThrow(participationId);
+        Post post = participation.getPost();
+        Long inviteeUserId = participation.getUser().getId();
 
         validatePostOwner(post, userId);
+        post.validateIsOpen();
+        validateParticipationStatus(participation);
 
-        List<Participation> participations = participationRepository.findByPostIdOrderByCreatedAtDesc(postId);
+        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, post.getId(), participation.getUser().getId());
 
-        return participations.stream()
-                .map(ParticipationResponse::from)
-                .toList();
+        post.approveParticipation(participation);
+        loggingStatusChange(participation);
+
+        return new ParticipationApproveResponse(
+                participation.getId(),
+                inviteeUserId,
+                response.roomId(),
+                participation.getStatus()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -90,14 +96,8 @@ public class ParticipationCommandService {
         }
     }
 
-    private static void validatePostIsOpen(Post post) {
-        if (post.isClosed()) {
-            throw RecruitmentClosedException.isClosed();
-        }
-    }
-
     private static void validateParticipationStatus(Participation participation) {
-        if (participation.isRejected()) {
+        if (participation.isRejected() || participation.isApproved()) {
             throw new InvalidParticipationStatusException();
         }
     }
