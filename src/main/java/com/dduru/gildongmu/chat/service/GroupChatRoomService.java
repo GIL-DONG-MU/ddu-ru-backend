@@ -6,8 +6,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
-import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
-import com.dduru.gildongmu.chat.dto.response.InviteTargetsResult;
+import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
@@ -22,42 +21,43 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import static com.dduru.gildongmu.chat.service.PrivateChatRoomService.validateNotSelfChat;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class GroupChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
 
-    @Transactional
-    public GroupChatInviteResponse inviteMembers(Long requesterId, Long roomId, GroupChatInviteRequest request) {
-        ChatRoom chatRoom = getActiveRoomOrThrow(roomId);
-        validateHostAuthority(chatRoom.getPost().getUser().getId(), requesterId);
+    public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long roomId, GroupChatInviteRequest request) {
+        ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomType(roomId, ChatRoomType.GROUP).orElseThrow(ChatRoomNotFoundException::new);
+        Long inviteeUserId = request.inviteeUserId();
+        return inviteMemberOrGetRoom(userId, chatRoom.getPost().getId(), inviteeUserId);
+    }
 
-        List<Long> inviteeUserIds = distinctNonHostUserIds(request.inviteeUserIds(), requesterId);
-        if (inviteeUserIds.isEmpty()) {
-            return GroupChatInviteResponse.empty(chatRoom.getId());
+    public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long postId, Long inviteeUserId) {
+        User invitee = userRepository.getByIdOrThrow(inviteeUserId);
+        ChatRoom chatRoom = getActiveRoomOrThrow(postId);
+
+        validateHostAuthority(chatRoom.getPost().getUser().getId(), userId);
+        validateNotSelfChat(userId, inviteeUserId);
+
+        if (isAlreadyMember(chatRoom, inviteeUserId)){
+            return new GroupChatInviteMemberResponse(chatRoom.getId(), false);
         }
 
-        InviteTargetsResult resolution = resolveInviteTargets(chatRoom.getId(), inviteeUserIds);
+        validateRoomCapacity(chatRoom);
+        saveInvitee(chatRoom, invitee);
 
-        List<User> newGuests = resolution.newGuests();
-        if (newGuests.isEmpty()) {
-            return GroupChatInviteResponse.empty(chatRoom.getId(), resolution);
-        }
+        return new GroupChatInviteMemberResponse(chatRoom.getId(), true);
+    }
 
-        validateRoomCapacity(chatRoom, newGuests.size());
-        saveNewGuestMembers(chatRoom, newGuests);
-
-        return GroupChatInviteResponse.success(chatRoom.getId(), newGuests.size(), resolution);
+    private boolean isAlreadyMember(ChatRoom chatRoom, Long inviteeUserId) {
+        return chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(chatRoom.getId(), inviteeUserId);
     }
 
     /**
@@ -80,8 +80,8 @@ public class GroupChatRoomService {
         room.activateIfPending();
     }
 
-    private ChatRoom getActiveRoomOrThrow(Long roomId) {
-        ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomTypeWithPostUser(roomId, ChatRoomType.GROUP)
+    private ChatRoom getActiveRoomOrThrow(Long postId) {
+        ChatRoom chatRoom = chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
                 .orElseThrow(ChatRoomNotFoundException::new);
         validateRoomIsActive(chatRoom);
         return chatRoom;
@@ -93,89 +93,23 @@ public class GroupChatRoomService {
         }
     }
 
-    private static void validateHostAuthority(Long postUserId, Long requesterId) {
-        if (!postUserId.equals(requesterId)) {
+    private static void validateHostAuthority(Long postUserId, Long userId) {
+        if (!postUserId.equals(userId)) {
             throw new GroupChatRoomInviteAccessDeniedException();
         }
     }
 
-    private static List<Long> distinctNonHostUserIds(List<Long> inviteeUserIds, Long hostUserId) {
-        return inviteeUserIds.stream()
-                .filter(id -> id != null && !id.equals(hostUserId)) // DTO 제약이 있지만 방어적으로 null도 제외
-                .distinct()
-                .toList();
-    }
-
-    private InviteTargetsResult resolveInviteTargets(Long roomId, List<Long> inviteeUserIds) {
-        List<User> users = userRepository.findAllById(inviteeUserIds);
-        Set<Long> userIds = extractUserIds(users);
-
-        List<Long> missingUserIds = findMissingIds(inviteeUserIds, userIds);
-        logMissingIdsIfAny(roomId, missingUserIds);
-
-        if (userIds.isEmpty()) {
-            return new InviteTargetsResult(List.of(), missingUserIds, List.of()); // all are missing
-        }
-
-        Set<Long> existingMemberUserIds = fetchExistingMemberIds(roomId, userIds);
-        List<Long> alreadyMemberUserIds = findAlreadyMemberIds(inviteeUserIds, existingMemberUserIds);
-        List<User> newGuests = findNewGuests(users, existingMemberUserIds);
-
-        return new InviteTargetsResult(newGuests, missingUserIds, alreadyMemberUserIds);
-    }
-
-
-    private static Set<Long> extractUserIds(List<User> users) {
-        return users.stream()
-                .map(User::getId)
-                .collect(Collectors.toSet());
-    }
-
-    private static List<Long> findMissingIds(List<Long> inviteeUserIds, Set<Long> userIds) {
-        return inviteeUserIds.stream()
-                .filter(id -> !userIds.contains(id))
-                .toList();
-    }
-
-    private static void logMissingIdsIfAny(Long roomId, List<Long> missingIds) {
-        if (missingIds.isEmpty()) {
-            return;
-        }
-        log.warn("그룹 초대에서 존재하지 않는 사용자 id가 포함됨. roomId={}, missingIds={}",
-                roomId, missingIds);
-    }
-
-    private Set<Long> fetchExistingMemberIds(Long roomId, Set<Long> userIds) {
-        return new HashSet<>(
-                chatRoomMemberRepository.findExistingUserIdsByRoomIdAndUserIdIn(roomId, userIds)
-        );
-    }
-
-    private static List<Long> findAlreadyMemberIds(List<Long> inviteeUserIds, Set<Long> existingMemberIds) {
-        return inviteeUserIds.stream()
-                .filter(existingMemberIds::contains)
-                .toList();
-    }
-
-    private static List<User> findNewGuests(List<User> users, Set<Long> existingMemberIds) {
-        return users.stream()
-                .filter(user -> !existingMemberIds.contains(user.getId()))
-                .toList();
-    }
-
-    private void validateRoomCapacity(ChatRoom room, int newGuestCount) {
+    private void validateRoomCapacity(ChatRoom room) {
         int currentMemberCount = chatRoomMemberRepository.countByRoom(room);
-        int totalAfterInvite = currentMemberCount + newGuestCount;
+        int totalAfterInvite = currentMemberCount + 1;
 
         if (!room.canAccommodate(totalAfterInvite)) {
             throw new ChatRoomCapacityExceededException();
         }
     }
 
-    private void saveNewGuestMembers(ChatRoom room, List<User> newGuestUsers) {
-        List<ChatRoomMember> created = newGuestUsers.stream()
-                .map(user -> ChatRoomMember.create(room, user, ChatMemberRole.GUEST))
-                .toList();
-        chatRoomMemberRepository.saveAll(created);
+    private void saveInvitee(ChatRoom room, User user) {
+        ChatRoomMember chatRoomMember = ChatRoomMember.create(room, user, ChatMemberRole.GUEST);
+        chatRoomMemberRepository.save(chatRoomMember);
     }
 }

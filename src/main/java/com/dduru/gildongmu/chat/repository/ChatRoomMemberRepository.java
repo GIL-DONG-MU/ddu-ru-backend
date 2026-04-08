@@ -6,15 +6,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
-import java.util.List;
-
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
-
     int countByRoom(ChatRoom room);
 
-    @Query("SELECT m.user.id FROM ChatRoomMember m WHERE m.room.id = :roomId AND m.user.id IN :userIds")
-    List<Long> findExistingUserIdsByRoomIdAndUserIdIn(
-            @Param("roomId") Long roomId,
-            @Param("userIds") Collection<Long> userIds);
+    @Query("""
+            SELECT COUNT(m) > 0
+            FROM ChatRoomMember m
+            WHERE m.room.id = :roomId
+              AND m.user.id = :inviteeUserId
+              AND m.room.status IN ('ACTIVE', 'PENDING')
+            """)
+    boolean existsByChatRoom_IdAndUser_Id(@Param("roomId") Long roomId, @Param("inviteeUserId") Long inviteeUserId);
 }
