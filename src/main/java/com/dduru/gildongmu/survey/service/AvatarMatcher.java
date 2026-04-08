@@ -15,23 +15,23 @@ public class AvatarMatcher {
         boolean isSocial = decisionScore >= THRESHOLD;
 
         if (!isEnergetic) {
-            if (!isAdventurous && !isSocial && !isFlex) return AvatarType.TTUR_POGUNI;
-            if (!isAdventurous && !isSocial) return AvatarType.TTUR_MOOD;
-            if (!isAdventurous && !isFlex) return AvatarType.TTUR_MALLANGI;
-            if (!isAdventurous) return AvatarType.TTUR_SWEET;
-            if (!isSocial && !isFlex) return AvatarType.TTUR_POPO;
-            if (!isSocial) return AvatarType.TTUR_SPARKLE;
-            if (!isFlex) return AvatarType.TTUR_GLIMMING;
-            return AvatarType.TTUR_PADO;
+            if (!isAdventurous && !isSocial && !isFlex) return AvatarType.TTUR_POGUN;
+            if (!isAdventurous && !isSocial) return AvatarType.TTUR_POSEUL;
+            if (!isAdventurous && !isFlex) return AvatarType.TTUR_TTORANG;
+            if (!isAdventurous) return AvatarType.TTUR_DASOM;
+            if (!isSocial && !isFlex) return AvatarType.TTUR_MUDI;
+            if (!isSocial) return AvatarType.TTUR_SODAM;
+            if (!isFlex) return AvatarType.TTUR_SWEET;
+            return AvatarType.TTUR_BANJJAK;
         }
 
-        if (!isAdventurous && !isSocial && !isFlex) return AvatarType.TTUR_DASHI;
-        if (!isAdventurous && !isSocial) return AvatarType.TTUR_FLARE;
-        if (!isAdventurous && !isFlex) return AvatarType.TTUR_BOUNCY;
-        if (!isAdventurous) return AvatarType.TTUR_PEPPI;
-        if (!isSocial && !isFlex) return AvatarType.TTUR_JETTI;
-        if (!isSocial) return AvatarType.TTUR_BLAZE;
-        if (!isFlex) return AvatarType.TTUR_VIVID;
-        return AvatarType.TTUR_SURGE;
+        if (!isAdventurous && !isSocial && !isFlex) return AvatarType.TTUR_SPARK;
+        if (!isAdventurous && !isSocial) return AvatarType.TTUR_LUNA;
+        if (!isAdventurous && !isFlex) return AvatarType.TTUR_GLIM;
+        if (!isAdventurous) return AvatarType.TTUR_HARAM;
+        if (!isSocial && !isFlex) return AvatarType.TTUR_MALLANG;
+        if (!isSocial) return AvatarType.TTUR_BONGBONG;
+        if (!isFlex) return AvatarType.TTUR_BEOMI;
+        return AvatarType.TTUR_BANGUL;
     }
 }

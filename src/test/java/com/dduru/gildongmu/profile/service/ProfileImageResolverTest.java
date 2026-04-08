@@ -33,11 +33,10 @@ class ProfileImageResolverTest {
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_SWEET)
-                .description("설명")
+                .displayName("뚜르 스윗")
+                .oneLineDescription("설명")
+                .body("본문")
                 .imageUrl("https://example.com/avatar-sweet.png")
-                .personality("성격")
-                .strength("강점")
-                .tip("팁")
                 .tags("[]")
                 .build();
         profile.updateAvatar(avatarProfile);

@@ -4,8 +4,6 @@ import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
-import java.util.List;
-
 public record SurveyResponse(
         Double rhythmScore,
         Double energyScore,
@@ -13,13 +11,7 @@ public record SurveyResponse(
         Double decisionScore,
         Integer avatarCode,
         AvatarType avatarType,
-        String avatarName,
-        String avatarDescription,
-        String imageUrl,
-        String personality,
-        String strength,
-        String tip,
-        List<String> tags
+        AvatarProfileResponse avatar
 ) {
     public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
         AvatarType avatarType = travelTendency.getAvatarType();
@@ -32,13 +24,7 @@ public record SurveyResponse(
                 travelTendency.getDecisionScore().doubleValue(),
                 avatarType.getCode(),
                 avatarType,
-                avatarType.getText(),
-                avatarProfile.description(),
-                avatarProfile.imageUrl(),
-                avatarProfile.personality(),
-                avatarProfile.strength(),
-                avatarProfile.tip(),
-                avatarProfile.tags()
+                avatarProfile
         );
     }
 
@@ -54,14 +40,7 @@ public record SurveyResponse(
                 scores.decisionScore(),
                 avatarType.getCode(),
                 avatarType,
-                avatarType.getText(),
-                avatarProfile.description(),
-                avatarProfile.imageUrl(),
-                avatarProfile.personality(),
-                avatarProfile.strength(),
-                avatarProfile.tip(),
-                avatarProfile.tags()
+                avatarProfile
         );
     }
-
 }

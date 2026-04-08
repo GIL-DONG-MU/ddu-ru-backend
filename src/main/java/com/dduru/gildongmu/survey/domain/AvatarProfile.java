@@ -22,32 +22,35 @@ public class AvatarProfile extends BaseTimeEntity {
     @Column(name = "avatar_type", nullable = false, unique = true)
     private AvatarType avatarType;
 
-    @Column(nullable = false, length = 200)
-    private String description;
+    @Column(name = "display_name", nullable = false, length = 64)
+    private String displayName;
+
+    @Column(name = "description", nullable = false, length = 200)
+    private String oneLineDescription;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String body;
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String personality;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String strength;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String tip;
 
     @Column(nullable = false, columnDefinition = "JSON")
     private String tags;
 
     @Builder
-    public AvatarProfile(AvatarType avatarType, String description, String imageUrl, String personality, String strength, String tip, String tags) {
+    public AvatarProfile(
+            AvatarType avatarType,
+            String displayName,
+            String oneLineDescription,
+            String body,
+            String imageUrl,
+            String tags
+    ) {
         this.avatarType = avatarType;
-        this.description = description;
+        this.displayName = displayName;
+        this.oneLineDescription = oneLineDescription;
+        this.body = body;
         this.imageUrl = imageUrl;
-        this.personality = personality;
-        this.strength = strength;
-        this.tip = tip;
         this.tags = tags;
     }
 }

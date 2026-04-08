@@ -28,12 +28,11 @@ public class AvatarProfileService {
 
         List<String> tags = jsonConverter.convertJsonToList(profile.getTags());
         return new AvatarProfileResponse(
-                profile.getDescription(),
-                profile.getImageUrl(),
-                profile.getPersonality(),
-                profile.getStrength(),
-                profile.getTip(),
-                tags
+                profile.getDisplayName(),
+                profile.getOneLineDescription(),
+                tags,
+                profile.getBody(),
+                profile.getImageUrl()
         );
     }
 }

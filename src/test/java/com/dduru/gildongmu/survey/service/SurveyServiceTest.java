@@ -142,17 +142,20 @@ class SurveyServiceTest {
                 .thenReturn(AvatarType.TTUR_SWEET);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
-                "설명", "https://example.com/avatar-sweet.png", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
+                "뚜르 스윗",
+                "설명",
+                List.of("태그1", "태그2", "태그3"),
+                "성격\n\n강점\n\n팁",
+                "https://example.com/avatar-sweet.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_SWEET)
-                .description("설명")
+                .displayName("뚜르 스윗")
+                .oneLineDescription("설명")
+                .body("성격\n\n강점\n\n팁")
                 .imageUrl("https://example.com/avatar-sweet.png")
-                .personality("성격")
-                .strength("강점")
-                .tip("팁")
                 .tags("[]")
                 .build();
         ReflectionTestUtils.setField(avatarProfile, "id", 1L);
@@ -168,10 +171,11 @@ class SurveyServiceTest {
         assertThat(response.consumptionScore()).isEqualTo(6.0);
         assertThat(response.decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
-        assertThat(response.imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
-        assertThat(response.personality()).isEqualTo("성격");
-        assertThat(response.strength()).isEqualTo("강점");
-        assertThat(response.tip()).isEqualTo("팁");
+        assertThat(response.avatar().characterName()).isEqualTo("뚜르 스윗");
+        assertThat(response.avatar().oneLineDescription()).isEqualTo("설명");
+        assertThat(response.avatar().tags()).containsExactly("태그1", "태그2", "태그3");
+        assertThat(response.avatar().description()).isEqualTo("성격\n\n강점\n\n팁");
+        assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
 
         verify(surveyRepository).save(any(Survey.class));
         verify(travelTendencyRepository).save(any(TravelTendency.class));
@@ -226,17 +230,20 @@ class SurveyServiceTest {
                 .thenReturn(AvatarType.TTUR_PADO);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
-                "설명2", "https://example.com/avatar-pado.png", "성격2", "강점2", "팁2", List.of("태그1", "태그2", "태그3")
+                "뚜르 파도",
+                "설명2",
+                List.of("태그1", "태그2", "태그3"),
+                "성격2\n\n강점2\n\n팁2",
+                "https://example.com/avatar-pado.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_PADO)).thenReturn(profile);
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_PADO)
-                .description("설명2")
+                .displayName("뚜르 파도")
+                .oneLineDescription("설명2")
+                .body("성격2\n\n강점2\n\n팁2")
                 .imageUrl("https://example.com/avatar-pado.png")
-                .personality("성격2")
-                .strength("강점2")
-                .tip("팁2")
                 .tags("[]")
                 .build();
         ReflectionTestUtils.setField(avatarProfile, "id", 2L);
@@ -285,7 +292,11 @@ class SurveyServiceTest {
         when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(travelTendency));
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
-                "설명", "https://example.com/avatar-sweet.png", "성격", "강점", "팁", List.of("태그1", "태그2", "태그3")
+                "뚜르 스윗",
+                "설명",
+                List.of("태그1", "태그2", "태그3"),
+                "성격\n\n강점\n\n팁",
+                "https://example.com/avatar-sweet.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_SWEET)).thenReturn(profile);
 
@@ -297,7 +308,7 @@ class SurveyServiceTest {
         assertThat(response.decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_SWEET);
         assertThat(response.avatarCode()).isEqualTo(4);
-        assertThat(response.imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
+        assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
     }
 
     @Test
