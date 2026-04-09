@@ -13,8 +13,8 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             SELECT COUNT(m) > 0
             FROM ChatRoomMember m
             WHERE m.room.id = :roomId
-              AND m.user.id = :inviteeUserId
+              AND m.user.id = :participantUserId
               AND m.room.status IN ('ACTIVE', 'PENDING')
             """)
-    boolean existsByChatRoom_IdAndUser_Id(@Param("roomId") Long roomId, @Param("inviteeUserId") Long inviteeUserId);
+    boolean existsByChatRoom_IdAndUser_Id(@Param("roomId") Long roomId, @Param("participantUserId") Long participantUserId);
 }

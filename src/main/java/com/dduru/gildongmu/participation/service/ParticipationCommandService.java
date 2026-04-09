@@ -36,19 +36,20 @@ public class ParticipationCommandService {
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         Post post = participation.getPost();
+        Long participantUserId = participation.getUser().getId();
 
         validatePostOwner(post, userId);
         post.validateIsOpen();
-        validateParticipationStatus(participation);
+        participation.validateContactAvailable();
 
-        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participation.getUser().getId());
+        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participantUserId);
 
         updateStatusToContactingIfNew(participation);
-
         loggingStatusChange(participation);
 
         return new ParticipationContactResponse(
                 participation.getId(),
+                participantUserId,
                 room.roomId(),
                 room.isCreated(),
                 participation.getStatus()
@@ -58,20 +59,20 @@ public class ParticipationCommandService {
     public ParticipationApproveResponse approveParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdOrThrow(participationId);
         Post post = participation.getPost();
-        Long inviteeUserId = participation.getUser().getId();
+        Long participantUserId = participation.getUser().getId();
 
         validatePostOwner(post, userId);
         post.validateIsOpen();
-        validateParticipationStatus(participation);
+        participation.validateApprovalAvailable();
 
-        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, post.getId(), participation.getUser().getId());
+        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, post.getId(), participantUserId);
 
         post.approveParticipation(participation);
         loggingStatusChange(participation);
 
         return new ParticipationApproveResponse(
                 participation.getId(),
-                inviteeUserId,
+                participantUserId,
                 response.roomId(),
                 participation.getStatus()
         );
