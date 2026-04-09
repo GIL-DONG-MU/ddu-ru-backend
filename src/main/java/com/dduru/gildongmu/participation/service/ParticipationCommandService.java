@@ -97,7 +97,7 @@ public class ParticipationCommandService {
     }
 
     private static void validateParticipationStatus(Participation participation) {
-        if (participation.isRejected() || participation.isApproved()) {
+        if (participation.isRejected() || participation.isApproved() || participation.isContacting()) {
             throw new InvalidParticipationStatusException();
         }
     }
