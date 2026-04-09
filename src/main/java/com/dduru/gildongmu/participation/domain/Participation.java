@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.participation.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.participation.exception.InvalidParticipationStatusException;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
@@ -92,5 +93,23 @@ public class Participation extends BaseTimeEntity {
 
     public boolean isApproved() {
         return status == ParticipationStatus.APPROVED;
+    }
+
+    public void validateContactAvailable() {
+        if (isRejected() || isApproved() || isContacting()) {
+            throw InvalidParticipationStatusException.contactNotAllowed();
+        }
+    }
+
+    public void validateApprovalAvailable() {
+        if (isRejected() || isApproved()) {
+            throw InvalidParticipationStatusException.approvalNotAllowed();
+        }
+    }
+
+    public void validateRejectionAvailable() {
+        if (isRejected() || isApproved()) {
+            throw InvalidParticipationStatusException.rejectionNotAllowed();
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.dduru.gildongmu.participation.dto.response.ParticipationCreateRespons
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,7 +53,7 @@ public interface ParticipationApiDocs {
             ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.RECRUITMENT_CLOSED,
             ErrorCode.RECRUITMENT_FULL,
-            ErrorCode.INVALID_PARTICIPATION_STATUS,
+            ErrorCode.PARTICIPATION_CONTACT_NOT_ALLOWED,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.UNAUTHORIZED
     })
@@ -71,7 +72,7 @@ public interface ParticipationApiDocs {
             ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.RECRUITMENT_CLOSED,
             ErrorCode.RECRUITMENT_FULL,
-            ErrorCode.INVALID_PARTICIPATION_STATUS,
+            ErrorCode.PARTICIPATION_APPROVAL_NOT_ALLOWED,
             ErrorCode.USER_NOT_FOUND,
             ErrorCode.CHAT_ROOM_NOT_FOUND,
             ErrorCode.CHAT_ROOM_CLOSED,
@@ -79,6 +80,21 @@ public interface ParticipationApiDocs {
             ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<ParticipationApproveResponse>> approveParticipation(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId
+    );
+
+    @Operation(summary = "참여 신청 거절", description = "게시글 참여 신청을 거절합니다.")
+    @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.PARTICIPATION_REJECTION_NOT_ALLOWED,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<Void>> rejectParticipation(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "동행 참여 신청 ID") Long participationId
     );

@@ -84,7 +84,10 @@ public enum ErrorCode {
     RECRUITMENT_FULL(HttpStatus.BAD_REQUEST, "모집 정원이 가득 찬 게시글입니다."),
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글에는 참여신청할 수 없습니다."),
     PARTICIPATION_POST_MISMATCH(HttpStatus.BAD_REQUEST, "해당 참여신청은 해당 게시글에 속해있지 않습니다."),
-    INVALID_PARTICIPATION_STATUS(HttpStatus.BAD_REQUEST, "승인/거절/연락중인 참여신청 상태입니다(PENDING만 가능합니다)."),
+    PARTICIPATION_CONTACT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PENDING 상태에서만 연락을 시작할 수 있습니다."),
+    PARTICIPATION_APPROVAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "이미 승인/거절중인 신청 상태는 참여 승인할 수 없습니다."),
+    PARTICIPATION_REJECTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "이미 승인/거절중인 신청 상태는 참여 거절할 수 없습니다."),
+    PARTICIPATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, ""),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),

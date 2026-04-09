@@ -65,6 +65,16 @@ public class ParticipationController implements ParticipationApiDocs {
     }
 
     @Override
+    @PatchMapping("/participations/{participationId}/reject")
+    public ResponseEntity<ApiResult<Void>> rejectParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
+    ) {
+        participationCommandService.rejectParticipation(userId, participationId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+    }
+
+    @Override
     @GetMapping("/participations")
     public ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
             @CurrentUser Long userId,

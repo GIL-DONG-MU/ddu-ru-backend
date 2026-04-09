@@ -9,7 +9,6 @@ import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveReques
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
-import com.dduru.gildongmu.participation.exception.InvalidParticipationStatusException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
@@ -78,6 +77,24 @@ public class ParticipationCommandService {
         );
     }
 
+    public void rejectParticipation(Long userId, Long participationId) {
+        Participation participation = participationRepository.getByIdOrThrow(participationId);
+        Post post = participation.getPost();
+
+        if (participation.isRejected()) {
+            return;
+        }
+
+        validatePostOwner(post, userId);
+        post.validateIsOpen();
+        participation.validateRejectionAvailable();
+
+
+        participation.reject();
+        loggingStatusChange(participation);
+    }
+
+
     @Transactional(readOnly = true)
     public List<ParticipationRetrieveResponse> retrieveAllParticipants(Long userId, ParticipationRetrieveRequest request) {
         return participationRepository.findReceivedRequestsByStatus(userId, request.status()).stream()
@@ -94,12 +111,6 @@ public class ParticipationCommandService {
     private static void validatePostOwner(Post post, Long userId) {
         if (!post.getUser().getId().equals(userId)) {
             throw new PostAccessDeniedException();
-        }
-    }
-
-    private static void validateParticipationStatus(Participation participation) {
-        if (participation.isRejected() || participation.isApproved() || participation.isContacting()) {
-            throw new InvalidParticipationStatusException();
         }
     }
 
