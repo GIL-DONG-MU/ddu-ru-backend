@@ -82,7 +82,7 @@ public enum ErrorCode {
     PARTICIPATION_CONTACT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "대기 중인 신청만 연락할 수 있습니다."),
     PARTICIPATION_APPROVAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "승인할 수 없습니다. 이미 승인되었거나 거절된 신청입니다."),
     PARTICIPATION_REJECTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "거절할 수 없습니다. 이미 승인되었거나 거절된 신청입니다."),
-    PARTICIPATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, ""),
+    PARTICIPATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "대기 중인 신청만 취소할 수 있습니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),

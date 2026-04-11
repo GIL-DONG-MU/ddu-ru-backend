@@ -10,6 +10,7 @@ import com.dduru.gildongmu.participation.dto.response.ChatRoomIds;
 import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
+import com.dduru.gildongmu.participation.exception.ParticipationApplicantAccessDeniedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -55,6 +56,15 @@ public class ParticipationApplicantService {
                 .toList();
     }
 
+    public void cancelMyParticipation(Long userId, Long participationId) {
+        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
+        validateApplicantOwnership(userId, participation);
+        participation.validateCancellableByApplicant();
+        participationRepository.delete(participation);
+        log.info("참여신청 취소(삭제) - participationId: {}, postId: {}, userId: {}",
+                participationId, participation.getPost().getId(), userId);
+    }
+
     private void validateParticipationAllowed(Post post, User applicant) {
         validateNotSelfParticipation(post.getUser().getId(), applicant.getId());
         post.validateIsOpen();
@@ -95,6 +105,12 @@ public class ParticipationApplicantService {
         return chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
                 .map(ChatRoom::getId)
                 .orElse(null);
+    }
+
+    private void validateApplicantOwnership(Long userId, Participation participation) {
+        if (!participation.getUser().getId().equals(userId)) {
+            throw new ParticipationApplicantAccessDeniedException();
+        }
     }
 
     private static void validateNotSelfParticipation(Long authorId, Long applicantId) {

@@ -112,4 +112,10 @@ public class Participation extends BaseTimeEntity {
             throw InvalidParticipationStatusException.rejectionNotAllowed();
         }
     }
+
+    public void validateCancellableByApplicant() {
+        if (!isPending()) {
+            throw InvalidParticipationStatusException.cancelNotAllowed();
+        }
+    }
 }
