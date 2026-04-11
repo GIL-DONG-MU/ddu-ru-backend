@@ -12,6 +12,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,7 @@ public class ParticipationService {
     private final UserRepository userRepository;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
-        Post post = postRepository.getActiveByIdOrThrow(postId);
+        Post post = postRepository.getActiveByIdForUpdateOrThrow(postId);
         User user = userRepository.getByIdOrThrow(userId);
 
         validateNotSelfParticipate(post.getUser().getId(), userId);
@@ -34,11 +35,11 @@ public class ParticipationService {
         checkDuplicateParticipation(post, user);
 
         Participation participation = Participation.createParticipation(post, user, request.message());
-        participationRepository.save(participation);
+        Participation savedParticipation = saveParticipationOrThrowDuplicate(participation, postId, userId);
 
         log.info("참여신청 완료 - participationId: {}, postId: {}, userId: {}",
-                participation.getId(), postId, userId);
-        return new ParticipationCreateResponse(participation.getId(), participation.getStatus());
+                savedParticipation.getId(), postId, userId);
+        return new ParticipationCreateResponse(savedParticipation.getId(), savedParticipation.getStatus());
     }
 
     private static void validateNotSelfParticipate(Long authorId, Long participantId) {
@@ -50,6 +51,18 @@ public class ParticipationService {
     private void checkDuplicateParticipation(Post post, User user) {
         if (participationRepository.existsByPostIdAndUserId(post.getId(), user.getId())) {
             throw new DuplicateParticipationException();
+        }
+    }
+
+    private Participation saveParticipationOrThrowDuplicate(Participation participation, Long postId, Long userId) {
+        try {
+            return participationRepository.save(participation);
+        } catch (DataIntegrityViolationException e) {
+            if (participationRepository.existsByPostIdAndUserId(postId, userId)) {
+                log.warn("중복 참여신청 동시성 충돌 - postId: {}, userId: {}", postId, userId);
+                throw new DuplicateParticipationException();
+            }
+            throw e;
         }
     }
 }

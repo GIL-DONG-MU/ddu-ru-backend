@@ -12,6 +12,7 @@ import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveRespo
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
+import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
+/**
+ * 참여 신청 커맨드(연락·승인·거절).
+ * <p>
+ * <b>락 순서:</b> 동일 트랜잭션에서 {@code Participation} 행을 {@code FOR UPDATE}로 잠근 뒤
+ * {@code Post} 행을 같은 방식으로 잠근다. 다른 코드 경로에서 {@code Post}를 먼저 잠그고
+ * {@code Participation}을 잡지 않도록 유지해야 데드락 위험을 줄일 수 있다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,18 +37,19 @@ public class ParticipationCommandService {
     private final PrivateChatRoomService privateChatRoomService;
     private final GroupChatRoomService groupChatRoomService;
     private final ParticipationRepository participationRepository;
+    private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
+        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
+        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
         Long participantUserId = participation.getUser().getId();
 
-        validatePostOwner(post, userId);
-        post.validateIsOpen();
+        validatePostOwner(lockedPost, userId);
+        lockedPost.validateIsOpen();
         participation.validateContactAvailable();
 
-        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoom(userId, post, participantUserId);
+        PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoomWithLockedPost(userId, lockedPost, participantUserId);
 
         updateStatusToContactingIfNew(participation);
         loggingStatusChange(participation);
@@ -55,17 +63,17 @@ public class ParticipationCommandService {
     }
 
     public ParticipationApproveResponse approveParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
+        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
+        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
         Long participantUserId = participation.getUser().getId();
 
-        validatePostOwner(post, userId);
-        post.validateIsOpen();
+        validatePostOwner(lockedPost, userId);
+        lockedPost.validateIsOpen();
         participation.validateApprovalAvailable();
 
-        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, post.getId(), participantUserId);
+        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, lockedPost.getId(), participantUserId);
 
-        post.approveParticipation(participation);
+        lockedPost.approveParticipation(participation);
         loggingStatusChange(participation);
 
         return new ParticipationApproveResponse(
@@ -77,12 +85,12 @@ public class ParticipationCommandService {
     }
 
     public void rejectParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdOrThrow(participationId);
+        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
         validatePostOwner(participation.getPost(), userId);
         participation.validateRejectionAvailable();
 
-        Post post = participation.getPost();
-        post.validateIsOpen();
+        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+        lockedPost.validateIsOpen();
 
         participation.reject();
         loggingStatusChange(participation);
