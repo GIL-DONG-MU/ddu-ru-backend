@@ -33,6 +33,27 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("target") User target
     );
 
+    @Query("""
+            SELECT DISTINCT r.id
+            FROM ChatRoom r
+            JOIN ChatRoomMember m1 ON m1.room = r
+            JOIN ChatRoomMember m2 ON m2.room = r
+            WHERE r.post.id = :postId
+              AND r.roomType = :roomType
+              AND r.status = :status
+              AND (
+                (m1.user.id = :userId1 AND m2.user.id = :userId2)
+                OR (m1.user.id = :userId2 AND m2.user.id = :userId1)
+              )
+            """)
+    Optional<Long> findPrivateRoomIdByPostAndUserIds(
+            @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType,
+            @Param("status") ChatRoomStatus status,
+            @Param("userId1") Long userId1,
+            @Param("userId2") Long userId2
+    );
+
     Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
