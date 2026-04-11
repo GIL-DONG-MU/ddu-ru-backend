@@ -248,7 +248,7 @@ row 삭제 이벤트:
 
 ## 9. 서비스 책임
 
-### 9.1 ParticipationService
+### 9.1 ParticipationApplicantService
 
 책임:
 

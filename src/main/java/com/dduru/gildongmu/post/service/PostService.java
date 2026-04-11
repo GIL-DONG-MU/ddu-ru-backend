@@ -5,7 +5,6 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
-import com.dduru.gildongmu.participation.service.ParticipationService;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
@@ -45,7 +44,6 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
-    private final ParticipationService participationService;
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;

@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ParticipationService {
+public class ParticipationApplicantService {
 
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
@@ -28,28 +28,31 @@ public class ParticipationService {
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
-        User user = userRepository.getByIdOrThrow(userId);
+        User applicant = userRepository.getByIdOrThrow(userId);
 
-        validateNotSelfParticipate(post.getUser().getId(), userId);
-        post.validateIsOpen();
-        checkDuplicateParticipation(post, user);
+        validateParticipationAllowed(post, applicant);
 
-        Participation participation = Participation.createParticipation(post, user, request.message());
-        Participation savedParticipation = saveParticipationOrThrowDuplicate(participation, postId, userId);
+        Participation participation = Participation.createParticipation(post, applicant, request.message());
+        Participation saved = saveParticipationOrThrowDuplicate(participation, postId, userId);
 
-        log.info("참여신청 완료 - participationId: {}, postId: {}, userId: {}",
-                savedParticipation.getId(), postId, userId);
-        return new ParticipationCreateResponse(savedParticipation.getId(), savedParticipation.getStatus());
+        log.info("참여신청 완료 - participationId: {}, postId: {}, userId: {}", saved.getId(), postId, userId);
+        return new ParticipationCreateResponse(saved.getId(), saved.getStatus());
     }
 
-    private static void validateNotSelfParticipate(Long authorId, Long participantId) {
-        if (authorId.equals(participantId)) {
+    private void validateParticipationAllowed(Post post, User applicant) {
+        validateNotSelfParticipation(post.getUser().getId(), applicant.getId());
+        post.validateIsOpen();
+        ensureNoDuplicateApplication(post.getId(), applicant.getId());
+    }
+
+    private static void validateNotSelfParticipation(Long authorId, Long applicantId) {
+        if (authorId.equals(applicantId)) {
             throw new SelfParticipationNotAllowedException();
         }
     }
 
-    private void checkDuplicateParticipation(Post post, User user) {
-        if (participationRepository.existsByPostIdAndUserId(post.getId(), user.getId())) {
+    private void ensureNoDuplicateApplication(Long postId, Long applicantId) {
+        if (participationRepository.existsByPostIdAndUserId(postId, applicantId)) {
             throw new DuplicateParticipationException();
         }
     }
