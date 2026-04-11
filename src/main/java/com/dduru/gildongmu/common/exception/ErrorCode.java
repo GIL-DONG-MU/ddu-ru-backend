@@ -69,11 +69,6 @@ public enum ErrorCode {
     INVALID_POST_STATUS(HttpStatus.BAD_REQUEST, "모집이 완료된 게시글은 모집 상태를 변경할 수 없습니다."),
     INVALID_POST_TAGS(HttpStatus.BAD_REQUEST, "태그 형식이 올바르지 않습니다."),
 
-    // 댓글 (COMMENT)
-    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
-    INVALID_PARENT_COMMENT(HttpStatus.BAD_REQUEST, "부모 댓글이 현재 게시글에 속해있지 않습니다."),
-    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "댓글 작성자만 접근할 수 있습니다."),
-
     // 여행지 (DESTINATION)
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."),
 
