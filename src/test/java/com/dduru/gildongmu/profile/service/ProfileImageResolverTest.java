@@ -32,12 +32,13 @@ class ProfileImageResolverTest {
         profile.updateProfile("테스트닉", null, ProfileImageType.AVATAR, null, "소개");
 
         AvatarProfile avatarProfile = AvatarProfile.builder()
-                .avatarType(AvatarType.TTUR_SWEET)
-                .description("설명")
+                .avatarType(AvatarType.TTUR_DASOM)
+                .displayName("뚜르 스윗")
+                .speechBubbleText("설명")
+                .descriptionLine1("첫 문단")
+                .descriptionLine2("둘째 문단")
+                .descriptionLine3("셋째 문단")
                 .imageUrl("https://example.com/avatar-sweet.png")
-                .personality("성격")
-                .strength("강점")
-                .tip("팁")
                 .tags("[]")
                 .build();
         profile.updateAvatar(avatarProfile);

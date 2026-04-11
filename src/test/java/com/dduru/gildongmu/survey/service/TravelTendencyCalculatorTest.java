@@ -2,6 +2,7 @@ package com.dduru.gildongmu.survey.service;
 
 import com.dduru.gildongmu.survey.domain.Survey;
 import com.dduru.gildongmu.survey.domain.enums.*;
+import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withPrecision;
 
 @DisplayName("여행 성향 점수 계산 테스트")
 class TravelTendencyCalculatorTest {
@@ -30,154 +32,118 @@ class TravelTendencyCalculatorTest {
     }
 
     @Test
-    @DisplayName("기본값_모두_5점으로_시작")
-    void 기본값_모두_5점으로_시작() {
-        // given
+    @DisplayName("모든_축_첫번째_선택지_0점_환산")
+    void 모든_축_첫번째_선택지_0점_환산() {
         Survey survey = Survey.createSurvey(
                 testUser,
-                Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT,
-                Question3Stay.HOTEL,
-                Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS,
-                Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.FLEXIBLE,
-                Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL,
-                Question11Photo.EYES_ONLY
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUTE_TIME_SET,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING, ActivityTag.NATURE, ActivityTag.FOOD)
         );
 
-        // when
-        TravelTendencyCalculator.TendencyScores scores = calculator.calculate(survey);
+        TendencyScoreResponse scores = calculator.calculate(survey);
 
-        // then
-        assertThat(scores.r()).isBetween(0.0, 10.0);
-        assertThat(scores.w()).isBetween(0.0, 10.0);
-        assertThat(scores.s()).isBetween(0.0, 10.0);
-        assertThat(scores.p()).isBetween(0.0, 10.0);
+        assertThat(scores.rhythmScore()).isEqualTo(0.0);
+        assertThat(scores.energyScore()).isEqualTo(0.0);
+        assertThat(scores.consumptionScore()).isEqualTo(0.0);
+        assertThat(scores.decisionScore()).isEqualTo(0.0);
     }
 
     @Test
-    @DisplayName("Q1_걷기버스선택시_W감소_P증가")
-    void Q1_걷기버스선택시_W감소_P증가() {
-        // given
-        Survey walkBusSurvey = Survey.createSurvey(
-                testUser, Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT, Question3Stay.HOTEL, Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS, Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.FLEXIBLE, Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL, Question11Photo.EYES_ONLY
-        );
-
-        Survey taxiSurvey = Survey.createSurvey(
-                testUser, Question1Transport.TAXI,
-                Question2Waiting.WAIT, Question3Stay.HOTEL, Question4Wakeup.EARLY,
-                Question5Expense.EACH_PAYS, Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.FLEXIBLE, Question9Menu.SAFE,
-                Question10Companion.SITUATIONAL, Question11Photo.EYES_ONLY
-        );
-
-        // when
-        TravelTendencyCalculator.TendencyScores walkBusScores = calculator.calculate(walkBusSurvey);
-        TravelTendencyCalculator.TendencyScores taxiScores = calculator.calculate(taxiSurvey);
-
-        // then
-        assertThat(walkBusScores.w()).isLessThan(taxiScores.w());
-        assertThat(walkBusScores.p()).isGreaterThan(taxiScores.p());
-    }
-
-    @Test
-    @DisplayName("Q7_선호활동_택3_누적합산_정상작동")
-    void Q7_선호활동_택3_누적합산_정상작동() {
-        // given
+    @DisplayName("모든_축_두번째_선택지_10점_환산")
+    void 모든_축_두번째_선택지_10점_환산() {
         Survey survey = Survey.createSurvey(
                 testUser,
-                Question1Transport.WALK_BUS,
-                Question2Waiting.WAIT,
-                Question3Stay.JUST_SLEEP,
-                Question4Wakeup.EARLY,
-                Question5Expense.POOLED,
-                Question6Spend.SPLURGE,
-                List.of(Question7Interest.FOOD, Question7Interest.SHOPPING, Question7Interest.ACTIVITY),
-                Question8Planning.FLEXIBLE,
-                Question9Menu.CHECK_REVIEW,
-                Question10Companion.SITUATIONAL,
-                Question11Photo.MATCH_COMPANION
+                RhythmQuestion1.IMPULSE_SIDE_TRIP,
+                RhythmQuestion2.PACK_LAST_MINUTE,
+                RhythmQuestion3.ROUGH_LIST_ONLY,
+                ConsumptionQuestion1.FLEX_OK,
+                ConsumptionQuestion2.SAVE_TIME_TAXI,
+                ConsumptionQuestion3.INVEST_EXPERIENCE,
+                EnergyQuestion1.PACKED_DAY,
+                EnergyQuestion2.BREAKFAST_SPRINT,
+                EnergyQuestion3.FILL_WITH_SPOTS,
+                DecisionQuestion1.LEAD_OR_ORGANIZE,
+                DecisionQuestion2.PROPOSE_FIRST,
+                DecisionQuestion3.DRIVE_CONCLUSION,
+                RecordStyleQuestion.SHOOT_NOW,
+                List.of(ActivityTag.SIGHTSEEING)
         );
 
-        // when
-        TravelTendencyCalculator.TendencyScores scores = calculator.calculate(survey);
+        TendencyScoreResponse scores = calculator.calculate(survey);
 
-        // then
-        assertThat(scores.r()).isGreaterThan(5.0);
-        assertThat(scores.p()).isGreaterThan(5.0);
+        assertThat(scores.rhythmScore()).isEqualTo(10.0);
+        assertThat(scores.energyScore()).isEqualTo(10.0);
+        assertThat(scores.consumptionScore()).isEqualTo(10.0);
+        assertThat(scores.decisionScore()).isEqualTo(10.0);
     }
 
     @Test
-    @DisplayName("점수_범위_0점에서_10점으로_제한")
-    void 점수_범위_0점에서_10점으로_제한() {
-        // given
-        Survey minScoreSurvey = Survey.createSurvey(
+    @DisplayName("원점수_4점일때_10점_환산_약_6_67")
+    void 원점수_4점일때_10점_환산_약_6_67() {
+        Survey survey = Survey.createSurvey(
                 testUser,
-                Question1Transport.WALK_BUS,
-                Question2Waiting.MOVE_ELSEWHERE,
-                Question3Stay.JUST_SLEEP,
-                Question4Wakeup.RELAXED,
-                Question5Expense.EACH_PAYS,
-                Question6Spend.SAVE,
-                List.of(Question7Interest.EXHIBITION, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.DETAILED,
-                Question9Menu.SAFE,
-                Question10Companion.US_ONLY,
-                Question11Photo.EYES_ONLY
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_LAST_MINUTE,
+                RhythmQuestion3.ROUGH_LIST_ONLY,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING)
         );
 
-        // when
-        TravelTendencyCalculator.TendencyScores scores = calculator.calculate(minScoreSurvey);
+        TendencyScoreResponse scores = calculator.calculate(survey);
 
-        // then
-        assertThat(scores.r()).isGreaterThanOrEqualTo(0.0);
-        assertThat(scores.w()).isGreaterThanOrEqualTo(0.0);
-        assertThat(scores.s()).isGreaterThanOrEqualTo(0.0);
-        assertThat(scores.p()).isGreaterThanOrEqualTo(0.0);
-        assertThat(scores.r()).isLessThanOrEqualTo(10.0);
-        assertThat(scores.w()).isLessThanOrEqualTo(10.0);
-        assertThat(scores.s()).isLessThanOrEqualTo(10.0);
-        assertThat(scores.p()).isLessThanOrEqualTo(10.0);
+        assertThat(scores.rhythmScore()).isCloseTo(6.7, withPrecision(0.01));
+        assertThat(scores.energyScore()).isEqualTo(0.0);
+        assertThat(scores.consumptionScore()).isEqualTo(0.0);
+        assertThat(scores.decisionScore()).isEqualTo(0.0);
     }
 
     @Test
-    @DisplayName("Q10_완전환영선택시_S크게증가")
-    void Q10_완전환영선택시_S크게증가() {
-        // given
-        Survey welcomeSurvey = Survey.createSurvey(
+    @DisplayName("점수는_항상_0에서_10_사이")
+    void 점수는_항상_0에서_10_사이() {
+        Survey survey = Survey.createSurvey(
                 testUser,
-                Question1Transport.WALK_BUS, Question2Waiting.WAIT, Question3Stay.HOTEL,
-                Question4Wakeup.EARLY, Question5Expense.EACH_PAYS, Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.FLEXIBLE, Question9Menu.SAFE,
-                Question10Companion.WELCOME,
-                Question11Photo.EYES_ONLY
+                RhythmQuestion1.IMPULSE_SIDE_TRIP,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUGH_LIST_ONLY,
+                ConsumptionQuestion1.FLEX_OK,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.INVEST_EXPERIENCE,
+                EnergyQuestion1.PACKED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.FILL_WITH_SPOTS,
+                DecisionQuestion1.LEAD_OR_ORGANIZE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.DRIVE_CONCLUSION,
+                RecordStyleQuestion.SHOOT_NOW,
+                List.of(ActivityTag.FESTIVAL)
         );
 
-        Survey onlyUsSurvey = Survey.createSurvey(
-                testUser,
-                Question1Transport.WALK_BUS, Question2Waiting.WAIT, Question3Stay.HOTEL,
-                Question4Wakeup.EARLY, Question5Expense.EACH_PAYS, Question6Spend.SAVE,
-                List.of(Question7Interest.SIGHTSEEING, Question7Interest.NATURE, Question7Interest.RESORT),
-                Question8Planning.FLEXIBLE, Question9Menu.SAFE,
-                Question10Companion.US_ONLY,
-                Question11Photo.EYES_ONLY
-        );
+        TendencyScoreResponse scores = calculator.calculate(survey);
 
-        // when
-        TravelTendencyCalculator.TendencyScores welcomeScores = calculator.calculate(welcomeSurvey);
-        TravelTendencyCalculator.TendencyScores onlyUsScores = calculator.calculate(onlyUsSurvey);
-
-        // then
-        assertThat(welcomeScores.s()).isGreaterThan(onlyUsScores.s() + 4.0);
+        assertThat(scores.rhythmScore()).isBetween(0.0, 10.0);
+        assertThat(scores.energyScore()).isBetween(0.0, 10.0);
+        assertThat(scores.consumptionScore()).isBetween(0.0, 10.0);
+        assertThat(scores.decisionScore()).isBetween(0.0, 10.0);
     }
 }
