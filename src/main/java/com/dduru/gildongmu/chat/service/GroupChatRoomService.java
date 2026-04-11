@@ -9,8 +9,8 @@ import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
-import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
+import com.dduru.gildongmu.chat.exception.NotSelfChatException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -18,11 +18,17 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.dduru.gildongmu.chat.service.PrivateChatRoomService.validateNotSelfChat;
-
+/**
+ * 그룹 채팅방 초대.
+ * <p>
+ * {@code ChatRoom} 행을 {@code FOR UPDATE}로 잠근 뒤, 같은 트랜잭션에서 방 상태({@code CLOSED}/{@code DELETED} 제외),
+ * 호스트(게시글 작성자) 권한, 정원을 검증한다. 방 행에 대한 갱신은 이 락과 직렬화되므로, 검증 시점의 스냅샷이
+ * 저장 직전까지 크게 어긋나지 않는다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,26 +40,31 @@ public class GroupChatRoomService {
     private final UserRepository userRepository;
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long roomId, GroupChatInviteRequest request) {
-        ChatRoom chatRoom = chatRoomRepository.findByIdAndRoomType(roomId, ChatRoomType.GROUP).orElseThrow(ChatRoomNotFoundException::new);
-        Long inviteeUserId = request.inviteeUserId();
-        return inviteMemberOrGetRoom(userId, chatRoom.getPost().getId(), inviteeUserId);
+        ChatRoom chatRoom = chatRoomRepository.getByIdAndRoomTypeForUpdateOrThrow(roomId, ChatRoomType.GROUP);
+        return inviteMemberOrGetRoom(userId, chatRoom, request.inviteeUserId());
     }
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long postId, Long inviteeUserId) {
+        ChatRoom chatRoom = chatRoomRepository.getByPostIdAndRoomTypeForUpdateOrThrow(postId, ChatRoomType.GROUP);
+        return inviteMemberOrGetRoom(userId, chatRoom, inviteeUserId);
+    }
+
+    private GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, ChatRoom chatRoom, Long inviteeUserId) {
         User invitee = userRepository.getByIdOrThrow(inviteeUserId);
-        ChatRoom chatRoom = getActiveRoomOrThrow(postId);
 
         validateHostAuthority(chatRoom.getPost().getUser().getId(), userId);
         validateNotSelfChat(userId, inviteeUserId);
+        validateRoomIsActive(chatRoom);
 
-        if (isAlreadyMember(chatRoom, inviteeUserId)){
+        if (isAlreadyMember(chatRoom, inviteeUserId)) {
             return new GroupChatInviteMemberResponse(chatRoom.getId(), false);
         }
 
         validateRoomCapacity(chatRoom);
-        saveInvitee(chatRoom, invitee);
+        validateRoomIsActive(chatRoom);
+        boolean invited = saveInvitee(chatRoom, invitee);
 
-        return new GroupChatInviteMemberResponse(chatRoom.getId(), true);
+        return new GroupChatInviteMemberResponse(chatRoom.getId(), invited);
     }
 
     private boolean isAlreadyMember(ChatRoom chatRoom, Long inviteeUserId) {
@@ -80,13 +91,6 @@ public class GroupChatRoomService {
         room.activateIfPending();
     }
 
-    private ChatRoom getActiveRoomOrThrow(Long postId) {
-        ChatRoom chatRoom = chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
-                .orElseThrow(ChatRoomNotFoundException::new);
-        validateRoomIsActive(chatRoom);
-        return chatRoom;
-    }
-
     private static void validateRoomIsActive(ChatRoom room) {
         if (room.getStatus() == ChatRoomStatus.CLOSED || room.getStatus() == ChatRoomStatus.DELETED) {
             throw new ChatRoomClosedException();
@@ -99,6 +103,12 @@ public class GroupChatRoomService {
         }
     }
 
+    private static void validateNotSelfChat(Long requesterId, Long targetUserId) {
+        if (requesterId.equals(targetUserId)) {
+            throw new NotSelfChatException();
+        }
+    }
+
     private void validateRoomCapacity(ChatRoom room) {
         int currentMemberCount = chatRoomMemberRepository.countByRoom(room);
         int totalAfterInvite = currentMemberCount + 1;
@@ -108,8 +118,17 @@ public class GroupChatRoomService {
         }
     }
 
-    private void saveInvitee(ChatRoom room, User user) {
+    private boolean saveInvitee(ChatRoom room, User user) {
         ChatRoomMember chatRoomMember = ChatRoomMember.create(room, user, ChatMemberRole.GUEST);
-        chatRoomMemberRepository.save(chatRoomMember);
+        try {
+            chatRoomMemberRepository.save(chatRoomMember);
+            return true;
+        } catch (DataIntegrityViolationException e) {
+            if (isAlreadyMember(room, user.getId())) {
+                log.warn("그룹 채팅 멤버 중복 초대 경쟁 상태 감지 - roomId={}, userId={}", room.getId(), user.getId());
+                return false;
+            }
+            throw e;
+        }
     }
 }

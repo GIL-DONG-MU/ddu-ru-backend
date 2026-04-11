@@ -5,7 +5,9 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,9 +35,43 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.id = :roomId
+              AND r.roomType = :chatRoomType
+            """)
+    Optional<ChatRoom> findByIdAndRoomTypeForUpdate(
+            @Param("roomId") Long roomId,
+            @Param("chatRoomType") ChatRoomType chatRoomType
+    );
+
     Optional<ChatRoom> findByPostIdAndRoomType(Long postId, ChatRoomType roomType);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.post.id = :postId
+              AND r.roomType = :roomType
+            """)
+    Optional<ChatRoom> findByPostIdAndRoomTypeForUpdate(
+            @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType
+    );
 
     default ChatRoom getByIdOrThrow(Long roomId) {
         return findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
+    }
+
+    default ChatRoom getByIdAndRoomTypeForUpdateOrThrow(Long roomId, ChatRoomType chatRoomType) {
+        return findByIdAndRoomTypeForUpdate(roomId, chatRoomType)
+                .orElseThrow(ChatRoomNotFoundException::new);
+    }
+
+    default ChatRoom getByPostIdAndRoomTypeForUpdateOrThrow(Long postId, ChatRoomType roomType) {
+        return findByPostIdAndRoomTypeForUpdate(postId, roomType)
+                .orElseThrow(ChatRoomNotFoundException::new);
     }
 }

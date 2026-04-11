@@ -21,6 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 1:1 채팅방 생성·조회.
+ * <p>
+ * 동일 글·동일 사용자 쌍에 대한 중복 방 생성을 막기 위해 {@code Post} 행을 {@code FOR UPDATE}로 잠근 뒤
+ * 기존 방을 조회한다. {@link #createOrGetRoomWithLockedPost}는 호출 측이 이미 Post 락을 잡은 트랜잭션에서만 사용한다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,11 +39,23 @@ public class PrivateChatRoomService {
     private final UserRepository userRepository;
 
     public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Long postId) {
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        return createOrGetRoom(requesterId, post, post.getUser().getId());
+        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(postId);
+        return doCreateOrGetRoom(requesterId, lockedPost, lockedPost.getUser().getId());
     }
 
     public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Post post, Long targetUserId) {
+        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(post.getId());
+        return doCreateOrGetRoom(requesterId, lockedPost, targetUserId);
+    }
+
+    /**
+     * 동일 트랜잭션에서 {@code Post} 행을 이미 {@code FOR UPDATE}로 잠근 경우에만 호출한다.
+     */
+    public PrivateChatRoomCreateResponse createOrGetRoomWithLockedPost(Long requesterId, Post lockedPost, Long targetUserId) {
+        return doCreateOrGetRoom(requesterId, lockedPost, targetUserId);
+    }
+
+    private PrivateChatRoomCreateResponse doCreateOrGetRoom(Long requesterId, Post post, Long targetUserId) {
         validateNotSelfChat(requesterId, targetUserId);
 
         User requester = userRepository.getByIdOrThrow(requesterId);
@@ -74,7 +92,7 @@ public class PrivateChatRoomService {
         ));
     }
 
-    static void validateNotSelfChat(Long requesterId, Long targetUserId) {
+    private static void validateNotSelfChat(Long requesterId, Long targetUserId) {
         if (requesterId.equals(targetUserId)) {
             throw new NotSelfChatException();
         }
