@@ -50,7 +50,6 @@ public class ParticipationCommandService {
                 participation.getId(),
                 participantUserId,
                 room.roomId(),
-                room.isCreated(),
                 participation.getStatus()
         );
     }
@@ -79,16 +78,11 @@ public class ParticipationCommandService {
 
     public void rejectParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdOrThrow(participationId);
-        Post post = participation.getPost();
-
-        if (participation.isRejected()) {
-            return;
-        }
-
-        validatePostOwner(post, userId);
-        post.validateIsOpen();
+        validatePostOwner(participation.getPost(), userId);
         participation.validateRejectionAvailable();
 
+        Post post = participation.getPost();
+        post.validateIsOpen();
 
         participation.reject();
         loggingStatusChange(participation);

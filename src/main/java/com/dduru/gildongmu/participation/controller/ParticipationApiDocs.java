@@ -25,7 +25,10 @@ import java.util.List;
 @SecurityRequirement(name = "JWT")
 public interface ParticipationApiDocs {
 
-    @Operation(summary = "참여 신청", description = "게시글에 참여 신청을 합니다. 모집이 마감되었거나 정원이 가득 찬 게시글에는 신청할 수 없습니다.")
+    @Operation(
+            summary = "참여 신청",
+            description = "게시글에 참여 신청을 합니다. 모집이 마감되었거나 정원이 가득 찬 게시글에는 신청할 수 없습니다. 동일 사용자의 중복 신청은 오류(409)를 반환합니다."
+    )
     @ApiResponse(responseCode = "201", description = "참여 신청 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
@@ -45,7 +48,7 @@ public interface ParticipationApiDocs {
 
     @Operation(
             summary = "참여 신청 연락 시작",
-            description = "방장이 신청자와 1:1 채팅을 시작합니다. `PENDING`이면 `CONTACTING`으로 변경하고, 이미 `CONTACTING`이면 상태를 유지한 채 기존 채팅방을 재사용합니다."
+            description = "방장이 신청자와 1:1 채팅을 시작합니다. `PENDING`인 경우에만 `CONTACTING`으로 바뀌며, 응답의 `privateRoomId`로 연락 채팅방을 열 수 있습니다. 이미 연락 중·승인·거절된 신청이면 오류를 반환합니다."
     )
     @ApiResponse(responseCode = "200", description = "연락 시작 성공")
     @ApiErrorResponses({
@@ -64,7 +67,7 @@ public interface ParticipationApiDocs {
 
     @Operation(
             summary = "참여 신청 승인",
-            description = "방장이 신청자를 승인합니다. `PENDING` 또는 `CONTACTING` 상태에서 승인 가능하며, 그룹 채팅방에 초대된 뒤 상태가 `APPROVED`로 변경됩니다. 이미 그룹 채팅방 멤버면 기존 방 정보를 반환합니다."
+            description = "방장이 신청자를 승인합니다. `PENDING` 또는 `CONTACTING` 상태에서만 승인할 수 있으며, 그룹 단톡에 초대한 뒤 `APPROVED`로 바뀝니다. 응답의 `groupRoomId`는 항상 포함됩니다. 이미 승인·거절된 신청이면 오류를 반환합니다."
     )
     @ApiResponse(responseCode = "200", description = "참여 신청 승인 성공")
     @ApiErrorResponses({
@@ -84,13 +87,18 @@ public interface ParticipationApiDocs {
             @Parameter(description = "동행 참여 신청 ID") Long participationId
     );
 
-    @Operation(summary = "참여 신청 거절", description = "게시글 참여 신청을 거절합니다.")
+    @Operation(
+            summary = "참여 신청 거절",
+            description = "게시글 참여 신청을 거절합니다. 요청 본문은 없으며, 이미 승인·거절된 신청에 대해 다시 호출하면 오류를 반환합니다."
+    )
     @ApiResponse(responseCode = "204", description = "참여 신청 거절 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.PARTICIPATION_NOT_FOUND,
             ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.PARTICIPATION_POST_MISMATCH,
+            ErrorCode.RECRUITMENT_CLOSED,
+            ErrorCode.RECRUITMENT_FULL,
             ErrorCode.PARTICIPATION_REJECTION_NOT_ALLOWED,
             ErrorCode.UNAUTHORIZED
     })
