@@ -25,8 +25,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SurveyQuestionService {
 
-    private static final int QUESTIONNAIRE_VERSION = 1;
+    /**
+     * 설문 질문/옵션 응답 포맷이 바뀌어
+     * 클라이언트가 다른 방식으로 해석해야 할 때 증가시키는 계약 버전
+     */
+    private static final int QUESTIONNAIRE_VERSION = 2;
     private static final String CACHE_NAME = "surveyQuestions";
+    private static final String EMPTY_FINGERPRINT = "v0";
 
     private final SurveyQuestionRepository surveyQuestionRepository;
     private final SurveyQuestionOptionRepository surveyQuestionOptionRepository;
@@ -34,46 +39,49 @@ public class SurveyQuestionService {
 
     public SurveyQuestionListResponse getSurveyQuestions() {
         String cacheKey = buildCacheKey();
-        SurveyQuestionListResponse cached = getCached(cacheKey);
+
+        SurveyQuestionListResponse cached = readFromCache(cacheKey);
         if (cached != null) {
             return cached;
         }
 
-        SurveyQuestionListResponse response = fetchFromDb();
-        putCache(cacheKey, response);
-
+        SurveyQuestionListResponse response = loadSurveyQuestionsFromDb();
+        writeToCache(cacheKey, response);
         return response;
     }
-
+    
     private String buildCacheKey() {
-        return "db:" + resolveDbVersion();
+        return "db:v" + QUESTIONNAIRE_VERSION + ":" + resolveCacheFingerprint();
     }
 
-    private SurveyQuestionListResponse getCached(String cacheKey) {
-        Cache cache = cacheManager.getCache(CACHE_NAME);
-        if (cache == null) {
-            return null;
+    private Cache getCacheOrNull() {
+        return cacheManager.getCache(CACHE_NAME);
+    }
+
+    private SurveyQuestionListResponse readFromCache(String cacheKey) {
+        Cache cache = getCacheOrNull();
+        return cache == null ? null : cache.get(cacheKey, SurveyQuestionListResponse.class);
+    }
+
+    private void writeToCache(String cacheKey, SurveyQuestionListResponse response) {
+        Cache cache = getCacheOrNull();
+        if (cache != null) {
+            cache.put(cacheKey, response);
         }
-        return cache.get(cacheKey, SurveyQuestionListResponse.class);
     }
 
-    private void putCache(String cacheKey, SurveyQuestionListResponse response) {
-        Cache cache = cacheManager.getCache(CACHE_NAME);
-        if (cache == null) {
-            return;
-        }
-        cache.put(cacheKey, response);
-    }
-
-    private SurveyQuestionListResponse fetchFromDb() {
+    private SurveyQuestionListResponse loadSurveyQuestionsFromDb() {
         List<SurveyQuestion> questions = surveyQuestionRepository.findAllByOrderByDisplayOrderAsc();
+
         List<String> questionIds = questions.stream()
                 .map(SurveyQuestion::getQuestionId)
                 .toList();
 
-        Map<String, List<SurveyQuestionOptionResponse>> optionsByQuestionId = resolveOptions(questionIds);
+        Map<String, List<SurveyQuestionOptionResponse>> optionsByQuestionId =
+                loadOptionsByQuestionId(questionIds);
+
         List<SurveyQuestionResponse> questionResponses = questions.stream()
-                .map(q -> toQuestionResponse(q, optionsByQuestionId))
+                .map(question -> toQuestionResponse(question, optionsByQuestionId))
                 .toList();
 
         return new SurveyQuestionListResponse(
@@ -100,7 +108,10 @@ public class SurveyQuestionService {
         );
     }
 
-    private Map<String, List<SurveyQuestionOptionResponse>> resolveOptions(List<String> questionIds) {
+    private Map<String, List<SurveyQuestionOptionResponse>> loadOptionsByQuestionId(List<String> questionIds) {
+        /**
+         * 질문이 없으면 옵션 조회도 불필요하므로 바로 빈 맵 반환
+         */
         if (questionIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -110,29 +121,48 @@ public class SurveyQuestionService {
 
         return options.stream()
                 .collect(Collectors.groupingBy(
-                        o -> o.getQuestion().getQuestionId(),
+                        option -> option.getQuestion().getQuestionId(),
                         Collectors.mapping(
-                                o -> new SurveyQuestionOptionResponse(o.getCode(), o.getIcon(), o.getText()),
+                                option -> new SurveyQuestionOptionResponse(
+                                        option.getCode(),
+                                        option.getIcon(),
+                                        option.getText()
+                                ),
                                 Collectors.toList()
                         )
                 ));
     }
 
-    private String resolveDbVersion() {
-        LocalDateTime qMax = surveyQuestionRepository.findMaxModifiedAt();
-        LocalDateTime oMax = surveyQuestionOptionRepository.findMaxModifiedAt();
-        long qCount = surveyQuestionRepository.count();
-        long oCount = surveyQuestionOptionRepository.count();
+    /**
+     * DB의 데이터 변경 여부를 감지하기 위한 지문(Fingerprint) 생성
+     */
+    private String resolveCacheFingerprint() {
+        LocalDateTime questionMaxModifiedAt = surveyQuestionRepository.findMaxModifiedAt();
+        LocalDateTime optionMaxModifiedAt = surveyQuestionOptionRepository.findMaxModifiedAt();
+        long questionCount = surveyQuestionRepository.count();
+        long optionCount = surveyQuestionOptionRepository.count();
 
-        LocalDateTime max = qMax;
-        if (oMax != null && (max == null || oMax.isAfter(max))) {
-            max = oMax;
+        LocalDateTime latestModifiedAt = resolveLatestModifiedAt(questionMaxModifiedAt, optionMaxModifiedAt);
+
+        if (latestModifiedAt == null) {
+            return EMPTY_FINGERPRINT;
         }
 
-        if (max == null) {
-            return "v0";
-        }
+        return latestModifiedAt.truncatedTo(ChronoUnit.SECONDS)
+                + "_" + questionCount
+                + "_" + optionCount;
+    }
 
-        return max.truncatedTo(ChronoUnit.SECONDS).toString() + "_" + qCount + "_" + oCount;
+    private LocalDateTime resolveLatestModifiedAt(
+            LocalDateTime questionMaxModifiedAt,
+            LocalDateTime optionMaxModifiedAt
+    ) {
+        if (optionMaxModifiedAt == null) {
+            return questionMaxModifiedAt;
+        }
+        if (questionMaxModifiedAt == null || optionMaxModifiedAt.isAfter(questionMaxModifiedAt)) {
+            return optionMaxModifiedAt;
+        }
+        return questionMaxModifiedAt;
     }
 }

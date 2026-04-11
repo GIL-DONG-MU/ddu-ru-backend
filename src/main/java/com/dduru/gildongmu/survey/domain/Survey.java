@@ -18,6 +18,8 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Survey extends BaseTimeEntity {
 
+    private static final int MAIN_AXIS_MAX_RAW = 6;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,113 +29,137 @@ public class Survey extends BaseTimeEntity {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q1_transport", nullable = false)
-    private Question1Transport q1Transport;
+    @Column(name = "rhythm_q1", nullable = false, length = 64)
+    private RhythmQuestion1 rhythmQ1;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q2_waiting", nullable = false)
-    private Question2Waiting q2Waiting;
+    @Column(name = "rhythm_q2", nullable = false, length = 64)
+    private RhythmQuestion2 rhythmQ2;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q3_stay", nullable = false)
-    private Question3Stay q3Stay;
+    @Column(name = "rhythm_q3", nullable = false, length = 64)
+    private RhythmQuestion3 rhythmQ3;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q4_wakeup", nullable = false)
-    private Question4Wakeup q4Wakeup;
+    @Column(name = "consumption_q1", nullable = false, length = 64)
+    private ConsumptionQuestion1 consumptionQ1;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q5_expense", nullable = false)
-    private Question5Expense q5Expense;
+    @Column(name = "consumption_q2", nullable = false, length = 64)
+    private ConsumptionQuestion2 consumptionQ2;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "q6_spend", nullable = false)
-    private Question6Spend q6Spend;
+    @Column(name = "consumption_q3", nullable = false, length = 64)
+    private ConsumptionQuestion3 consumptionQ3;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "energy_q1", nullable = false, length = 64)
+    private EnergyQuestion1 energyQ1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "energy_q2", nullable = false, length = 64)
+    private EnergyQuestion2 energyQ2;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "energy_q3", nullable = false, length = 64)
+    private EnergyQuestion3 energyQ3;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision_q1", nullable = false, length = 64)
+    private DecisionQuestion1 decisionQ1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision_q2", nullable = false, length = 64)
+    private DecisionQuestion2 decisionQ2;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision_q3", nullable = false, length = 64)
+    private DecisionQuestion3 decisionQ3;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "record_style", nullable = false, length = 64)
+    private RecordStyleQuestion recordStyle;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "survey_interests", joinColumns = @JoinColumn(name = "survey_id"))
+    @CollectionTable(name = "survey_activity_tags", joinColumns = @JoinColumn(name = "survey_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "interest", nullable = false)
-    private List<Question7Interest> q7Interests;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "q8_planning", nullable = false)
-    private Question8Planning q8Planning;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "q9_menu", nullable = false)
-    private Question9Menu q9Menu;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "q10_companion", nullable = false)
-    private Question10Companion q10Companion;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "q11_photo", nullable = false)
-    private Question11Photo q11Photo;
+    @Column(name = "tag", nullable = false, length = 64)
+    private List<ActivityTag> activityTags;
 
     @Builder
-    public Survey(User user, Question1Transport q1Transport, Question2Waiting q2Waiting,
-                  Question3Stay q3Stay, Question4Wakeup q4Wakeup, Question5Expense q5Expense,
-                  Question6Spend q6Spend, List<Question7Interest> q7Interests,
-                  Question8Planning q8Planning, Question9Menu q9Menu,
-                  Question10Companion q10Companion, Question11Photo q11Photo) {
+    public Survey(User user,
+                  RhythmQuestion1 rhythmQ1, RhythmQuestion2 rhythmQ2, RhythmQuestion3 rhythmQ3,
+                  ConsumptionQuestion1 consumptionQ1, ConsumptionQuestion2 consumptionQ2, ConsumptionQuestion3 consumptionQ3,
+                  EnergyQuestion1 energyQ1, EnergyQuestion2 energyQ2, EnergyQuestion3 energyQ3,
+                  DecisionQuestion1 decisionQ1, DecisionQuestion2 decisionQ2, DecisionQuestion3 decisionQ3,
+                  RecordStyleQuestion recordStyle,
+                  List<ActivityTag> activityTags) {
         this.user = user;
-        this.q1Transport = q1Transport;
-        this.q2Waiting = q2Waiting;
-        this.q3Stay = q3Stay;
-        this.q4Wakeup = q4Wakeup;
-        this.q5Expense = q5Expense;
-        this.q6Spend = q6Spend;
-        this.q7Interests = q7Interests != null ? new ArrayList<>(q7Interests) : null;
-        this.q8Planning = q8Planning;
-        this.q9Menu = q9Menu;
-        this.q10Companion = q10Companion;
-        this.q11Photo = q11Photo;
+        this.rhythmQ1 = rhythmQ1;
+        this.rhythmQ2 = rhythmQ2;
+        this.rhythmQ3 = rhythmQ3;
+        this.consumptionQ1 = consumptionQ1;
+        this.consumptionQ2 = consumptionQ2;
+        this.consumptionQ3 = consumptionQ3;
+        this.energyQ1 = energyQ1;
+        this.energyQ2 = energyQ2;
+        this.energyQ3 = energyQ3;
+        this.decisionQ1 = decisionQ1;
+        this.decisionQ2 = decisionQ2;
+        this.decisionQ3 = decisionQ3;
+        this.recordStyle = recordStyle;
+        this.activityTags = activityTags != null ? new ArrayList<>(activityTags) : new ArrayList<>();
     }
 
-    public static Survey createSurvey(User user, Question1Transport q1Transport, Question2Waiting q2Waiting,
-                                      Question3Stay q3Stay, Question4Wakeup q4Wakeup, Question5Expense q5Expense,
-                                      Question6Spend q6Spend, List<Question7Interest> q7Interests,
-                                      Question8Planning q8Planning, Question9Menu q9Menu,
-                                      Question10Companion q10Companion, Question11Photo q11Photo) {
+    public static Survey createSurvey(User user,
+                                      RhythmQuestion1 rhythmQ1, RhythmQuestion2 rhythmQ2, RhythmQuestion3 rhythmQ3,
+                                      ConsumptionQuestion1 consumptionQ1, ConsumptionQuestion2 consumptionQ2, ConsumptionQuestion3 consumptionQ3,
+                                      EnergyQuestion1 energyQ1, EnergyQuestion2 energyQ2, EnergyQuestion3 energyQ3,
+                                      DecisionQuestion1 decisionQ1, DecisionQuestion2 decisionQ2, DecisionQuestion3 decisionQ3,
+                                      RecordStyleQuestion recordStyle,
+                                      List<ActivityTag> activityTags) {
         return Survey.builder()
                 .user(user)
-                .q1Transport(q1Transport)
-                .q2Waiting(q2Waiting)
-                .q3Stay(q3Stay)
-                .q4Wakeup(q4Wakeup)
-                .q5Expense(q5Expense)
-                .q6Spend(q6Spend)
-                .q7Interests(q7Interests)
-                .q8Planning(q8Planning)
-                .q9Menu(q9Menu)
-                .q10Companion(q10Companion)
-                .q11Photo(q11Photo)
+                .rhythmQ1(rhythmQ1)
+                .rhythmQ2(rhythmQ2)
+                .rhythmQ3(rhythmQ3)
+                .consumptionQ1(consumptionQ1)
+                .consumptionQ2(consumptionQ2)
+                .consumptionQ3(consumptionQ3)
+                .energyQ1(energyQ1)
+                .energyQ2(energyQ2)
+                .energyQ3(energyQ3)
+                .decisionQ1(decisionQ1)
+                .decisionQ2(decisionQ2)
+                .decisionQ3(decisionQ3)
+                .recordStyle(recordStyle)
+                .activityTags(activityTags)
                 .build();
     }
 
-    public void updateSurvey(Question1Transport q1Transport, Question2Waiting q2Waiting, Question3Stay q3Stay,
-                             Question4Wakeup q4Wakeup, Question5Expense q5Expense, Question6Spend q6Spend,
-                             List<Question7Interest> q7Interests, Question8Planning q8Planning,
-                             Question9Menu q9Menu, Question10Companion q10Companion, Question11Photo q11Photo) {
-        this.q1Transport = q1Transport;
-        this.q2Waiting = q2Waiting;
-        this.q3Stay = q3Stay;
-        this.q4Wakeup = q4Wakeup;
-        this.q5Expense = q5Expense;
-        this.q6Spend = q6Spend;
-        if (this.q7Interests == null) {
-            this.q7Interests = q7Interests != null ? new ArrayList<>(q7Interests) : new ArrayList<>();
-        } else {
-            this.q7Interests.clear();
-            if (q7Interests != null) {
-                this.q7Interests.addAll(q7Interests);
-            }
-        }
-        this.q8Planning = q8Planning;
-        this.q9Menu = q9Menu;
-        this.q10Companion = q10Companion;
-        this.q11Photo = q11Photo;
+    public void updateSurvey(RhythmQuestion1 rhythmQ1, RhythmQuestion2 rhythmQ2, RhythmQuestion3 rhythmQ3,
+                             ConsumptionQuestion1 consumptionQ1, ConsumptionQuestion2 consumptionQ2, ConsumptionQuestion3 consumptionQ3,
+                             EnergyQuestion1 energyQ1, EnergyQuestion2 energyQ2, EnergyQuestion3 energyQ3,
+                             DecisionQuestion1 decisionQ1, DecisionQuestion2 decisionQ2, DecisionQuestion3 decisionQ3,
+                             RecordStyleQuestion recordStyle,
+                             List<ActivityTag> activityTags) {
+        this.rhythmQ1 = rhythmQ1;
+        this.rhythmQ2 = rhythmQ2;
+        this.rhythmQ3 = rhythmQ3;
+        this.consumptionQ1 = consumptionQ1;
+        this.consumptionQ2 = consumptionQ2;
+        this.consumptionQ3 = consumptionQ3;
+        this.energyQ1 = energyQ1;
+        this.energyQ2 = energyQ2;
+        this.energyQ3 = energyQ3;
+        this.decisionQ1 = decisionQ1;
+        this.decisionQ2 = decisionQ2;
+        this.decisionQ3 = decisionQ3;
+        this.recordStyle = recordStyle;
+        this.activityTags = activityTags != null ? new ArrayList<>(activityTags) : new ArrayList<>();
+    }
+
+    public static int mainAxisMaxRaw() {
+        return MAIN_AXIS_MAX_RAW;
     }
 }

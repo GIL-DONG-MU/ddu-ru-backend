@@ -2,62 +2,59 @@ package com.dduru.gildongmu.survey.dto.response;
 
 import com.dduru.gildongmu.survey.domain.TravelTendency;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
+import com.dduru.gildongmu.survey.domain.enums.RecordStyleType;
 import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
-import java.util.List;
-
 public record SurveyResponse(
-        Double r,
-        Double w,
-        Double s,
-        Double p,
+        TendencyScoreResponse tendencyScores,
         Integer avatarCode,
         AvatarType avatarType,
-        String avatarName,
-        String avatarDescription,
-        String imageUrl,
-        String personality,
-        String strength,
-        String tip,
-        List<String> tags
+        RecordStyleType recordStyleType,
+        String avatarLabel,
+        AvatarProfileResponse avatarProfile
 ) {
-    public static SurveyResponse from(TravelTendency travelTendency, AvatarProfileService avatarProfileService) {
+    public static SurveyResponse from(
+            TravelTendency travelTendency,
+            RecordStyleType recordStyleType,
+            AvatarProfileService avatarProfileService
+    ) {
         AvatarType avatarType = travelTendency.getAvatarType();
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
+        TendencyScoreResponse tendencyScores = new TendencyScoreResponse(
+                travelTendency.getRhythmScore().doubleValue(),
+                travelTendency.getEnergyScore().doubleValue(),
+                travelTendency.getConsumptionScore().doubleValue(),
+                travelTendency.getDecisionScore().doubleValue()
+        );
+
         return new SurveyResponse(
-                travelTendency.getR().doubleValue(),
-                travelTendency.getW().doubleValue(),
-                travelTendency.getS().doubleValue(),
-                travelTendency.getP().doubleValue(),
+                tendencyScores,
                 avatarType.getCode(),
                 avatarType,
-                avatarType.getText(),
-                avatarProfile.description(),
-                avatarProfile.imageUrl(),
-                avatarProfile.personality(),
-                avatarProfile.strength(),
-                avatarProfile.tip(),
-                avatarProfile.tags()
+                recordStyleType,
+                avatarLabel(avatarProfile, recordStyleType),
+                avatarProfile
         );
     }
 
     public static SurveyResponse of(
-            double r, double w, double s, double p,
+            TendencyScoreResponse scores,
             AvatarType avatarType,
+            RecordStyleType recordStyleType,
             AvatarProfileResponse avatarProfile
     ) {
         return new SurveyResponse(
-                r, w, s, p,
+                scores,
                 avatarType.getCode(),
                 avatarType,
-                avatarType.getText(),
-                avatarProfile.description(),
-                avatarProfile.imageUrl(),
-                avatarProfile.personality(),
-                avatarProfile.strength(),
-                avatarProfile.tip(),
-                avatarProfile.tags()
+                recordStyleType,
+                avatarLabel(avatarProfile, recordStyleType),
+                avatarProfile
         );
+    }
+
+    private static String avatarLabel(AvatarProfileResponse avatarProfile, RecordStyleType recordStyleType) {
+        return avatarProfile.characterName() + "-" + recordStyleType.name();
     }
 }
