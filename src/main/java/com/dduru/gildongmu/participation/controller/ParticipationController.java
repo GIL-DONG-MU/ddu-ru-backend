@@ -8,8 +8,8 @@ import com.dduru.gildongmu.participation.dto.response.ParticipationApproveRespon
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
+import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.participation.service.ParticipationCommandService;
-import com.dduru.gildongmu.participation.service.ParticipationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -30,8 +30,8 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class ParticipationController implements ParticipationApiDocs {
 
-    private final ParticipationService participationService;
     private final ParticipationCommandService participationCommandService;
+    private final ParticipationApplicantService participationApplicantService;
 
     @Override
     @PostMapping("/posts/{postId}/participations")
@@ -40,7 +40,7 @@ public class ParticipationController implements ParticipationApiDocs {
             @PathVariable Long postId,
             @Valid @RequestBody ParticipationRequest request
     ) {
-        ParticipationCreateResponse response = participationService.participate(userId, postId, request);
+        ParticipationCreateResponse response = participationApplicantService.participate(userId, postId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
