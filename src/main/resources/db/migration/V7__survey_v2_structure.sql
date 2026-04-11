@@ -47,14 +47,18 @@ ALTER TABLE travel_tendencies
 ALTER TABLE travel_tendencies
     MODIFY COLUMN avatar_type VARCHAR(64) NOT NULL;
 
--- AvatarType 16종: display_name·body 정리 + 기존 personality/strength/tip 제거
+-- AvatarType 16종: 말풍선(speech_bubble_text)·본문 3줄·기존 personality/strength/tip 제거
+-- (구 description 컬럼은 speech_bubble_text 로 이름만 변경)
 
 ALTER TABLE avatar_profiles
     MODIFY COLUMN avatar_type VARCHAR(64) NOT NULL;
 
 ALTER TABLE avatar_profiles
+    CHANGE COLUMN description speech_bubble_text VARCHAR(200) NOT NULL;
+
+ALTER TABLE avatar_profiles
     ADD COLUMN display_name VARCHAR(64) NULL AFTER avatar_type,
-    ADD COLUMN body TEXT NULL AFTER description;
+    ADD COLUMN body TEXT NULL AFTER speech_bubble_text;
 
 UPDATE avatar_profiles SET display_name = avatar_type WHERE display_name IS NULL;
 
@@ -106,18 +110,18 @@ UPDATE avatar_profiles SET avatar_type = 'TTUR_MARU' WHERE avatar_type = 'TTUR_S
 UPDATE travel_tendencies SET avatar_type = 'TTUR_MARU' WHERE avatar_type = 'TTUR_SURGE';
 
 -- 기존 8행(레거시 row): 코드 치환 직후 avatar_type 기준으로 최종 캐릭터 카피 반영 — body는 앱 본문(문단 + 빈 줄 반복), image_url은 TTUR_* 슬러그(ttur-{소문자}.png)
-UPDATE avatar_profiles SET display_name = '포근', description = '계획 없이 떠나는 여행은 왠지 불안해요!', tags = '["꼼꼼함","여유로움","안정감"]', body = CONCAT('즉흥적인 변수보다 미리 짜둔 계획 안에서 안정감을 느끼는 타입이에요.', '\n\n', '바쁘게 몰아치는 여행보다 여유로운 흐름을 선호하지만, 자연스럽게 그 흐름을 만들어가는 건 바로 본인이에요.', '\n\n', '예산도 꼼꼼히 따지면서 알차고 안정적인 여행을 설계하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-pogun.png', modified_at = NOW() WHERE avatar_type = 'TTUR_POGUN';
-UPDATE avatar_profiles SET display_name = '포슬', description = '모두가 편안해야 내가 편해요!', tags = '["따뜻함","배려심","조용함"]', body = CONCAT('무리하지 않고 계획 안에서 편안하게 흘러가는 여행을 좋아하는 타입이에요.', '\n\n', '앞장서기보다는 주변 사람들과 자연스럽게 맞춰가며 분위기를 부드럽게 만들어줘요.', '\n\n', '가성비를 챙기면서도 조용하고 안정적인 여행을 즐기는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-poseul.png', modified_at = NOW() WHERE avatar_type = 'TTUR_POSEUL';
-UPDATE avatar_profiles SET display_name = '또랑', description = '동선이 곧 행복이에요, 낭비는 NO!', tags = '["야무짐","전략적","부지런함"]', body = CONCAT('동선부터 예산까지 꼼꼼하게 짜고 부지런하게 실행하는 전략형 타입이에요.', '\n\n', '하루를 알차게 채우는 걸 좋아하고, 자연스럽게 일정을 정리하고 이끌어가는 역할을 맡게 돼요.', '\n\n', '여행을 효율적으로 설계하고 실행하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-ttorang.png', modified_at = NOW() WHERE avatar_type = 'TTUR_TTORANG';
-UPDATE avatar_profiles SET display_name = '다솜', description = '알차게 움직이되, 함께가 먼저예요!', tags = '["세심함","조화로움","성실함"]', body = CONCAT('계획적으로 움직이면서도 함께하는 사람들의 페이스에 맞춰주는 타입이에요.', '\n\n', '예산을 꼼꼼히 챙기면서 부지런히 움직이지만, 주도하기보다는 조화를 중요하게 생각해요.', '\n\n', '알차면서도 부드러운 여행을 만들어가는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-dasom.png', modified_at = NOW() WHERE avatar_type = 'TTUR_DASOM';
-UPDATE avatar_profiles SET display_name = '무디', description = '분위기 좋은 곳엔 돈 아끼지 않아요!', tags = '["감성적","안목","여유로움"]', body = CONCAT('감성적인 장소와 특별한 분위기를 중요하게 여기는 타입이에요.', '\n\n', '여유롭게 즐기되, 여행의 흐름은 직접 만들어가고 싶어하는 편이에요.', '\n\n', '돈이 좀 들더라도 기억에 남는 경험을 선택하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-mudi.png', modified_at = NOW() WHERE avatar_type = 'TTUR_MUDI';
-UPDATE avatar_profiles SET display_name = '소담', description = '좋은 순간은 천천히 스며드는 거예요!', tags = '["따뜻함","낭만","세심함"]', body = CONCAT('여행의 분위기와 감성을 소중히 여기며 천천히 스며드는 타입이에요.', '\n\n', '앞장서기보다는 그 순간의 분위기에 자연스럽게 녹아드는 걸 좋아해요.', '\n\n', '특별한 경험에는 기꺼이 투자하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-sodam.png', modified_at = NOW() WHERE avatar_type = 'TTUR_SODAM';
-UPDATE avatar_profiles SET display_name = '스윗', description = '좋은 건 무조건 다 경험해봐야죠!', tags = '["열정적","도전정신","적극적"]', body = CONCAT('좋은 경험을 절대 놓치지 않으려 부지런히 움직이는 적극적인 타입이에요.', '\n\n', '계획을 바탕으로 다양한 활동을 직접 이끌어가는 걸 좋아하고, 경험을 위해서라면 지출도 아끼지 않아요.', '\n\n', '여행을 꽉 채워 이끌어가는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-sweet.png', modified_at = NOW() WHERE avatar_type = 'TTUR_SWEET';
-UPDATE avatar_profiles SET display_name = '반짝', description = '함께라면 어떤 경험도 빛나요!', tags = '["밝음","배려심","활발함"]', body = CONCAT('하루를 알차게 채우며 활동적으로 움직이는 걸 좋아하는 타입이에요.', '\n\n', '직접 나서기보다는 함께하는 사람들과의 조화를 중요하게 생각하며 경험에 적극적으로 투자해요.', '\n\n', '활기차면서도 배려심 있는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-banjjak.png', modified_at = NOW() WHERE avatar_type = 'TTUR_BANJJAK';
+UPDATE avatar_profiles SET display_name = '포근', speech_bubble_text = '계획 없이 떠나는 여행은 왠지 불안해요!', tags = '["꼼꼼함","여유로움","안정감"]', body = CONCAT('즉흥적인 변수보다 미리 짜둔 계획 안에서 안정감을 느끼는 타입이에요.', '\n\n', '바쁘게 몰아치는 여행보다 여유로운 흐름을 선호하지만, 자연스럽게 그 흐름을 만들어가는 건 바로 본인이에요.', '\n\n', '예산도 꼼꼼히 따지면서 알차고 안정적인 여행을 설계하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-pogun.png', modified_at = NOW() WHERE avatar_type = 'TTUR_POGUN';
+UPDATE avatar_profiles SET display_name = '포슬', speech_bubble_text = '모두가 편안해야 내가 편해요!', tags = '["따뜻함","배려심","조용함"]', body = CONCAT('무리하지 않고 계획 안에서 편안하게 흘러가는 여행을 좋아하는 타입이에요.', '\n\n', '앞장서기보다는 주변 사람들과 자연스럽게 맞춰가며 분위기를 부드럽게 만들어줘요.', '\n\n', '가성비를 챙기면서도 조용하고 안정적인 여행을 즐기는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-poseul.png', modified_at = NOW() WHERE avatar_type = 'TTUR_POSEUL';
+UPDATE avatar_profiles SET display_name = '또랑', speech_bubble_text = '동선이 곧 행복이에요, 낭비는 NO!', tags = '["야무짐","전략적","부지런함"]', body = CONCAT('동선부터 예산까지 꼼꼼하게 짜고 부지런하게 실행하는 전략형 타입이에요.', '\n\n', '하루를 알차게 채우는 걸 좋아하고, 자연스럽게 일정을 정리하고 이끌어가는 역할을 맡게 돼요.', '\n\n', '여행을 효율적으로 설계하고 실행하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-ttorang.png', modified_at = NOW() WHERE avatar_type = 'TTUR_TTORANG';
+UPDATE avatar_profiles SET display_name = '다솜', speech_bubble_text = '알차게 움직이되, 함께가 먼저예요!', tags = '["세심함","조화로움","성실함"]', body = CONCAT('계획적으로 움직이면서도 함께하는 사람들의 페이스에 맞춰주는 타입이에요.', '\n\n', '예산을 꼼꼼히 챙기면서 부지런히 움직이지만, 주도하기보다는 조화를 중요하게 생각해요.', '\n\n', '알차면서도 부드러운 여행을 만들어가는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-dasom.png', modified_at = NOW() WHERE avatar_type = 'TTUR_DASOM';
+UPDATE avatar_profiles SET display_name = '무디', speech_bubble_text = '분위기 좋은 곳엔 돈 아끼지 않아요!', tags = '["감성적","안목","여유로움"]', body = CONCAT('감성적인 장소와 특별한 분위기를 중요하게 여기는 타입이에요.', '\n\n', '여유롭게 즐기되, 여행의 흐름은 직접 만들어가고 싶어하는 편이에요.', '\n\n', '돈이 좀 들더라도 기억에 남는 경험을 선택하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-mudi.png', modified_at = NOW() WHERE avatar_type = 'TTUR_MUDI';
+UPDATE avatar_profiles SET display_name = '소담', speech_bubble_text = '좋은 순간은 천천히 스며드는 거예요!', tags = '["따뜻함","낭만","세심함"]', body = CONCAT('여행의 분위기와 감성을 소중히 여기며 천천히 스며드는 타입이에요.', '\n\n', '앞장서기보다는 그 순간의 분위기에 자연스럽게 녹아드는 걸 좋아해요.', '\n\n', '특별한 경험에는 기꺼이 투자하는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-sodam.png', modified_at = NOW() WHERE avatar_type = 'TTUR_SODAM';
+UPDATE avatar_profiles SET display_name = '스윗', speech_bubble_text = '좋은 건 무조건 다 경험해봐야죠!', tags = '["열정적","도전정신","적극적"]', body = CONCAT('좋은 경험을 절대 놓치지 않으려 부지런히 움직이는 적극적인 타입이에요.', '\n\n', '계획을 바탕으로 다양한 활동을 직접 이끌어가는 걸 좋아하고, 경험을 위해서라면 지출도 아끼지 않아요.', '\n\n', '여행을 꽉 채워 이끌어가는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-sweet.png', modified_at = NOW() WHERE avatar_type = 'TTUR_SWEET';
+UPDATE avatar_profiles SET display_name = '반짝', speech_bubble_text = '함께라면 어떤 경험도 빛나요!', tags = '["밝음","배려심","활발함"]', body = CONCAT('하루를 알차게 채우며 활동적으로 움직이는 걸 좋아하는 타입이에요.', '\n\n', '직접 나서기보다는 함께하는 사람들과의 조화를 중요하게 생각하며 경험에 적극적으로 투자해요.', '\n\n', '활기차면서도 배려심 있는 타입입니다.'), image_url = 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-banjjak.png', modified_at = NOW() WHERE avatar_type = 'TTUR_BANJJAK';
 
 -- 신규 8종 행 추가(기존 DB에 없던 타입)
 INSERT INTO avatar_profiles
-    (avatar_type, display_name, description, body, image_url, tags, created_at, modified_at)
+    (avatar_type, display_name, speech_bubble_text, body, image_url, tags, created_at, modified_at)
 VALUES
     ('TTUR_SPARK', '스파크', '계획이요? 현장에서 만들어가면 되죠!', CONCAT('계획보다 현장의 느낌을 중요하게 여기고 새로운 경험을 찾아 즉흥적으로 움직이는 탐험형 타입이에요.', '\n\n', '예상치 못한 상황에서도 흔들리지 않고 여행을 신나게 이끌어가요.', '\n\n', '자유롭게 앞장서며 여행을 개척하는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-spark.png', '["탐험가","추진력","자유로움"]', NOW(), NOW()),
     ('TTUR_LUNA', '루나', '새로운 건 일단 해보고 생각해요!', CONCAT('정해진 틀 없이 자유롭게 움직이며 새로운 경험을 적극적으로 받아들이는 타입이에요.', '\n\n', '앞장서기보다는 즉흥적인 흐름 속에서 자연스럽게 어울리는 걸 좋아해요.', '\n\n', '어디서든 새로운 경험에 열려있는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-luna.png', '["개방적","도전정신","자유로움"]', NOW(), NOW()),
@@ -127,6 +131,24 @@ VALUES
     ('TTUR_BONGBONG', '봉봉', '어디든 좋아요, 같이 가면 그게 최고!', CONCAT('가볍고 편안하게 즉흥적으로 움직이며 예산도 슬기롭게 챙기는 타입이에요.', '\n\n', '주도하기보다는 흐름에 자연스럽게 녹아들며 주변 사람들과 편하게 어울려요.', '\n\n', '어디서든 부담 없이 함께할 수 있는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-bongbong.png', '["친화력","따뜻함","편안함"]', NOW(), NOW()),
     ('TTUR_BEOMI', '범이', '일단 출발! 방법은 가면서 찾아요!', CONCAT('상황에 맞게 빠르게 판단하고 가성비 있게 부지런히 움직이는 타입이에요.', '\n\n', '계획보다는 현장에서 직접 결론을 내리고 이끌어가는 걸 좋아해요.', '\n\n', '에너지 넘치게 여행을 주도하는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-beomi.png', '["추진력","순발력","활발함"]', NOW(), NOW()),
     ('TTUR_MARU', '마루', '에너지 넘치게, 근데 예산은 지켜요!', CONCAT('에너지 넘치게 즉흥적으로 움직이면서도 예산은 현명하게 챙기는 타입이에요.', '\n\n', '직접 이끌기보다는 빠르게 적응하며 어떤 상황에서도 분위기에 잘 녹아들어요.', '\n\n', '활발하게 움직이며 자연스럽게 어울리는 타입입니다.'), 'https://dduru.s3.ap-northeast-2.amazonaws.com/avatar/ttur-maru.png', '["에너지","적응력","가성비"]', NOW(), NOW());
+
+-- 본문 3문단 → description_line_1~3 (body는 임시로 채운 뒤 분리·삭제)
+ALTER TABLE avatar_profiles
+    ADD COLUMN description_line_1 TEXT NULL AFTER speech_bubble_text,
+    ADD COLUMN description_line_2 TEXT NULL AFTER description_line_1,
+    ADD COLUMN description_line_3 TEXT NULL AFTER description_line_2;
+
+UPDATE avatar_profiles
+SET description_line_1 = TRIM(SUBSTRING_INDEX(body, '\n\n', 1)),
+    description_line_2 = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(body, '\n\n', 2), '\n\n', -1)),
+    description_line_3 = TRIM(SUBSTRING_INDEX(body, '\n\n', -1));
+
+ALTER TABLE avatar_profiles
+    MODIFY COLUMN description_line_1 TEXT NOT NULL,
+    MODIFY COLUMN description_line_2 TEXT NOT NULL,
+    MODIFY COLUMN description_line_3 TEXT NOT NULL;
+
+ALTER TABLE avatar_profiles DROP `body`;
 
 -- SurveyQuestionSeeder의 v2 문항/옵션 시드를 SQL로 이관
 -- 레거시/기존 데이터를 정리한 뒤 v2(14문항)로 재시드

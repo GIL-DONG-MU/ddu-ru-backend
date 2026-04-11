@@ -29,9 +29,11 @@ public class AvatarProfileService {
         List<String> tags = jsonConverter.convertJsonToList(profile.getTags());
         return new AvatarProfileResponse(
                 profile.getDisplayName(),
-                profile.getOneLineDescription(),
+                profile.getSpeechBubbleText(),
                 tags,
-                profile.getBody(),
+                profile.getDescriptionLine1(),
+                profile.getDescriptionLine2(),
+                profile.getDescriptionLine3(),
                 profile.getImageUrl()
         );
     }

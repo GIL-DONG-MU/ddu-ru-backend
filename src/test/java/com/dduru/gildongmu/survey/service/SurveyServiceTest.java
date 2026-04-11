@@ -145,7 +145,9 @@ class SurveyServiceTest {
                 "뚜르 스윗",
                 "설명",
                 List.of("태그1", "태그2", "태그3"),
-                "성격\n\n강점\n\n팁",
+                "성격",
+                "강점",
+                "팁",
                 "https://example.com/avatar-sweet.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_DASOM)).thenReturn(profile);
@@ -153,8 +155,10 @@ class SurveyServiceTest {
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_DASOM)
                 .displayName("뚜르 스윗")
-                .oneLineDescription("설명")
-                .body("성격\n\n강점\n\n팁")
+                .speechBubbleText("설명")
+                .descriptionLine1("성격")
+                .descriptionLine2("강점")
+                .descriptionLine3("팁")
                 .imageUrl("https://example.com/avatar-sweet.png")
                 .tags("[]")
                 .build();
@@ -166,16 +170,18 @@ class SurveyServiceTest {
 
         SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
 
-        assertThat(response.rhythmScore()).isEqualTo(5.5);
-        assertThat(response.energyScore()).isEqualTo(4.5);
-        assertThat(response.consumptionScore()).isEqualTo(6.0);
-        assertThat(response.decisionScore()).isEqualTo(7.0);
+        assertThat(response.tendencyScores().rhythmScore()).isEqualTo(5.5);
+        assertThat(response.tendencyScores().energyScore()).isEqualTo(4.5);
+        assertThat(response.tendencyScores().consumptionScore()).isEqualTo(6.0);
+        assertThat(response.tendencyScores().decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
-        assertThat(response.avatar().characterName()).isEqualTo("뚜르 스윗");
-        assertThat(response.avatar().oneLineDescription()).isEqualTo("설명");
-        assertThat(response.avatar().tags()).containsExactly("태그1", "태그2", "태그3");
-        assertThat(response.avatar().description()).isEqualTo("성격\n\n강점\n\n팁");
-        assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
+        assertThat(response.avatarProfile().characterName()).isEqualTo("뚜르 스윗");
+        assertThat(response.avatarProfile().speechBubbleText()).isEqualTo("설명");
+        assertThat(response.avatarProfile().tags()).containsExactly("태그1", "태그2", "태그3");
+        assertThat(response.avatarProfile().descriptionLine1()).isEqualTo("성격");
+        assertThat(response.avatarProfile().descriptionLine2()).isEqualTo("강점");
+        assertThat(response.avatarProfile().descriptionLine3()).isEqualTo("팁");
+        assertThat(response.avatarProfile().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
         assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
         assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
 
@@ -235,7 +241,9 @@ class SurveyServiceTest {
                 "뚜르 파도",
                 "설명2",
                 List.of("태그1", "태그2", "태그3"),
-                "성격2\n\n강점2\n\n팁2",
+                "성격2",
+                "강점2",
+                "팁2",
                 "https://example.com/avatar-pado.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_BANJJAK)).thenReturn(profile);
@@ -243,8 +251,10 @@ class SurveyServiceTest {
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_BANJJAK)
                 .displayName("뚜르 파도")
-                .oneLineDescription("설명2")
-                .body("성격2\n\n강점2\n\n팁2")
+                .speechBubbleText("설명2")
+                .descriptionLine1("성격2")
+                .descriptionLine2("강점2")
+                .descriptionLine3("팁2")
                 .imageUrl("https://example.com/avatar-pado.png")
                 .tags("[]")
                 .build();
@@ -300,20 +310,22 @@ class SurveyServiceTest {
                 "뚜르 스윗",
                 "설명",
                 List.of("태그1", "태그2", "태그3"),
-                "성격\n\n강점\n\n팁",
+                "성격",
+                "강점",
+                "팁",
                 "https://example.com/avatar-sweet.png"
         );
         when(avatarProfileService.getProfile(AvatarType.TTUR_DASOM)).thenReturn(profile);
 
         SurveyResponse response = surveyService.getMySurveyResult(1L);
 
-        assertThat(response.rhythmScore()).isEqualTo(5.5);
-        assertThat(response.energyScore()).isEqualTo(4.5);
-        assertThat(response.consumptionScore()).isEqualTo(6.0);
-        assertThat(response.decisionScore()).isEqualTo(7.0);
+        assertThat(response.tendencyScores().rhythmScore()).isEqualTo(5.5);
+        assertThat(response.tendencyScores().energyScore()).isEqualTo(4.5);
+        assertThat(response.tendencyScores().consumptionScore()).isEqualTo(6.0);
+        assertThat(response.tendencyScores().decisionScore()).isEqualTo(7.0);
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
         assertThat(response.avatarCode()).isEqualTo(4);
-        assertThat(response.avatar().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
+        assertThat(response.avatarProfile().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
         assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
         assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
     }

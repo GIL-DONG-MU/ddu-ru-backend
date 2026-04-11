@@ -34,8 +34,10 @@ class ProfileImageResolverTest {
         AvatarProfile avatarProfile = AvatarProfile.builder()
                 .avatarType(AvatarType.TTUR_DASOM)
                 .displayName("뚜르 스윗")
-                .oneLineDescription("설명")
-                .body("본문")
+                .speechBubbleText("설명")
+                .descriptionLine1("첫 문단")
+                .descriptionLine2("둘째 문단")
+                .descriptionLine3("셋째 문단")
                 .imageUrl("https://example.com/avatar-sweet.png")
                 .tags("[]")
                 .build();

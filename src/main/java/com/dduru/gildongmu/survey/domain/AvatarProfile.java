@@ -25,11 +25,17 @@ public class AvatarProfile extends BaseTimeEntity {
     @Column(name = "display_name", nullable = false, length = 64)
     private String displayName;
 
-    @Column(name = "description", nullable = false, length = 200)
-    private String oneLineDescription;
+    @Column(name = "speech_bubble_text", nullable = false, length = 200)
+    private String speechBubbleText;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String body;
+    @Column(name = "description_line_1", nullable = false, columnDefinition = "TEXT")
+    private String descriptionLine1;
+
+    @Column(name = "description_line_2", nullable = false, columnDefinition = "TEXT")
+    private String descriptionLine2;
+
+    @Column(name = "description_line_3", nullable = false, columnDefinition = "TEXT")
+    private String descriptionLine3;
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
@@ -41,15 +47,19 @@ public class AvatarProfile extends BaseTimeEntity {
     public AvatarProfile(
             AvatarType avatarType,
             String displayName,
-            String oneLineDescription,
-            String body,
+            String speechBubbleText,
+            String descriptionLine1,
+            String descriptionLine2,
+            String descriptionLine3,
             String imageUrl,
             String tags
     ) {
         this.avatarType = avatarType;
         this.displayName = displayName;
-        this.oneLineDescription = oneLineDescription;
-        this.body = body;
+        this.speechBubbleText = speechBubbleText;
+        this.descriptionLine1 = descriptionLine1;
+        this.descriptionLine2 = descriptionLine2;
+        this.descriptionLine3 = descriptionLine3;
         this.imageUrl = imageUrl;
         this.tags = tags;
     }
