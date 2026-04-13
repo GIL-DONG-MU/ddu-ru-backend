@@ -49,6 +49,9 @@ public class GroupChatRoomService {
         return inviteMemberOrGetRoom(userId, chatRoom, inviteeUserId);
     }
 
+    /**
+     * 그룹 멤버 추가는 항상 {@code ChatRoom} 락을 잡은 뒤 이 메서드로만 진입한다.
+     */
     private GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, ChatRoom chatRoom, Long inviteeUserId) {
         User invitee = userRepository.getByIdOrThrow(inviteeUserId);
 
@@ -61,7 +64,6 @@ public class GroupChatRoomService {
         }
 
         validateRoomCapacity(chatRoom);
-        validateRoomIsActive(chatRoom);
         boolean invited = saveInvitee(chatRoom, invitee);
 
         return new GroupChatInviteMemberResponse(chatRoom.getId(), invited);
@@ -118,6 +120,9 @@ public class GroupChatRoomService {
         }
     }
 
+    /**
+     * 그룹 멤버 row 추가는 room lock을 잡은 흐름에서만 수행한다.
+     */
     private boolean saveInvitee(ChatRoom room, User user) {
         ChatRoomMember chatRoomMember = ChatRoomMember.create(room, user, ChatMemberRole.GUEST);
         try {
