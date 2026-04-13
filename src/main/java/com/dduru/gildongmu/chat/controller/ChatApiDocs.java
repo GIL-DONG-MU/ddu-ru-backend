@@ -1,8 +1,8 @@
 package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
+import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
-import com.dduru.gildongmu.chat.dto.response.GroupChatInviteResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
@@ -33,7 +33,7 @@ public interface ChatApiDocs {
 
     @Operation(
             summary = "그룹 채팅 멤버 초대",
-            description = "방장이 기존 그룹 채팅방에 사용자를 1명 이상 초대합니다. 이미 참여 중이거나 존재하지 않는 사용자는 건너뛰고, 누락된 대상은 응답의 목록 필드로 반환합니다."
+            description = "방장이 기존 그룹 채팅방에 사용자를 1명 초대합니다. 이미 참여 중이면 조회해서 리턴합니다."
     )
     @ApiResponse(responseCode = "200", description = "성공")
     @ApiErrorResponses({
@@ -44,7 +44,7 @@ public interface ChatApiDocs {
             ErrorCode.CHAT_ROOM_INVITE_ACCESS_DENIED,
             ErrorCode.INVALID_INPUT_VALUE
     })
-    ResponseEntity<ApiResult<GroupChatInviteResponse>> inviteMembersToGroupRoom(
+    ResponseEntity<ApiResult<GroupChatInviteMemberResponse>> inviteMemberToGroupRoom(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "채팅방 ID", required = true) @PathVariable Long roomId,
             @Valid GroupChatInviteRequest request

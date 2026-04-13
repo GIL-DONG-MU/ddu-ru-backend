@@ -96,8 +96,11 @@ public class PostService {
         boolean isOwner = isOwner(post, currentUserId);
         boolean hasLiked = hasLiked(postId, currentUserId);
 
-        List<ParticipantInfo> participants = participationService.getParticipantsForPostDetail(post);
-        MyParticipationStatus myParticipationStatus = participationService.getMyParticipationStatus(postId, currentUserId, isOwner);
+        // #202: 아래 임시 대체 코드, 이후 변경 예정
+        List<ParticipantInfo> participants = List.of();
+        MyParticipationStatus myParticipationStatus = MyParticipationStatus.NONE;
+//        List<ParticipantInfo> participants = participationService.getParticipantsForPostDetail(post);
+//        MyParticipationStatus myParticipationStatus = participationService.getMyParticipationStatus(postId, currentUserId, isOwner);
         PostDetailResponse response = PostDetailResponse.from(
                 post,
                 jsonConverter,

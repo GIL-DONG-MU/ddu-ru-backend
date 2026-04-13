@@ -21,10 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 1:1 채팅방 생성·조회.
+ * <p>
+ * 동일 글·동일 사용자 쌍에 대한 중복 방 생성을 막기 위해 {@code Post} 행을 {@code FOR UPDATE}로 잠근 뒤
+ * 기존 방을 조회한다. {@link #createOrGetRoomWithLockedPost}는 호출 측이 이미 Post 락을 잡은 트랜잭션에서만 사용한다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class PrivateChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
@@ -32,24 +38,32 @@ public class PrivateChatRoomService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    @Transactional
     public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Long postId) {
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        return createOrGetRoom(requesterId, post, post.getUser().getId());
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(postId);
+        return doCreateOrGetRoom(requesterId, lockedPost, lockedPost.getUser().getId());
     }
 
-    private PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Post post, Long targetUserId) {
-        User requester = userRepository.getByIdOrThrow(requesterId);
-        User target = userRepository.getByIdOrThrow(targetUserId);
+    public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Post post, Long targetUserId) {
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(post.getId());
+        return doCreateOrGetRoom(requesterId, lockedPost, targetUserId);
+    }
+
+    /**
+     * 동일 트랜잭션에서 {@code Post} 행을 이미 {@code FOR UPDATE}로 잠근 경우에만 호출한다.
+     */
+    public PrivateChatRoomCreateResponse createOrGetRoomWithLockedPost(Long requesterId, Post lockedPost, Long targetUserId) {
+        return doCreateOrGetRoom(requesterId, lockedPost, targetUserId);
+    }
+
+    private PrivateChatRoomCreateResponse doCreateOrGetRoom(Long requesterId, Post post, Long targetUserId) {
         validateNotSelfChat(requesterId, targetUserId);
 
-        Optional<ChatRoom> existingRoom = findExistingRoom(post, requester, target);
-        if (existingRoom.isPresent()) {
-            return new PrivateChatRoomCreateResponse(existingRoom.get().getId(), false);
-        }
+        User requester = userRepository.getByIdOrThrow(requesterId);
+        User target = userRepository.getByIdOrThrow(targetUserId);
 
-        Long newRoomId = createRoom(post, requester, target);
-        return new PrivateChatRoomCreateResponse(newRoomId, true);
+        return findExistingRoom(post, requester, target)
+                .map(room -> new PrivateChatRoomCreateResponse(room.getId(), false))
+                .orElseGet(() -> new PrivateChatRoomCreateResponse(createRoom(post, requester, target), true));
     }
 
     private Optional<ChatRoom> findExistingRoom(Post post, User requester, User target) {

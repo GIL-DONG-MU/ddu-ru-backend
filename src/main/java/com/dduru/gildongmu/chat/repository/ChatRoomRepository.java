@@ -5,7 +5,9 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,25 +33,45 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("target") User target
     );
 
+    Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.id = :roomId
+              AND r.roomType = :chatRoomType
+            """)
+    Optional<ChatRoom> findByIdAndRoomTypeWithLock(
+            @Param("roomId") Long roomId,
+            @Param("chatRoomType") ChatRoomType chatRoomType
+    );
+
+    Optional<ChatRoom> findByPostIdAndRoomType(Long postId, ChatRoomType roomType);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.post.id = :postId
+              AND r.roomType = :roomType
+            """)
+    Optional<ChatRoom> findByPostIdAndRoomTypeWithLock(
+            @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType
+    );
+
     default ChatRoom getByIdOrThrow(Long roomId) {
         return findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
 
-    Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
+    default ChatRoom getByIdAndRoomTypeWithLockOrThrow(Long roomId, ChatRoomType chatRoomType) {
+        return findByIdAndRoomTypeWithLock(roomId, chatRoomType)
+                .orElseThrow(ChatRoomNotFoundException::new);
+    }
 
-    /**
-     * LAZY 연관(post.user) 접근 시 추가 쿼리가 발생할 수 있어 fetch join으로 함께 로딩한다.
-     */
-    @Query("""
-            SELECT r
-            FROM ChatRoom r
-            JOIN FETCH r.post p
-            JOIN FETCH p.user u
-            WHERE r.id = :roomId
-              AND r.roomType = :roomType
-            """)
-    Optional<ChatRoom> findByIdAndRoomTypeWithPostUser(
-            @Param("roomId") Long roomId,
-            @Param("roomType") ChatRoomType roomType
-    );
+    default ChatRoom getByPostIdAndRoomTypeWithLockOrThrow(Long postId, ChatRoomType roomType) {
+        return findByPostIdAndRoomTypeWithLock(postId, roomType)
+                .orElseThrow(ChatRoomNotFoundException::new);
+    }
 }

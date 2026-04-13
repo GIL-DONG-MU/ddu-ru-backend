@@ -74,11 +74,15 @@ public enum ErrorCode {
 
     // 참여신청 (PARTICIPATION)
     PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "참여신청을 찾을 수 없습니다."),
-    DUPLICATE_PARTICIPATION(HttpStatus.BAD_REQUEST, "이미 참여신청한 게시글입니다."),
+    DUPLICATE_PARTICIPATION(HttpStatus.CONFLICT, "이미 참여 신청한 게시글입니다."),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "모집이 마감된 게시글입니다."),
+    RECRUITMENT_FULL(HttpStatus.BAD_REQUEST, "모집 정원이 가득 찬 게시글입니다."),
     SELF_PARTICIPATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글에는 참여신청할 수 없습니다."),
     PARTICIPATION_POST_MISMATCH(HttpStatus.BAD_REQUEST, "해당 참여신청은 해당 게시글에 속해있지 않습니다."),
-    INVALID_PARTICIPATION_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 참여신청 상태입니다."),
+    PARTICIPATION_CONTACT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "대기 중인 신청만 연락할 수 있습니다."),
+    PARTICIPATION_APPROVAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "승인할 수 없습니다. 이미 승인되었거나 거절된 신청입니다."),
+    PARTICIPATION_REJECTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "거절할 수 없습니다. 이미 승인되었거나 거절된 신청입니다."),
+    PARTICIPATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, ""),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
@@ -100,7 +104,11 @@ public enum ErrorCode {
     CHAT_NOT_GROUP_ROOM(HttpStatus.BAD_REQUEST, "그룹 채팅방이 아닙니다."),
     CHAT_INVITE_HOST_ONLY(HttpStatus.FORBIDDEN, "방장만 멤버를 초대할 수 있습니다."),
     NOT_SELF_CHAT(HttpStatus.FORBIDDEN, "자신과의 채팅은 허용되지 않습니다."),
-    CHAT_ROOM_INVITE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 그룹 채팅 멤버를 추가할 수 있습니다.");
+    CHAT_ROOM_INVITE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 그룹 채팅 멤버를 추가할 수 있습니다."),
+    GROUP_CHAT_ALREADY_MEMBER(HttpStatus.BAD_REQUEST, "이미 그룹 채팅방의 멤버입니다."),
+
+    ;
+
     private final int status;
     private final String message;
 
