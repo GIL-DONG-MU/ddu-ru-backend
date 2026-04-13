@@ -1,7 +1,13 @@
 package com.dduru.gildongmu.participation.service;
 
+import com.dduru.gildongmu.chat.domain.ChatRoom;
+import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
+import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
+import com.dduru.gildongmu.participation.dto.response.ChatRoomIds;
+import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
@@ -16,6 +22,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,6 +33,7 @@ public class ParticipationApplicantService {
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
@@ -39,10 +48,53 @@ public class ParticipationApplicantService {
         return new ParticipationCreateResponse(saved.getId(), saved.getStatus());
     }
 
+    @Transactional(readOnly = true)
+    public List<MyParticipationResponse> retrieveMyApplications(Long userId) {
+        return participationRepository.findMyApplicationsForVisiblePosts(userId).stream()
+                .map(participation -> toApplicationResponse(userId, participation))
+                .toList();
+    }
+
     private void validateParticipationAllowed(Post post, User applicant) {
         validateNotSelfParticipation(post.getUser().getId(), applicant.getId());
         post.validateIsOpen();
         ensureNoDuplicateApplication(post.getId(), applicant.getId());
+    }
+
+    private MyParticipationResponse toApplicationResponse(Long applicantUserId, Participation participation) {
+        ChatRoomIds roomIds = resolveChatRoomIds(applicantUserId, participation);
+        return MyParticipationResponse.from(participation, roomIds.privateRoomId(), roomIds.groupRoomId());
+    }
+
+    private ChatRoomIds resolveChatRoomIds(Long applicantUserId, Participation participation) {
+        Post post = participation.getPost();
+        return switch (participation.getStatus()) {
+            case CONTACTING -> new ChatRoomIds(
+                    findActivePrivateRoomId(applicantUserId, post),
+                    null
+            );
+            case APPROVED -> new ChatRoomIds(
+                    null,
+                    findGroupRoomId(post.getId())
+            );
+            case PENDING, REJECTED -> new ChatRoomIds(null, null);
+        };
+    }
+
+    private Long findActivePrivateRoomId(Long applicantUserId, Post post) {
+        return chatRoomRepository.findPrivateRoomIdByPostAndUserIds(
+                post.getId(),
+                ChatRoomType.PRIVATE,
+                ChatRoomStatus.ACTIVE,
+                applicantUserId,
+                post.getUser().getId()
+        ).orElse(null);
+    }
+
+    private Long findGroupRoomId(Long postId) {
+        return chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
+                .map(ChatRoom::getId)
+                .orElse(null);
     }
 
     private static void validateNotSelfParticipation(Long authorId, Long applicantId) {

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
@@ -82,5 +83,14 @@ public class ParticipationController implements ParticipationApiDocs {
     ) {
         List<ParticipationRetrieveResponse> participants = participationCommandService.retrieveAllParticipants(userId, request);
         return ResponseEntity.ok(ApiResult.ok(participants));
+    }
+
+    @Override
+    @GetMapping("/users/me/participations")
+    public ResponseEntity<ApiResult<List<MyParticipationResponse>>> getMyParticipationApplications(
+            @CurrentUser Long userId
+    ) {
+        List<MyParticipationResponse> list = participationApplicantService.retrieveMyApplications(userId);
+        return ResponseEntity.ok(ApiResult.ok(list));
     }
 }

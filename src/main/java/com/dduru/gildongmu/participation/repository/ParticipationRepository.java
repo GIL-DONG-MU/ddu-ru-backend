@@ -8,11 +8,23 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Long>, ParticipationRepositoryCustom {
 
     boolean existsByPostIdAndUserId(Long postId, Long userId);
+
+    @Query("""
+            SELECT p
+            FROM Participation p
+            JOIN FETCH p.post po
+            JOIN FETCH po.user
+            WHERE p.user.id = :userId
+              AND po.isDeleted = false
+            ORDER BY p.createdAt DESC
+            """)
+    List<Participation> findMyApplicationsForVisiblePosts(@Param("userId") Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
