@@ -130,4 +130,20 @@ public interface ParticipationApiDocs {
     ResponseEntity<ApiResult<List<MyParticipationResponse>>> getMyParticipationApplications(
             @Parameter(hidden = true) Long userId
     );
+
+    @Operation(
+            summary = "내 동행 신청 취소",
+            description = "신청자 본인이 `PENDING`(대기중)인 참여 신청만 삭제(취소)합니다. 연락 중 이후 상태에서는 호출할 수 없습니다."
+    )
+    @ApiResponse(responseCode = "204", description = "신청 취소 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.PARTICIPATION_CANCEL_NOT_ALLOWED,
+            ErrorCode.ACCESS_DENIED,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<Void>> cancelMyParticipation(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId
+    );
 }

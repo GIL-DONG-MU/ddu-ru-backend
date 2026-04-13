@@ -20,4 +20,8 @@ public class InvalidParticipationStatusException extends BusinessException {
         return new InvalidParticipationStatusException(ErrorCode.PARTICIPATION_REJECTION_NOT_ALLOWED);
     }
 
+    public static InvalidParticipationStatusException cancelNotAllowed() {
+        return new InvalidParticipationStatusException(ErrorCode.PARTICIPATION_CANCEL_NOT_ALLOWED);
+    }
+
 }

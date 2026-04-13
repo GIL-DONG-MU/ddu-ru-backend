@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -92,5 +93,15 @@ public class ParticipationController implements ParticipationApiDocs {
     ) {
         List<MyParticipationResponse> list = participationApplicantService.retrieveMyApplications(userId);
         return ResponseEntity.ok(ApiResult.ok(list));
+    }
+
+    @Override
+    @DeleteMapping("/participations/{participationId}")
+    public ResponseEntity<ApiResult<Void>> cancelMyParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
+    ) {
+        participationApplicantService.cancelMyParticipation(userId, participationId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }
