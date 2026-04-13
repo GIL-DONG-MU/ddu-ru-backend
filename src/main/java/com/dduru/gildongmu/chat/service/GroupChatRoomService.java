@@ -40,12 +40,12 @@ public class GroupChatRoomService {
     private final UserRepository userRepository;
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long roomId, GroupChatInviteRequest request) {
-        ChatRoom chatRoom = chatRoomRepository.getByIdAndRoomTypeForUpdateOrThrow(roomId, ChatRoomType.GROUP);
+        ChatRoom chatRoom = chatRoomRepository.getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP);
         return inviteMemberOrGetRoom(userId, chatRoom, request.inviteeUserId());
     }
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long postId, Long inviteeUserId) {
-        ChatRoom chatRoom = chatRoomRepository.getByPostIdAndRoomTypeForUpdateOrThrow(postId, ChatRoomType.GROUP);
+        ChatRoom chatRoom = chatRoomRepository.getByPostIdAndRoomTypeWithLockOrThrow(postId, ChatRoomType.GROUP);
         return inviteMemberOrGetRoom(userId, chatRoom, inviteeUserId);
     }
 

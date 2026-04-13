@@ -27,7 +27,7 @@ public class ParticipationService {
     private final UserRepository userRepository;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
-        Post post = postRepository.getActiveByIdForUpdateOrThrow(postId);
+        Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
         User user = userRepository.getByIdOrThrow(userId);
 
         validateNotSelfParticipate(post.getUser().getId(), userId);

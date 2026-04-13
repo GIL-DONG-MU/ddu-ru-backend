@@ -39,12 +39,12 @@ public class PrivateChatRoomService {
     private final UserRepository userRepository;
 
     public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Long postId) {
-        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(postId);
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(postId);
         return doCreateOrGetRoom(requesterId, lockedPost, lockedPost.getUser().getId());
     }
 
     public PrivateChatRoomCreateResponse createOrGetRoom(Long requesterId, Post post, Long targetUserId) {
-        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(post.getId());
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(post.getId());
         return doCreateOrGetRoom(requesterId, lockedPost, targetUserId);
     }
 

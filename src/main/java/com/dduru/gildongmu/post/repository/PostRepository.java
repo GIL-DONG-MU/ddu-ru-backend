@@ -18,7 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
-    Optional<Post> findActiveByIdForUpdate(@Param("id") Long id);
+    Optional<Post> findActiveByIdWithLock(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
@@ -33,8 +33,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
                 .orElseThrow(PostNotFoundException::new);
     }
 
-    default Post getActiveByIdForUpdateOrThrow(Long id) {
-        return findActiveByIdForUpdate(id)
+    default Post getActiveByIdWithLockOrThrow(Long id) {
+        return findActiveByIdWithLock(id)
                 .orElseThrow(PostNotFoundException::new);
     }
 

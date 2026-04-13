@@ -41,8 +41,8 @@ public class ParticipationCommandService {
     private final ProfileImageResolver profileImageResolver;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
-        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+        Participation participation = participationRepository.getByIdWithLockOrThrow(participationId);
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(participation.getPost().getId());
         Long participantUserId = participation.getUser().getId();
 
         validatePostOwner(lockedPost, userId);
@@ -62,8 +62,8 @@ public class ParticipationCommandService {
     }
 
     public ParticipationApproveResponse approveParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
-        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+        Participation participation = participationRepository.getByIdWithLockOrThrow(participationId);
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(participation.getPost().getId());
         Long participantUserId = participation.getUser().getId();
 
         validatePostOwner(lockedPost, userId);
@@ -83,8 +83,8 @@ public class ParticipationCommandService {
     }
 
     public void rejectParticipation(Long userId, Long participationId) {
-        Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
-        Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+        Participation participation = participationRepository.getByIdWithLockOrThrow(participationId);
+        Post lockedPost = postRepository.getActiveByIdWithLockOrThrow(participation.getPost().getId());
 
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();

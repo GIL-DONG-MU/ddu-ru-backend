@@ -22,15 +22,15 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
             JOIN FETCH p.user
             WHERE p.id = :id
             """)
-    Optional<Participation> findByIdForUpdate(@Param("id") Long id);
+    Optional<Participation> findByIdWithLock(@Param("id") Long id);
 
     default Participation getByIdOrThrow(Long id) {
         return findById(id)
                 .orElseThrow(ParticipationNotFoundException::new);
     }
 
-    default Participation getByIdForUpdateOrThrow(Long id) {
-        return findByIdForUpdate(id)
+    default Participation getByIdWithLockOrThrow(Long id) {
+        return findByIdWithLock(id)
                 .orElseThrow(ParticipationNotFoundException::new);
     }
 }
