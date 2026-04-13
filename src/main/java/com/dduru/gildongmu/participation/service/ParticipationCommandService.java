@@ -85,13 +85,13 @@ public class ParticipationCommandService {
     public void rejectParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
         Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
 
         participation.reject();
         loggingStatusChange(participation);
     }
-
 
     @Transactional(readOnly = true)
     public List<ParticipationRetrieveResponse> retrieveAllParticipants(Long userId, ParticipationRetrieveRequest request) {
