@@ -47,11 +47,10 @@ public class ParticipationCommandService {
 
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
-        participation.validateContactAvailable();
 
         PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoomWithLockedPost(userId, lockedPost, participantUserId);
 
-        updateStatusToContactingIfNew(participation);
+        participation.contact();
         loggingStatusChange(participation);
 
         return new ParticipationContactResponse(
@@ -69,7 +68,6 @@ public class ParticipationCommandService {
 
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
-        participation.validateApprovalAvailable();
 
         GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, lockedPost.getId(), participantUserId);
 
@@ -86,10 +84,8 @@ public class ParticipationCommandService {
 
     public void rejectParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdForUpdateOrThrow(participationId);
-        validatePostOwner(participation.getPost(), userId);
-        participation.validateRejectionAvailable();
-
         Post lockedPost = postRepository.getActiveByIdForUpdateOrThrow(participation.getPost().getId());
+        validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
 
         participation.reject();
@@ -102,12 +98,6 @@ public class ParticipationCommandService {
         return participationRepository.findReceivedRequestsByStatus(userId, request.status()).stream()
                 .map(queryResult -> ParticipationRetrieveResponse.from(queryResult, profileImageResolver))
                 .toList();
-    }
-
-    private static void updateStatusToContactingIfNew(Participation participation) {
-        if (participation.isPending()) {
-            participation.contact();
-        }
     }
 
     private static void validatePostOwner(Post post, Long userId) {

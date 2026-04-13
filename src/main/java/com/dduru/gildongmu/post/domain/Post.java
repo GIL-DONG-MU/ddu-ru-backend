@@ -188,9 +188,6 @@ public class Post extends BaseTimeEntity {
     }
 
     public void approveParticipation(Participation participation) {
-        if (participation.isApproved()) {
-            return;
-        }
         participation.approve();
         incrementRecruitCount();
     }

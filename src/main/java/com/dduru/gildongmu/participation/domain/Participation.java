@@ -65,16 +65,19 @@ public class Participation extends BaseTimeEntity {
     }
 
     public void approve() {
+        validateApprovalAllowed();
         this.status = ParticipationStatus.APPROVED;
         this.approvedAt = LocalDateTime.now();
     }
 
     public void contact() {
+        validateContactAllowed();
         this.status = ParticipationStatus.CONTACTING;
         this.contactedAt = LocalDateTime.now();
     }
 
     public void reject() {
+        validateRejectionAllowed();
         this.status = ParticipationStatus.REJECTED;
         this.rejectedAt = LocalDateTime.now();
     }
@@ -95,20 +98,20 @@ public class Participation extends BaseTimeEntity {
         return status == ParticipationStatus.APPROVED;
     }
 
-    public void validateContactAvailable() {
-        if (isRejected() || isApproved() || isContacting()) {
+    private void validateContactAllowed() {
+        if (!isPending()) {
             throw InvalidParticipationStatusException.contactNotAllowed();
         }
     }
 
-    public void validateApprovalAvailable() {
-        if (isRejected() || isApproved()) {
+    private void validateApprovalAllowed() {
+        if (!isPending() && !isContacting()) {
             throw InvalidParticipationStatusException.approvalNotAllowed();
         }
     }
 
-    public void validateRejectionAvailable() {
-        if (isRejected() || isApproved()) {
+    private void validateRejectionAllowed() {
+        if (!isPending() && !isContacting()) {
             throw InvalidParticipationStatusException.rejectionNotAllowed();
         }
     }
