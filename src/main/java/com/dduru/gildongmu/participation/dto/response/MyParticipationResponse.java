@@ -5,9 +5,7 @@ import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.post.domain.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 @Schema(description = "내가 보낸 동행 신청(신청 내역) 목록 항목")
 public record MyParticipationResponse(
