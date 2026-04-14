@@ -17,7 +17,7 @@ public class BgColor extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "hex_code", nullable = false, length = 7)
+    @Column(name = "hex_code", length = 10)
     private String hexCode;
 
     @Column(name = "display_order", nullable = false)
