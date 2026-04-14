@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.profile.service;
+package com.dduru.gildongmu.profile.utils;
 
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
@@ -12,26 +12,30 @@ public class ProfileImageResolver {
     private String defaultProfileImageUrl;
 
     public String resolve(Profile profile) {
-        if (profile == null || profile.getProfileImageType() == null) {
+        if (profile == null) {
             return null;
         }
 
-        return switch (profile.getProfileImageType()) {
-            case DEFAULT -> defaultProfileImageUrl;
-            case UPLOADED -> profile.getUploadedImageUrl();
-            case AVATAR -> profile.getAvatar().getImageUrl();
-        };
+        return resolve(
+                profile.getProfileImageType(),
+                profile.getUploadedImageUrl(),
+                profile.getAvatar() != null ? profile.getAvatar().getImageUrl() : null
+        );
     }
 
     public String resolve(ProfileImageType profileImageType, String uploadedImageUrl, String avatarImageUrl) {
         if (profileImageType == null) {
-            return null;
+            return defaultProfileImageUrl;
         }
 
         return switch (profileImageType) {
             case DEFAULT -> defaultProfileImageUrl;
-            case UPLOADED -> uploadedImageUrl;
-            case AVATAR -> avatarImageUrl;
+            case UPLOADED -> hasText(uploadedImageUrl) ? uploadedImageUrl : defaultProfileImageUrl;
+            case AVATAR -> hasText(avatarImageUrl) ? avatarImageUrl : defaultProfileImageUrl;
         };
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

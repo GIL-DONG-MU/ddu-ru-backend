@@ -12,6 +12,7 @@ import java.util.List;
 
 import static com.dduru.gildongmu.participation.domain.QParticipation.participation;
 import static com.dduru.gildongmu.post.domain.QPost.post;
+import static com.dduru.gildongmu.profile.domain.QBgColor.bgColor;
 import static com.dduru.gildongmu.profile.domain.QProfile.profile;
 import static com.dduru.gildongmu.survey.domain.QAvatarProfile.avatarProfile;
 import static com.dduru.gildongmu.user.domain.QUser.user;
@@ -36,6 +37,7 @@ public class ParticipationRepositoryImpl implements ParticipationRepositoryCusto
                         profile.profileImageType,
                         profile.uploadedImageUrl,
                         avatarProfile.imageUrl,
+                        bgColor.id,
                         participation.message,
                         participation.status,
                         participation.createdAt,
@@ -51,6 +53,7 @@ public class ParticipationRepositoryImpl implements ParticipationRepositoryCusto
                 // nullable 연관을 타면 implicit join이 inner join처럼 동작해서 avatar가 없는 유저가 결과에서 빠질 수 있어서 명시적으로 left join으로 profile 가져옴.
                 .leftJoin(user.profile, profile)
                 .leftJoin(profile.avatar, avatarProfile)
+                .leftJoin(profile.bgColor, bgColor)
                 .where(
                         post.user.id.eq(postOwnerId),
                         post.isDeleted.isFalse(),

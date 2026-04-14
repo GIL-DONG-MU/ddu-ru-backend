@@ -4,7 +4,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;

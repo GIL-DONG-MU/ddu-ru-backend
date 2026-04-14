@@ -11,7 +11,7 @@ import com.dduru.gildongmu.participation.dto.response.ParticipationContactRespon
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.DisplayName;
