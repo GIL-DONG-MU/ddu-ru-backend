@@ -8,10 +8,13 @@ import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
+import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
+import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
@@ -38,6 +41,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -331,5 +338,115 @@ class PostServiceTest {
 
         assertThat(result).isEqualTo(2);
         verify(superHostService, times(1)).cancelActiveExposureByClosedPosts();
+    }
+
+    @DisplayName("게시글 삭제 시 슈퍼호스트 활성 노출을 취소한다")
+    @Test
+    void delete_cancelsSuperHostExposureForPost() {
+        Long postId = 1L;
+        Long userId = 10L;
+        User owner = User.builder().email("owner@a.com").name("owner").oauthId("kakao-10").oauthType(OauthType.KAKAO).build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+        Post post = Post.builder()
+                .user(owner)
+                .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
+                .title("제목").content("내용내용내용내용내용내용내용내용")
+                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(3))
+                .recruitCapacity(5).recruitDeadline(LocalDate.now().plusDays(1))
+                .preferredGender(Gender.M).isAgeAny(false).minAge(20).maxAge(30)
+                .photoUrl(null).tags("[]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(post, "id", postId);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+
+        postService.delete(postId, userId);
+
+        verify(superHostService).cancelActiveExposureByPostId(eq(postId));
+    }
+
+    @DisplayName("게시글을 CLOSED로 변경하면 슈퍼호스트 활성 노출을 취소한다")
+    @Test
+    void changeStatus_toClosed_cancelsSuperHostExposure() {
+        Long postId = 1L;
+        Long userId = 10L;
+        User owner = User.builder().email("owner@a.com").name("owner").oauthId("kakao-10").oauthType(OauthType.KAKAO).build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+        Post post = Post.builder()
+                .user(owner)
+                .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
+                .title("제목").content("내용내용내용내용내용내용내용내용")
+                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(3))
+                .recruitCapacity(5).recruitDeadline(LocalDate.now().plusDays(1))
+                .preferredGender(Gender.M).isAgeAny(false).minAge(20).maxAge(30)
+                .photoUrl(null).tags("[]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "status", PostStatus.OPEN);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+
+        postService.changeStatus(postId, userId, new PostStatusUpdateRequest(false));
+
+        verify(superHostService).cancelActiveExposureByPostId(eq(postId));
+    }
+
+    @DisplayName("게시글을 OPEN으로 변경하면 슈퍼호스트 노출 취소를 호출하지 않는다")
+    @Test
+    void changeStatus_toOpen_doesNotCancelSuperHostExposure() {
+        Long postId = 1L;
+        Long userId = 10L;
+        User owner = User.builder().email("owner@a.com").name("owner").oauthId("kakao-10").oauthType(OauthType.KAKAO).build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+        Post post = Post.builder()
+                .user(owner)
+                .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
+                .title("제목").content("내용내용내용내용내용내용내용내용")
+                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(3))
+                .recruitCapacity(5).recruitDeadline(LocalDate.now().plusDays(1))
+                .preferredGender(Gender.M).isAgeAny(false).minAge(20).maxAge(30)
+                .photoUrl(null).tags("[]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "status", PostStatus.CLOSED);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+
+        postService.changeStatus(postId, userId, new PostStatusUpdateRequest(true));
+
+        verify(superHostService, never()).cancelActiveExposureByPostId(any());
+    }
+
+    @DisplayName("모집 상태 변경이 도메인에서 거부되면 슈퍼호스트 노출 취소를 호출하지 않는다")
+    @Test
+    void changeStatus_whenDomainRejects_doesNotCancelSuperHostExposure() {
+        Long postId = 1L;
+        Long userId = 10L;
+        User owner = User.builder().email("owner@a.com").name("owner").oauthId("kakao-10").oauthType(OauthType.KAKAO).build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+        Post built = Post.builder()
+                .user(owner)
+                .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
+                .title("제목").content("내용내용내용내용내용내용내용내용")
+                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(3))
+                .recruitCapacity(5).recruitDeadline(LocalDate.now().plusDays(1))
+                .preferredGender(Gender.M).isAgeAny(false).minAge(20).maxAge(30)
+                .photoUrl(null).tags("[]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(built, "id", postId);
+        ReflectionTestUtils.setField(built, "status", PostStatus.OPEN);
+        Post post = spy(built);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+        doThrow(new InvalidPostStatusException()).when(post).changeStatus(PostStatus.CLOSED);
+
+        assertThatThrownBy(() -> postService.changeStatus(postId, userId, new PostStatusUpdateRequest(false)))
+                .isInstanceOf(InvalidPostStatusException.class);
+
+        verify(superHostService, never()).cancelActiveExposureByPostId(any());
     }
 }

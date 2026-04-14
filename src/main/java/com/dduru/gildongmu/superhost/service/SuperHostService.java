@@ -188,7 +188,7 @@ public class SuperHostService {
         for (Throwable t = e; t != null; t = t.getCause()) {
             if (t instanceof DuplicateKeyException) {
                 String message = t.getMessage();
-                return message == null || message.contains(UK_SUPER_HOST_TICKETS_USER_SOURCE);
+                return message != null && message.contains(UK_SUPER_HOST_TICKETS_USER_SOURCE);
             }
         }
         return false;

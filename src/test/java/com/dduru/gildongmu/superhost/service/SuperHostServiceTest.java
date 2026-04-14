@@ -104,6 +104,23 @@ class SuperHostServiceTest {
     }
 
     @Test
+    @DisplayName("rethrows when duplicate key message does not match onboarding ticket unique")
+    void grantOnboardingRewardTicket_rethrowsUnrecognizedDuplicateKey() {
+        Long userId = 1L;
+        User user = createUser(userId);
+        DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                "duplicate",
+                new DuplicateKeyException("some_other_unique_key")
+        );
+
+        when(userRepository.getByIdOrThrow(userId)).thenReturn(user);
+        when(superHostTicketRepository.save(any(SuperHostTicket.class))).thenThrow(exception);
+
+        assertThatThrownBy(() -> superHostService.grantOnboardingRewardTicket(userId))
+                .isSameAs(exception);
+    }
+
+    @Test
     @DisplayName("티켓 적용 성공 시 노출이 ACTIVE로 생성된다")
     void applyTicketToPost_success() {
         Long userId = 1L;

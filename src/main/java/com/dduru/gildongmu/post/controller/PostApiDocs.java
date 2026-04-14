@@ -118,8 +118,6 @@ public interface PostApiDocs {
     @Operation(summary = "슈퍼호스트 티켓 적용", description = "보유한 슈퍼호스트 티켓 1개를 게시글에 적용합니다.")
     @ApiResponse(responseCode = "200", description = "적용 성공")
     @ApiErrorResponses({
-            ErrorCode.POST_NOT_FOUND,
-            ErrorCode.POST_ACCESS_DENIED,
             ErrorCode.SUPER_HOST_TICKET_NOT_FOUND,
             ErrorCode.SUPER_HOST_ALREADY_ACTIVE,
             ErrorCode.SUPER_HOST_POST_NOT_APPLICABLE,
