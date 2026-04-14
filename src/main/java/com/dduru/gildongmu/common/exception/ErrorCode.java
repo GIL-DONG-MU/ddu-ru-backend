@@ -90,6 +90,12 @@ public enum ErrorCode {
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "업로드할 파일이 없습니다."),
     INVALID_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "허용되지 않는 파일 확장자입니다."),
 
+    // 슈퍼호스트 (SUPER_HOST)
+    SUPER_HOST_TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "사용 가능한 슈퍼호스트 티켓이 없습니다."),
+    SUPER_HOST_ALREADY_ACTIVE(HttpStatus.CONFLICT, "이미 활성화된 슈퍼호스트 게시글이 있습니다."),
+    SUPER_HOST_TICKET_NOT_USABLE(HttpStatus.BAD_REQUEST, "사용할 수 없는 슈퍼호스트 티켓입니다."),
+    SUPER_HOST_POST_NOT_APPLICABLE(HttpStatus.BAD_REQUEST, "슈퍼호스트로 노출할 수 없는 게시글입니다."),
+
     // 채팅 (CHAT)
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방 멤버를 찾을 수 없습니다."),

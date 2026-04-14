@@ -14,6 +14,16 @@ public interface PostRepository extends JpaRepository<Post, Long>,PostRepository
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
     Optional<Post> findActiveById(@Param("id") Long id);
 
+    @Query("""
+            SELECT p
+            FROM Post p
+            WHERE p.id = :postId
+              AND p.user.id = :userId
+              AND p.isDeleted = false
+              AND p.status = com.dduru.gildongmu.post.domain.enums.PostStatus.OPEN
+            """)
+    Optional<Post> findSuperHostApplicableByIdAndUserId(@Param("postId") Long postId, @Param("userId") Long userId);
+
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     void incrementViewCount(@Param("postId") Long postId);

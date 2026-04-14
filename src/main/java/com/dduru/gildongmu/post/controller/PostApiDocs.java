@@ -10,9 +10,12 @@ import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.superhost.dto.response.MySuperHostStatusResponse;
+import com.dduru.gildongmu.superhost.dto.response.SuperHostApplyResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import com.dduru.gildongmu.superhost.dto.response.SuperHostPostListResponse;
 import org.springdoc.core.annotations.ParameterObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +28,18 @@ public interface PostApiDocs {
     @Operation(summary = "게시글 목록 조회", description = "필터 조건에 따라 게시글 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     ResponseEntity<ApiResult<PostListResponse>> retrievePosts(@ParameterObject PostListRequest request);
+
+    @Operation(summary = "슈퍼호스트 게시글 목록 조회", description = "메인 상단에 노출할 슈퍼호스트 게시글 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    ResponseEntity<ApiResult<SuperHostPostListResponse>> retrieveSuperHostPosts(
+            @Parameter(description = "최대 조회 개수(기본 10)") Integer size
+    );
+
+    @Operation(summary = "내 슈퍼호스트 현황 조회", description = "보유 티켓 수, 현재 활성 게시글, 종료 시각을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    ResponseEntity<ApiResult<MySuperHostStatusResponse>> retrieveMySuperHostStatus(
+            @Parameter(hidden = true) Long userId
+    );
 
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -98,5 +113,20 @@ public interface PostApiDocs {
             @Parameter(description = "게시글 ID") Long postId,
             @Parameter(hidden = true) Long userId,
             @Valid PostStatusUpdateRequest request
+    );
+
+    @Operation(summary = "슈퍼호스트 티켓 적용", description = "보유한 슈퍼호스트 티켓 1개를 게시글에 적용합니다.")
+    @ApiResponse(responseCode = "200", description = "적용 성공")
+    @ApiErrorResponses({
+            ErrorCode.POST_NOT_FOUND,
+            ErrorCode.POST_ACCESS_DENIED,
+            ErrorCode.SUPER_HOST_TICKET_NOT_FOUND,
+            ErrorCode.SUPER_HOST_ALREADY_ACTIVE,
+            ErrorCode.SUPER_HOST_POST_NOT_APPLICABLE,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<SuperHostApplyResponse>> applySuperHostTicket(
+            @Parameter(description = "게시글 ID") Long postId,
+            @Parameter(hidden = true) Long userId
     );
 }

@@ -21,6 +21,7 @@ import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.tag.service.TagValidator;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -50,6 +51,7 @@ public class PostService {
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
     private final GroupChatRoomService groupChatRoomService;
+    private final SuperHostService superHostService;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
@@ -81,12 +83,15 @@ public class PostService {
         Post post = getOwnedPost(postId, userId);
 
         post.softDelete(userId);
+        superHostService.cancelActiveExposureByPostId(postId);
 
         log.info("게시글 삭제됨 - postId={}, userId={}", postId, userId);
     }
 
     public int closeExpiredPosts() {
-        return postRepository.closeExpiredPostsByDate(LocalDate.now());
+        int updatedCount = postRepository.closeExpiredPostsByDate(LocalDate.now());
+        superHostService.cancelActiveExposureByClosedPosts();
+        return updatedCount;
     }
 
     public PostDetailResponse recordViewAndGetDetail(Long postId, Long currentUserId) {
@@ -120,6 +125,10 @@ public class PostService {
             log.warn("게시글 모집 상태 변경 불가 - postId={}, userId={}, currentStatus={}, requestedStatus={}",
                     postId, userId, post.getStatus(), newStatus);
             throw e;
+        }
+
+        if (newStatus == PostStatus.CLOSED) {
+            superHostService.cancelActiveExposureByPostId(postId);
         }
 
         log.info("게시글 모집 상태 변경됨 - postId={}, status={}", postId, newStatus);
