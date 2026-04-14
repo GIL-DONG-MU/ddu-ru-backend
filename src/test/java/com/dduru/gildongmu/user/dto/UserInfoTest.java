@@ -1,8 +1,11 @@
 package com.dduru.gildongmu.user.dto;
 
+import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.survey.domain.AvatarProfile;
+import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +39,9 @@ class UserInfoTest {
         UserInfo userInfo = UserInfo.from(user, profileImageResolver);
 
         // then
-        assertThat(userInfo.profileImageType()).isEqualTo(ProfileImageType.DEFAULT);
-        assertThat(userInfo.profileImage()).isEqualTo("https://example.com/default.png");
+        assertThat(userInfo.profileImage().type()).isEqualTo(ProfileImageType.DEFAULT);
+        assertThat(userInfo.profileImage().url()).isEqualTo("https://example.com/default.png");
+        assertThat(userInfo.profileImage().bgColorId()).isNull();
     }
 
     @Test
@@ -60,7 +64,49 @@ class UserInfoTest {
         UserInfo userInfo = UserInfo.from(user, profileImageResolver);
 
         // then
-        assertThat(userInfo.profileImageType()).isEqualTo(ProfileImageType.UPLOADED);
-        assertThat(userInfo.profileImage()).isEqualTo("https://example.com/uploaded.png");
+        assertThat(userInfo.profileImage().type()).isEqualTo(ProfileImageType.UPLOADED);
+        assertThat(userInfo.profileImage().url()).isEqualTo("https://example.com/uploaded.png");
+        assertThat(userInfo.profileImage().bgColorId()).isNull();
+    }
+
+    @Test
+    @DisplayName("AVATAR 타입이면 profileImage 객체에 bgColor 정보를 함께 담는다")
+    void from_AVATAR_includesAvatarAndBgColor() {
+        User user = User.builder()
+                .email("test3@example.com")
+                .name("테스터3")
+                .oauthId("oauth-3")
+                .oauthType(OauthType.GOOGLE)
+                .build();
+        Profile profile = new Profile(user);
+
+        AvatarProfile avatarProfile = AvatarProfile.builder()
+                .avatarType(AvatarType.TTUR_DASOM)
+                .displayName("다솜")
+                .speechBubbleText("설명")
+                .descriptionLine1("성격")
+                .descriptionLine2("강점")
+                .descriptionLine3("팁")
+                .imageUrl("https://example.com/avatar.png")
+                .tags("[]")
+                .build();
+        BgColor bgColor = BgColor.builder()
+                .hexCode("#F5E6C8")
+                .displayOrder(1)
+                .build();
+        ReflectionTestUtils.setField(bgColor, "id", 9L);
+
+        profile.updateAvatar(avatarProfile);
+        profile.updateProfile("아바타닉", null, ProfileImageType.AVATAR, bgColor, "소개");
+        ReflectionTestUtils.setField(user, "profile", profile);
+
+        ProfileImageResolver profileImageResolver = mock(ProfileImageResolver.class);
+        when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/avatar.png");
+
+        UserInfo userInfo = UserInfo.from(user, profileImageResolver);
+
+        assertThat(userInfo.profileImage().type()).isEqualTo(ProfileImageType.AVATAR);
+        assertThat(userInfo.profileImage().url()).isEqualTo("https://example.com/avatar.png");
+        assertThat(userInfo.profileImage().bgColorId()).isEqualTo(9L);
     }
 }
