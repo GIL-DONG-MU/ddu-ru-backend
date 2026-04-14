@@ -17,6 +17,7 @@ import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -37,6 +38,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +69,9 @@ class PostServiceTest {
 
     @Mock
     private ProfileImageResolver profileImageResolver;
+
+    @Mock
+    private SuperHostService superHostService;
 
     @InjectMocks
     private PostService postService;
@@ -315,5 +320,16 @@ class PostServiceTest {
 
         assertThatThrownBy(() -> postService.update(postId, requesterId, updateRequest))
                 .isInstanceOf(PostAccessDeniedException.class);
+    }
+
+    @DisplayName("자동 마감 시 슈퍼호스트 활성 노출도 함께 취소한다")
+    @Test
+    void closeExpiredPosts_cancelsClosedPostExposure() {
+        when(postRepository.closeExpiredPostsByDate(any(LocalDate.class))).thenReturn(2);
+
+        int result = postService.closeExpiredPosts();
+
+        assertThat(result).isEqualTo(2);
+        verify(superHostService, times(1)).cancelActiveExposureByClosedPosts();
     }
 }
