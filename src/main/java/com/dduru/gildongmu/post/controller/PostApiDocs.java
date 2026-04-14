@@ -99,4 +99,5 @@ public interface PostApiDocs {
             @Parameter(hidden = true) Long userId,
             @Valid PostStatusUpdateRequest request
     );
+
 }

@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.exception.PostNotFoundException;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,20 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
     Optional<Post> findActiveByIdWithLock(@Param("id") Long id);
+
+    @Query("""
+            SELECT p
+            FROM Post p
+            WHERE p.id = :postId
+              AND p.user.id = :userId
+              AND p.isDeleted = false
+              AND p.status = :status
+            """)
+    Optional<Post> findSuperHostApplicableByIdAndUserId(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId,
+            @Param("status") PostStatus status
+    );
 
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")

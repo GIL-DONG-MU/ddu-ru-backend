@@ -7,6 +7,7 @@ import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record PostSummaryResponse(
         Long id,
@@ -25,9 +26,20 @@ public record PostSummaryResponse(
         String photoUrl,
         int viewCount,
         int likeCount,
-        UserInfo author
+        UserInfo author,
+        boolean isSuperHost,
+        LocalDateTime superHostEndsAt
 ) {
     public static PostSummaryResponse from(Post post, ProfileImageResolver profileImageResolver) {
+        return from(post, profileImageResolver, false, null);
+    }
+
+    public static PostSummaryResponse from(
+            Post post,
+            ProfileImageResolver profileImageResolver,
+            boolean isSuperHost,
+            LocalDateTime superHostEndsAt
+    ) {
         String photoUrl = post.getPhotoUrl();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
@@ -48,7 +60,9 @@ public record PostSummaryResponse(
                 photoUrl,
                 post.getViewCount(),
                 post.getLikeCount(),
-                authorInfo
+                authorInfo,
+                isSuperHost,
+                superHostEndsAt
         );
     }
 }

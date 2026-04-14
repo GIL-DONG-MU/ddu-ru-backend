@@ -82,4 +82,5 @@ public class PostController implements PostApiDocs {
         postService.changeStatus(postId, userId, request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
+
 }
