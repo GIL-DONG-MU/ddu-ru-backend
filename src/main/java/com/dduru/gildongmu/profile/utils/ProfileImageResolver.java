@@ -12,7 +12,7 @@ public class ProfileImageResolver {
     private String defaultProfileImageUrl;
 
     public String resolve(Profile profile) {
-        if (profile == null || profile.getProfileImageType() == null) {
+        if (profile == null) {
             return null;
         }
 

@@ -93,6 +93,25 @@ class ProfileImageResolverTest {
     }
 
     @Test
+    @DisplayName("ProfileImageType이 null이면 기본 이미지를 반환한다")
+    void resolve_nullProfileImageType_returnsDefaultImageUrl() {
+        ProfileImageResolver resolver = new ProfileImageResolver();
+        ReflectionTestUtils.setField(resolver, "defaultProfileImageUrl", "https://example.com/default-profile.png");
+
+        User user = User.builder()
+                .email("test@example.com")
+                .name("테스터")
+                .oauthId("oauth-1")
+                .oauthType(OauthType.KAKAO)
+                .build();
+        Profile profile = new Profile(user);
+
+        String resolved = resolver.resolve(profile);
+
+        assertThat(resolved).isEqualTo("https://example.com/default-profile.png");
+    }
+
+    @Test
     @DisplayName("쿼리 기반 resolve에서도 AVATAR 이미지가 없으면 기본 이미지를 반환한다")
     void resolve_queryAvatarWithoutImageUrl_returnsDefaultImageUrl() {
         ProfileImageResolver resolver = new ProfileImageResolver();
