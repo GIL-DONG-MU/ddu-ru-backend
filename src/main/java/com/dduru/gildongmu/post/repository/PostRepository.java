@@ -2,7 +2,9 @@ package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostNotFoundException;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,9 +12,13 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.Optional;
 
-public interface PostRepository extends JpaRepository<Post, Long>,PostRepositoryCustom {
+public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
     Optional<Post> findActiveById(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
+    Optional<Post> findActiveByIdWithLock(@Param("id") Long id);
 
     @Query("""
             SELECT p
@@ -34,6 +40,11 @@ public interface PostRepository extends JpaRepository<Post, Long>,PostRepository
 
     default Post getActiveByIdOrThrow(Long id) {
         return findActiveById(id)
+                .orElseThrow(PostNotFoundException::new);
+    }
+
+    default Post getActiveByIdWithLockOrThrow(Long id) {
+        return findActiveByIdWithLock(id)
                 .orElseThrow(PostNotFoundException::new);
     }
 

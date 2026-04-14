@@ -3,13 +3,27 @@ package com.dduru.gildongmu.participation.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
-import com.dduru.gildongmu.participation.dto.response.ParticipationResponse;
-import com.dduru.gildongmu.participation.service.ParticipationService;
+import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
+import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
+import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
+import com.dduru.gildongmu.participation.service.ParticipationCommandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -18,59 +32,76 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class ParticipationController implements ParticipationApiDocs {
 
-    private final ParticipationService participationService;
+    private final ParticipationCommandService participationCommandService;
+    private final ParticipationApplicantService participationApplicantService;
 
     @Override
     @PostMapping("/posts/{postId}/participations")
-    public ResponseEntity<ApiResult<ParticipationResponse>> createParticipation(
-            @PathVariable Long postId,
+    public ResponseEntity<ApiResult<ParticipationCreateResponse>> createParticipation(
             @CurrentUser Long userId,
+            @PathVariable Long postId,
             @Valid @RequestBody ParticipationRequest request
     ) {
-        ParticipationResponse response = participationService.participate(postId, userId, request);
+        ParticipationCreateResponse response = participationApplicantService.participate(userId, postId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
     @Override
-    @GetMapping("/posts/{postId}/participations")
-    public ResponseEntity<ApiResult<List<ParticipationResponse>>> getPostParticipants(
-            @PathVariable Long postId,
-            @CurrentUser Long userId
+    @PostMapping("/participations/{participationId}/contact")
+    public ResponseEntity<ApiResult<ParticipationContactResponse>> contactParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
     ) {
-        List<ParticipationResponse> participants = participationService.getParticipationsByPost(postId, userId);
+        ParticipationContactResponse response = participationCommandService.contactParticipation(userId, participationId);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PatchMapping("/participations/{participationId}/approve")
+    public ResponseEntity<ApiResult<ParticipationApproveResponse>> approveParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
+    ) {
+        ParticipationApproveResponse response = participationCommandService.approveParticipation(userId, participationId);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PatchMapping("/participations/{participationId}/reject")
+    public ResponseEntity<ApiResult<Void>> rejectParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
+    ) {
+        participationCommandService.rejectParticipation(userId, participationId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+    }
+
+    @Override
+    @GetMapping("/participations")
+    public ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
+            @CurrentUser Long userId,
+            @ParameterObject ParticipationRetrieveRequest request
+    ) {
+        List<ParticipationRetrieveResponse> participants = participationCommandService.retrieveAllParticipants(userId, request);
         return ResponseEntity.ok(ApiResult.ok(participants));
     }
 
     @Override
-    @PatchMapping("/posts/{postId}/participations/{participationId}/approve")
-    public ResponseEntity<ApiResult<Void>> approveParticipation(
-            @PathVariable Long postId,
-            @PathVariable Long participationId,
+    @GetMapping("/users/me/participations")
+    public ResponseEntity<ApiResult<List<MyParticipationResponse>>> getMyParticipationApplications(
             @CurrentUser Long userId
     ) {
-        participationService.approveParticipation(postId, participationId, userId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+        List<MyParticipationResponse> list = participationApplicantService.retrieveMyApplications(userId);
+        return ResponseEntity.ok(ApiResult.ok(list));
     }
 
     @Override
-    @PatchMapping("/posts/{postId}/participations/{participationId}/reject")
-    public ResponseEntity<ApiResult<Void>> rejectParticipation(
-            @PathVariable Long postId,
-            @PathVariable Long participationId,
-            @CurrentUser Long userId
+    @DeleteMapping("/participations/{participationId}")
+    public ResponseEntity<ApiResult<Void>> cancelMyParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
     ) {
-        participationService.rejectParticipation(postId, participationId, userId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
-    }
-
-    @Override
-    @DeleteMapping("/posts/{postId}/participations/{participationId}")
-    public ResponseEntity<ApiResult<Void>> cancelParticipation(
-            @PathVariable Long postId,
-            @PathVariable Long participationId,
-            @CurrentUser Long userId
-    ) {
-        participationService.cancelParticipation(postId, participationId, userId);
+        participationApplicantService.cancelMyParticipation(userId, participationId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

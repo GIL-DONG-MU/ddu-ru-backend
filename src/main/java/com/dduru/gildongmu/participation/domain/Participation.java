@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.participation.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.participation.exception.InvalidParticipationStatusException;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
@@ -64,16 +65,19 @@ public class Participation extends BaseTimeEntity {
     }
 
     public void approve() {
+        validateApprovalAllowed();
         this.status = ParticipationStatus.APPROVED;
         this.approvedAt = LocalDateTime.now();
     }
 
     public void contact() {
+        validateContactAllowed();
         this.status = ParticipationStatus.CONTACTING;
         this.contactedAt = LocalDateTime.now();
     }
 
     public void reject() {
+        validateRejectionAllowed();
         this.status = ParticipationStatus.REJECTED;
         this.rejectedAt = LocalDateTime.now();
     }
@@ -92,5 +96,29 @@ public class Participation extends BaseTimeEntity {
 
     public boolean isApproved() {
         return status == ParticipationStatus.APPROVED;
+    }
+
+    private void validateContactAllowed() {
+        if (!isPending()) {
+            throw InvalidParticipationStatusException.contactNotAllowed();
+        }
+    }
+
+    private void validateApprovalAllowed() {
+        if (!isPending() && !isContacting()) {
+            throw InvalidParticipationStatusException.approvalNotAllowed();
+        }
+    }
+
+    private void validateRejectionAllowed() {
+        if (!isPending() && !isContacting()) {
+            throw InvalidParticipationStatusException.rejectionNotAllowed();
+        }
+    }
+
+    public void validateCancellableByApplicant() {
+        if (!isPending()) {
+            throw InvalidParticipationStatusException.cancelNotAllowed();
+        }
     }
 }

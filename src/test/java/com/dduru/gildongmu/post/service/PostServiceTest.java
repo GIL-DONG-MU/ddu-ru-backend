@@ -5,7 +5,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
-import com.dduru.gildongmu.participation.service.ParticipationService;
+import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
@@ -59,9 +59,6 @@ class PostServiceTest {
     private JsonConverter jsonConverter = new JsonConverter(new ObjectMapper());
 
     @Mock
-    private ParticipationService participationService;
-
-    @Mock
     private GroupChatRoomService groupchatRoomService;
 
     @Mock
@@ -69,6 +66,9 @@ class PostServiceTest {
 
     @Mock
     private ProfileImageResolver profileImageResolver;
+
+    @Mock
+    private ParticipationApplicantService participationApplicantService;
 
     @Mock
     private SuperHostService superHostService;

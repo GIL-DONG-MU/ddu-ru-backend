@@ -28,4 +28,3 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
     
     boolean existsByPhoneNumber(String phoneNumber);
 }
-
