@@ -15,6 +15,7 @@ import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
+import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ public class SurveyService {
     private final ProfileManagementService profileManagementService;
     private final UserRepository userRepository;
     private final OnboardingService onboardingService;
+    private final SuperHostService superHostService;
 
     public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
@@ -57,6 +59,7 @@ public class SurveyService {
         saveOrUpdateTravelTendency(user, scores, avatarType);
         updateProfileAvatar(userId, avatarType);
         onboardingService.completeSurvey(userId);
+        superHostService.grantOnboardingRewardTicket(userId);
 
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
 
