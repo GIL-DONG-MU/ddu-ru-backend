@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.superhost.service;
 
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.service.ProfileImageResolver;
@@ -142,7 +143,7 @@ public class SuperHostService {
     }
 
     private Post getApplicablePostOrThrow(Long postId, Long userId) {
-        return postRepository.findSuperHostApplicableByIdAndUserId(postId, userId)
+        return postRepository.findSuperHostApplicableByIdAndUserId(postId, userId, PostStatus.OPEN)
                 .orElseThrow(SuperHostPostNotApplicableException::new);
     }
 

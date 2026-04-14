@@ -3,6 +3,7 @@ package com.dduru.gildongmu.superhost.service;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -112,7 +113,8 @@ class SuperHostServiceTest {
         SuperHostTicket ticket = SuperHostTicket.create(user, SuperHostTicketSource.ONBOARDING_SURVEY, 3);
         ReflectionTestUtils.setField(ticket, "id", 99L);
 
-        when(postRepository.findSuperHostApplicableByIdAndUserId(postId, userId)).thenReturn(Optional.of(post));
+        when(postRepository.findSuperHostApplicableByIdAndUserId(postId, userId, PostStatus.OPEN))
+                .thenReturn(Optional.of(post));
         when(superHostExposureRepository.existsByUser_IdAndStatusAndEndedAtAfter(eq(userId), eq(SuperHostExposureStatus.ACTIVE), any(LocalDateTime.class))).thenReturn(false);
         when(superHostTicketRepository.findFirstByUser_IdAndStatusOrderByIdAsc(userId, SuperHostTicketStatus.UNUSED))
                 .thenReturn(Optional.of(ticket));
@@ -137,7 +139,8 @@ class SuperHostServiceTest {
         Long userId = 1L;
         User user = createUser(userId);
         Post post = createPost(10L, user);
-        when(postRepository.findSuperHostApplicableByIdAndUserId(10L, userId)).thenReturn(Optional.of(post));
+        when(postRepository.findSuperHostApplicableByIdAndUserId(10L, userId, PostStatus.OPEN))
+                .thenReturn(Optional.of(post));
         when(superHostExposureRepository.existsByUser_IdAndStatusAndEndedAtAfter(eq(userId), eq(SuperHostExposureStatus.ACTIVE), any(LocalDateTime.class))).thenReturn(true);
 
         assertThatThrownBy(() -> superHostService.applyTicketToPost(userId, 10L))
@@ -147,7 +150,8 @@ class SuperHostServiceTest {
     @Test
     @DisplayName("슈퍼호스트 적용 불가 게시글이면 예외가 발생한다")
     void applyTicketToPost_failsWhenPostNotApplicable() {
-        when(postRepository.findSuperHostApplicableByIdAndUserId(10L, 1L)).thenReturn(Optional.empty());
+        when(postRepository.findSuperHostApplicableByIdAndUserId(10L, 1L, PostStatus.OPEN))
+                .thenReturn(Optional.empty());
         assertThatThrownBy(() -> superHostService.applyTicketToPost(1L, 10L))
                 .isInstanceOf(SuperHostPostNotApplicableException.class);
     }
