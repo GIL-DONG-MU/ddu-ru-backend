@@ -23,6 +23,11 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
+# readiness/healthcheck 확인용 도구 설치
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # 빌드된 JAR 파일만 복사
 COPY --from=build /app/build/libs/*.jar app.jar
 
