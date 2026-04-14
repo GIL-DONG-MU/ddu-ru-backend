@@ -1,7 +1,5 @@
 package com.dduru.gildongmu.post.dto.response;
 
-import com.dduru.gildongmu.journey.domain.enums.JourneyStatus;
-import com.dduru.gildongmu.journey.utils.JourneyStatusResolver;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -29,7 +27,6 @@ public record PostSummaryResponse(
         int viewCount,
         int likeCount,
         UserInfo author,
-        JourneyStatus journeyStatus,
         boolean isSuperHost,
         LocalDateTime superHostEndsAt
 ) {
@@ -45,7 +42,6 @@ public record PostSummaryResponse(
     ) {
         String photoUrl = post.getPhotoUrl();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
-        JourneyStatus journeyStatus = JourneyStatusResolver.resolve(post, LocalDate.now());
 
         return new PostSummaryResponse(
                 post.getId(),
@@ -65,7 +61,6 @@ public record PostSummaryResponse(
                 post.getViewCount(),
                 post.getLikeCount(),
                 authorInfo,
-                journeyStatus,
                 isSuperHost,
                 superHostEndsAt
         );

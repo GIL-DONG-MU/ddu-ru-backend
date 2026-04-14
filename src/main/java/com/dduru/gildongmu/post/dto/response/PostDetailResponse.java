@@ -1,10 +1,8 @@
 package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
-import com.dduru.gildongmu.journey.domain.enums.JourneyStatus;
 import com.dduru.gildongmu.journey.utils.JourneyDisplayCalculator;
 import com.dduru.gildongmu.journey.utils.JourneyPermissionResolver;
-import com.dduru.gildongmu.journey.utils.JourneyStatusResolver;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -41,7 +39,6 @@ public record PostDetailResponse(
         UserInfo author,
         boolean isOwner,
         boolean canEdit,
-        JourneyStatus journeyStatus,
         boolean hasLiked,
         List<ParticipantInfo> participants,
         MyParticipationStatus myParticipationStatus,
@@ -60,7 +57,6 @@ public record PostDetailResponse(
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         LocalDate today = LocalDate.now();
-        JourneyStatus journeyStatus = JourneyStatusResolver.resolve(post, today);
         boolean canEdit = JourneyPermissionResolver.canEdit(post, currentUserId, today);
         String tripDurationText = JourneyDisplayCalculator.tripDurationText(post);
         String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, today);
@@ -91,7 +87,6 @@ public record PostDetailResponse(
                 authorInfo,
                 isOwner,
                 canEdit,
-                journeyStatus,
                 hasLiked,
                 participants,
                 myParticipationStatus,
