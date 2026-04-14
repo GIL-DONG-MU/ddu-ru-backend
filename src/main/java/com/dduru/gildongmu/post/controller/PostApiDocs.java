@@ -37,6 +37,9 @@ public interface PostApiDocs {
 
     @Operation(summary = "내 슈퍼호스트 현황 조회", description = "보유 티켓 수, 현재 활성 게시글, 종료 시각을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED
+    })
     ResponseEntity<ApiResult<MySuperHostStatusResponse>> retrieveMySuperHostStatus(
             @Parameter(hidden = true) Long userId
     );
