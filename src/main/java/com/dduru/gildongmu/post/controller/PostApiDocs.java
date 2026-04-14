@@ -26,7 +26,7 @@ public interface PostApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     ResponseEntity<ApiResult<PostListResponse>> retrievePosts(@ParameterObject PostListRequest request);
 
-    @Operation(summary = "게시글 상세 조회", description = "게시글 상세 정보를 조회합니다.")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 상세 정보를 조회합니다. 응답에는 여행 단계(journeyStatus)와 현재 사용자 기준 수정 가능 여부(canEdit)가 포함됩니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({ErrorCode.POST_NOT_FOUND})
     ResponseEntity<ApiResult<PostDetailResponse>> retrievePostDetail(

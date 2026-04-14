@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.journey.utils.JourneyPermissionResolver;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
@@ -106,6 +107,7 @@ public class PostService {
         return PostDetailResponse.from(
                 post,
                 jsonConverter,
+                currentUserId,
                 isOwner,
                 hasLiked,
                 participants,
@@ -142,7 +144,7 @@ public class PostService {
     }
 
     private boolean isOwner(Post post, Long currentUserId) {
-        return currentUserId != null && currentUserId.equals(post.getUser().getId());
+        return JourneyPermissionResolver.isHost(post, currentUserId);
     }
 
     private boolean hasLiked(Long postId, Long currentUserId) {
