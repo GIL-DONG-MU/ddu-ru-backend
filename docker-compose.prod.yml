@@ -9,9 +9,11 @@ services:
     restart: unless-stopped
     networks:
       - ddu-ru-network
-  app:
+
+  app_blue: &app_template
     image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
     restart: unless-stopped
+    stop_grace_period: 40s
     expose:
       - "8080"
     volumes:
@@ -57,13 +59,16 @@ services:
       PROFILE_DEFAULT_IMAGE_URL: ${PROFILE_DEFAULT_IMAGE_URL}
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health/readiness || exit 1"]
       interval: 30s
       retries: 5
       timeout: 10s
       start_period: 60s
     networks:
       - ddu-ru-network
+
+  app_green:
+    <<: *app_template
 
   nginx:
     image: nginx:alpine
@@ -77,8 +82,6 @@ services:
       - ./deployment/nginx/ssl:/etc/nginx/ssl:ro
       - ./deployment/nginx/certbot/www:/var/www/certbot:ro
       - nginx-logs:/var/log/nginx
-    depends_on:
-      - app
     networks:
       - ddu-ru-network
 
