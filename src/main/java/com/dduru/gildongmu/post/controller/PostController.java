@@ -11,10 +11,6 @@ import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.service.PostQueryService;
 import com.dduru.gildongmu.post.service.PostService;
-import com.dduru.gildongmu.superhost.dto.response.MySuperHostStatusResponse;
-import com.dduru.gildongmu.superhost.dto.response.SuperHostApplyResponse;
-import com.dduru.gildongmu.superhost.dto.response.SuperHostPostListResponse;
-import com.dduru.gildongmu.superhost.service.SuperHostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,30 +23,11 @@ import org.springframework.web.bind.annotation.*;
 public class PostController implements PostApiDocs {
     private final PostService postService;
     private final PostQueryService postQueryService;
-    private final SuperHostService superHostService;
 
     @Override
     @GetMapping
     public ResponseEntity<ApiResult<PostListResponse>> retrievePosts(PostListRequest request) {
         PostListResponse response = postQueryService.retrieveAllWithFilter(request);
-        return ResponseEntity.ok(ApiResult.ok(response));
-    }
-
-    @Override
-    @GetMapping("/super-hosts")
-    public ResponseEntity<ApiResult<SuperHostPostListResponse>> retrieveSuperHostPosts(
-            @RequestParam(required = false) Integer size
-    ) {
-        SuperHostPostListResponse response = superHostService.retrieveSuperHostPosts(size);
-        return ResponseEntity.ok(ApiResult.ok(response));
-    }
-
-    @Override
-    @GetMapping("/super-hosts/me")
-    public ResponseEntity<ApiResult<MySuperHostStatusResponse>> retrieveMySuperHostStatus(
-            @CurrentUser Long userId
-    ) {
-        MySuperHostStatusResponse response = superHostService.getMyStatus(userId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
@@ -106,13 +83,4 @@ public class PostController implements PostApiDocs {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
-    @Override
-    @PostMapping("/{postId}/super-host")
-    public ResponseEntity<ApiResult<SuperHostApplyResponse>> applySuperHostTicket(
-            @PathVariable Long postId,
-            @CurrentUser Long userId
-    ) {
-        SuperHostApplyResponse response = superHostService.applyTicketToPost(userId, postId);
-        return ResponseEntity.ok(ApiResult.ok(response));
-    }
 }
