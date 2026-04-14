@@ -3,7 +3,7 @@ package com.dduru.gildongmu.user.dto;
 import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.user.domain.User;

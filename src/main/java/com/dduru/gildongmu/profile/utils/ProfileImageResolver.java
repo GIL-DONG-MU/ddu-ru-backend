@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.profile.service;
+package com.dduru.gildongmu.profile.utils;
 
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;

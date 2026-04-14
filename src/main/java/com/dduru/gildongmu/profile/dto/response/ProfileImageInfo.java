@@ -2,7 +2,7 @@ package com.dduru.gildongmu.profile.dto.response;
 
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "프로필 이미지 표시 정보")

@@ -2,7 +2,7 @@ package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 
 public record ParticipantInfo(

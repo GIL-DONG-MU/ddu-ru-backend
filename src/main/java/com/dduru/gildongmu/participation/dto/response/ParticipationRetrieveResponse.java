@@ -3,7 +3,7 @@ package com.dduru.gildongmu.participation.dto.response;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.query.ParticipationRetrieveQueryResult;
 import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
