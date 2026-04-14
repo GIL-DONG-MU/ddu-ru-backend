@@ -103,7 +103,7 @@ public class PostService {
 
         List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
         MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(postId, currentUserId, isOwner);
-        PostDetailResponse response = PostDetailResponse.from(
+        return PostDetailResponse.from(
                 post,
                 jsonConverter,
                 isOwner,
@@ -112,7 +112,6 @@ public class PostService {
                 myParticipationStatus,
                 profileImageResolver
         );
-        return response;
     }
 
     public void changeStatus(Long postId, Long userId, PostStatusUpdateRequest request) {
