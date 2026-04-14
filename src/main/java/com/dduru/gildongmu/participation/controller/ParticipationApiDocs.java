@@ -5,6 +5,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
@@ -116,5 +117,33 @@ public interface ParticipationApiDocs {
     ResponseEntity<ApiResult<List<ParticipationRetrieveResponse>>> getParticipants(
             @Parameter(hidden = true) Long userId,
             @Valid @ParameterObject ParticipationRetrieveRequest request
+    );
+
+    @Operation(
+            summary = "내가 보낸 동행 신청 목록(신청 내역)",
+            description = "로그인 사용자가 신청한 동행 참여 건을 상태 구분 없이 최신순 전체로 조회합니다. 연락 중·수락 건에는 채팅방 이동에 필요한 방 ID가 포함될 수 있습니다."
+    )
+    @ApiResponse(responseCode = "200", description = "신청 내역 조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<List<MyParticipationResponse>>> getMyParticipationApplications(
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary = "내 동행 신청 취소",
+            description = "신청자 본인이 `PENDING`(대기중)인 참여 신청만 삭제(취소)합니다. 연락 중 이후 상태에서는 호출할 수 없습니다."
+    )
+    @ApiResponse(responseCode = "204", description = "신청 취소 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.PARTICIPATION_NOT_FOUND,
+            ErrorCode.PARTICIPATION_CANCEL_NOT_ALLOWED,
+            ErrorCode.ACCESS_DENIED,
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<Void>> cancelMyParticipation(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "동행 참여 신청 ID") Long participationId
     );
 }

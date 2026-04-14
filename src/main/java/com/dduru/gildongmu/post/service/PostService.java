@@ -5,7 +5,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
-import com.dduru.gildongmu.participation.service.ParticipationService;
+import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
@@ -45,11 +45,11 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
-    private final ParticipationService participationService;
     private final PostLikeRepository postLikeRepository;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
     private final GroupChatRoomService groupChatRoomService;
+    private final ParticipationApplicantService participationApplicantService;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
@@ -96,11 +96,8 @@ public class PostService {
         boolean isOwner = isOwner(post, currentUserId);
         boolean hasLiked = hasLiked(postId, currentUserId);
 
-        // #202: 아래 임시 대체 코드, 이후 변경 예정
-        List<ParticipantInfo> participants = List.of();
-        MyParticipationStatus myParticipationStatus = MyParticipationStatus.NONE;
-//        List<ParticipantInfo> participants = participationService.getParticipantsForPostDetail(post);
-//        MyParticipationStatus myParticipationStatus = participationService.getMyParticipationStatus(postId, currentUserId, isOwner);
+        List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
+        MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(postId, currentUserId, isOwner);
         PostDetailResponse response = PostDetailResponse.from(
                 post,
                 jsonConverter,

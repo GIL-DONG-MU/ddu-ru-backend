@@ -4,17 +4,19 @@ import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
+import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
+import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.participation.service.ParticipationCommandService;
-import com.dduru.gildongmu.participation.service.ParticipationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,8 +32,8 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class ParticipationController implements ParticipationApiDocs {
 
-    private final ParticipationService participationService;
     private final ParticipationCommandService participationCommandService;
+    private final ParticipationApplicantService participationApplicantService;
 
     @Override
     @PostMapping("/posts/{postId}/participations")
@@ -40,7 +42,7 @@ public class ParticipationController implements ParticipationApiDocs {
             @PathVariable Long postId,
             @Valid @RequestBody ParticipationRequest request
     ) {
-        ParticipationCreateResponse response = participationService.participate(userId, postId, request);
+        ParticipationCreateResponse response = participationApplicantService.participate(userId, postId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
@@ -82,5 +84,24 @@ public class ParticipationController implements ParticipationApiDocs {
     ) {
         List<ParticipationRetrieveResponse> participants = participationCommandService.retrieveAllParticipants(userId, request);
         return ResponseEntity.ok(ApiResult.ok(participants));
+    }
+
+    @Override
+    @GetMapping("/users/me/participations")
+    public ResponseEntity<ApiResult<List<MyParticipationResponse>>> getMyParticipationApplications(
+            @CurrentUser Long userId
+    ) {
+        List<MyParticipationResponse> list = participationApplicantService.retrieveMyApplications(userId);
+        return ResponseEntity.ok(ApiResult.ok(list));
+    }
+
+    @Override
+    @DeleteMapping("/participations/{participationId}")
+    public ResponseEntity<ApiResult<Void>> cancelMyParticipation(
+            @CurrentUser Long userId,
+            @PathVariable Long participationId
+    ) {
+        participationApplicantService.cancelMyParticipation(userId, participationId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }

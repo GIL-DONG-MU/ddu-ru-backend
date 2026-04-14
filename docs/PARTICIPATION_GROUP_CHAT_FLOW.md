@@ -248,7 +248,7 @@ row 삭제 이벤트:
 
 ## 9. 서비스 책임
 
-### 9.1 ParticipationService
+### 9.1 ParticipationApplicantService
 
 책임:
 
@@ -256,6 +256,8 @@ row 삭제 이벤트:
 - 신청 중복 검증
 - 자기 게시글 신청 금지 검증
 - 게시글 모집 가능 여부 검증
+- 내가 보낸 신청 내역 조회(채팅방 ID 포함)
+- 대기 중 신청 취소
 
 ### 9.2 ParticipationCommandService
 
