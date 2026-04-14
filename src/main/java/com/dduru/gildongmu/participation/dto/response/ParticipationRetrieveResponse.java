@@ -2,7 +2,8 @@ package com.dduru.gildongmu.participation.dto.response;
 
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.query.ParticipationRetrieveQueryResult;
-import com.dduru.gildongmu.profile.service.ProfileImageResolver;
+import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -15,8 +16,8 @@ public record ParticipationRetrieveResponse(
         Long userId,
         @Schema(description = "신청자 이름", example = "여행메이트")
         String userName,
-        @Schema(description = "신청자 프로필 이미지 URL", example = "https://example.com/profile.jpg")
-        String profileImageUrl,
+        @Schema(description = "신청자 프로필 이미지 정보")
+        ProfileImageInfo profileImage,
         @Schema(description = "신청 메시지", example = "안녕하세요. 일정이 비슷해서 신청드립니다.")
         String message,
         @Schema(description = "신청 상태", example = "PENDING", allowableValues = {"PENDING", "CONTACTING", "APPROVED", "REJECTED"})
@@ -42,10 +43,12 @@ public record ParticipationRetrieveResponse(
                 queryResult.participationId(),
                 queryResult.userId(),
                 queryResult.userName(),
-                profileImageResolver.resolve(
+                ProfileImageInfo.from(
                         queryResult.profileImageType(),
                         queryResult.uploadedImageUrl(),
-                        queryResult.avatarImageUrl()
+                        queryResult.avatarImageUrl(),
+                        queryResult.bgColorId(),
+                        profileImageResolver
                 ),
                 queryResult.message(),
                 queryResult.status(),

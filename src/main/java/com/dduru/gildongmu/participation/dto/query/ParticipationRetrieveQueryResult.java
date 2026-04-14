@@ -12,6 +12,7 @@ public record ParticipationRetrieveQueryResult(
         ProfileImageType profileImageType,
         String uploadedImageUrl,
         String avatarImageUrl,
+        Long bgColorId,
         String message,
         ParticipationStatus status,
         LocalDateTime appliedAt,
