@@ -8,8 +8,8 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.customizers.OperationCustomizer;
-import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import org.springdoc.core.customizers.GlobalOperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,7 +32,7 @@ public class ApiErrorResponseDocsCustomizer {
      * ErrorResponse 스키마를 Components에 등록
      */
     @Bean
-    public OpenApiCustomizer errorResponseSchemaCustomizer() {
+    public GlobalOpenApiCustomizer errorResponseSchemaCustomizer() {
         return openApi -> {
             Components components = openApi.getComponents();
             if (components == null) {
@@ -58,7 +58,7 @@ public class ApiErrorResponseDocsCustomizer {
      * @ApiErrorResponses 어노테이션에 지정된 ErrorCode enum을 기반으로 에러 응답 자동 추가
      */
     @Bean
-    public OperationCustomizer operationCustomizer() {
+    public GlobalOperationCustomizer operationCustomizer() {
         return (operation, handlerMethod) -> {
             ErrorCode[] errorCodes = new ErrorCode[0];
 
