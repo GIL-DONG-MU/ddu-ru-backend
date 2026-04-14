@@ -17,6 +17,7 @@ import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
+import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -62,6 +63,8 @@ class SurveyServiceTest {
     private OnboardingService onboardingService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private SuperHostService superHostService;
 
     @InjectMocks
     private SurveyService surveyService;
@@ -187,6 +190,7 @@ class SurveyServiceTest {
 
         verify(surveyRepository).save(any(Survey.class));
         verify(travelTendencyRepository).save(any(TravelTendency.class));
+        verify(superHostService).grantOnboardingRewardTicket(1L);
     }
 
     @Test
@@ -277,6 +281,7 @@ class SurveyServiceTest {
         assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
         assertThat(response.avatarLabel()).isEqualTo("뚜르 파도-A");
         verify(surveyRepository, never()).save(any(Survey.class));
+        verify(superHostService).grantOnboardingRewardTicket(1L);
     }
 
     @Test
