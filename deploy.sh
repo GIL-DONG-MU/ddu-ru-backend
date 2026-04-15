@@ -1,20 +1,29 @@
 #!/bin/bash
-
 set -Eeuo pipefail
 
-# 프로젝트 루트의 .env는 docker compose가 치환용으로만 읽고, 셸에는 자동 주입되지 않음
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "${SCRIPT_DIR}/.env" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  . "${SCRIPT_DIR}/.env"
-  set +a
-fi
 
-COMPOSE=(docker compose -f docker-compose.prod.yml)
-UPSTREAM_DIR="deployment/nginx/conf.d/upstreams"
+load_dotenv() {
+  local env_file="$1"
+  [ -f "$env_file" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    [[ "$line" != *=* ]] && continue
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    key="${key%"${key##*[![:space:]]}"}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "$key"="$value"
+  done <"$env_file"
+}
+load_dotenv "${SCRIPT_DIR}/.env"
+
+COMPOSE=(docker compose -f "${SCRIPT_DIR}/docker-compose.prod.yml")
+UPSTREAM_DIR="${SCRIPT_DIR}/deployment/nginx/conf.d/upstreams"
 ACTIVE_UPSTREAM_FILE="${UPSTREAM_DIR}/active-upstream.inc"
-NGINX_UPSTREAM_PATH_IN_CONTAINER="/etc/nginx/conf.d/upstreams/active-upstream.inc"
 READINESS_PATH="http://localhost:8080/actuator/health/readiness"
 MAX_RETRIES=24
 RETRY_INTERVAL=5
@@ -28,6 +37,21 @@ require_env() {
   local key="$1"
   if [ -z "${!key:-}" ]; then
     echo "환경변수 ${key} 가 비어 있습니다." >&2
+    exit 1
+  fi
+}
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "필요한 명령을 찾을 수 없습니다: ${cmd}" >&2
+    exit 1
+  fi
+}
+
+require_compose_v2() {
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "docker compose v2가 필요합니다." >&2
     exit 1
   fi
 }
@@ -56,10 +80,20 @@ current_active_color() {
 }
 
 switch_upstream() {
-  local color="$1"
-  cp "${UPSTREAM_DIR}/active-upstream.${color}.inc" "$ACTIVE_UPSTREAM_FILE"
+  local target_color="$1"
+  local rollback_color="$2"
+
+  cp "${UPSTREAM_DIR}/active-upstream.${target_color}.inc" "$ACTIVE_UPSTREAM_FILE"
+
+  if ! "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1; then
+    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE"
+    "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1 || true
+    log "❌ nginx 설정 검증 실패. upstream를 ${rollback_color} 로 복구"
+    return 1
+  fi
+
   "${COMPOSE[@]}" exec -T nginx nginx -s reload
-  log "🔀 active upstream -> ${color}"
+  log "🔀 active upstream -> ${target_color}"
 }
 
 log "🚀 DDU-RU Backend Blue-Green 배포 시작"
@@ -68,6 +102,9 @@ require_env AWS_REGION
 require_env ECR_REGISTRY
 require_env ECR_REPOSITORY
 require_env IMAGE_TAG
+require_command aws
+require_command docker
+require_compose_v2
 
 log "🔐 ECR 로그인"
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
@@ -94,8 +131,9 @@ log "🚀 대상 색상 기동 (${idle_service})"
 "${COMPOSE[@]}" up -d --no-deps "${idle_service}"
 
 if ! wait_for_readiness "${idle_service}"; then
-  log "❌ ${idle_service} readiness 실패. 롤백 없이 종료"
+  log "❌ ${idle_service} readiness 실패. 새 색상 중지 후 종료"
   "${COMPOSE[@]}" logs --tail=200 "${idle_service}" || true
+  "${COMPOSE[@]}" stop "${idle_service}" || true
   exit 1
 fi
 
@@ -103,11 +141,8 @@ log "🧱 Nginx 기동 보장"
 "${COMPOSE[@]}" up -d nginx
 
 log "🌐 Nginx upstream 전환 (${idle_color})"
-switch_upstream "${idle_color}"
-
-if ! "${COMPOSE[@]}" exec -T nginx sh -c "test -f ${NGINX_UPSTREAM_PATH_IN_CONTAINER}"; then
-  log "❌ Nginx 내부 upstream 파일 확인 실패. 이전 색상으로 롤백"
-  switch_upstream "${active_color}"
+if ! switch_upstream "${idle_color}" "${active_color}"; then
+  "${COMPOSE[@]}" stop "${idle_service}" || true
   exit 1
 fi
 
