@@ -56,6 +56,26 @@ require_compose_v2() {
   fi
 }
 
+require_file() {
+  local path="$1"
+  if [ ! -f "$path" ]; then
+    echo "필수 파일이 없습니다: ${path}" >&2
+    exit 1
+  fi
+}
+
+bootstrap_active_upstream() {
+  if [ -f "$ACTIVE_UPSTREAM_FILE" ]; then
+    return 0
+  fi
+
+  cp "${UPSTREAM_DIR}/active-upstream.blue.inc" "$ACTIVE_UPSTREAM_FILE" || {
+    echo "active upstream 초기화에 실패했습니다: ${UPSTREAM_DIR}/active-upstream.blue.inc" >&2
+    exit 1
+  }
+  log "ℹ️ active upstream 파일이 없어 blue로 초기화했습니다."
+}
+
 wait_for_readiness() {
   local service="$1"
   local i=1
@@ -83,16 +103,26 @@ switch_upstream() {
   local target_color="$1"
   local rollback_color="$2"
 
-  cp "${UPSTREAM_DIR}/active-upstream.${target_color}.inc" "$ACTIVE_UPSTREAM_FILE"
+  cp "${UPSTREAM_DIR}/active-upstream.${target_color}.inc" "$ACTIVE_UPSTREAM_FILE" || {
+    log "❌ upstream 파일 복사 실패: ${UPSTREAM_DIR}/active-upstream.${target_color}.inc"
+    return 1
+  }
 
   if ! "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1; then
-    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE"
+    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE" || true
     "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1 || true
     log "❌ nginx 설정 검증 실패. upstream를 ${rollback_color} 로 복구"
     return 1
   fi
 
-  "${COMPOSE[@]}" exec -T nginx nginx -s reload
+  if ! "${COMPOSE[@]}" exec -T nginx nginx -s reload >/dev/null 2>&1; then
+    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE" || true
+    "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1 || true
+    "${COMPOSE[@]}" exec -T nginx nginx -s reload >/dev/null 2>&1 || true
+    log "❌ nginx reload 실패. upstream를 ${rollback_color} 로 복구"
+    return 1
+  fi
+
   log "🔀 active upstream -> ${target_color}"
 }
 
@@ -105,6 +135,12 @@ require_env IMAGE_TAG
 require_command aws
 require_command docker
 require_compose_v2
+require_file "${SCRIPT_DIR}/docker-compose.prod.yml"
+require_file "${SCRIPT_DIR}/deployment/nginx/nginx.conf"
+require_file "${SCRIPT_DIR}/deployment/nginx/conf.d/default.conf"
+require_file "${UPSTREAM_DIR}/active-upstream.blue.inc"
+require_file "${UPSTREAM_DIR}/active-upstream.green.inc"
+bootstrap_active_upstream
 
 log "🔐 ECR 로그인"
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
