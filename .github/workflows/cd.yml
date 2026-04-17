@@ -2,7 +2,7 @@ name: CD - Continuous Deployment
 
 on:
   workflow_run:
-    workflows: ["CI - Continuous Integration"]
+    workflows: [ "CI - Continuous Integration" ]
     types:
       - completed
     branches:
@@ -117,7 +117,6 @@ jobs:
             cd ~/app
             tar -xzf deploy-bundle.tar.gz
             rm -f deploy-bundle.tar.gz
-            find deployment -maxdepth 5 -type f | sort
             test -f ~/app/deployment/nginx/conf.d/upstreams/active-upstream.blue.inc
             test -f ~/app/deployment/nginx/conf.d/upstreams/active-upstream.green.inc
             chmod +x ./deploy.sh && ./deploy.sh

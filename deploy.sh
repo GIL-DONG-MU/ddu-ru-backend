@@ -1,27 +1,11 @@
 #!/bin/bash
-set -Eeuo pipefail
+
+# DDU-RU Backend Blue-Green 배포 스크립트
+
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-load_dotenv() {
-  local env_file="$1"
-  [ -f "$env_file" ] || return 0
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line%$'\r'}"
-    [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ -z "${line//[[:space:]]/}" ]] && continue
-    [[ "$line" != *=* ]] && continue
-    local key="${line%%=*}"
-    local value="${line#*=}"
-    key="${key%"${key##*[![:space:]]}"}"
-    key="${key#"${key%%[![:space:]]*}"}"
-    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
-    export "$key"="$value"
-  done <"$env_file"
-}
-load_dotenv "${SCRIPT_DIR}/.env"
-
-COMPOSE=(docker compose -f "${SCRIPT_DIR}/docker-compose.prod.yml")
+COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.prod.yml"
 UPSTREAM_DIR="${SCRIPT_DIR}/deployment/nginx/conf.d/upstreams"
 ACTIVE_UPSTREAM_FILE="${UPSTREAM_DIR}/active-upstream.inc"
 READINESS_PATH="http://localhost:8080/actuator/health/readiness"
@@ -29,164 +13,170 @@ MAX_RETRIES=24
 RETRY_INTERVAL=5
 DRAIN_SECONDS=10
 
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+load_dotenv() {
+  local env_file="$1"
+  [ -f "$env_file" ] || return 0
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    [[ "$line" != *=* ]] && continue
+
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    key="${key%"${key##*[![:space:]]}"}"
+    key="${key#"${key%%[![:space:]]*}"}"
+
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "$key"="$value"
+  done <"$env_file"
 }
 
-require_env() {
-  local key="$1"
-  if [ -z "${!key:-}" ]; then
-    echo "환경변수 ${key} 가 비어 있습니다." >&2
-    exit 1
-  fi
-}
-
-require_command() {
-  local cmd="$1"
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "필요한 명령을 찾을 수 없습니다: ${cmd}" >&2
-    exit 1
-  fi
-}
-
-require_compose_v2() {
-  if ! docker compose version >/dev/null 2>&1; then
-    echo "docker compose v2가 필요합니다." >&2
-    exit 1
-  fi
-}
-
-require_file() {
-  local path="$1"
-  if [ ! -f "$path" ]; then
-    echo "필수 파일이 없습니다: ${path}" >&2
-    exit 1
-  fi
-}
-
-bootstrap_active_upstream() {
-  if [ -f "$ACTIVE_UPSTREAM_FILE" ]; then
-    return 0
-  fi
-
-  cp "${UPSTREAM_DIR}/active-upstream.blue.inc" "$ACTIVE_UPSTREAM_FILE" || {
-    echo "active upstream 초기화에 실패했습니다: ${UPSTREAM_DIR}/active-upstream.blue.inc" >&2
-    exit 1
-  }
-  log "ℹ️ active upstream 파일이 없어 blue로 초기화했습니다."
+compose() {
+  docker compose -f "${COMPOSE_FILE}" "$@"
 }
 
 wait_for_readiness() {
   local service="$1"
-  local i=1
-  while [ "$i" -le "$MAX_RETRIES" ]; do
-    if "${COMPOSE[@]}" exec -T "$service" sh -c "curl -fsS ${READINESS_PATH} | grep -q '\"status\":\"UP\"'" >/dev/null 2>&1; then
-      log "✅ ${service} readiness 통과"
+
+  echo "⏳ ${service} readiness 확인 중..."
+  for i in $(seq 1 "${MAX_RETRIES}"); do
+    if compose exec -T "$service" sh -c "curl -fsS ${READINESS_PATH} | grep -q '\"status\":\"UP\"'" >/dev/null 2>&1; then
+      echo "✅ ${service} readiness 통과"
       return 0
     fi
-    log "⏳ ${service} readiness 대기 중... (${i}/${MAX_RETRIES})"
-    sleep "$RETRY_INTERVAL"
-    i=$((i + 1))
-  done
-  return 1
-}
 
-current_active_color() {
-  if [ -f "$ACTIVE_UPSTREAM_FILE" ] && grep -q "app_green:8080" "$ACTIVE_UPSTREAM_FILE"; then
-    echo "green"
-  else
-    echo "blue"
-  fi
+    echo "Attempt ${i}/${MAX_RETRIES}: 아직 준비되지 않았습니다. ${RETRY_INTERVAL}초 후 재시도..."
+    sleep "${RETRY_INTERVAL}"
+  done
+
+  return 1
 }
 
 switch_upstream() {
   local target_color="$1"
   local rollback_color="$2"
 
-  cp "${UPSTREAM_DIR}/active-upstream.${target_color}.inc" "$ACTIVE_UPSTREAM_FILE" || {
-    log "❌ upstream 파일 복사 실패: ${UPSTREAM_DIR}/active-upstream.${target_color}.inc"
+  cp "${UPSTREAM_DIR}/active-upstream.${target_color}.inc" "${ACTIVE_UPSTREAM_FILE}" || {
+    echo "❌ upstream 파일 복사 실패: ${UPSTREAM_DIR}/active-upstream.${target_color}.inc"
     return 1
   }
 
-  if ! "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1; then
-    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE" || true
-    "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1 || true
-    log "❌ nginx 설정 검증 실패. upstream를 ${rollback_color} 로 복구"
+  if ! compose exec -T nginx nginx -t >/dev/null 2>&1; then
+    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "${ACTIVE_UPSTREAM_FILE}" || true
+    compose exec -T nginx nginx -t >/dev/null 2>&1 || true
+    echo "❌ nginx 설정 검증 실패. upstream를 ${rollback_color} 로 복구합니다."
     return 1
   fi
 
-  if ! "${COMPOSE[@]}" exec -T nginx nginx -s reload >/dev/null 2>&1; then
-    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "$ACTIVE_UPSTREAM_FILE" || true
-    "${COMPOSE[@]}" exec -T nginx nginx -t >/dev/null 2>&1 || true
-    "${COMPOSE[@]}" exec -T nginx nginx -s reload >/dev/null 2>&1 || true
-    log "❌ nginx reload 실패. upstream를 ${rollback_color} 로 복구"
+  if ! compose exec -T nginx nginx -s reload >/dev/null 2>&1; then
+    cp "${UPSTREAM_DIR}/active-upstream.${rollback_color}.inc" "${ACTIVE_UPSTREAM_FILE}" || true
+    compose exec -T nginx nginx -t >/dev/null 2>&1 || true
+    compose exec -T nginx nginx -s reload >/dev/null 2>&1 || true
+    echo "❌ nginx reload 실패. upstream를 ${rollback_color} 로 복구합니다."
     return 1
   fi
 
-  log "🔀 active upstream -> ${target_color}"
+  echo "🔀 active upstream -> ${target_color}"
 }
 
-log "🚀 DDU-RU Backend Blue-Green 배포 시작"
+load_dotenv "${SCRIPT_DIR}/.env"
 
-require_env AWS_REGION
-require_env ECR_REGISTRY
-require_env ECR_REPOSITORY
-require_env IMAGE_TAG
-require_command aws
-require_command docker
-require_compose_v2
-require_file "${SCRIPT_DIR}/docker-compose.prod.yml"
-require_file "${SCRIPT_DIR}/deployment/nginx/nginx.conf"
-require_file "${SCRIPT_DIR}/deployment/nginx/conf.d/default.conf"
-require_file "${UPSTREAM_DIR}/active-upstream.blue.inc"
-require_file "${UPSTREAM_DIR}/active-upstream.green.inc"
-bootstrap_active_upstream
+echo "🚀 DDU-RU Backend Blue-Green 배포 시작..."
 
-log "🔐 ECR 로그인"
+for key in AWS_REGION ECR_REGISTRY ECR_REPOSITORY IMAGE_TAG; do
+  if [ -z "${!key:-}" ]; then
+    echo "❌ 환경변수 ${key} 가 비어 있습니다." >&2
+    exit 1
+  fi
+done
+
+for cmd in aws docker; do
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    echo "❌ 필요한 명령을 찾을 수 없습니다: ${cmd}" >&2
+    exit 1
+  fi
+done
+
+if ! docker compose version >/dev/null 2>&1; then
+  echo "❌ docker compose v2가 필요합니다." >&2
+  exit 1
+fi
+
+for file in \
+  "${COMPOSE_FILE}" \
+  "${SCRIPT_DIR}/deployment/nginx/nginx.conf" \
+  "${SCRIPT_DIR}/deployment/nginx/conf.d/default.conf" \
+  "${UPSTREAM_DIR}/active-upstream.blue.inc" \
+  "${UPSTREAM_DIR}/active-upstream.green.inc"; do
+  if [ ! -f "${file}" ]; then
+    echo "❌ 필수 파일이 없습니다: ${file}" >&2
+    exit 1
+  fi
+done
+
+if [ ! -f "${ACTIVE_UPSTREAM_FILE}" ]; then
+  cp "${UPSTREAM_DIR}/active-upstream.blue.inc" "${ACTIVE_UPSTREAM_FILE}" || {
+    echo "❌ active upstream 초기화 실패: ${UPSTREAM_DIR}/active-upstream.blue.inc" >&2
+    exit 1
+  }
+  echo "ℹ️ active upstream 파일이 없어 blue로 초기화했습니다."
+fi
+
+echo "🧾 배포 컨텍스트 확인"
+echo "AWS_REGION=${AWS_REGION}"
+echo "ECR_REGISTRY=${ECR_REGISTRY}"
+echo "ECR_REPOSITORY=${ECR_REPOSITORY}"
+echo "IMAGE_TAG=${IMAGE_TAG}"
+
+echo "🔐 ECR에 Docker 로그인..."
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
 
-active_color="$(current_active_color)"
-if [ "$active_color" = "blue" ]; then
-  idle_color="green"
+if grep -q "app_green:8080" "${ACTIVE_UPSTREAM_FILE}"; then
+  ACTIVE_COLOR="green"
+  IDLE_COLOR="blue"
 else
-  idle_color="blue"
+  ACTIVE_COLOR="blue"
+  IDLE_COLOR="green"
 fi
 
-active_service="app_${active_color}"
-idle_service="app_${idle_color}"
+ACTIVE_SERVICE="app_${ACTIVE_COLOR}"
+IDLE_SERVICE="app_${IDLE_COLOR}"
 
-log "현재 활성 색상: ${active_color}, 배포 대상: ${idle_color}"
+echo "현재 활성 색상: ${ACTIVE_COLOR}, 배포 대상: ${IDLE_COLOR}"
 
-log "🧱 필수 인프라(redis) 기동 보장"
-"${COMPOSE[@]}" up -d redis
+echo "🧱 필수 인프라(redis) 기동 보장..."
+compose up -d redis
 
-log "📥 새 버전 이미지 pull (${idle_service})"
-"${COMPOSE[@]}" pull "${idle_service}"
+echo "📥 새 버전 이미지 가져오는 중... (${IDLE_SERVICE})"
+compose pull "${IDLE_SERVICE}"
 
-log "🚀 대상 색상 기동 (${idle_service})"
-"${COMPOSE[@]}" up -d --no-deps "${idle_service}"
+echo "🚀 대상 색상 기동... (${IDLE_SERVICE})"
+compose up -d --no-deps "${IDLE_SERVICE}"
 
-if ! wait_for_readiness "${idle_service}"; then
-  log "❌ ${idle_service} readiness 실패. 새 색상 중지 후 종료"
-  "${COMPOSE[@]}" logs --tail=200 "${idle_service}" || true
-  "${COMPOSE[@]}" stop "${idle_service}" || true
+if ! wait_for_readiness "${IDLE_SERVICE}"; then
+  echo "❌ ${IDLE_SERVICE} readiness 실패"
+  echo "🔍 로그 확인:"
+  compose logs --tail=200 "${IDLE_SERVICE}" || true
+  compose stop "${IDLE_SERVICE}" || true
   exit 1
 fi
 
-log "🧱 Nginx 기동 보장"
-"${COMPOSE[@]}" up -d nginx
+echo "🧱 Nginx 기동 보장..."
+compose up -d nginx
 
-log "🌐 Nginx upstream 전환 (${idle_color})"
-if ! switch_upstream "${idle_color}" "${active_color}"; then
-  "${COMPOSE[@]}" stop "${idle_service}" || true
+echo "🌐 Nginx upstream 전환... (${IDLE_COLOR})"
+if ! switch_upstream "${IDLE_COLOR}" "${ACTIVE_COLOR}"; then
+  compose stop "${IDLE_SERVICE}" || true
   exit 1
 fi
 
-log "🕒 기존 색상 커넥션 드레인 대기 (${DRAIN_SECONDS}s)"
+echo "🕒 기존 색상 연결 정리 대기... (${DRAIN_SECONDS}s)"
 sleep "${DRAIN_SECONDS}"
 
-log "🛑 이전 색상 중지 (${active_service})"
-"${COMPOSE[@]}" stop "${active_service}" || true
+echo "🛑 이전 색상 중지... (${ACTIVE_SERVICE})"
+compose stop "${ACTIVE_SERVICE}" || true
 
-log "✅ 배포 완료: active=${idle_color}, inactive=${active_color}"
-"${COMPOSE[@]}" ps
+echo "✅ 배포 완료: active=${IDLE_COLOR}, inactive=${ACTIVE_COLOR}"
+compose ps
