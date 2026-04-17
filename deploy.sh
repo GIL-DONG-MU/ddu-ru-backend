@@ -61,8 +61,6 @@ switch_upstream() {
   echo "🔀 active upstream -> ${target_color}"
 }
 
-load_dotenv "${SCRIPT_DIR}/.env"
-
 echo "🚀 DDU-RU Backend Blue-Green 배포 시작..."
 
 for key in AWS_REGION ECR_REGISTRY ECR_REPOSITORY IMAGE_TAG; do
