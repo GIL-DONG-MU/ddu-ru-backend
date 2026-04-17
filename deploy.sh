@@ -13,26 +13,6 @@ MAX_RETRIES=24
 RETRY_INTERVAL=5
 DRAIN_SECONDS=10
 
-load_dotenv() {
-  local env_file="$1"
-  [ -f "$env_file" ] || return 0
-
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line%$'\r'}"
-    [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ -z "${line//[[:space:]]/}" ]] && continue
-    [[ "$line" != *=* ]] && continue
-
-    local key="${line%%=*}"
-    local value="${line#*=}"
-    key="${key%"${key##*[![:space:]]}"}"
-    key="${key#"${key%%[![:space:]]*}"}"
-
-    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
-    export "$key"="$value"
-  done <"$env_file"
-}
-
 compose() {
   docker compose -f "${COMPOSE_FILE}" "$@"
 }
