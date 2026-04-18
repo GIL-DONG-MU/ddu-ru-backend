@@ -6,6 +6,7 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageBroadcastPayload;
+import com.dduru.gildongmu.chat.dto.ws.ChatMessageSenderPayload;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageSendRequest;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
@@ -45,7 +46,7 @@ public class ChatMessageSendService {
         validateRoomOpen(room);
         checkSenderIsMember(senderUserId, roomId);
 
-        User sender = userRepository.getByIdOrThrow(senderUserId);
+        User sender = userRepository.getWithProfileByIdOrThrow(senderUserId);
         String content = resolveUserMessageContent(request);
         saveUserMessageAndMaybeActivate(room, sender, request.messageType(), content);
     }
@@ -73,6 +74,7 @@ public class ChatMessageSendService {
 
     private ChatMessageBroadcastPayload toPayload(ChatMessage saved) {
         Post post = saved.getRoom().getPost();
+        User sender = requireSender(saved);
 
         return new ChatMessageBroadcastPayload(
                 saved.getId(),
@@ -81,9 +83,17 @@ public class ChatMessageSendService {
                 post.getRecruitCount(),
                 post.getRecruitCapacity(),
                 saved.getMessageType(),
-                null,
+                ChatMessageSenderPayload.from(sender, post.getUser().getId(), profileImageResolver),
                 saved.getCreatedAt()
         );
+    }
+
+    private static User requireSender(ChatMessage saved) {
+        User sender = saved.getSender();
+        if (sender == null) {
+            throw new IllegalStateException("사용자 메시지에는 sender가 필요합니다.");
+        }
+        return sender;
     }
 
     private static String resolveUserMessageContent(ChatMessageSendRequest request) {
