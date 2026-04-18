@@ -85,8 +85,7 @@ public class GroupChatRoomService {
     /**
      * 해당 방에 첫 메시지가 저장된 직후 호출하면 PENDING → ACTIVE 로 전환한다.
      */
-    public void activateChatOnFirstMessage(Long roomId) {
-        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
+    public static void activateChatOnFirstMessage(ChatRoom room) {
         if (room.getRoomType() != ChatRoomType.GROUP) {
             return;
         }
