@@ -17,6 +17,8 @@ public record ChatMessageBroadcastPayload(
         int recruitCapacity,
         ChatMessageType messageType,
         ChatMessageSenderPayload sender,
+        ChatUserMessagePayload userMessage,
+        ChatSystemMessagePayload systemMessage,
         LocalDateTime createdAt
 ) {
 }

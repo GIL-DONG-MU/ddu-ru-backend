@@ -8,12 +8,15 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageBroadcastPayload;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageSenderPayload;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageSendRequest;
+import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
+import com.dduru.gildongmu.chat.dto.ws.ChatUserMessagePayload;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.ChatSystemMessageSendAccessDeniedException;
 import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.chat.system.ChatSystemMessageFactory;
 import com.dduru.gildongmu.chat.validation.ChatImageUrlValidator;
 import com.dduru.gildongmu.chat.validation.ChatTextValidator;
 import com.dduru.gildongmu.post.domain.Post;
@@ -40,6 +43,7 @@ public class ChatMessageSendService {
     private final GroupChatRoomService groupChatRoomService;
     private final ProfileImageResolver profileImageResolver;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final ChatSystemMessageFactory chatSystemMessageFactory;
 
     public void sendUserMessage(Long senderUserId, Long roomId, ChatMessageSendRequest request) {
         ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
@@ -49,6 +53,36 @@ public class ChatMessageSendService {
         User sender = userRepository.getWithProfileByIdOrThrow(senderUserId);
         String content = resolveUserMessageContent(request);
         saveUserMessageAndMaybeActivate(room, sender, request.messageType(), content);
+    }
+
+    /**
+     * 멤버 초대 성공 등 서버 전용 시스템 메시지를 저장하고 브로드캐스트한다.
+     */
+    public void publishUserInvited(Long roomId, long inviteeUserId, long actorUserId) {
+        saveSystemMessageAndBroadcast(
+                roomId,
+                chatSystemMessageFactory.userInvited(inviteeUserId, actorUserId)
+        );
+    }
+
+    /**
+     * 서버에서 생성한 시스템 메시지를 JSON content로 저장하고 typed payload로 동일 토픽에 전달한다.
+     */
+    public void saveSystemMessageAndBroadcast(Long roomId, ChatSystemMessagePayload systemMessage) {
+        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
+        validateRoomOpen(room);
+        long beforeCount = chatMessageRepository.countByRoom_Id(roomId);
+        ChatMessage saved = chatMessageRepository.save(ChatMessage.builder()
+                .room(room)
+                .sender(null)
+                .messageType(ChatMessageType.SYSTEM)
+                .content(chatSystemMessageFactory.serialize(systemMessage))
+                .build());
+        chatMessageRepository.flush();
+        if (beforeCount == 0) {
+            groupChatRoomService.activateChatOnFirstMessage(room);
+        }
+        scheduleBroadcastAfterCommit(toPayload(saved), roomId);
     }
 
     private void checkSenderIsMember(Long senderUserId, Long roomId) {
@@ -74,6 +108,22 @@ public class ChatMessageSendService {
 
     private ChatMessageBroadcastPayload toPayload(ChatMessage saved) {
         Post post = saved.getRoom().getPost();
+
+        if (saved.getMessageType() == ChatMessageType.SYSTEM) {
+            return new ChatMessageBroadcastPayload(
+                    saved.getId(),
+                    saved.getRoom().getId(),
+                    post.getTitle(),
+                    post.getRecruitCount(),
+                    post.getRecruitCapacity(),
+                    saved.getMessageType(),
+                    null,
+                    null,
+                    chatSystemMessageFactory.deserialize(saved.getContent()),
+                    saved.getCreatedAt()
+            );
+        }
+
         User sender = requireSender(saved);
 
         return new ChatMessageBroadcastPayload(
@@ -84,6 +134,8 @@ public class ChatMessageSendService {
                 post.getRecruitCapacity(),
                 saved.getMessageType(),
                 ChatMessageSenderPayload.from(sender, post.getUser().getId(), profileImageResolver),
+                ChatUserMessagePayload.from(saved.getMessageType(), saved.getContent()),
+                null,
                 saved.getCreatedAt()
         );
     }
