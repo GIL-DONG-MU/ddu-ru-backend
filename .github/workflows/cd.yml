@@ -2,7 +2,7 @@ name: CD - Continuous Deployment
 
 on:
   workflow_run:
-    workflows: ["CI - Continuous Integration"]
+    workflows: [ "CI - Continuous Integration" ]
     types:
       - completed
     branches:
@@ -52,13 +52,19 @@ jobs:
           docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
           echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      - name: 📂 Copy deployment files to EC2
+      - name: 📦 Package deployment bundle
+        run: |
+          tar --exclude='deployment/nginx/conf.d/upstreams/active-upstream.inc' \
+              -czf deploy-bundle.tar.gz \
+              deploy.sh docker-compose.prod.yml deployment
+
+      - name: 📂 Copy deployment bundle to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "deploy.sh,docker-compose.prod.yml"
+          source: "deploy-bundle.tar.gz"
           target: "~/app"
 
       - name: 🚀 Deploy to EC2
@@ -107,5 +113,10 @@ jobs:
 
             # 배포 스크립트 실행
             set -e
+            mkdir -p ~/app
             cd ~/app
+            tar -xzf deploy-bundle.tar.gz
+            rm -f deploy-bundle.tar.gz
+            test -f ~/app/deployment/nginx/conf.d/upstreams/active-upstream.blue.inc
+            test -f ~/app/deployment/nginx/conf.d/upstreams/active-upstream.green.inc
             chmod +x ./deploy.sh && ./deploy.sh

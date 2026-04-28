@@ -25,6 +25,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 jwt:
   expiration: ${JWT_EXPIRATION}
@@ -36,6 +38,9 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [reqId=%X{requestId:-} ip=%X{clientIp:-} method=%X{method:-} uri=%X{uri:-} userId=%X{userId:-}] %msg%n"
 
+server:
+  shutdown: graceful
+
 management:
   endpoints:
     web:
@@ -44,3 +49,15 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db,redis
+        liveness:
+          include: livenessState
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
