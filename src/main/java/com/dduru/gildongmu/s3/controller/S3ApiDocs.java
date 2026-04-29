@@ -1,7 +1,7 @@
-package com.dduru.gildongmu.S3.controller;
+package com.dduru.gildongmu.s3.controller;
 
-import com.dduru.gildongmu.S3.dto.request.ImageUploadRequest;
-import com.dduru.gildongmu.S3.dto.response.ImageUploadResponse;
+import com.dduru.gildongmu.s3.dto.request.ImageUploadRequest;
+import com.dduru.gildongmu.s3.dto.response.ImageUploadResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
