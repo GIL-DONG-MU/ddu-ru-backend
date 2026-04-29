@@ -13,6 +13,7 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다."),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type입니다."),
 
     // 인증 (AUTH)
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 인증 토큰입니다."),
