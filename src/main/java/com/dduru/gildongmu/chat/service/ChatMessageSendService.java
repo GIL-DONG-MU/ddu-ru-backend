@@ -6,10 +6,8 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageBroadcastPayload;
-import com.dduru.gildongmu.chat.dto.ws.ChatMessageSenderPayload;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageSendRequest;
 import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
-import com.dduru.gildongmu.chat.dto.ws.ChatUserMessagePayload;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.ChatSystemMessageSendAccessDeniedException;
@@ -40,7 +38,6 @@ public class ChatMessageSendService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
 
-    private final GroupChatRoomService groupChatRoomService;
     private final ProfileImageResolver profileImageResolver;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatSystemMessageFactory chatSystemMessageFactory;
@@ -52,37 +49,18 @@ public class ChatMessageSendService {
 
         User sender = userRepository.getWithProfileByIdOrThrow(senderUserId);
         String content = resolveUserMessageContent(request);
-        saveUserMessageAndMaybeActivate(room, sender, request.messageType(), content);
+        saveUserMessageAndBroadcast(room, sender, request.messageType(), content);
     }
 
-    /**
-     * 멤버 초대 성공 등 서버 전용 시스템 메시지를 저장하고 브로드캐스트한다.
-     */
-    public void publishUserInvited(Long roomId, long inviteeUserId, long actorUserId) {
-        saveSystemMessageAndBroadcast(
-                roomId,
-                chatSystemMessageFactory.userInvited(inviteeUserId, actorUserId)
+    public void publishUserInvited(ChatRoom room, long inviteeUserId, long actorUserId) {
+        saveSystemMessageAndBroadcast(room, chatSystemMessageFactory.userInvited(inviteeUserId, actorUserId));
+    }
+
+    private void saveSystemMessageAndBroadcast(ChatRoom room, ChatSystemMessagePayload systemMessage) {
+        ChatMessage chatMessage = saveMessageAndActivateRoomIfFirstMessage(room, null, ChatMessageType.SYSTEM,
+                chatSystemMessageFactory.serialize(systemMessage)
         );
-    }
-
-    /**
-     * 서버에서 생성한 시스템 메시지를 JSON content로 저장하고 typed payload로 동일 토픽에 전달한다.
-     */
-    public void saveSystemMessageAndBroadcast(Long roomId, ChatSystemMessagePayload systemMessage) {
-        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
-        validateRoomOpen(room);
-        long beforeCount = chatMessageRepository.countByRoom_Id(roomId);
-        ChatMessage saved = chatMessageRepository.save(ChatMessage.builder()
-                .room(room)
-                .sender(null)
-                .messageType(ChatMessageType.SYSTEM)
-                .content(chatSystemMessageFactory.serialize(systemMessage))
-                .build());
-        chatMessageRepository.flush();
-        if (beforeCount == 0) {
-            groupChatRoomService.activateChatOnFirstMessage(room);
-        }
-        scheduleBroadcastAfterCommit(toPayload(saved), roomId);
+        broadcastAfterCommit(toPayload(chatMessage), room.getId());
     }
 
     private void checkSenderIsMember(Long senderUserId, Long roomId) {
@@ -91,57 +69,48 @@ public class ChatMessageSendService {
         }
     }
 
-    private void saveUserMessageAndMaybeActivate(ChatRoom room, User sender, ChatMessageType messageType, String content) {
-        long beforeCount = chatMessageRepository.countByRoom_Id(room.getId());
-        ChatMessage saved = chatMessageRepository.save(ChatMessage.builder()
-                .room(room)
-                .sender(sender)
-                .messageType(messageType)
-                .content(content)
-                .build());
+    private void saveUserMessageAndBroadcast(ChatRoom room, User sender, ChatMessageType messageType, String content) {
+        ChatMessage chatMessage = saveMessageAndActivateRoomIfFirstMessage(room, sender, messageType, content);
+        broadcastAfterCommit(toPayload(chatMessage), room.getId());
+    }
+
+    private ChatMessage saveMessageAndActivateRoomIfFirstMessage(
+            ChatRoom room,
+            User sender,
+            ChatMessageType messageType,
+            String content
+    ) {
+        long beforeMessageCount = chatMessageRepository.countByRoom_Id(room.getId());
+        ChatMessage message = saveAndFlushMessage(room, sender, messageType, content);
+        activateRoomIfFirstMessage(room, beforeMessageCount);
+        return message;
+    }
+
+    private ChatMessage saveAndFlushMessage(ChatRoom room, User sender, ChatMessageType messageType, String content) {
+        ChatMessage message = chatMessageRepository.save(ChatMessage.create(room, sender, messageType, content));
         chatMessageRepository.flush();
-        if (beforeCount == 0) {
-            groupChatRoomService.activateChatOnFirstMessage(room);
-        }
-        scheduleBroadcastAfterCommit(toPayload(saved), room.getId());
+        return message;
     }
 
-    private ChatMessageBroadcastPayload toPayload(ChatMessage saved) {
-        Post post = saved.getRoom().getPost();
-
-        if (saved.getMessageType() == ChatMessageType.SYSTEM) {
-            return new ChatMessageBroadcastPayload(
-                    saved.getId(),
-                    saved.getRoom().getId(),
-                    post.getTitle(),
-                    post.getRecruitCount(),
-                    post.getRecruitCapacity(),
-                    saved.getMessageType(),
-                    null,
-                    null,
-                    chatSystemMessageFactory.deserialize(saved.getContent()),
-                    saved.getCreatedAt()
-            );
+    private void activateRoomIfFirstMessage(ChatRoom room, long beforeMessageCount) {
+        if (beforeMessageCount == 0) {
+            room.activateIfPending();
         }
-
-        User sender = requireSender(saved);
-
-        return new ChatMessageBroadcastPayload(
-                saved.getId(),
-                saved.getRoom().getId(),
-                post.getTitle(),
-                post.getRecruitCount(),
-                post.getRecruitCapacity(),
-                saved.getMessageType(),
-                ChatMessageSenderPayload.from(sender, post.getUser().getId(), profileImageResolver),
-                ChatUserMessagePayload.from(saved.getMessageType(), saved.getContent()),
-                null,
-                saved.getCreatedAt()
-        );
     }
 
-    private static User requireSender(ChatMessage saved) {
-        User sender = saved.getSender();
+    private ChatMessageBroadcastPayload toPayload(ChatMessage message) {
+        Post post = message.getRoom().getPost();
+
+        if (message.getMessageType() == ChatMessageType.SYSTEM) {
+            return ChatMessageBroadcastPayload.ofSystemMessage(message, post, chatSystemMessageFactory);
+        }
+
+        User sender = requireSender(message.getSender());
+
+        return ChatMessageBroadcastPayload.ofUserMessage(message, post, sender, profileImageResolver);
+    }
+
+    private static User requireSender(User sender) {
         if (sender == null) {
             throw new IllegalStateException("사용자 메시지에는 sender가 필요합니다.");
         }
@@ -166,7 +135,7 @@ public class ChatMessageSendService {
      * 트랜잭션이 커밋된 뒤에만 브로드캐스트해서, 롤백 시 잘못된 실시간 메시지가 나가지 않게 한다.
      * 테스트 등 비트랜잭션 호출에서는 즉시 전송한다.
      */
-    private void scheduleBroadcastAfterCommit(ChatMessageBroadcastPayload payload, Long roomId) {
+    private void broadcastAfterCommit(ChatMessageBroadcastPayload payload, Long roomId) {
         String destination = ChatDestinationPaths.topicRoom(roomId);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(
