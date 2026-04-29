@@ -48,4 +48,14 @@ public class S3Controller implements S3ApiDocs {
         List<ImageUploadResponse> responses = s3Service.prepareSurveyImageUpload(request.fileNames());
         return ResponseEntity.ok(ApiResult.ok(responses));
     }*/
+
+    @Override
+    @PostMapping("/chats/presigned-url")
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareChatImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        List<ImageUploadResponse> responses = s3Service.prepareChatImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
+    }
+
 }

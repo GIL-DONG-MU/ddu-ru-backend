@@ -27,7 +27,8 @@ public interface S3ApiDocs {
     @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
-            ErrorCode.INVALID_FILE_EXTENSION
+            ErrorCode.INVALID_FILE_EXTENSION,
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(
             @RequestBody ImageUploadRequest request
@@ -43,7 +44,8 @@ public interface S3ApiDocs {
     @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
-            ErrorCode.INVALID_FILE_EXTENSION
+            ErrorCode.INVALID_FILE_EXTENSION,
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareProfileImageUpload(
             @Valid @RequestBody ImageUploadRequest request
@@ -62,4 +64,21 @@ public interface S3ApiDocs {
             ErrorCode.INVALID_FILE_EXTENSION
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareSurveyImageUpload(@RequestBody ImageUploadRequest request);*/
+
+    @Operation(
+            summary = "채팅 이미지 업로드를 위한 Presigned URL 생성",
+            description = "채팅으로 보낸 사진을 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "
+                    + "여러 파일을 한 번에 요청할 수 있습니다 (최대 10개). "
+                    + "파일명은 UUID로 변환되어 중복을 방지합니다. "
+                    + "클라이언트는 각 Presigned URL로 직접 S3에 업로드한 후, 받은 fileUrl을 채팅 IMAGE 메시지의 content로 전송합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.INVALID_FILE_EXTENSION,
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+    })
+    ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareChatImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    );
 }
