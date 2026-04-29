@@ -31,13 +31,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class GroupChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
+    private final ChatMessageSendService chatMessageSendService;
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long roomId, GroupChatInviteRequest request) {
         ChatRoom chatRoom = chatRoomRepository.getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP);
@@ -57,7 +58,7 @@ public class GroupChatRoomService {
 
         validateHostAuthority(chatRoom.getPost().getUser().getId(), userId);
         validateNotSelfChat(userId, inviteeUserId);
-        validateRoomIsActive(chatRoom);
+        validateRoomOpen(chatRoom);
 
         if (isAlreadyMember(chatRoom, inviteeUserId)) {
             return new GroupChatInviteMemberResponse(chatRoom.getId(), false);
@@ -65,6 +66,9 @@ public class GroupChatRoomService {
 
         validateRoomCapacity(chatRoom);
         boolean invited = saveInvitee(chatRoom, invitee);
+        if (invited) {
+            chatMessageSendService.publishUserInvited(chatRoom, invitee.getId(), userId);
+        }
 
         return new GroupChatInviteMemberResponse(chatRoom.getId(), invited);
     }
@@ -82,18 +86,7 @@ public class GroupChatRoomService {
         log.info("그룹 채팅방 생성 - roomId={}, postId={}, hostId={}", room.getId(), post.getId(), author.getId());
     }
 
-    /**
-     * 해당 방에 첫 메시지가 저장된 직후 호출하면 PENDING → ACTIVE 로 전환한다.
-     */
-    public void activateChatOnFirstMessage(Long roomId) {
-        ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
-        if (room.getRoomType() != ChatRoomType.GROUP) {
-            return;
-        }
-        room.activateIfPending();
-    }
-
-    private static void validateRoomIsActive(ChatRoom room) {
+    private static void validateRoomOpen(ChatRoom room) {
         if (room.getStatus() == ChatRoomStatus.CLOSED || room.getStatus() == ChatRoomStatus.DELETED) {
             throw new ChatRoomClosedException();
         }

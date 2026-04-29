@@ -27,6 +27,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.id = :id")
     Optional<User> findWithProfileById(@Param("id") Long id);
 
+    default User getWithProfileByIdOrThrow(Long id) {
+        return findWithProfileById(id)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
     default User getByIdOrThrow(Long id) {
         return findById(id)
                 .orElseThrow(UserNotFoundException::new);

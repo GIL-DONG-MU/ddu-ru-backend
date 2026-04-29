@@ -34,11 +34,20 @@ public class ChatMessage extends BaseTimeEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Builder
-    public ChatMessage(ChatRoom room, User sender, ChatMessageType messageType, String content) {
+    @Builder(access = AccessLevel.PRIVATE)
+    private ChatMessage(ChatRoom room, User sender, ChatMessageType messageType, String content) {
         this.room = room;
         this.sender = sender;
         this.messageType = messageType;
         this.content = content;
+    }
+
+    public static ChatMessage create(ChatRoom room, User sender, ChatMessageType messageType, String content) {
+        return ChatMessage.builder()
+                .room(room)
+                .sender(sender)
+                .messageType(messageType)
+                .content(content)
+                .build();
     }
 }
