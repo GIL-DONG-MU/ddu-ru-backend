@@ -105,16 +105,7 @@ public class ChatMessageSendService {
             return ChatMessageBroadcastPayload.ofSystemMessage(message, post, chatSystemMessageFactory);
         }
 
-        User sender = requireSender(message.getSender());
-
-        return ChatMessageBroadcastPayload.ofUserMessage(message, post, sender, profileImageResolver);
-    }
-
-    private static User requireSender(User sender) {
-        if (sender == null) {
-            throw new IllegalStateException("사용자 메시지에는 sender가 필요합니다.");
-        }
-        return sender;
+        return ChatMessageBroadcastPayload.ofUserMessage(message, post, message.getSender(), profileImageResolver);
     }
 
     private static String resolveUserMessageContent(ChatMessageSendRequest request) {
