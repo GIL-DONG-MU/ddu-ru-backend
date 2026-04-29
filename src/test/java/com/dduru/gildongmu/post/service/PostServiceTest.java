@@ -12,13 +12,17 @@ import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
 import com.dduru.gildongmu.post.dto.request.PostUpdateRequest;
+import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
+import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
 import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
@@ -221,6 +225,124 @@ class PostServiceTest {
         assertThat(saved.isAgeAny()).isTrue();
         assertThat(saved.getMinAge()).isNull();
         assertThat(saved.getMaxAge()).isNull();
+    }
+
+    @DisplayName("게시글 상세 조회 시 모집글 수정 권한과 표시 텍스트를 함께 응답한다")
+    @Test
+    void recordViewAndGetDetail_returnsDetailWithCapabilityAndDisplayText() {
+        Long postId = 1L;
+        Long userId = 10L;
+
+        User owner = User.builder()
+                .email("owner@a.com")
+                .name("owner")
+                .oauthId("kakao-10")
+                .oauthType(OauthType.KAKAO)
+                .build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+
+        Profile profile = new Profile(owner);
+        profile.setupInitialProfile(Gender.F, null, LocalDate.of(1998, 1, 1));
+        profile.updateProfile("호스트닉", null, ProfileImageType.DEFAULT, null, "소개");
+        ReflectionTestUtils.setField(owner, "profile", profile);
+
+        Destination destination = Destination.builder()
+                .countryCode("KR")
+                .countryName("대한민국")
+                .city("제주")
+                .image("https://example.com/destination.png")
+                .build();
+
+        LocalDate today = LocalDate.now();
+        Post post = Post.builder()
+                .user(owner)
+                .destination(destination)
+                .title("제주 같이 가요")
+                .content("함께 떠나는 여행입니다. 충분히 긴 설명을 넣어둡니다.")
+                .startDate(today.plusDays(2))
+                .endDate(today.plusDays(4))
+                .recruitCapacity(4)
+                .recruitDeadline(today.plusDays(3))
+                .preferredGender(Gender.U)
+                .isAgeAny(true)
+                .photoUrl("https://example.com/photo.png")
+                .tags("[\"맛집\",\"바다\"]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "status", PostStatus.OPEN);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+        when(postLikeRepository.existsByUserIdAndPostId(userId, postId)).thenReturn(false);
+        when(participationApplicantService.getParticipantsForPostDetail(post)).thenReturn(List.of());
+        when(participationApplicantService.getMyParticipationStatus(postId, userId, true)).thenReturn(MyParticipationStatus.NONE);
+        when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/profile.png");
+
+        PostDetailResponse response = postService.recordViewAndGetDetail(postId, userId);
+
+        verify(postRepository).incrementViewCount(postId);
+        assertThat(response.isOwner()).isTrue();
+        assertThat(response.canEditPost()).isTrue();
+        assertThat(response.tripDurationText()).isEqualTo("2박 3일");
+        assertThat(response.recruitDeadlineDDay()).startsWith("D-");
+        assertThat(response.tags()).containsExactly("맛집", "바다");
+    }
+
+    @DisplayName("게시글 상세 조회 시 여행 시작 다음 날부터는 모집글 수정 권한이 없다")
+    @Test
+    void recordViewAndGetDetail_afterTravelStart_returnsCannotEditPost() {
+        Long postId = 1L;
+        Long userId = 10L;
+
+        User owner = User.builder()
+                .email("owner@a.com")
+                .name("owner")
+                .oauthId("kakao-10")
+                .oauthType(OauthType.KAKAO)
+                .build();
+        ReflectionTestUtils.setField(owner, "id", userId);
+
+        Profile profile = new Profile(owner);
+        profile.setupInitialProfile(Gender.F, null, LocalDate.of(1998, 1, 1));
+        profile.updateProfile("호스트닉", null, ProfileImageType.DEFAULT, null, "소개");
+        ReflectionTestUtils.setField(owner, "profile", profile);
+
+        Destination destination = Destination.builder()
+                .countryCode("KR")
+                .countryName("대한민국")
+                .city("서울")
+                .image("https://example.com/destination.png")
+                .build();
+
+        LocalDate today = LocalDate.now();
+        Post post = Post.builder()
+                .user(owner)
+                .destination(destination)
+                .title("서울 같이 가요")
+                .content("이미 여행이 시작된 뒤의 충분히 긴 설명입니다.")
+                .startDate(today.minusDays(1))
+                .endDate(today.plusDays(1))
+                .recruitCapacity(4)
+                .recruitDeadline(today.plusDays(1))
+                .preferredGender(Gender.U)
+                .isAgeAny(true)
+                .photoUrl("https://example.com/photo.png")
+                .tags("[\"야경\"]")
+                .companionType(CompanionType.FULL)
+                .build();
+        ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "status", PostStatus.OPEN);
+
+        when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+        when(postLikeRepository.existsByUserIdAndPostId(userId, postId)).thenReturn(false);
+        when(participationApplicantService.getParticipantsForPostDetail(post)).thenReturn(List.of());
+        when(participationApplicantService.getMyParticipationStatus(postId, userId, true)).thenReturn(MyParticipationStatus.NONE);
+        when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/profile.png");
+
+        PostDetailResponse response = postService.recordViewAndGetDetail(postId, userId);
+
+        assertThat(response.isOwner()).isTrue();
+        assertThat(response.canEditPost()).isFalse();
     }
 
     @DisplayName("게시글 생성 시 연령 무관인데 min/max를 넣으면 예외가 발생한다")

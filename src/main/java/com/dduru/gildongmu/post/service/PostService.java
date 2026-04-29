@@ -16,7 +16,6 @@ import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.exception.InvalidPostDateException;
-import com.dduru.gildongmu.post.exception.InvalidPostStatusException;
 import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
@@ -99,14 +98,17 @@ public class PostService {
         Post post = postRepository.getActiveByIdOrThrow(postId);
 
         boolean isOwner = isOwner(post, currentUserId);
+        boolean canEditPost = canEditPost(post, currentUserId);
         boolean hasLiked = hasLiked(postId, currentUserId);
 
         List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
         MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(postId, currentUserId, isOwner);
+
         return PostDetailResponse.from(
                 post,
                 jsonConverter,
                 isOwner,
+                canEditPost,
                 hasLiked,
                 participants,
                 myParticipationStatus,
@@ -118,13 +120,7 @@ public class PostService {
         Post post = getOwnedPost(postId, userId);
 
         PostStatus newStatus = request.open() ? PostStatus.OPEN : PostStatus.CLOSED;
-        try {
-            post.changeStatus(newStatus);
-        } catch (InvalidPostStatusException e) {
-            log.warn("게시글 모집 상태 변경 불가 - postId={}, userId={}, currentStatus={}, requestedStatus={}",
-                    postId, userId, post.getStatus(), newStatus);
-            throw e;
-        }
+        post.changeStatus(newStatus);
 
         if (newStatus == PostStatus.CLOSED) {
             superHostService.cancelActiveExposureByPostId(postId);
@@ -143,6 +139,17 @@ public class PostService {
 
     private boolean isOwner(Post post, Long currentUserId) {
         return currentUserId != null && currentUserId.equals(post.getUser().getId());
+    }
+
+    private boolean canEditPost(Post post, Long currentUserId) {
+        if (!isOwner(post, currentUserId)) {
+            return false;
+        }
+
+        LocalDate today = LocalDate.now();
+        return !post.hasRecruitDeadlinePassed(today)
+                && !post.hasTravelEnded(today)
+                && !post.hasTravelStarted(today);
     }
 
     private boolean hasLiked(Long postId, Long currentUserId) {

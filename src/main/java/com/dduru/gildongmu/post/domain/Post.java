@@ -111,8 +111,8 @@ public class Post extends BaseTimeEntity {
     @Column(name = "companion_type")
     private CompanionType companionType;
 
-    @Builder
-    public Post(User user, Destination destination, String title, String content,
+    @Builder(access = AccessLevel.PRIVATE)
+    private Post(User user, Destination destination, String title, String content,
                 LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                 LocalDate recruitDeadline, Gender preferredGender,
                 boolean isAgeAny, Integer minAge, Integer maxAge,
@@ -168,7 +168,7 @@ public class Post extends BaseTimeEntity {
                            LocalDate recruitDeadline, Gender preferredGender,
                            boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
                            boolean applyPhotoUrlPatch, String photoUrl, String tags, CompanionType companionType) {
-        validateUpdatable();
+        validateUpdatable(LocalDate.now());
 
         applyBasicChanges(destination, title, content, startDate, endDate, recruitDeadline,
                 preferredGender, tags, companionType);
@@ -302,28 +302,28 @@ public class Post extends BaseTimeEntity {
         return (int) ChronoUnit.DAYS.between(LocalDate.now(), target);
     }
 
-    private void validateUpdatable() {
-        if (hasRecruitDeadlinePassed()) {
+    public void validateUpdatable(LocalDate today) {
+        if (hasRecruitDeadlinePassed(today)) {
             throw new RecruitDeadlinePassedException();
         }
-        if (hasTravelEnded()) {
+        if (hasTravelEnded(today)) {
             throw new TravelAlreadyEndedException();
         }
-        if (hasTravelStarted()) {
+        if (hasTravelStarted(today)) {
             throw new TravelAlreadyStartedException();
         }
     }
 
-    private boolean hasRecruitDeadlinePassed() {
-        return recruitDeadline != null && LocalDate.now().isAfter(recruitDeadline);
+    public boolean hasRecruitDeadlinePassed(LocalDate today) {
+        return recruitDeadline != null && today.isAfter(recruitDeadline);
     }
 
-    private boolean hasTravelStarted() {
-        return LocalDate.now().isAfter(startDate);
+    public boolean hasTravelStarted(LocalDate today) {
+        return today.isAfter(startDate);
     }
 
-    private boolean hasTravelEnded() {
-        return LocalDate.now().isAfter(endDate);
+    public boolean hasTravelEnded(LocalDate today) {
+        return today.isAfter(endDate);
     }
 
     private void updateRecruitCapacity(Integer newCapacity) {
