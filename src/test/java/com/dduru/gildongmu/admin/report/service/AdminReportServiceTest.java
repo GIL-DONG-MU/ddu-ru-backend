@@ -17,6 +17,7 @@ import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.domain.enums.Role;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -50,55 +51,65 @@ class AdminReportServiceTest {
     @InjectMocks
     private AdminReportService adminReportService;
 
-    @DisplayName("신고 목록 조회 시 상태 필터를 레포지토리에 전달한다")
-    @Test
-    void findAll_withStatusFilter_passesFilterToRepository() {
-        ReportStatus status = ReportStatus.IN_REVIEW;
-        Pageable pageable = PageRequest.of(0, 20);
+    @Nested
+    @DisplayName("신고 목록 조회")
+    class FindAll {
 
-        Report report = createReport(1L);
-        Page<Report> page = new PageImpl<>(List.of(report), pageable, 1);
-        when(reportRepository.findAllByStatusOptional(status, pageable)).thenReturn(page);
+        @Test
+        @DisplayName("상태 필터를 레포지토리에 전달한다")
+        void passesFilterToRepository() {
+            ReportStatus status = ReportStatus.IN_REVIEW;
+            Pageable pageable = PageRequest.of(0, 20);
+            Report report = createReport(1L);
+            Page<Report> page = new PageImpl<>(List.of(report), pageable, 1);
 
-        AdminReportListResponse response = adminReportService.findAll(status, pageable);
+            when(reportRepository.findAllByStatusOptional(status, pageable)).thenReturn(page);
 
-        assertThat(response.content()).hasSize(1);
-        assertThat(response.content().get(0).status()).isEqualTo(ReportStatus.RECEIVED);
-        verify(reportRepository).findAllByStatusOptional(status, pageable);
+            AdminReportListResponse response = adminReportService.findAll(status, pageable);
+
+            assertThat(response.content()).hasSize(1);
+            assertThat(response.content().get(0).status()).isEqualTo(ReportStatus.RECEIVED);
+            verify(reportRepository).findAllByStatusOptional(status, pageable);
+        }
     }
 
-    @DisplayName("신고 처리 시 reviewer/reviewedAt/status/reviewNote가 갱신된다")
-    @Test
-    void update_updatesReviewerReviewedAtStatusAndReviewNote() {
-        Long reportId = 11L;
-        Long reviewerId = 99L;
-        Report report = createReport(reportId);
-        User reviewer = createUser(reviewerId, "admin@dduru.com", "관리자", Role.ADMIN);
-        AdminReportUpdateRequest request = new AdminReportUpdateRequest(ReportStatus.RESOLVED, "검토 및 조치 완료");
+    @Nested
+    @DisplayName("신고 처리")
+    class Update {
 
-        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
-        when(userRepository.getByIdOrThrow(reviewerId)).thenReturn(reviewer);
+        @Test
+        @DisplayName("reviewer/reviewedAt/status/reviewNote가 갱신된다")
+        void updatesReviewerReviewedAtStatusAndReviewNote() {
+            Long reportId = 11L;
+            Long reviewerId = 99L;
+            Report report = createReport(reportId);
+            User reviewer = createUser(reviewerId, "admin@dduru.com", "관리자", Role.ADMIN);
+            AdminReportUpdateRequest request = new AdminReportUpdateRequest(ReportStatus.RESOLVED, "검토 및 조치 완료");
 
-        AdminReportResponse response = adminReportService.update(reportId, reviewerId, request);
+            when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+            when(userRepository.getByIdOrThrow(reviewerId)).thenReturn(reviewer);
 
-        assertThat(response.status()).isEqualTo(ReportStatus.RESOLVED);
-        assertThat(response.reviewerId()).isEqualTo(reviewerId);
-        assertThat(response.reviewerName()).isEqualTo("관리자");
-        assertThat(response.reviewedAt()).isNotNull();
-        assertThat(response.reviewNote()).isEqualTo("검토 및 조치 완료");
-    }
+            AdminReportResponse response = adminReportService.update(reportId, reviewerId, request);
 
-    @DisplayName("존재하지 않는 신고를 처리하면 예외가 발생한다")
-    @Test
-    void update_whenReportNotFound_throwsReportNotFoundException() {
-        Long reportId = 999L;
-        Long reviewerId = 1L;
-        AdminReportUpdateRequest request = new AdminReportUpdateRequest(ReportStatus.REJECTED, "근거 부족");
+            assertThat(response.status()).isEqualTo(ReportStatus.RESOLVED);
+            assertThat(response.reviewerId()).isEqualTo(reviewerId);
+            assertThat(response.reviewerName()).isEqualTo("관리자");
+            assertThat(response.reviewedAt()).isNotNull();
+            assertThat(response.reviewNote()).isEqualTo("검토 및 조치 완료");
+        }
 
-        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
+        @Test
+        @DisplayName("존재하지 않는 신고를 처리하면 예외가 발생한다")
+        void whenReportNotFoundThrowsException() {
+            Long reportId = 999L;
+            Long reviewerId = 1L;
+            AdminReportUpdateRequest request = new AdminReportUpdateRequest(ReportStatus.REJECTED, "근거 부족");
 
-        assertThatThrownBy(() -> adminReportService.update(reportId, reviewerId, request))
-                .isInstanceOf(ReportNotFoundException.class);
+            when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> adminReportService.update(reportId, reviewerId, request))
+                    .isInstanceOf(ReportNotFoundException.class);
+        }
     }
 
     private Report createReport(Long reportId) {
@@ -111,23 +122,23 @@ class AdminReportServiceTest {
     }
 
     private Post createPost(Long postId, User owner) {
-        Post post = Post.builder()
-                .user(owner)
-                .destination(Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build())
-                .title("신고 대상 게시글")
-                .content("신고 대상 게시글 본문은 충분한 길이로 작성합니다.")
-                .startDate(LocalDate.now().plusDays(1))
-                .endDate(LocalDate.now().plusDays(2))
-                .recruitCapacity(5)
-                .recruitDeadline(LocalDate.now().plusDays(1))
-                .preferredGender(Gender.M)
-                .isAgeAny(false)
-                .photoUrl(null)
-                .tags("[]")
-                .minAge(20)
-                .maxAge(30)
-                .companionType(CompanionType.FULL)
-                .build();
+        Post post = Post.createPost(
+                owner,
+                Destination.builder().countryCode("KR").countryName("대한민국").city("서울").build(),
+                "신고 대상 게시글",
+                "신고 대상 게시글 본문은 충분한 길이로 작성합니다.",
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(2),
+                5,
+                LocalDate.now().plusDays(1),
+                Gender.M,
+                false,
+                20,
+                30,
+                null,
+                "[]",
+                CompanionType.FULL
+        );
         ReflectionTestUtils.setField(post, "id", postId);
         return post;
     }
