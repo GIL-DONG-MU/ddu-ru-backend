@@ -124,6 +124,7 @@ public enum ErrorCode {
     CHAT_IMAGE_URL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "이미지 URL 형식이 올바르지 않습니다."),
     CHAT_IMAGE_URL_NOT_ABSOLUTE(HttpStatus.BAD_REQUEST, "이미지 URL은 절대 경로(https)여야 합니다."),
     CHAT_IMAGE_URL_INVALID_SCHEME(HttpStatus.BAD_REQUEST, "이미지 URL은 https 만 허용됩니다."),
+    CHAT_IMAGE_URL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "채팅 이미지는 업로드된 chats 경로 URL만 허용됩니다."),
     CHAT_SYSTEM_MESSAGE_SEND_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "SYSTEM 은 사용자 메시지로 처리되지 않습니다.");
 
     private final int status;
