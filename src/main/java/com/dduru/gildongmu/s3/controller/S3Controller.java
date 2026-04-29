@@ -1,8 +1,8 @@
-package com.dduru.gildongmu.S3.controller;
+package com.dduru.gildongmu.s3.controller;
 
-import com.dduru.gildongmu.S3.dto.request.ImageUploadRequest;
-import com.dduru.gildongmu.S3.dto.response.ImageUploadResponse;
-import com.dduru.gildongmu.S3.service.S3Service;
+import com.dduru.gildongmu.s3.dto.request.ImageUploadRequest;
+import com.dduru.gildongmu.s3.dto.response.ImageUploadResponse;
+import com.dduru.gildongmu.s3.service.S3Service;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,4 +48,14 @@ public class S3Controller implements S3ApiDocs {
         List<ImageUploadResponse> responses = s3Service.prepareSurveyImageUpload(request.fileNames());
         return ResponseEntity.ok(ApiResult.ok(responses));
     }*/
+
+    @Override
+    @PostMapping("/chats/presigned-url")
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareChatImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        List<ImageUploadResponse> responses = s3Service.prepareChatImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
+    }
+
 }

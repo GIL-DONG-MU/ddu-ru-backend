@@ -32,4 +32,8 @@ public class InvalidChatImageUrlException extends BusinessException {
     public static InvalidChatImageUrlException nonHttpsScheme() {
         return new InvalidChatImageUrlException(ErrorCode.CHAT_IMAGE_URL_INVALID_SCHEME);
     }
+
+    public static InvalidChatImageUrlException notAllowed() {
+        return new InvalidChatImageUrlException(ErrorCode.CHAT_IMAGE_URL_NOT_ALLOWED);
+    }
 }

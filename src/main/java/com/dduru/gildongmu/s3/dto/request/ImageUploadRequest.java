@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.S3.dto.request;
+package com.dduru.gildongmu.s3.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
