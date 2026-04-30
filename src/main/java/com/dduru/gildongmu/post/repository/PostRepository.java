@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
@@ -43,34 +42,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostRepositor
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.status = 'CLOSED' WHERE p.status = 'OPEN' AND p.recruitDeadline < :today")
     int closeExpiredPostsByDate(@Param("today") LocalDate today);
-
-    @Query("""
-            SELECT p
-            FROM Post p
-            JOIN FETCH p.destination
-            WHERE p.user.id = :userId
-              AND p.isDeleted = false
-              AND p.endDate >= :today
-            ORDER BY p.startDate ASC, p.id DESC
-            """)
-    List<Post> findActiveJourneyPostsByOwnerId(
-            @Param("userId") Long userId,
-            @Param("today") LocalDate today
-    );
-
-    @Query("""
-            SELECT p
-            FROM Post p
-            JOIN FETCH p.destination
-            WHERE p.user.id = :userId
-              AND p.isDeleted = false
-              AND p.endDate < :today
-            ORDER BY p.endDate DESC, p.id DESC
-            """)
-    List<Post> findCompletedJourneyPostsByOwnerId(
-            @Param("userId") Long userId,
-            @Param("today") LocalDate today
-    );
 
     default Post getActiveByIdOrThrow(Long id) {
         return findActiveById(id)

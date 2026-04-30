@@ -1,7 +1,7 @@
 package com.dduru.gildongmu.journey.dto.response;
 
+import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.support.JourneyDisplayCalculator;
-import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.post.domain.Post;
 
 import java.time.LocalDate;
@@ -18,15 +18,8 @@ public record JourneyMainCardResponse(
         Integer recruitCapacity,
         boolean isOwner
 ) {
-    public static JourneyMainCardResponse fromHost(Post post) {
-        return from(post, true);
-    }
-
-    public static JourneyMainCardResponse fromParticipation(Participation participation) {
-        return from(participation.getPost(), false);
-    }
-
-    private static JourneyMainCardResponse from(Post post, boolean isOwner) {
+    public static JourneyMainCardResponse fromJourneyMember(JourneyMember journeyMember) {
+        Post post = journeyMember.getPost();
         return new JourneyMainCardResponse(
                 post.getId(),
                 post.getTitle(),
@@ -37,7 +30,7 @@ public record JourneyMainCardResponse(
                 post.getDestination().getCity(),
                 post.getRecruitCount(),
                 post.getRecruitCapacity(),
-                isOwner
+                journeyMember.isHost()
         );
     }
 }

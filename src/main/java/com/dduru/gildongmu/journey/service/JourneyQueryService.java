@@ -1,40 +1,32 @@
 package com.dduru.gildongmu.journey.service;
 
+import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainCardResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
-import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
-import com.dduru.gildongmu.participation.repository.ParticipationRepository;
-import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class JourneyQueryService {
 
-    private final PostRepository postRepository;
-    private final ParticipationRepository participationRepository;
+    private final JourneyMemberRepository journeyMemberRepository;
 
     public JourneyMainListResponse retrieveMyJourneys(Long userId) {
         LocalDate today = LocalDate.now();
 
-        List<Post> activeOwnedPosts = postRepository.findActiveJourneyPostsByOwnerId(userId, today);
-        List<Participation> activeApprovedParticipations = participationRepository
-                .findActiveJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, today);
-        List<Post> completedOwnedPosts = postRepository.findCompletedJourneyPostsByOwnerId(userId, today);
-        List<Participation> completedApprovedParticipations = participationRepository
-                .findCompletedJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, today);
+        List<JourneyMember> activeJourneyMembers = journeyMemberRepository
+                .findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);
+        List<JourneyMember> completedJourneyMembers = journeyMemberRepository
+                .findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);
 
         Comparator<JourneyMainCardResponse> activeSortOrder = Comparator
                 .comparing(JourneyMainCardResponse::startDate)
@@ -43,34 +35,20 @@ public class JourneyQueryService {
                 .comparing(JourneyMainCardResponse::endDate, Comparator.reverseOrder())
                 .thenComparing(JourneyMainCardResponse::postId, Comparator.reverseOrder());
 
-        List<JourneyMainCardResponse> activeJourneys = mergeJourneyCards(
-                activeOwnedPosts,
-                activeApprovedParticipations,
-                activeSortOrder
-        );
-        List<JourneyMainCardResponse> completedJourneys = mergeJourneyCards(
-                completedOwnedPosts,
-                completedApprovedParticipations,
-                completedSortOrder
-        );
+        List<JourneyMainCardResponse> activeJourneys = toJourneyCards(activeJourneyMembers, activeSortOrder);
+        List<JourneyMainCardResponse> completedJourneys = toJourneyCards(completedJourneyMembers, completedSortOrder);
 
         return JourneyMainListResponse.of(activeJourneys, completedJourneys);
     }
 
-    private List<JourneyMainCardResponse> mergeJourneyCards(
-            List<Post> ownedPosts,
-            List<Participation> approvedParticipations,
+    private List<JourneyMainCardResponse> toJourneyCards(
+            List<JourneyMember> journeyMembers,
             Comparator<JourneyMainCardResponse> sortOrder
     ) {
-        Map<Long, JourneyMainCardResponse> cardsByPostId = Stream.concat(
-                        ownedPosts.stream().map(JourneyMainCardResponse::fromHost),
-                        approvedParticipations.stream().map(JourneyMainCardResponse::fromParticipation)
-                )
+        // journey_members는 post/user unique 제약을 가지므로 카드 조립 시 별도 중복제거가 필요 없다.
+        return journeyMembers.stream()
+                .map(JourneyMainCardResponse::fromJourneyMember)
                 .sorted(sortOrder)
-                .collect(LinkedHashMap::new,
-                        (map, item) -> map.putIfAbsent(item.postId(), item),
-                        LinkedHashMap::putAll);
-
-        return List.copyOf(cardsByPostId.values());
+                .toList();
     }
 }
