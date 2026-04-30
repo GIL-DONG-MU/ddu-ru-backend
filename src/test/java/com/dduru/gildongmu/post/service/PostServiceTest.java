@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
@@ -82,6 +83,9 @@ class PostServiceTest {
     @Mock
     private SuperHostService superHostService;
 
+    @Mock
+    private JourneyMemberRepository journeyMemberRepository;
+
     @InjectMocks
     private PostService postService;
 
@@ -137,6 +141,7 @@ class PostServiceTest {
             assertThat(savedPost.isAgeAny()).isFalse();
             assertThat(savedPost.getMinAge()).isEqualTo(25);
             assertThat(savedPost.getMaxAge()).isEqualTo(35);
+            verify(journeyMemberRepository).save(any());
             verify(groupChatRoomService).createPendingRoomForPost(savedPost, user);
         }
 

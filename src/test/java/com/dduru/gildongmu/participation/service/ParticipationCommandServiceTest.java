@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
+import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
@@ -26,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +49,9 @@ class ParticipationCommandServiceTest {
 
     @Mock
     private ProfileImageResolver profileImageResolver;
+
+    @Mock
+    private JourneyMemberRepository journeyMemberRepository;
 
     @InjectMocks
     private ParticipationCommandService participationCommandService;
@@ -100,6 +105,7 @@ class ParticipationCommandServiceTest {
 
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
+            when(journeyMemberRepository.findByPostIdAndUserId(post.getId(), participantId)).thenReturn(java.util.Optional.empty());
             when(groupChatRoomService.inviteMemberOrGetRoom(ownerId, post.getId(), participantId))
                     .thenReturn(new GroupChatInviteMemberResponse(roomId, true));
 
@@ -109,6 +115,7 @@ class ParticipationCommandServiceTest {
             assertThat(response.status()).isEqualTo(ParticipationStatus.APPROVED);
             assertThat(participation.isApproved()).isTrue();
             assertThat(post.getRecruitCount()).isEqualTo(2);
+            verify(journeyMemberRepository).save(any());
             verify(groupChatRoomService).inviteMemberOrGetRoom(ownerId, post.getId(), participantId);
         }
     }

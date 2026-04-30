@@ -1,14 +1,13 @@
 package com.dduru.gildongmu.journey.service;
 
 import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
-import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
-import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
-import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -32,10 +31,7 @@ import static org.mockito.Mockito.when;
 class JourneyQueryServiceTest {
 
     @Mock
-    private PostRepository postRepository;
-
-    @Mock
-    private ParticipationRepository participationRepository;
+    private JourneyMemberRepository journeyMemberRepository;
 
     @InjectMocks
     private JourneyQueryService journeyQueryService;
@@ -54,17 +50,15 @@ class JourneyQueryServiceTest {
             Post completedOwnedPost = createPost(3L, userId, "도쿄 여행", "도쿄", LocalDate.now().minusDays(5), LocalDate.now().minusDays(3));
             Post completedMemberPost = createPost(4L, 30L, "서울 여행", "서울", LocalDate.now().minusDays(3), LocalDate.now().minusDays(1));
 
-            Participation activeApprovedParticipation = approvedParticipation(activeMemberPost, userId);
-            Participation completedApprovedParticipation = approvedParticipation(completedMemberPost, userId);
+            JourneyMember activeOwnedJourneyMember = journeyMember(activeOwnedPost, userId, true);
+            JourneyMember activeMemberJourneyMember = journeyMember(activeMemberPost, userId, false);
+            JourneyMember completedOwnedJourneyMember = journeyMember(completedOwnedPost, userId, true);
+            JourneyMember completedMemberJourneyMember = journeyMember(completedMemberPost, userId, false);
 
-            when(postRepository.findActiveJourneyPostsByOwnerId(userId, LocalDate.now()))
-                    .thenReturn(List.of(activeOwnedPost));
-            when(participationRepository.findActiveJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, LocalDate.now()))
-                    .thenReturn(List.of(activeApprovedParticipation));
-            when(postRepository.findCompletedJourneyPostsByOwnerId(userId, LocalDate.now()))
-                    .thenReturn(List.of(completedOwnedPost));
-            when(participationRepository.findCompletedJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, LocalDate.now()))
-                    .thenReturn(List.of(completedApprovedParticipation));
+            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+                    .thenReturn(List.of(activeOwnedJourneyMember, activeMemberJourneyMember));
+            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+                    .thenReturn(List.of(completedOwnedJourneyMember, completedMemberJourneyMember));
 
             JourneyMainListResponse response = journeyQueryService.retrieveMyJourneys(userId);
 
@@ -88,11 +82,9 @@ class JourneyQueryServiceTest {
         void returnsEmptyList() {
             Long userId = 10L;
 
-            when(postRepository.findActiveJourneyPostsByOwnerId(userId, LocalDate.now())).thenReturn(List.of());
-            when(participationRepository.findActiveJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, LocalDate.now()))
+            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
                     .thenReturn(List.of());
-            when(postRepository.findCompletedJourneyPostsByOwnerId(userId, LocalDate.now())).thenReturn(List.of());
-            when(participationRepository.findCompletedJourneyParticipationsByUserIdAndStatus(userId, ParticipationStatus.APPROVED, LocalDate.now()))
+            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
                     .thenReturn(List.of());
 
             JourneyMainListResponse response = journeyQueryService.retrieveMyJourneys(userId);
@@ -102,10 +94,12 @@ class JourneyQueryServiceTest {
         }
     }
 
-    private Participation approvedParticipation(Post post, Long userId) {
-        Participation participation = Participation.createParticipation(post, createUser(userId, "member-" + userId), "안녕하세요");
-        ReflectionTestUtils.setField(participation, "status", ParticipationStatus.APPROVED);
-        return participation;
+    private JourneyMember journeyMember(Post post, Long userId, boolean isHost) {
+        JourneyMember journeyMember = isHost
+                ? JourneyMember.createHost(post, createUser(userId, "host-" + userId))
+                : JourneyMember.createMember(post, createUser(userId, "member-" + userId));
+        ReflectionTestUtils.setField(journeyMember, "status", JourneyMemberStatus.ACTIVE);
+        return journeyMember;
     }
 
     private Post createPost(Long postId, Long ownerId, String title, String destinationCity, LocalDate startDate, LocalDate endDate) {
