@@ -65,7 +65,7 @@ class JourneyQueryServiceTest {
             assertThat(response.activeJourneys()).hasSize(2);
             assertThat(response.activeJourneys().get(0).postId()).isEqualTo(2L);
             assertThat(response.activeJourneys().get(0).isOwner()).isFalse();
-            assertThat(response.activeJourneys().get(0).tripDurationText()).isEqualTo("당일 일정");
+            assertThat(response.activeJourneys().get(0).tripDurationText()).isEqualTo("당일치기");
             assertThat(response.activeJourneys().get(1).postId()).isEqualTo(1L);
             assertThat(response.activeJourneys().get(1).isOwner()).isTrue();
             assertThat(response.activeJourneys().get(1).tripDurationText()).isEqualTo("2박 3일");
