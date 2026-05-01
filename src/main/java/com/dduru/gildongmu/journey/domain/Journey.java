@@ -51,4 +51,13 @@ public class Journey extends BaseTimeEntity {
                 .photoUrl(post.getPhotoUrl())
                 .build();
     }
+
+    public void update(String title, String photoUrl) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (photoUrl != null) {
+            this.photoUrl = photoUrl;
+        }
+    }
 }

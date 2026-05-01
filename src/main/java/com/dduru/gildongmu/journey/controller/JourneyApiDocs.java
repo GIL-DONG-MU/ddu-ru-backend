@@ -3,13 +3,16 @@ package com.dduru.gildongmu.journey.controller;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyDetailResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Journeys", description = "나의 여정 API")
@@ -41,5 +44,22 @@ public interface JourneyApiDocs {
     ResponseEntity<ApiResult<JourneyDetailResponse>> retrieveMyJourneyDetail(
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary = "나의 여정 기본 정보 수정",
+            description = "active journey member가 나의 여정의 제목과 대표 사진을 수정합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "수정 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<JourneyUpdateResponse>> updateJourneyBasicInfo(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(hidden = true) Long userId,
+            @Valid JourneyUpdateRequest request
     );
 }
