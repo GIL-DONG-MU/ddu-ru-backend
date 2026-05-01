@@ -66,7 +66,7 @@ public class ParticipationApplicantService {
     @Transactional(readOnly = true)
     public List<ParticipantInfo> getParticipantsForPostDetail(Post post) {
         return journeyMemberRepository
-                .findByPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
+                .findByJourneyPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
                 .map(journeyMember -> ParticipantInfo.from(journeyMember.getUser(), journeyMember.isHost(), profileImageResolver))
                 .toList();
     }
