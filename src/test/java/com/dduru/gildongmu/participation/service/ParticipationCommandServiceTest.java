@@ -4,7 +4,9 @@ import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
+import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
@@ -49,6 +51,9 @@ class ParticipationCommandServiceTest {
 
     @Mock
     private ProfileImageResolver profileImageResolver;
+
+    @Mock
+    private JourneyRepository journeyRepository;
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
@@ -100,12 +105,14 @@ class ParticipationCommandServiceTest {
 
             User owner = createUser(ownerId, "owner");
             Post post = createPost(100L, owner);
+            Journey journey = createJourney(500L, post);
             Participation participation = createParticipation(participationId, post, participantId);
             participation.contact();
 
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
-            when(journeyMemberRepository.findByPostIdAndUserId(post.getId(), participantId)).thenReturn(java.util.Optional.empty());
+            when(journeyRepository.getByPostIdOrThrow(post.getId())).thenReturn(journey);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participantId)).thenReturn(java.util.Optional.empty());
             when(groupChatRoomService.inviteMemberOrGetRoom(ownerId, post.getId(), participantId))
                     .thenReturn(new GroupChatInviteMemberResponse(roomId, true));
 
@@ -146,6 +153,12 @@ class ParticipationCommandServiceTest {
         );
         ReflectionTestUtils.setField(post, "id", postId);
         return post;
+    }
+
+    private Journey createJourney(Long journeyId, Post post) {
+        Journey journey = Journey.create(post);
+        ReflectionTestUtils.setField(journey, "id", journeyId);
+        return journey;
     }
 
     private User createUser(Long userId, String name) {
