@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Journey extends BaseTimeEntity {
+    /**
+     * 공개 모집글과 1:1로 연결되는 나의 여정 워크스페이스.
+     * 현재는 제목/대표 사진만 독립적으로 관리하고, 나머지 여행 정보는 post를 참조한다.
+     */
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +44,7 @@ public class Journey extends BaseTimeEntity {
     }
 
     public static Journey create(Post post) {
+        // 생성 시점에만 공개 모집글의 제목/대표 사진을 초기값으로 복사한다.
         return Journey.builder()
                 .post(post)
                 .title(post.getTitle())
