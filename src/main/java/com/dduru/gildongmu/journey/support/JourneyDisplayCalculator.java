@@ -16,7 +16,7 @@ public final class JourneyDisplayCalculator {
 
         return nights > 0
                 ? nights + "박 " + totalDays + "일"
-                : "당일 일정";
+                : "당일치기";
     }
 
     public static String recruitDeadlineDDay(Post post, LocalDate today) {
