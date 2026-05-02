@@ -182,7 +182,7 @@ class JourneyQueryServiceTest {
             assertThatThrownBy(() -> journeyQueryService.retrieveMyJourneyDetail(journeyId, userId))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
-            verify(postService, never()).getDetail(200L, userId);
+            verify(postService, never()).getDetail(any(Post.class), anyLong());
             verify(chatRoomRepository, never()).findByPostIdAndRoomType(200L, ChatRoomType.GROUP);
         }
 
