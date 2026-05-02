@@ -112,6 +112,11 @@ public class PostService {
         return buildDetailResponse(post, currentUserId);
     }
 
+    @Transactional(readOnly = true)
+    public PostDetailResponse getDetail(Post post, Long currentUserId) {
+        return buildDetailResponse(post, currentUserId);
+    }
+
     private PostDetailResponse buildDetailResponse(Post post, Long currentUserId) {
         boolean isOwner = isOwner(post, currentUserId);
         boolean canEditPost = canEditPost(post, currentUserId);

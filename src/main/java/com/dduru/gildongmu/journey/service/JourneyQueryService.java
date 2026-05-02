@@ -56,10 +56,9 @@ public class JourneyQueryService {
         Journey journey = journeyRepository.getByIdWithPostContextOrThrow(journeyId);
         validateJourneyAccess(journeyId, userId);
 
-        Long postId = journey.getPost().getId();
         // journey는 제목/대표 사진만 직접 가지고, 상단 카드에 필요한 나머지 값은 연결된 post에서 읽는다.
-        PostDetailResponse post = postService.getDetail(postId, userId);
-        Long groupRoomId = chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
+        PostDetailResponse post = postService.getDetail(journey.getPost(), userId);
+        Long groupRoomId = chatRoomRepository.findByPostIdAndRoomType(journey.getPost().getId(), ChatRoomType.GROUP)
                 .map(chatRoom -> chatRoom.getId())
                 .orElse(null);
 
