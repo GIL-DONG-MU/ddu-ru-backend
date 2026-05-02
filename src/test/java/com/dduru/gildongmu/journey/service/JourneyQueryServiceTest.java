@@ -152,7 +152,7 @@ class JourneyQueryServiceTest {
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(true);
-            when(postService.getDetail(postId, userId)).thenReturn(postDetail);
+            when(postService.getDetail(journey.getPost(), userId)).thenReturn(postDetail);
             when(chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP))
                     .thenReturn(Optional.of(groupRoom));
 
@@ -182,7 +182,7 @@ class JourneyQueryServiceTest {
             assertThatThrownBy(() -> journeyQueryService.retrieveMyJourneyDetail(journeyId, userId))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
-            verify(postService, never()).getDetail(200L, userId);
+            verify(postService, never()).getDetail(any(Post.class), anyLong());
             verify(chatRoomRepository, never()).findByPostIdAndRoomType(200L, ChatRoomType.GROUP);
         }
 
@@ -200,6 +200,7 @@ class JourneyQueryServiceTest {
 
             verify(journeyMemberRepository, never()).existsByJourneyIdAndUserIdAndStatus(anyLong(), anyLong(), any());
             verify(postService, never()).getDetail(anyLong(), anyLong());
+            verify(postService, never()).getDetail(any(Post.class), anyLong());
             verify(chatRoomRepository, never()).findByPostIdAndRoomType(anyLong(), any());
         }
     }

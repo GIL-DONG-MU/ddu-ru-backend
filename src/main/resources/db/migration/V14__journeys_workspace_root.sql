@@ -41,6 +41,18 @@ SET jm.journey_id = (
 WHERE jm.journey_id IS NULL;
 
 ALTER TABLE journey_members
+    MODIFY COLUMN journey_id BIGINT NOT NULL;
+
+ALTER TABLE journey_members
+    DROP FOREIGN KEY fk_journey_members_post;
+
+ALTER TABLE journey_members
+    DROP INDEX uk_journey_members_post_user;
+
+ALTER TABLE journey_members
+    DROP INDEX idx_journey_members_post_status;
+
+ALTER TABLE journey_members
     ADD CONSTRAINT uk_journey_members_journey_user UNIQUE (journey_id, user_id);
 
 ALTER TABLE journey_members
@@ -49,3 +61,6 @@ ALTER TABLE journey_members
 
 CREATE INDEX idx_journey_members_journey_status
     ON journey_members (journey_id, status);
+
+ALTER TABLE journey_members
+    DROP COLUMN post_id;
