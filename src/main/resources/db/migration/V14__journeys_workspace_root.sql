@@ -64,4 +64,3 @@ CREATE INDEX idx_journey_members_journey_status
 
 ALTER TABLE journey_members
     DROP COLUMN post_id;
-         
