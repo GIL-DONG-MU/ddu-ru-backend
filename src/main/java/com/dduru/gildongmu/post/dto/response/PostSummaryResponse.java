@@ -30,13 +30,10 @@ public record PostSummaryResponse(
         boolean isSuperHost,
         LocalDateTime superHostEndsAt
 ) {
-    public static PostSummaryResponse from(Post post, ProfileImageResolver profileImageResolver) {
-        return from(post, profileImageResolver, false, null);
-    }
-
     public static PostSummaryResponse from(
             Post post,
             ProfileImageResolver profileImageResolver,
+            LocalDate today,
             boolean isSuperHost,
             LocalDateTime superHostEndsAt
     ) {
@@ -49,8 +46,8 @@ public record PostSummaryResponse(
                 post.getContent(),
                 post.getStatus(),
                 post.isFull(),
-                post.getDaysUntilRecruitDeadline(),
-                post.getDaysUntilTravelStart(),
+                post.getDaysUntilRecruitDeadline(today),
+                post.getDaysUntilTravelStart(today),
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),

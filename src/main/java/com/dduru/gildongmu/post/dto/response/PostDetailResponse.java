@@ -45,6 +45,7 @@ public record PostDetailResponse(
         String recruitDeadlineDDay
 ) {
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter,
+                                          LocalDate today,
                                           boolean isOwner,
                                           boolean canEditPost,
                                           boolean hasLiked,
@@ -56,7 +57,7 @@ public record PostDetailResponse(
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         String tripDurationText = JourneyDisplayCalculator.tripDurationText(post);
-        String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, LocalDate.now());
+        String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, today);
 
         return new PostDetailResponse(
                 post.getId(),
@@ -64,8 +65,8 @@ public record PostDetailResponse(
                 post.getContent(),
                 post.getStatus(),
                 post.isFull(),
-                post.getDaysUntilRecruitDeadline(),
-                post.getDaysUntilTravelStart(),
+                post.getDaysUntilRecruitDeadline(today),
+                post.getDaysUntilTravelStart(today),
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),

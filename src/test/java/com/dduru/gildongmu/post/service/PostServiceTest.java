@@ -29,6 +29,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,13 +41,16 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -55,6 +59,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PostService 테스트")
 class PostServiceTest {
+    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
+    private static final LocalDate TODAY = LocalDate.of(2026, 5, 5);
 
     @Mock
     private PostRepository postRepository;
@@ -86,8 +92,17 @@ class PostServiceTest {
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private PostService postService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
+        lenient().when(clock.instant()).thenReturn(TODAY.atStartOfDay(KOREA_ZONE).toInstant());
+    }
 
     @Nested
     @DisplayName("게시글 생성")
@@ -317,7 +332,7 @@ class PostServiceTest {
             Profile profile = attachProfile(owner, "호스트닉");
             Destination destination = createDestination("제주", "https://example.com/destination.png");
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = TODAY;
             Post post = createPost(
                     postId,
                     owner,
@@ -362,7 +377,7 @@ class PostServiceTest {
             Profile profile = attachProfile(owner, "호스트닉");
             Destination destination = createDestination("서울", "https://example.com/destination.png");
 
-            LocalDate today = LocalDate.now();
+            LocalDate today = TODAY;
             Post post = createPost(
                     postId,
                     owner,
@@ -532,10 +547,10 @@ class PostServiceTest {
                 createDestination("서울", null),
                 "제목",
                 "내용내용내용내용내용내용내용내용",
-                LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(3),
+                TODAY.plusDays(1),
+                TODAY.plusDays(3),
                 5,
-                LocalDate.now().plusDays(1),
+                TODAY.plusDays(1),
                 Gender.M,
                 false,
                 20,

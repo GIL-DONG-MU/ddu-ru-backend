@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -20,8 +22,10 @@ import java.util.List;
 public class PostQueryService {
     private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
+    private final Clock clock;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
+        LocalDate today = LocalDate.now(clock);
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
 
@@ -32,7 +36,7 @@ public class PostQueryService {
         }
 
         List<PostSummaryResponse> summaries = posts.stream()
-                .map(post -> PostSummaryResponse.from(post, profileImageResolver))
+                .map(post -> PostSummaryResponse.from(post, profileImageResolver, today, false, null))
                 .toList();
 
         return PostListResponse.of(summaries, hasNext);
