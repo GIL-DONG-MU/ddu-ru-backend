@@ -14,11 +14,12 @@ public record JourneyMainCardResponse(
         LocalDate endDate,
         String tripDurationText,
         String destination,
+        String recruitDeadlineDDay,
         Integer recruitCount,
         Integer recruitCapacity,
         boolean isOwner
 ) {
-    public static JourneyMainCardResponse fromJourneyMember(JourneyMember journeyMember) {
+    public static JourneyMainCardResponse fromJourneyMember(JourneyMember journeyMember, LocalDate today) {
         Post post = journeyMember.getPost();
         return new JourneyMainCardResponse(
                 post.getId(),
@@ -28,6 +29,7 @@ public record JourneyMainCardResponse(
                 post.getEndDate(),
                 JourneyDisplayCalculator.tripDurationText(post),
                 post.getDestination().getCity(),
+                JourneyDisplayCalculator.recruitDeadlineDDay(post, today),
                 post.getRecruitCount(),
                 post.getRecruitCapacity(),
                 journeyMember.isHost()

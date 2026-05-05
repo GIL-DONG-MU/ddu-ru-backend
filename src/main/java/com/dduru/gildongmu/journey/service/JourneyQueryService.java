@@ -37,19 +37,20 @@ public class JourneyQueryService {
                 .comparing(JourneyMainCardResponse::endDate, Comparator.reverseOrder())
                 .thenComparing(JourneyMainCardResponse::postId, Comparator.reverseOrder());
 
-        List<JourneyMainCardResponse> activeJourneys = toJourneyCards(activeJourneyMembers, activeSortOrder);
-        List<JourneyMainCardResponse> completedJourneys = toJourneyCards(completedJourneyMembers, completedSortOrder);
+        List<JourneyMainCardResponse> activeJourneys = toJourneyCards(activeJourneyMembers, activeSortOrder, today);
+        List<JourneyMainCardResponse> completedJourneys = toJourneyCards(completedJourneyMembers, completedSortOrder, today);
 
         return JourneyMainListResponse.of(activeJourneys, completedJourneys);
     }
 
     private List<JourneyMainCardResponse> toJourneyCards(
             List<JourneyMember> journeyMembers,
-            Comparator<JourneyMainCardResponse> sortOrder
+            Comparator<JourneyMainCardResponse> sortOrder,
+            LocalDate today
     ) {
         // journey_members는 post/user unique 제약을 가지므로 카드 조립 시 별도 중복제거가 필요 없다.
         return journeyMembers.stream()
-                .map(JourneyMainCardResponse::fromJourneyMember)
+                .map(journeyMember -> JourneyMainCardResponse.fromJourneyMember(journeyMember, today))
                 .sorted(sortOrder)
                 .toList();
     }
