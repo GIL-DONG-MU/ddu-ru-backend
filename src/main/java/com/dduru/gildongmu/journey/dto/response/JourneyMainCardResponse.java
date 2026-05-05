@@ -9,7 +9,6 @@ import java.time.LocalDate;
 
 public record JourneyMainCardResponse(
         Long journeyId,
-        Long postId,
         String title,
         String photoUrl,
         LocalDate startDate,
@@ -26,7 +25,6 @@ public record JourneyMainCardResponse(
         Post post = journey.getPost();
         return new JourneyMainCardResponse(
                 journey.getId(),
-                post.getId(),
                 journey.getTitle(),
                 journey.getPhotoUrl(),
                 post.getStartDate(),

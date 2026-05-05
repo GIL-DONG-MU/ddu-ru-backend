@@ -91,23 +91,19 @@ class JourneyQueryServiceTest {
 
             assertThat(response.activeJourneys()).hasSize(2);
             assertThat(response.activeJourneys().get(0).journeyId()).isEqualTo(12L);
-            assertThat(response.activeJourneys().get(0).postId()).isEqualTo(2L);
             assertThat(response.activeJourneys().get(0).isOwner()).isFalse();
             assertThat(response.activeJourneys().get(0).tripDurationText()).isEqualTo("당일치기");
             assertThat(response.activeJourneys().get(0).recruitDeadlineDDay()).isEqualTo("D-1");
             assertThat(response.activeJourneys().get(1).journeyId()).isEqualTo(11L);
-            assertThat(response.activeJourneys().get(1).postId()).isEqualTo(1L);
             assertThat(response.activeJourneys().get(1).isOwner()).isTrue();
             assertThat(response.activeJourneys().get(1).tripDurationText()).isEqualTo("2박 3일");
             assertThat(response.activeJourneys().get(1).recruitDeadlineDDay()).isEqualTo("D-6");
 
             assertThat(response.completedJourneys()).hasSize(2);
             assertThat(response.completedJourneys().get(0).journeyId()).isEqualTo(14L);
-            assertThat(response.completedJourneys().get(0).postId()).isEqualTo(4L);
             assertThat(response.completedJourneys().get(0).isOwner()).isFalse();
             assertThat(response.completedJourneys().get(0).recruitDeadlineDDay()).isEqualTo("마감");
             assertThat(response.completedJourneys().get(1).journeyId()).isEqualTo(13L);
-            assertThat(response.completedJourneys().get(1).postId()).isEqualTo(3L);
             assertThat(response.completedJourneys().get(1).isOwner()).isTrue();
             assertThat(response.completedJourneys().get(1).recruitDeadlineDDay()).isEqualTo("마감");
         }
