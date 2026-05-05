@@ -50,13 +50,13 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final PostLikeRepository postLikeRepository;
-    private final JsonConverter jsonConverter;
-    private final ProfileImageResolver profileImageResolver;
+    private final JourneyRepository journeyRepository;
+    private final JourneyMemberRepository journeyMemberRepository;
     private final GroupChatRoomService groupChatRoomService;
     private final ParticipationApplicantService participationApplicantService;
     private final SuperHostService superHostService;
-    private final JourneyRepository journeyRepository;
-    private final JourneyMemberRepository journeyMemberRepository;
+    private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
