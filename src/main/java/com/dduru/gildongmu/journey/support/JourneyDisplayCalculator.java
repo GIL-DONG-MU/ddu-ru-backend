@@ -10,11 +10,7 @@ public final class JourneyDisplayCalculator {
     }
 
     public static String tripDurationText(Post post) {
-        return tripDurationText(post.getStartDate(), post.getEndDate());
-    }
-
-    public static String tripDurationText(LocalDate startDate, LocalDate endDate) {
-        long nightsLong = ChronoUnit.DAYS.between(startDate, endDate);
+        long nightsLong = ChronoUnit.DAYS.between(post.getStartDate(), post.getEndDate());
         int nights = (int) nightsLong;
         int totalDays = nights + 1;
 
