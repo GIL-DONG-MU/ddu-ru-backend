@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -30,9 +31,10 @@ public class JourneyQueryService {
     private final JourneyMemberRepository journeyMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PostService postService;
+    private final Clock clock;
 
     public JourneyMainListResponse retrieveMyJourneys(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
 
         List<JourneyMember> activeJourneyMembers = journeyMemberRepository
                 .findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);

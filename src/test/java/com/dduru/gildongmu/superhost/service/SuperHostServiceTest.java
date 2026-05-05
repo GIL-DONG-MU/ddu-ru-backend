@@ -24,6 +24,7 @@ import com.dduru.gildongmu.superhost.repository.SuperHostTicketRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,8 +38,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,12 +50,15 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SuperHostService 테스트")
 class SuperHostServiceTest {
+    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 5, 12, 0);
 
     @Mock
     private UserRepository userRepository;
@@ -65,8 +71,17 @@ class SuperHostServiceTest {
     @Mock
     private ProfileImageResolver profileImageResolver;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private SuperHostService superHostService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
+        lenient().when(clock.instant()).thenReturn(NOW.atZone(KOREA_ZONE).toInstant());
+    }
 
     @Nested
     @DisplayName("온보딩 보상 티켓 지급")
@@ -195,8 +210,8 @@ class SuperHostServiceTest {
             User user = createUser(1L);
             Post post = createPost(10L, user);
             SuperHostTicket ticket = SuperHostTicket.create(user, SuperHostTicketSource.ONBOARDING_SURVEY, 3);
-            LocalDateTime endsAt = LocalDateTime.now().plusDays(3);
-            SuperHostExposure exposure = SuperHostExposure.create(ticket, user, post, LocalDateTime.now(), endsAt);
+            LocalDateTime endsAt = NOW.plusDays(3);
+            SuperHostExposure exposure = SuperHostExposure.create(ticket, user, post, NOW, endsAt);
 
             when(superHostExposureRepository.findVisibleExposures(any(), any(), any(Pageable.class))).thenReturn(List.of(exposure));
             when(profileImageResolver.resolve(any(Profile.class))).thenReturn("https://example.com/profile.png");
@@ -230,7 +245,7 @@ class SuperHostServiceTest {
             User user = createUser(userId);
             Post post = createPost(10L, user);
             SuperHostTicket ticket = SuperHostTicket.create(user, SuperHostTicketSource.ONBOARDING_SURVEY, 3);
-            SuperHostExposure exposure = SuperHostExposure.create(ticket, user, post, LocalDateTime.now(), LocalDateTime.now().plusDays(2));
+            SuperHostExposure exposure = SuperHostExposure.create(ticket, user, post, NOW, NOW.plusDays(2));
 
             when(superHostTicketRepository.countByUser_IdAndStatus(userId, SuperHostTicketStatus.UNUSED)).thenReturn(2L);
             when(superHostExposureRepository.findFirstByUser_IdAndStatusAndEndedAtAfterOrderByStartedAtDesc(

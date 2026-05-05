@@ -48,6 +48,7 @@ profile:
   default-image-url: ${PROFILE_DEFAULT_IMAGE_URL}
 
 app:
+  time-zone: Asia/Seoul
   logging:
     performance:
       warn-threshold-ms: 300

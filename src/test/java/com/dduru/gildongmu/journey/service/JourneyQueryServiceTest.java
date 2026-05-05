@@ -22,6 +22,7 @@ import com.dduru.gildongmu.post.service.PostService;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,11 +45,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JourneyQueryService 테스트")
 class JourneyQueryServiceTest {
+    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
+    private static final LocalDate TODAY = LocalDate.of(2026, 5, 5);
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
@@ -60,8 +66,17 @@ class JourneyQueryServiceTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private JourneyQueryService journeyQueryService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
+        lenient().when(clock.instant()).thenReturn(TODAY.atStartOfDay(KOREA_ZONE).toInstant());
+    }
 
     @Nested
     @DisplayName("나의 여정 메인 목록 조회")
@@ -72,19 +87,19 @@ class JourneyQueryServiceTest {
         void returnsActiveAndCompletedJourneys() {
             Long userId = 10L;
 
-            Post activeOwnedPost = createPost(1L, userId, "제주 여행", "제주", LocalDate.now().plusDays(5), LocalDate.now().plusDays(7));
-            Post activeMemberPost = createPost(2L, 20L, "부산 여행", "부산", LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
-            Post completedOwnedPost = createPost(3L, userId, "도쿄 여행", "도쿄", LocalDate.now().minusDays(5), LocalDate.now().minusDays(3));
-            Post completedMemberPost = createPost(4L, 30L, "서울 여행", "서울", LocalDate.now().minusDays(3), LocalDate.now().minusDays(1));
+            Post activeOwnedPost = createPost(1L, userId, "제주 여행", "제주", TODAY.plusDays(5), TODAY.plusDays(7));
+            Post activeMemberPost = createPost(2L, 20L, "부산 여행", "부산", TODAY.plusDays(2), TODAY.plusDays(2));
+            Post completedOwnedPost = createPost(3L, userId, "도쿄 여행", "도쿄", TODAY.minusDays(5), TODAY.minusDays(3));
+            Post completedMemberPost = createPost(4L, 30L, "서울 여행", "서울", TODAY.minusDays(3), TODAY.minusDays(1));
 
             JourneyMember activeOwnedJourneyMember = journeyMember(create(11L, activeOwnedPost), userId, true);
             JourneyMember activeMemberJourneyMember = journeyMember(create(12L, activeMemberPost), userId, false);
             JourneyMember completedOwnedJourneyMember = journeyMember(create(13L, completedOwnedPost), userId, true);
             JourneyMember completedMemberJourneyMember = journeyMember(create(14L, completedMemberPost), userId, false);
 
-            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
                     .thenReturn(List.of(activeOwnedJourneyMember, activeMemberJourneyMember));
-            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
                     .thenReturn(List.of(completedOwnedJourneyMember, completedMemberJourneyMember));
 
             JourneyMainListResponse response = journeyQueryService.retrieveMyJourneys(userId);
@@ -113,9 +128,9 @@ class JourneyQueryServiceTest {
         void returnsEmptyList() {
             Long userId = 10L;
 
-            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+            when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
                     .thenReturn(List.of());
-            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, LocalDate.now()))
+            when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
                     .thenReturn(List.of());
 
             JourneyMainListResponse response = journeyQueryService.retrieveMyJourneys(userId);
