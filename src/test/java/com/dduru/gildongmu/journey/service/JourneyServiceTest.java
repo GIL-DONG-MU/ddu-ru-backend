@@ -10,7 +10,6 @@ import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
-import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
@@ -40,9 +39,6 @@ class JourneyServiceTest {
     @Mock
     private JourneyRepository journeyRepository;
 
-    @Mock
-    private JourneyMemberRepository journeyMemberRepository;
-
     @InjectMocks
     private JourneyService journeyService;
 
@@ -56,15 +52,13 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
-            JourneyMember hostMember = JourneyMember.createHost(journey, createUser(userId, "host"));
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     "제주 우리 여행",
                     "https://example.com/journey-updated.png"
             );
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(hostMember));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
 
             JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
 
@@ -81,15 +75,13 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 20L;
             Journey journey = createJourney(journeyId, 10L);
-            JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"));
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     "멤버가 바꾼 제목",
                     "https://example.com/member-updated.png"
             );
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(member));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
 
             JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
 
@@ -106,12 +98,11 @@ class JourneyServiceTest {
             Long userId = 20L;
             Journey journey = createJourney(journeyId, 10L);
             JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"));
-            ReflectionTestUtils.setField(member, "status", JourneyMemberStatus.REMOVED);
+            member.remove();
             JourneyUpdateRequest request = new JourneyUpdateRequest("새 제목", null);
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(member));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
                     .isInstanceOf(JourneyAccessDeniedException.class);
@@ -123,17 +114,15 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
-            JourneyMember hostMember = JourneyMember.createHost(journey, createUser(userId, "host"));
             JourneyUpdateRequest request = new JourneyUpdateRequest("   ", null);
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(hostMember));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyBasicInfoException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+                    .isEqualTo(ErrorCode.JOURNEY_EMPTY_PATCH);
         }
 
         @Test
@@ -142,17 +131,32 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
-            JourneyMember hostMember = JourneyMember.createHost(journey, createUser(userId, "host"));
-            JourneyUpdateRequest request = new JourneyUpdateRequest("짧다", null);
+            JourneyUpdateRequest request = new JourneyUpdateRequest("😀😀😀😀", null);
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(hostMember));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyBasicInfoException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+                    .isEqualTo(ErrorCode.JOURNEY_INVALID_TITLE_LENGTH);
+        }
+
+        @Test
+        @DisplayName("대표 사진 URL 형식이 잘못되면 예외가 발생한다")
+        void throwsWhenPhotoUrlIsInvalid() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, userId);
+            JourneyUpdateRequest request = new JourneyUpdateRequest(null, "http:test");
+
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
+
+            assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
+                    .isInstanceOf(InvalidJourneyBasicInfoException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_INVALID_PHOTO_URL);
         }
 
         @Test
@@ -161,15 +165,13 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
-            JourneyMember hostMember = JourneyMember.createHost(journey, createUser(userId, "host"));
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     null,
                     "https://example.com/journey-photo-only.png"
             );
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, userId))
-                    .thenReturn(Optional.of(hostMember));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
 
             JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
 

@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,20 @@ import java.util.Optional;
 public interface JourneyRepository extends JpaRepository<Journey, Long> {
 
     Optional<Journey> findByPostId(Long postId);
+
+    @Query("""
+            SELECT j
+            FROM JourneyMember jm
+            JOIN jm.journey j
+            WHERE j.id = :journeyId
+              AND jm.user.id = :userId
+              AND jm.status = :status
+            """)
+    Optional<Journey> findUpdatableJourneyByIdAndUserId(
+            @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId,
+            @Param("status") JourneyMemberStatus status
+    );
 
     @Query("""
             SELECT j
