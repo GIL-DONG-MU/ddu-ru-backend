@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Journeys", description = "나의 여정 API")
@@ -52,14 +51,15 @@ public interface JourneyApiDocs {
     )
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiErrorResponses({
-            ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.UNAUTHORIZED,
             ErrorCode.JOURNEY_ACCESS_DENIED,
-            ErrorCode.JOURNEY_NOT_FOUND
+            ErrorCode.JOURNEY_EMPTY_PATCH,
+            ErrorCode.JOURNEY_INVALID_TITLE_LENGTH,
+            ErrorCode.JOURNEY_INVALID_PHOTO_URL
     })
     ResponseEntity<ApiResult<JourneyUpdateResponse>> updateJourneyBasicInfo(
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(hidden = true) Long userId,
-            @Valid JourneyUpdateRequest request
+            JourneyUpdateRequest request
     );
 }

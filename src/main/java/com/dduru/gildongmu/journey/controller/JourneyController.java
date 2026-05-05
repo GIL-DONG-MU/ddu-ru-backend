@@ -8,9 +8,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.service.JourneyQueryService;
 import com.dduru.gildongmu.journey.service.JourneyService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,9 +49,9 @@ public class JourneyController implements JourneyApiDocs {
     public ResponseEntity<ApiResult<JourneyUpdateResponse>> updateJourneyBasicInfo(
             @PathVariable Long journeyId,
             @CurrentUser Long userId,
-            @Valid @RequestBody JourneyUpdateRequest request
+            @RequestBody JourneyUpdateRequest request
     ) {
         JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(ApiResult.ok(response));
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

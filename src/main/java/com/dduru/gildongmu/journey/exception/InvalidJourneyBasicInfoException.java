@@ -4,15 +4,19 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
 public class InvalidJourneyBasicInfoException extends BusinessException {
-    private InvalidJourneyBasicInfoException(String message) {
-        super(ErrorCode.INVALID_INPUT_VALUE, message);
+    private InvalidJourneyBasicInfoException(ErrorCode errorCode) {
+        super(errorCode);
     }
 
     public static InvalidJourneyBasicInfoException emptyPatch() {
-        return new InvalidJourneyBasicInfoException("제목 또는 대표 사진 중 하나는 입력해야 합니다.");
+        return new InvalidJourneyBasicInfoException(ErrorCode.JOURNEY_EMPTY_PATCH);
     }
 
     public static InvalidJourneyBasicInfoException invalidTitleLength() {
-        return new InvalidJourneyBasicInfoException("제목은 5자 이상 40자 이하여야 합니다.");
+        return new InvalidJourneyBasicInfoException(ErrorCode.JOURNEY_INVALID_TITLE_LENGTH);
+    }
+
+    public static InvalidJourneyBasicInfoException invalidPhotoUrl() {
+        return new InvalidJourneyBasicInfoException(ErrorCode.JOURNEY_INVALID_PHOTO_URL);
     }
 }
