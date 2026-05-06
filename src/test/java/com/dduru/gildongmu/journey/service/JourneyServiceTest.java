@@ -1,7 +1,9 @@
 package com.dduru.gildongmu.journey.service;
 
+import com.dduru.gildongmu.common.config.S3Properties;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
@@ -16,11 +18,11 @@ import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,12 +37,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JourneyService 테스트")
 class JourneyServiceTest {
+    private static final String S3_HOST = "https://dummy-bucket.s3.ap-northeast-2.amazonaws.com";
 
     @Mock
     private JourneyRepository journeyRepository;
 
-    @InjectMocks
     private JourneyService journeyService;
+
+    @BeforeEach
+    void setUp() {
+        S3Properties s3Properties = new S3Properties();
+        s3Properties.setBucket("dummy-bucket");
+        s3Properties.setRegion("ap-northeast-2");
+        journeyService = new JourneyService(journeyRepository, new S3ImageUrlValidator(s3Properties));
+    }
 
     @Nested
     @DisplayName("나의 여정 기본 정보 수정")
@@ -54,7 +64,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     "제주 우리 여행",
-                    "https://example.com/journey-updated.png"
+                    S3_HOST + "/journeys/journey-updated.png"
             );
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
@@ -64,9 +74,9 @@ class JourneyServiceTest {
 
             assertThat(response.journeyId()).isEqualTo(journeyId);
             assertThat(response.title()).isEqualTo("제주 우리 여행");
-            assertThat(response.photoUrl()).isEqualTo("https://example.com/journey-updated.png");
+            assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/journey-updated.png");
             assertThat(journey.getTitle()).isEqualTo("제주 우리 여행");
-            assertThat(journey.getPhotoUrl()).isEqualTo("https://example.com/journey-updated.png");
+            assertThat(journey.getPhotoUrl()).isEqualTo(S3_HOST + "/journeys/journey-updated.png");
         }
 
         @Test
@@ -77,7 +87,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, 10L);
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     "멤버가 바꾼 제목",
-                    "https://example.com/member-updated.png"
+                    S3_HOST + "/journeys/member-updated.png"
             );
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
@@ -86,9 +96,9 @@ class JourneyServiceTest {
             JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
 
             assertThat(response.title()).isEqualTo("멤버가 바꾼 제목");
-            assertThat(response.photoUrl()).isEqualTo("https://example.com/member-updated.png");
+            assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/member-updated.png");
             assertThat(journey.getTitle()).isEqualTo("멤버가 바꾼 제목");
-            assertThat(journey.getPhotoUrl()).isEqualTo("https://example.com/member-updated.png");
+            assertThat(journey.getPhotoUrl()).isEqualTo(S3_HOST + "/journeys/member-updated.png");
         }
 
         @Test
@@ -167,7 +177,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     null,
-                    "https://example.com/journey-photo-only.png"
+                    S3_HOST + "/journeys/journey-photo-only.png"
             );
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
@@ -176,7 +186,7 @@ class JourneyServiceTest {
             JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
 
             assertThat(response.title()).isEqualTo("제주도 2박 3일 여행");
-            assertThat(response.photoUrl()).isEqualTo("https://example.com/journey-photo-only.png");
+            assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/journey-photo-only.png");
         }
     }
 
@@ -208,7 +218,7 @@ class JourneyServiceTest {
                 true,
                 null,
                 null,
-                "https://example.com/photo.png",
+                S3_HOST + "/posts/photo.png",
                 "[]",
                 CompanionType.FULL
         );

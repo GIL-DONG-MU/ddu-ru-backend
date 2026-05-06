@@ -51,6 +51,23 @@ public interface S3ApiDocs {
             @Valid @RequestBody ImageUploadRequest request
     );
 
+    @Operation(
+            summary = "나의 여정 대표 이미지 업로드를 위한 Presigned URL 생성",
+            description = "나의 여정 대표 사진을 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "
+                    + "여러 파일을 한 번에 요청할 수 있습니다 (최대 10개). "
+                    + "파일명은 UUID로 변환되어 중복을 방지합니다. "
+                    + "클라이언트는 각 Presigned URL로 직접 S3에 업로드한 후, 받은 fileUrl을 나의 여정 대표 사진 수정 요청의 photoUrl에 넣습니다."
+    )
+    @ApiResponse(responseCode = "200", description = "Presigned URL 생성 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.INVALID_FILE_EXTENSION,
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+    })
+    ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareJourneyImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    );
+
     /*@Operation(
             summary = "설문조사 이미지 업로드를 위한 Presigned URL 생성",
             description = "설문조사 질문 이미지를 S3에 직접 업로드하기 위한 Presigned URL을 생성합니다. "

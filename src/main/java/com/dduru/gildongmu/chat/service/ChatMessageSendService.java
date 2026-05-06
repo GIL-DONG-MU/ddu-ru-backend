@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.chat.service;
 
 import com.dduru.gildongmu.chat.constants.ChatDestinationPaths;
+import com.dduru.gildongmu.chat.constants.ChatMessageConstants;
 import com.dduru.gildongmu.chat.domain.ChatMessage;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
@@ -15,10 +16,11 @@ import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.system.ChatSystemMessageFactory;
-import com.dduru.gildongmu.chat.validation.ChatImageUrlValidator;
 import com.dduru.gildongmu.chat.validation.ChatTextValidator;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +43,7 @@ public class ChatMessageSendService {
     private final ProfileImageResolver profileImageResolver;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatSystemMessageFactory chatSystemMessageFactory;
-    private final ChatImageUrlValidator chatImageUrlValidator;
+    private final S3ImageUrlValidator s3ImageUrlValidator;
 
     public void sendUserMessage(Long senderUserId, Long roomId, ChatMessageSendRequest request) {
         ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
@@ -112,7 +114,11 @@ public class ChatMessageSendService {
     private String resolveUserMessageContent(ChatMessageSendRequest request) {
         return switch (request.messageType()) {
             case TEXT -> ChatTextValidator.validateAndNormalize(request.content());
-            case IMAGE -> chatImageUrlValidator.validateAndNormalize(request.content());
+            case IMAGE -> s3ImageUrlValidator.validateAndNormalize(
+                    request.content(),
+                    S3ImageDirectory.CHATS,
+                    ChatMessageConstants.MAX_IMAGE_URL_LENGTH
+            );
             case SYSTEM -> throw new ChatSystemMessageSendAccessDeniedException();
         };
     }

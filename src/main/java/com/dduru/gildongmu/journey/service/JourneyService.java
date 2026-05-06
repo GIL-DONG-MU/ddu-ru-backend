@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.journey.service;
 
+import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
@@ -7,13 +9,11 @@ import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +23,7 @@ public class JourneyService {
     private static final int TITLE_MAX_LENGTH = 40;
 
     private final JourneyRepository journeyRepository;
+    private final S3ImageUrlValidator s3ImageUrlValidator;
 
     public JourneyUpdateResponse update(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE)
@@ -65,24 +66,10 @@ public class JourneyService {
         if (!StringUtils.hasText(raw)) {
             return null;
         }
-        String photoUrl = raw.trim();
-        validatePhotoUrl(photoUrl);
-        return photoUrl;
-    }
 
-    private void validatePhotoUrl(String photoUrl) {
         try {
-            URI uri = new URI(photoUrl);
-            if (!uri.isAbsolute()) {
-                throw InvalidJourneyBasicInfoException.invalidPhotoUrl();
-            }
-            if (uri.getScheme() == null || !"https".equalsIgnoreCase(uri.getScheme())) {
-                throw InvalidJourneyBasicInfoException.invalidPhotoUrl();
-            }
-            if (!StringUtils.hasText(uri.getHost())) {
-                throw InvalidJourneyBasicInfoException.invalidPhotoUrl();
-            }
-        } catch (URISyntaxException e) {
+            return s3ImageUrlValidator.validateAndNormalize(raw, S3ImageDirectory.JOURNEYS);
+        } catch (InvalidImageUrlException e) {
             throw InvalidJourneyBasicInfoException.invalidPhotoUrl();
         }
     }
