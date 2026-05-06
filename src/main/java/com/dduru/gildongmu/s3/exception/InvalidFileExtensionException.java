@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.S3.exception;
+package com.dduru.gildongmu.s3.exception;
 
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;

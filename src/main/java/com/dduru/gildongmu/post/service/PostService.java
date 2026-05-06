@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -50,13 +51,14 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final PostLikeRepository postLikeRepository;
-    private final JsonConverter jsonConverter;
-    private final ProfileImageResolver profileImageResolver;
+    private final JourneyRepository journeyRepository;
+    private final JourneyMemberRepository journeyMemberRepository;
     private final GroupChatRoomService groupChatRoomService;
     private final ParticipationApplicantService participationApplicantService;
     private final SuperHostService superHostService;
-    private final JourneyRepository journeyRepository;
-    private final JourneyMemberRepository journeyMemberRepository;
+    private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
+    private final TimeProvider timeProvider;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
@@ -81,7 +83,7 @@ public class PostService {
         Destination destination = getDestinationOrNull(request);
         LocalDate recruitDeadline = calculateRecruitDeadline(getEndDateOrCurrent(post, request));
 
-        updatePost(post, destination, request, recruitDeadline);
+        updatePost(post, destination, request, recruitDeadline, today());
 
         log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }
@@ -96,7 +98,7 @@ public class PostService {
     }
 
     public int closeExpiredPosts() {
-        int updatedCount = postRepository.closeExpiredPostsByDate(LocalDate.now());
+        int updatedCount = postRepository.closeExpiredPostsByDate(today());
         superHostService.cancelActiveExposureByClosedPosts();
         return updatedCount;
     }
@@ -118,8 +120,9 @@ public class PostService {
     }
 
     private PostDetailResponse buildDetailResponse(Post post, Long currentUserId) {
+        LocalDate today = today();
         boolean isOwner = isOwner(post, currentUserId);
-        boolean canEditPost = canEditPost(post, currentUserId);
+        boolean canEditPost = canEditPost(post, currentUserId, today);
         boolean hasLiked = hasLiked(post.getId(), currentUserId);
 
         List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
@@ -128,6 +131,7 @@ public class PostService {
         return PostDetailResponse.from(
                 post,
                 jsonConverter,
+                today,
                 isOwner,
                 canEditPost,
                 hasLiked,
@@ -162,12 +166,11 @@ public class PostService {
         return currentUserId != null && currentUserId.equals(post.getUser().getId());
     }
 
-    private boolean canEditPost(Post post, Long currentUserId) {
+    private boolean canEditPost(Post post, Long currentUserId, LocalDate today) {
         if (!isOwner(post, currentUserId)) {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
         return !post.hasRecruitDeadlinePassed(today)
                 && !post.hasTravelEnded(today)
                 && !post.hasTravelStarted(today);
@@ -260,7 +263,7 @@ public class PostService {
         );
     }
 
-    private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadline) {
+    private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadline, LocalDate today) {
         boolean applyPreferredAgePatch = hasAgePatch(request);
         boolean preferredAgeAny = applyPreferredAgePatch && Boolean.TRUE.equals(request.isAgeAny());
 
@@ -280,7 +283,7 @@ public class PostService {
                 request.startDate(), request.endDate(), request.recruitCapacity(),
                 recruitDeadline, request.preferredGender(), applyPreferredAgePatch,
                 preferredAgeAny, minAge, maxAge,
-                applyPhotoUrlPatch, photoUrl, tagsJson, request.companionType());
+                applyPhotoUrlPatch, photoUrl, tagsJson, request.companionType(), today);
     }
 
     private String resolvePhotoUrl(String photoUrl, Destination destination) {
@@ -297,5 +300,9 @@ public class PostService {
 
     private String tagsToJson(List<String> tags) {
         return jsonConverter.convertTagListToJson(tags);
+    }
+
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }

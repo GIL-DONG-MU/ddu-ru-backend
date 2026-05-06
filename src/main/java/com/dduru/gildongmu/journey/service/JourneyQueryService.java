@@ -3,6 +3,7 @@ package com.dduru.gildongmu.journey.service;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.response.JourneyDetailResponse;
@@ -30,9 +31,10 @@ public class JourneyQueryService {
     private final JourneyMemberRepository journeyMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PostService postService;
+    private final TimeProvider timeProvider;
 
     public JourneyMainListResponse retrieveMyJourneys(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = timeProvider.today();
 
         List<JourneyMember> activeJourneyMembers = journeyMemberRepository
                 .findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);
