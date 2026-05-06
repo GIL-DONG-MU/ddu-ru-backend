@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.journey.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
@@ -21,34 +22,29 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JourneyQueryService 테스트")
 class JourneyQueryServiceTest {
-    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
     private static final LocalDate TODAY = LocalDate.of(2026, 5, 5);
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
 
     @Mock
-    private Clock clock;
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private JourneyQueryService journeyQueryService;
 
     @BeforeEach
-    void setUpClock() {
-        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
-        lenient().when(clock.instant()).thenReturn(TODAY.atStartOfDay(KOREA_ZONE).toInstant());
+    void setUpTimeProvider() {
+        when(timeProvider.today()).thenReturn(TODAY);
     }
 
     @Nested

@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
@@ -12,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,10 +22,10 @@ import java.util.List;
 public class PostQueryService {
     private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
-    private final Clock clock;
+    private final TimeProvider timeProvider;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = timeProvider.today();
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, pageable);
 
