@@ -41,6 +41,7 @@ public class ChatMessageSendService {
     private final ProfileImageResolver profileImageResolver;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatSystemMessageFactory chatSystemMessageFactory;
+    private final ChatImageUrlValidator chatImageUrlValidator;
 
     public void sendUserMessage(Long senderUserId, Long roomId, ChatMessageSendRequest request) {
         ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
@@ -108,10 +109,10 @@ public class ChatMessageSendService {
         return ChatMessageBroadcastPayload.ofUserMessage(message, post, message.getSender(), profileImageResolver);
     }
 
-    private static String resolveUserMessageContent(ChatMessageSendRequest request) {
+    private String resolveUserMessageContent(ChatMessageSendRequest request) {
         return switch (request.messageType()) {
             case TEXT -> ChatTextValidator.validateAndNormalize(request.content());
-            case IMAGE -> ChatImageUrlValidator.validateAndNormalize(request.content());
+            case IMAGE -> chatImageUrlValidator.validateAndNormalize(request.content());
             case SYSTEM -> throw new ChatSystemMessageSendAccessDeniedException();
         };
     }

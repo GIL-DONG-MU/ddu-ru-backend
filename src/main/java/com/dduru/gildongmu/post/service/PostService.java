@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -34,7 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -58,7 +58,7 @@ public class PostService {
     private final SuperHostService superHostService;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
-    private final Clock clock;
+    private final TimeProvider timeProvider;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         validateCreateRequest(request);
@@ -303,6 +303,6 @@ public class PostService {
     }
 
     private LocalDate today() {
-        return LocalDate.now(clock);
+        return timeProvider.today();
     }
 }

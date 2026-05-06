@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.superhost.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
@@ -38,10 +39,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,7 +56,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SuperHostService 테스트")
 class SuperHostServiceTest {
-    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 5, 12, 0);
 
     @Mock
@@ -72,15 +70,15 @@ class SuperHostServiceTest {
     private ProfileImageResolver profileImageResolver;
 
     @Mock
-    private Clock clock;
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private SuperHostService superHostService;
 
     @BeforeEach
-    void setUpClock() {
-        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
-        lenient().when(clock.instant()).thenReturn(NOW.atZone(KOREA_ZONE).toInstant());
+    void setUpTimeProvider() {
+        lenient().when(timeProvider.now()).thenReturn(NOW);
+        lenient().when(timeProvider.today()).thenReturn(NOW.toLocalDate());
     }
 
     @Nested

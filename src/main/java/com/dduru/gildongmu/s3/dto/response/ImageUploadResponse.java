@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.S3.dto.response;
+package com.dduru.gildongmu.s3.dto.response;
 
 public record ImageUploadResponse(
         String presignedUrl,

@@ -5,9 +5,11 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -120,6 +122,21 @@ public class GlobalExceptionHandler {
         String message = "지원하지 않는 HTTP 메서드입니다: " + e.getMethod();
         ErrorResponse response = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED, message);
         return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        log.warn("Media Type Not Supported: {}", e.getMessage());
+
+        String contentType = e.getContentType() == null ? "unknown" : e.getContentType().toString();
+        String supportedTypes = e.getSupportedMediaTypes().stream()
+                .map(MediaType::toString)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse(MediaType.APPLICATION_JSON_VALUE);
+        String message = "지원하지 않는 Content-Type입니다: %s. 지원 형식: %s".formatted(contentType, supportedTypes);
+
+        ErrorResponse response = ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE, message);
+        return ResponseEntity.status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getStatus()).body(response);
     }
 
     @ExceptionHandler(Exception.class)

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.journey.service;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
@@ -32,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -45,7 +45,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,15 +66,14 @@ class JourneyQueryServiceTest {
     private PostService postService;
 
     @Mock
-    private Clock clock;
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private JourneyQueryService journeyQueryService;
 
     @BeforeEach
-    void setUpClock() {
-        lenient().when(clock.getZone()).thenReturn(KOREA_ZONE);
-        lenient().when(clock.instant()).thenReturn(TODAY.atStartOfDay(KOREA_ZONE).toInstant());
+    void setUpTimeProvider() {
+        when(timeProvider.today()).thenReturn(TODAY);
     }
 
     @Nested

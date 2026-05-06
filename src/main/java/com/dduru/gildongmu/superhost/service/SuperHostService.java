@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.superhost.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
@@ -28,7 +29,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,7 +47,7 @@ public class SuperHostService {
     private final SuperHostTicketRepository superHostTicketRepository;
     private final SuperHostExposureRepository superHostExposureRepository;
     private final ProfileImageResolver profileImageResolver;
-    private final Clock clock;
+    private final TimeProvider timeProvider;
 
     public void grantOnboardingRewardTicket(Long userId) {
         User user = userRepository.getByIdOrThrow(userId);
@@ -67,7 +67,7 @@ public class SuperHostService {
 
     public SuperHostApplyResponse applyTicketToPost(Long userId, Long postId) {
         Post post = getApplicablePostOrThrow(postId, userId);
-        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime now = timeProvider.now();
         validateNoActiveExposure(userId, now);
         SuperHostTicket ticket = getUnusedTicketOrThrow(userId);
 
@@ -84,8 +84,8 @@ public class SuperHostService {
     @Transactional(readOnly = true)
     public SuperHostPostListResponse retrieveSuperHostPosts(Integer size) {
         int requestSize = normalizeRequestSize(size);
-        LocalDateTime now = LocalDateTime.now(clock);
-        LocalDate today = LocalDate.now(clock);
+        LocalDateTime now = timeProvider.now();
+        LocalDate today = timeProvider.today();
         List<PostSummaryResponse> responses = superHostExposureRepository
                 .findVisibleExposures(SuperHostExposureStatus.ACTIVE, now, PageRequest.of(0, requestSize))
                 .stream()
@@ -104,13 +104,13 @@ public class SuperHostService {
         return superHostExposureRepository.endExpiredExposures(
                 SuperHostExposureStatus.ACTIVE,
                 SuperHostExposureStatus.ENDED,
-                LocalDateTime.now(clock)
+                timeProvider.now()
         );
     }
 
     @Transactional(readOnly = true)
     public MySuperHostStatusResponse getMyStatus(Long userId) {
-        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime now = timeProvider.now();
         int unusedCount = getUnusedTicketCount(userId);
 
         return superHostExposureRepository
@@ -129,7 +129,7 @@ public class SuperHostService {
                 postId,
                 SuperHostExposureStatus.ACTIVE,
                 SuperHostExposureStatus.CANCELLED,
-                LocalDateTime.now(clock)
+                timeProvider.now()
         );
         if (cancelledCount > 0) {
             log.info("게시글 상태 변경으로 슈퍼호스트 노출 취소 - postId={}, count={}", postId, cancelledCount);
@@ -140,7 +140,7 @@ public class SuperHostService {
         int cancelledCount = superHostExposureRepository.cancelActiveExposureByClosedPosts(
                 SuperHostExposureStatus.ACTIVE,
                 SuperHostExposureStatus.CANCELLED,
-                LocalDateTime.now(clock)
+                timeProvider.now()
         );
         if (cancelledCount > 0) {
             log.info("자동 마감된 게시글의 슈퍼호스트 노출 취소 - count={}", cancelledCount);
