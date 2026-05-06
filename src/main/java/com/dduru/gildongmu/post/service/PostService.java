@@ -113,7 +113,6 @@ public class PostService {
         Post post = postRepository.getActiveByIdOrThrow(postId);
         return buildDetailResponse(post, currentUserId);
     }
-        LocalDate today = today();
 
     @Transactional(readOnly = true)
     public PostDetailResponse getDetail(Post post, Long currentUserId) {
@@ -121,6 +120,7 @@ public class PostService {
     }
 
     private PostDetailResponse buildDetailResponse(Post post, Long currentUserId) {
+        LocalDate today = today();
         boolean isOwner = isOwner(post, currentUserId);
         boolean canEditPost = canEditPost(post, currentUserId, today);
         boolean hasLiked = hasLiked(post.getId(), currentUserId);
