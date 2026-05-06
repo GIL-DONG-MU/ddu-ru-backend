@@ -5,6 +5,8 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
@@ -88,6 +90,9 @@ class PostServiceTest {
     private SuperHostService superHostService;
 
     @Mock
+    private JourneyRepository journeyRepository;
+
+    @Mock
     private JourneyMemberRepository journeyMemberRepository;
 
     @Mock
@@ -138,6 +143,7 @@ class PostServiceTest {
                 ReflectionTestUtils.setField(post, "id", 100L);
                 return post;
             });
+            when(journeyRepository.save(any(Journey.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             PostCreateResponse response = postService.create(userId, request);
 
@@ -153,8 +159,52 @@ class PostServiceTest {
             assertThat(savedPost.isAgeAny()).isFalse();
             assertThat(savedPost.getMinAge()).isEqualTo(25);
             assertThat(savedPost.getMaxAge()).isEqualTo(35);
+            verify(journeyRepository).save(any());
             verify(journeyMemberRepository).save(any());
             verify(groupChatRoomService).createPendingRoomForPost(savedPost, user);
+        }
+
+        @Test
+        @DisplayName("journey는 생성 시 제목과 대표 사진을 post 초기값으로 저장한다")
+        void createsJourneyWithCopiedTitleAndPhoto() {
+            Long userId = 1L;
+            Long destinationId = 10L;
+            User user = createUser(userId, "user");
+            Destination destination = createDestination("제주도", null);
+            ReflectionTestUtils.setField(destination, "id", destinationId);
+
+            PostCreateRequest request = new PostCreateRequest(
+                    destinationId,
+                    "제목 다섯글자이상입니다",
+                    "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!",
+                    LocalDate.now().plusDays(10),
+                    LocalDate.now().plusDays(12),
+                    5,
+                    Gender.M,
+                    true,
+                    null,
+                    null,
+                    "https://example.com/journey-cover.png",
+                    List.of(),
+                    CompanionType.FULL
+            );
+
+            givenCreateContext(userId, destinationId, user, destination);
+            when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
+                Post post = invocation.getArgument(0);
+                ReflectionTestUtils.setField(post, "id", 100L);
+                return post;
+            });
+            when(journeyRepository.save(any(Journey.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            postService.create(userId, request);
+
+            ArgumentCaptor<Journey> journeyCaptor = ArgumentCaptor.forClass(Journey.class);
+            verify(journeyRepository).save(journeyCaptor.capture());
+            Journey savedJourney = journeyCaptor.getValue();
+
+            assertThat(savedJourney.getTitle()).isEqualTo(request.title());
+            assertThat(savedJourney.getPhotoUrl()).isEqualTo(request.photoUrl());
         }
 
         @Test

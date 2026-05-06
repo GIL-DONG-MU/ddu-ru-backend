@@ -4,8 +4,10 @@ import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
+import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveRequest;
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
@@ -41,6 +43,7 @@ public class ParticipationCommandService {
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
+    private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
@@ -73,11 +76,12 @@ public class ParticipationCommandService {
         lockedPost.validateIsOpen();
 
         lockedPost.approveParticipation(participation);
+        Journey journey = journeyRepository.getByPostIdOrThrow(lockedPost.getId());
         // 승인 이후 실제 협업 멤버십을 만든다. 신청 이력은 participations에, 협업 멤버는 journey_members에 남긴다.
-        journeyMemberRepository.findByPostIdAndUserId(lockedPost.getId(), participantUserId)
+        journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participantUserId)
                 .ifPresentOrElse(
                         JourneyMember::activate,
-                        () -> journeyMemberRepository.save(JourneyMember.createMember(lockedPost, participation.getUser()))
+                        () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser()))
                 );
         GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, lockedPost.getId(), participantUserId);
         loggingStatusChange(participation);

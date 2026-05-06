@@ -3,7 +3,6 @@ package com.dduru.gildongmu.journey.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
-import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "journey_members",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"journey_id", "user_id"})
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -31,8 +30,8 @@ public class JourneyMember extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "journey_id", nullable = false)
+    private Journey journey;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -53,25 +52,25 @@ public class JourneyMember extends BaseTimeEntity {
     private LocalDateTime removedAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private JourneyMember(Post post, User user, JourneyMemberRole role) {
-        this.post = post;
+    private JourneyMember(Journey journey, User user, JourneyMemberRole role) {
+        this.journey = journey;
         this.user = user;
         this.role = role;
         this.status = JourneyMemberStatus.ACTIVE;
         this.joinedAt = LocalDateTime.now();
     }
 
-    public static JourneyMember createHost(Post post, User user) {
+    public static JourneyMember createHost(Journey journey, User user) {
         return JourneyMember.builder()
-                .post(post)
+                .journey(journey)
                 .user(user)
                 .role(JourneyMemberRole.HOST)
                 .build();
     }
 
-    public static JourneyMember createMember(Post post, User user) {
+    public static JourneyMember createMember(Journey journey, User user) {
         return JourneyMember.builder()
-                .post(post)
+                .journey(journey)
                 .user(user)
                 .role(JourneyMemberRole.MEMBER)
                 .build();

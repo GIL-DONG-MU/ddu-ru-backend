@@ -85,6 +85,10 @@ public enum ErrorCode {
     PARTICIPATION_REJECTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "거절할 수 없습니다. 이미 승인되었거나 거절된 신청입니다."),
     PARTICIPATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "대기 중인 신청만 취소할 수 있습니다."),
 
+    // 나의 여정 (JOURNEY)
+    JOURNEY_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정을 찾을 수 없습니다."),
+    JOURNEY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "나의 여정에 접근할 권한이 없습니다."),
+
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
     SELF_POST_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자신의 게시글은 신고할 수 없습니다."),

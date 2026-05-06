@@ -5,8 +5,10 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
@@ -49,12 +51,13 @@ public class PostService {
     private final UserRepository userRepository;
     private final DestinationRepository destinationRepository;
     private final PostLikeRepository postLikeRepository;
-    private final JsonConverter jsonConverter;
-    private final ProfileImageResolver profileImageResolver;
+    private final JourneyRepository journeyRepository;
+    private final JourneyMemberRepository journeyMemberRepository;
     private final GroupChatRoomService groupChatRoomService;
     private final ParticipationApplicantService participationApplicantService;
     private final SuperHostService superHostService;
-    private final JourneyMemberRepository journeyMemberRepository;
+    private final JsonConverter jsonConverter;
+    private final ProfileImageResolver profileImageResolver;
     private final TimeProvider timeProvider;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
@@ -65,7 +68,8 @@ public class PostService {
 
         Post post = createPost(user, destination, request);
         Post savedPost = postRepository.save(post);
-        journeyMemberRepository.save(JourneyMember.createHost(savedPost, user));
+        Journey savedJourney = journeyRepository.save(Journey.create(savedPost));
+        journeyMemberRepository.save(JourneyMember.createHost(savedJourney, user));
         groupChatRoomService.createPendingRoomForPost(savedPost, user);
 
         log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
@@ -101,15 +105,28 @@ public class PostService {
 
     public PostDetailResponse recordViewAndGetDetail(Long postId, Long currentUserId) {
         postRepository.incrementViewCount(postId);
-        Post post = postRepository.getActiveByIdOrThrow(postId);
-        LocalDate today = today();
+        return getDetail(postId, currentUserId);
+    }
 
+    @Transactional(readOnly = true)
+    public PostDetailResponse getDetail(Long postId, Long currentUserId) {
+        Post post = postRepository.getActiveByIdOrThrow(postId);
+        return buildDetailResponse(post, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public PostDetailResponse getDetail(Post post, Long currentUserId) {
+        return buildDetailResponse(post, currentUserId);
+    }
+
+    private PostDetailResponse buildDetailResponse(Post post, Long currentUserId) {
+        LocalDate today = today();
         boolean isOwner = isOwner(post, currentUserId);
         boolean canEditPost = canEditPost(post, currentUserId, today);
-        boolean hasLiked = hasLiked(postId, currentUserId);
+        boolean hasLiked = hasLiked(post.getId(), currentUserId);
 
         List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
-        MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(postId, currentUserId, isOwner);
+        MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(post.getId(), currentUserId, isOwner);
 
         return PostDetailResponse.from(
                 post,
