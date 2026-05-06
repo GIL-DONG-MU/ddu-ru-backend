@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.participation.repository;
 
 import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.exception.ParticipationNotFoundException;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,22 +27,6 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     List<Participation> findMyApplicationsForVisiblePosts(@Param("userId") Long userId);
 
     Optional<Participation> findByPostIdAndUserId(Long postId, Long userId);
-
-    @Query("""
-            SELECT p
-            FROM Participation p
-            JOIN FETCH p.user u
-            JOIN FETCH u.profile pr
-            LEFT JOIN FETCH pr.avatar
-            LEFT JOIN FETCH pr.bgColor
-            WHERE p.post.id = :postId
-              AND p.status = :status
-            ORDER BY p.approvedAt ASC, p.id ASC
-            """)
-    List<Participation> findByPostIdAndStatusWithMemberProfiles(
-            @Param("postId") Long postId,
-            @Param("status") ParticipationStatus status
-    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

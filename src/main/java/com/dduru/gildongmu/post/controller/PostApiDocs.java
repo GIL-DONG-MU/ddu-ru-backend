@@ -91,7 +91,6 @@ public interface PostApiDocs {
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.POST_ACCESS_DENIED,
-            ErrorCode.INVALID_POST_STATUS,
             ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<Void>> updatePostStatus(

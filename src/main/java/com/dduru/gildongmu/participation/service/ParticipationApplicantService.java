@@ -4,8 +4,9 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
-import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ChatRoomIds;
 import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
@@ -27,7 +28,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -41,6 +41,7 @@ public class ParticipationApplicantService {
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ProfileImageResolver profileImageResolver;
+    private final JourneyMemberRepository journeyMemberRepository;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
@@ -64,14 +65,10 @@ public class ParticipationApplicantService {
 
     @Transactional(readOnly = true)
     public List<ParticipantInfo> getParticipantsForPostDetail(Post post) {
-        List<ParticipantInfo> participants = new ArrayList<>();
-        participants.add(ParticipantInfo.from(post.getUser(), true, profileImageResolver));
-
-        participationRepository
-                .findByPostIdAndStatusWithMemberProfiles(post.getId(), ParticipationStatus.APPROVED).stream()
-                .map(participation -> ParticipantInfo.from(participation.getUser(), false, profileImageResolver))
-                .forEach(participants::add);
-        return participants;
+        return journeyMemberRepository
+                .findByPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
+                .map(journeyMember -> ParticipantInfo.from(journeyMember.getUser(), journeyMember.isHost(), profileImageResolver))
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.journey.support.JourneyDisplayCalculator;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
@@ -9,7 +10,6 @@ import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public record PostDetailResponse(
@@ -37,6 +37,7 @@ public record PostDetailResponse(
         LocalDateTime createdAt,
         UserInfo author,
         boolean isOwner,
+        boolean canEditPost,
         boolean hasLiked,
         List<ParticipantInfo> participants,
         MyParticipationStatus myParticipationStatus,
@@ -44,7 +45,9 @@ public record PostDetailResponse(
         String recruitDeadlineDDay
 ) {
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter,
+                                          LocalDate today,
                                           boolean isOwner,
+                                          boolean canEditPost,
                                           boolean hasLiked,
                                           List<ParticipantInfo> participants,
                                           MyParticipationStatus myParticipationStatus,
@@ -53,23 +56,8 @@ public record PostDetailResponse(
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
-        long nightsLong = ChronoUnit.DAYS.between(post.getStartDate(), post.getEndDate());
-        int nights = (int) nightsLong;
-        int totalDays = nights + 1;
-        String tripDurationText = nights > 0
-                ? nights + "박 " + totalDays + "일"
-                : "당일 일정";
-
-        String recruitDeadlineDDay;
-        LocalDate deadline = post.getRecruitDeadline();
-        if (deadline == null) {
-            recruitDeadlineDDay = "상시 모집";
-        } else if (LocalDate.now().isAfter(deadline)) {
-            recruitDeadlineDDay = "마감";
-        } else {
-            int d = post.getDaysUntilRecruitDeadline();
-            recruitDeadlineDDay = (d == 0) ? "D-Day" : "D-" + d;
-        }
+        String tripDurationText = JourneyDisplayCalculator.tripDurationText(post);
+        String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, today);
 
         return new PostDetailResponse(
                 post.getId(),
@@ -77,8 +65,8 @@ public record PostDetailResponse(
                 post.getContent(),
                 post.getStatus(),
                 post.isFull(),
-                post.getDaysUntilRecruitDeadline(),
-                post.getDaysUntilTravelStart(),
+                post.getDaysUntilRecruitDeadline(today),
+                post.getDaysUntilTravelStart(today),
                 post.getStartDate(),
                 post.getEndDate(),
                 post.getDestination().getCity(),
@@ -96,6 +84,7 @@ public record PostDetailResponse(
                 post.getCreatedAt(),
                 authorInfo,
                 isOwner,
+                canEditPost,
                 hasLiked,
                 participants,
                 myParticipationStatus,
