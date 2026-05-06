@@ -11,10 +11,12 @@ import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,15 +28,20 @@ public class JourneyService {
     private final S3ImageUrlValidator s3ImageUrlValidator;
 
     public JourneyUpdateResponse update(Long journeyId, Long userId, JourneyUpdateRequest request) {
-        Journey journey = journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE)
-                .orElseThrow(JourneyAccessDeniedException::new);
+        Journey journey = getUpdatableJourney(journeyId, userId);
 
         String title = normalizeTitle(request.title());
         String photoUrl = normalizePhotoUrl(request.photoUrl());
         validateHasAnyPatch(title, photoUrl);
 
-        journey.update(title, photoUrl);
+        journey.updateBasicInfo(title, photoUrl);
+        log.info("나의 여정 기본 정보 수정됨 - journeyId={}, userId={}", journeyId, userId);
         return JourneyUpdateResponse.from(journey);
+    }
+
+    private Journey getUpdatableJourney(Long journeyId, Long userId) {
+        return journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE)
+                .orElseThrow(JourneyAccessDeniedException::new);
     }
 
     private void validateHasAnyPatch(String title, String photoUrl) {
@@ -43,32 +50,29 @@ public class JourneyService {
         }
     }
 
-    private void validateTitle(String title) {
-        if (title == null) {
-            return;
+    private String normalizeTitle(String title) {
+        if (!StringUtils.hasText(title)) {
+            return null;
         }
+        String normalizedTitle = title.trim();
+        validateTitleLength(normalizedTitle);
+        return normalizedTitle;
+    }
+
+    private void validateTitleLength(String title) {
         int length = title.codePointCount(0, title.length());
         if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
             throw InvalidJourneyBasicInfoException.invalidTitleLength();
         }
     }
 
-    private String normalizeTitle(String raw) {
-        if (!StringUtils.hasText(raw)) {
-            return null;
-        }
-        String title = raw.trim();
-        validateTitle(title);
-        return title;
-    }
-
-    private String normalizePhotoUrl(String raw) {
-        if (!StringUtils.hasText(raw)) {
+    private String normalizePhotoUrl(String photoUrl) {
+        if (!StringUtils.hasText(photoUrl)) {
             return null;
         }
 
         try {
-            return s3ImageUrlValidator.validateAndNormalize(raw, S3ImageDirectory.JOURNEYS);
+            return s3ImageUrlValidator.validateAndNormalize(photoUrl, S3ImageDirectory.JOURNEYS);
         } catch (InvalidImageUrlException e) {
             throw InvalidJourneyBasicInfoException.invalidPhotoUrl();
         }
