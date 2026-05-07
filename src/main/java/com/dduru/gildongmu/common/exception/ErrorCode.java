@@ -88,6 +88,9 @@ public enum ErrorCode {
     // 나의 여정 (JOURNEY)
     JOURNEY_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정을 찾을 수 없습니다."),
     JOURNEY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "나의 여정에 접근할 권한이 없습니다."),
+    JOURNEY_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "제목 또는 대표 사진 중 하나는 입력해야 합니다."),
+    JOURNEY_INVALID_TITLE_LENGTH(HttpStatus.BAD_REQUEST, "제목은 5자 이상 40자 이하여야 합니다."),
+    JOURNEY_INVALID_PHOTO_URL(HttpStatus.BAD_REQUEST, "대표 사진 URL 형식이 올바르지 않습니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
@@ -118,17 +121,19 @@ public enum ErrorCode {
     CHAT_ROOM_INVITE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글 작성자만 그룹 채팅 멤버를 추가할 수 있습니다."),
     GROUP_CHAT_ALREADY_MEMBER(HttpStatus.BAD_REQUEST, "이미 그룹 채팅방의 멤버입니다."),
 
+    // 이미지 URL (IMAGE URL)
+    IMAGE_URL_REQUIRED(HttpStatus.BAD_REQUEST, "이미지 URL은 필수입니다."),
+    IMAGE_URL_BLANK(HttpStatus.BAD_REQUEST, "이미지 URL은 비어 있을 수 없습니다."),
+    IMAGE_URL_TOO_LONG(HttpStatus.BAD_REQUEST, "이미지 URL이 너무 깁니다."),
+    IMAGE_URL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "이미지 URL 형식이 올바르지 않습니다."),
+    IMAGE_URL_NOT_ABSOLUTE(HttpStatus.BAD_REQUEST, "이미지 URL은 절대 경로(https)여야 합니다."),
+    IMAGE_URL_INVALID_SCHEME(HttpStatus.BAD_REQUEST, "이미지 URL은 https 만 허용됩니다."),
+    IMAGE_URL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "업로드된 이미지 URL만 허용됩니다."),
+
     // 채팅 메세지 (CHAT MESSAGE)
     CHAT_TEXT_REQUIRED(HttpStatus.BAD_REQUEST, "메시지 내용은 필수입니다."),
     CHAT_TEXT_BLANK(HttpStatus.BAD_REQUEST, "공백만 있는 메시지는 전송할 수 없습니다."),
     CHAT_TEXT_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지가 너무 깁니다."),
-    CHAT_IMAGE_URL_REQUIRED(HttpStatus.BAD_REQUEST, "이미지 URL은 필수입니다."),
-    CHAT_IMAGE_URL_BLANK(HttpStatus.BAD_REQUEST, "이미지 URL은 비어 있을 수 없습니다."),
-    CHAT_IMAGE_URL_TOO_LONG(HttpStatus.BAD_REQUEST, "이미지 URL이 너무 깁니다."),
-    CHAT_IMAGE_URL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "이미지 URL 형식이 올바르지 않습니다."),
-    CHAT_IMAGE_URL_NOT_ABSOLUTE(HttpStatus.BAD_REQUEST, "이미지 URL은 절대 경로(https)여야 합니다."),
-    CHAT_IMAGE_URL_INVALID_SCHEME(HttpStatus.BAD_REQUEST, "이미지 URL은 https 만 허용됩니다."),
-    CHAT_IMAGE_URL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "채팅 이미지는 업로드된 chats 경로 URL만 허용됩니다."),
     CHAT_SYSTEM_MESSAGE_SEND_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "SYSTEM 은 사용자 메시지로 처리되지 않습니다.");
 
     private final int status;

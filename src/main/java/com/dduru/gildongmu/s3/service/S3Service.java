@@ -1,8 +1,10 @@
 package com.dduru.gildongmu.s3.service;
 
-import com.dduru.gildongmu.s3.dto.response.ImageUploadResponse;
-import com.dduru.gildongmu.s3.exception.InvalidFileExtensionException;
 import com.dduru.gildongmu.common.config.S3Properties;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
+import com.dduru.gildongmu.s3.dto.response.ImageUploadResponse;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
+import com.dduru.gildongmu.s3.exception.InvalidFileExtensionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,7 +15,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,27 +27,31 @@ public class S3Service {
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
 
-    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "gif");
-    private static final String S3_POSTS_DIR = "posts/";
-    private static final String S3_PROFILES_DIR = "profiles/";
-    private static final String S3_CHATS_DIR = "chats/";
     /*private static final String S3_SURVEY_DIR = "survey/";*/
     private static final Duration PRESIGNED_URL_TTL = Duration.ofMinutes(10);
 
     public List<ImageUploadResponse> preparePostImageUpload(List<String> fileNames) {
         List<ImageUploadResponse> responses = fileNames.stream()
-                .map(fileName -> prepareUploadInternal(fileName, S3_POSTS_DIR))
+                .map(fileName -> prepareUploadInternal(fileName, S3ImageDirectory.POSTS))
                 .toList();
-        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3_POSTS_DIR, responses.size());
+        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3ImageDirectory.POSTS.keyPrefix(), responses.size());
         return responses;
     }
 
 
     public List<ImageUploadResponse> prepareProfileImageUpload(List<String> fileNames) {
         List<ImageUploadResponse> responses = fileNames.stream()
-                .map(fileName -> prepareUploadInternal(fileName, S3_PROFILES_DIR))
+                .map(fileName -> prepareUploadInternal(fileName, S3ImageDirectory.PROFILES))
                 .toList();
-        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3_PROFILES_DIR, responses.size());
+        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3ImageDirectory.PROFILES.keyPrefix(), responses.size());
+        return responses;
+    }
+
+    public List<ImageUploadResponse> prepareJourneyImageUpload(List<String> fileNames) {
+        List<ImageUploadResponse> responses = fileNames.stream()
+                .map(fileName -> prepareUploadInternal(fileName, S3ImageDirectory.JOURNEYS))
+                .toList();
+        log.info("Presigned URL 생성 완료{} 파일 개수: {}", S3ImageDirectory.JOURNEYS.keyPrefix(), responses.size());
         return responses;
     }
 
@@ -62,16 +67,16 @@ public class S3Service {
 
     public List<ImageUploadResponse> prepareChatImageUpload(List<String> fileNames) {
         List<ImageUploadResponse> responses = fileNames.stream()
-                .map(fileName -> prepareUploadInternal(fileName, S3_CHATS_DIR))
+                .map(fileName -> prepareUploadInternal(fileName, S3ImageDirectory.CHATS))
                 .toList();
-        log.debug("Presigned URL 생성 완료{} 파일 개수: {}", S3_CHATS_DIR, responses.size());
+        log.debug("Presigned URL 생성 완료{} 파일 개수: {}", S3ImageDirectory.CHATS.keyPrefix(), responses.size());
         return responses;
     }
 
-    private ImageUploadResponse prepareUploadInternal(String fileName, String directory) {
+    private ImageUploadResponse prepareUploadInternal(String fileName, S3ImageDirectory directory) {
         validateFileExtension(fileName);
         String finalFileName = generateFileName(fileName);
-        String key = directory + finalFileName;
+        String key = directory.keyPrefix() + finalFileName;
         return presignPut(key);
     }
 
@@ -97,8 +102,9 @@ public class S3Service {
 
     private void validateFileExtension(String fileName) {
         String extension = StringUtils.getFilenameExtension(fileName);
-        if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
-            throw InvalidFileExtensionException.invalidExtension(ALLOWED_EXTENSIONS);
+        List<String> allowedExtensions = S3ImageUrlValidator.allowedFileExtensions();
+        if (extension == null || !allowedExtensions.contains(extension.toLowerCase())) {
+            throw InvalidFileExtensionException.invalidExtension(allowedExtensions);
         }
     }
 

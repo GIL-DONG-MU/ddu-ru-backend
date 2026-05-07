@@ -40,6 +40,15 @@ public class S3Controller implements S3ApiDocs {
         return ResponseEntity.ok(ApiResult.ok(responses));
     }
 
+    @Override
+    @PostMapping("/journeys/presigned-url")
+    public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareJourneyImageUpload(
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        List<ImageUploadResponse> responses = s3Service.prepareJourneyImageUpload(request.fileNames());
+        return ResponseEntity.ok(ApiResult.ok(responses));
+    }
+
     /*@Override
     @PostMapping("/surveys/uploads")
     public ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareSurveyImageUpload(

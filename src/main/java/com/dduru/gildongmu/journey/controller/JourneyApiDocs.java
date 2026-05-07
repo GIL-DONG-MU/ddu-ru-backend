@@ -3,8 +3,10 @@ package com.dduru.gildongmu.journey.controller;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyDetailResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -41,5 +43,23 @@ public interface JourneyApiDocs {
     ResponseEntity<ApiResult<JourneyDetailResponse>> retrieveMyJourneyDetail(
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary = "나의 여정 기본 정보 수정",
+            description = "active journey member가 나의 여정의 제목과 대표 사진을 수정합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "수정 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_EMPTY_PATCH,
+            ErrorCode.JOURNEY_INVALID_TITLE_LENGTH,
+            ErrorCode.JOURNEY_INVALID_PHOTO_URL
+    })
+    ResponseEntity<ApiResult<JourneyUpdateResponse>> updateJourneyBasicInfo(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(hidden = true) Long userId,
+            JourneyUpdateRequest request
     );
 }
