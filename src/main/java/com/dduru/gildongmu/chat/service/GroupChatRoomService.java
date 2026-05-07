@@ -13,7 +13,7 @@ import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedExcepti
 import com.dduru.gildongmu.chat.exception.NotSelfChatException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
-import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +45,8 @@ public class GroupChatRoomService {
         return inviteMemberOrGetRoom(userId, chatRoom, request.inviteeUserId());
     }
 
-    public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long postId, Long inviteeUserId) {
-        ChatRoom chatRoom = chatRoomRepository.getByPostIdAndRoomTypeWithLockOrThrow(postId, ChatRoomType.GROUP);
+    public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long journeyId, Long inviteeUserId) {
+        ChatRoom chatRoom = chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP);
         return inviteMemberOrGetRoom(userId, chatRoom, inviteeUserId);
     }
 
@@ -56,7 +56,7 @@ public class GroupChatRoomService {
     private GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, ChatRoom chatRoom, Long inviteeUserId) {
         User invitee = userRepository.getByIdOrThrow(inviteeUserId);
 
-        validateHostAuthority(chatRoom.getPost().getUser().getId(), userId);
+        validateHostAuthority(chatRoom.getContextPost().getUser().getId(), userId);
         validateNotSelfChat(userId, inviteeUserId);
         validateRoomOpen(chatRoom);
 
@@ -78,12 +78,12 @@ public class GroupChatRoomService {
     }
 
     /**
-     * 게시글 저장 직후 호출. 글당 그룹 단톡 1개를 PENDING으로 만들고 작성자를 HOST로 둔다.
+     * 나의 여정 생성 직후 호출. 여정당 그룹 단톡 1개를 PENDING으로 만들고 작성자를 HOST로 둔다.
      */
-    public void createPendingRoomForPost(Post post, User author) {
-        ChatRoom room = chatRoomRepository.save(ChatRoom.createPendingGroupChat(post));
+    public void createPendingRoomForJourney(Journey journey, User author) {
+        ChatRoom room = chatRoomRepository.save(ChatRoom.createPendingGroupChat(journey));
         chatRoomMemberRepository.save(ChatRoomMember.create(room, author, ChatMemberRole.HOST));
-        log.info("그룹 채팅방 생성 - roomId={}, postId={}, hostId={}", room.getId(), post.getId(), author.getId());
+        log.info("그룹 채팅방 생성 - roomId={}, journeyId={}, hostId={}", room.getId(), journey.getId(), author.getId());
     }
 
     private static void validateRoomOpen(ChatRoom room) {

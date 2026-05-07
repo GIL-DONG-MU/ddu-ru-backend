@@ -83,7 +83,7 @@ public class ParticipationCommandService {
                         JourneyMember::activate,
                         () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser()))
                 );
-        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, lockedPost.getId(), participantUserId);
+        GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, journey.getId(), participantUserId);
         loggingStatusChange(participation);
 
         return new ParticipationApproveResponse(
