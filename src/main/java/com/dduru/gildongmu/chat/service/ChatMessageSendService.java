@@ -102,7 +102,7 @@ public class ChatMessageSendService {
     }
 
     private ChatMessageBroadcastPayload toPayload(ChatMessage message) {
-        Post post = message.getRoom().getPost();
+        Post post = message.getRoom().getContextPost();
 
         if (message.getMessageType() == ChatMessageType.SYSTEM) {
             return ChatMessageBroadcastPayload.ofSystemMessage(message, post, chatSystemMessageFactory);
