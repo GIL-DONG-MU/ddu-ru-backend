@@ -68,17 +68,28 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("chatRoomType") ChatRoomType chatRoomType
     );
 
-    Optional<ChatRoom> findByPostIdAndRoomType(Long postId, ChatRoomType roomType);
+    Optional<ChatRoom> findByJourneyIdAndRoomType(Long journeyId, ChatRoomType roomType);
+
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.journey.post.id = :postId
+              AND r.roomType = :roomType
+            """)
+    Optional<ChatRoom> findByJourneyPostIdAndRoomType(
+            @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT r
             FROM ChatRoom r
-            WHERE r.post.id = :postId
+            WHERE r.journey.id = :journeyId
               AND r.roomType = :roomType
             """)
-    Optional<ChatRoom> findByPostIdAndRoomTypeWithLock(
-            @Param("postId") Long postId,
+    Optional<ChatRoom> findByJourneyIdAndRoomTypeWithLock(
+            @Param("journeyId") Long journeyId,
             @Param("roomType") ChatRoomType roomType
     );
 
@@ -91,8 +102,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
                 .orElseThrow(ChatRoomNotFoundException::new);
     }
 
-    default ChatRoom getByPostIdAndRoomTypeWithLockOrThrow(Long postId, ChatRoomType roomType) {
-        return findByPostIdAndRoomTypeWithLock(postId, roomType)
+    default ChatRoom getByJourneyIdAndRoomTypeWithLock(Long journeyId, ChatRoomType roomType) {
+        return findByJourneyIdAndRoomTypeWithLock(journeyId, roomType)
                 .orElseThrow(ChatRoomNotFoundException::new);
     }
 }

@@ -60,7 +60,7 @@ public class JourneyQueryService {
 
         // journey는 제목/대표 사진만 직접 가지고, 상단 카드에 필요한 나머지 값은 연결된 post에서 읽는다.
         PostDetailResponse post = postService.getDetail(journey.getPost(), userId);
-        Long groupRoomId = chatRoomRepository.findByPostIdAndRoomType(journey.getPost().getId(), ChatRoomType.GROUP)
+        Long groupRoomId = chatRoomRepository.findByJourneyIdAndRoomType(journey.getId(), ChatRoomType.GROUP)
                 .map(chatRoom -> chatRoom.getId())
                 .orElse(null);
 

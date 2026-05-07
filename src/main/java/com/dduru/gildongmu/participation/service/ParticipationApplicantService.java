@@ -136,7 +136,7 @@ public class ParticipationApplicantService {
     }
 
     private Long findGroupRoomId(Long postId) {
-        return chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP)
+        return chatRoomRepository.findByJourneyPostIdAndRoomType(postId, ChatRoomType.GROUP)
                 .map(ChatRoom::getId)
                 .orElse(null);
     }
