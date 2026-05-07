@@ -51,7 +51,7 @@ public class JourneyController implements JourneyApiDocs {
             @CurrentUser Long userId,
             @RequestBody JourneyUpdateRequest request
     ) {
-        JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
+        JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

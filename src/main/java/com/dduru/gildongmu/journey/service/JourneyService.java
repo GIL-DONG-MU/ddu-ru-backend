@@ -27,7 +27,7 @@ public class JourneyService {
     private final JourneyRepository journeyRepository;
     private final S3ImageUrlValidator s3ImageUrlValidator;
 
-    public JourneyUpdateResponse update(Long journeyId, Long userId, JourneyUpdateRequest request) {
+    public JourneyUpdateResponse updateBasicInfo(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = getUpdatableJourney(journeyId, userId);
 
         String title = normalizeTitle(request.title());

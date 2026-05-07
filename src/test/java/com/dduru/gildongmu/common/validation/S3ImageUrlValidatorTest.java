@@ -67,4 +67,13 @@ class S3ImageUrlValidatorTest {
                 S3ImageDirectory.CHATS
         )).hasMessage(ErrorCode.IMAGE_URL_NOT_ALLOWED.getMessage());
     }
+
+    @Test
+    @DisplayName("허용되지 않는 이미지 확장자면 거부한다")
+    void validateAndNormalize_invalidImageExtension_throwsNotAllowed() {
+        assertThatThrownBy(() -> validator.validateAndNormalize(
+                "https://dummy-bucket.s3.ap-northeast-2.amazonaws.com/journeys/test.txt",
+                S3ImageDirectory.JOURNEYS
+        )).hasMessage(ErrorCode.IMAGE_URL_NOT_ALLOWED.getMessage());
+    }
 }

@@ -70,7 +70,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
+            JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
 
             assertThat(response.journeyId()).isEqualTo(journeyId);
             assertThat(response.title()).isEqualTo("제주 우리 여행");
@@ -93,7 +93,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
+            JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
 
             assertThat(response.title()).isEqualTo("멤버가 바꾼 제목");
             assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/member-updated.png");
@@ -114,7 +114,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
+            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
                     .isInstanceOf(JourneyAccessDeniedException.class);
         }
 
@@ -129,7 +129,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
+            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyBasicInfoException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.JOURNEY_EMPTY_PATCH);
@@ -146,7 +146,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
+            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyBasicInfoException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.JOURNEY_INVALID_TITLE_LENGTH);
@@ -163,7 +163,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            assertThatThrownBy(() -> journeyService.update(journeyId, userId, request))
+            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyBasicInfoException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.JOURNEY_INVALID_PHOTO_URL);
@@ -183,7 +183,7 @@ class JourneyServiceTest {
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
 
-            JourneyUpdateResponse response = journeyService.update(journeyId, userId, request);
+            JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
 
             assertThat(response.title()).isEqualTo("제주도 2박 3일 여행");
             assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/journey-photo-only.png");
