@@ -11,6 +11,7 @@ import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +31,7 @@ class ChatRoomTest {
         @DisplayName("채팅방 타입이 없으면 커스텀 예외가 발생한다")
         void missingRoomTypeThrowsCustomException() {
             InvalidChatRoomContextException exception = catchThrowableOfType(
-                    () -> createChatRoom(null, null, null, 2),
+                    () -> createChatRoom(null, null, null),
                     InvalidChatRoomContextException.class
             );
 
@@ -44,7 +45,7 @@ class ChatRoomTest {
             Journey journey = Journey.create(createPost());
 
             InvalidChatRoomContextException exception = catchThrowableOfType(
-                    () -> createChatRoom(null, journey, ChatRoomType.PRIVATE, 2),
+                    () -> createChatRoom(null, journey, ChatRoomType.PRIVATE),
                     InvalidChatRoomContextException.class
             );
 
@@ -58,7 +59,7 @@ class ChatRoomTest {
             Post post = createPost();
 
             InvalidChatRoomContextException exception = catchThrowableOfType(
-                    () -> createChatRoom(post, null, ChatRoomType.GROUP, 3),
+                    () -> createChatRoom(post, null, ChatRoomType.GROUP),
                     InvalidChatRoomContextException.class
             );
 
@@ -79,17 +80,49 @@ class ChatRoomTest {
         }
     }
 
-    private ChatRoom createChatRoom(Post post, Journey journey, ChatRoomType roomType, int maxCapacity) {
+    @Nested
+    @DisplayName("그룹 채팅방 정원")
+    class GroupRoomCapacity {
+
+        @Test
+        @DisplayName("그룹 채팅방 정원은 연결된 게시글 모집 정원에서 계산한다")
+        void groupRoomCapacityIsDerivedFromPostRecruitCapacity() {
+            Post post = createPost();
+            ChatRoom room = ChatRoom.createGroupChat(Journey.create(post));
+
+            assertThat(room.canAccommodate(3)).isTrue();
+            assertThat(room.canAccommodate(4)).isFalse();
+
+            ReflectionTestUtils.setField(post, "recruitCapacity", 4);
+
+            assertThat(room.canAccommodate(4)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("1:1 채팅방 정원")
+    class PrivateRoomCapacity {
+
+        @Test
+        @DisplayName("1:1 채팅방은 항상 2명까지만 수용한다")
+        void privateRoomCapacityIsAlwaysTwo() {
+            ChatRoom room = ChatRoom.forPrivateChat(createPost());
+
+            assertThat(room.canAccommodate(2)).isTrue();
+            assertThat(room.canAccommodate(3)).isFalse();
+        }
+    }
+
+    private ChatRoom createChatRoom(Post post, Journey journey, ChatRoomType roomType) {
         try {
             Constructor<ChatRoom> constructor = ChatRoom.class.getDeclaredConstructor(
                     Post.class,
                     Journey.class,
                     ChatRoomType.class,
-                    Integer.class,
                     ChatRoomStatus.class
             );
             constructor.setAccessible(true);
-            return constructor.newInstance(post, journey, roomType, maxCapacity, null);
+            return constructor.newInstance(post, journey, roomType, null);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException runtimeException) {

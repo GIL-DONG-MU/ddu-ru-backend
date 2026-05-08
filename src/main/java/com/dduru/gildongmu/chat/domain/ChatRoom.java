@@ -38,16 +38,12 @@ public class ChatRoom extends BaseTimeEntity {
     @Column(name = "status", nullable = false, length = 20)
     private ChatRoomStatus status;
 
-    @Column(name = "max_capacity", nullable = false)
-    private Integer maxCapacity;
-
     @Builder(access = AccessLevel.PRIVATE)
-    private ChatRoom(Post post, Journey journey, ChatRoomType roomType, Integer maxCapacity, ChatRoomStatus status) {
+    private ChatRoom(Post post, Journey journey, ChatRoomType roomType, ChatRoomStatus status) {
         validateRoomContext(post, journey, roomType);
         this.post = post;
         this.journey = journey;
         this.roomType = roomType;
-        this.maxCapacity = maxCapacity;
         this.status = status != null ? status : ChatRoomStatus.ACTIVE;
     }
 
@@ -55,24 +51,21 @@ public class ChatRoom extends BaseTimeEntity {
         return ChatRoom.builder()
                 .post(post)
                 .roomType(ChatRoomType.PRIVATE)
-                .maxCapacity(2)
                 .status(ChatRoomStatus.ACTIVE)
                 .build();
     }
 
     public static ChatRoom createGroupChat(Journey journey) {
         validateRoomContext(null, journey, ChatRoomType.GROUP);
-        int capacity = journey.getPost().getRecruitCapacity();
         return ChatRoom.builder()
                 .journey(journey)
                 .roomType(ChatRoomType.GROUP)
-                .maxCapacity(capacity)
                 .status(ChatRoomStatus.ACTIVE)
                 .build();
     }
 
     public boolean canAccommodate(int participantCount) {
-        return participantCount <= maxCapacity;
+        return participantCount <= getCapacityLimit();
     }
 
     public Post getContextPost() {
@@ -98,5 +91,12 @@ public class ChatRoom extends BaseTimeEntity {
         if (exception != null) {
             throw exception;
         }
+    }
+
+    private int getCapacityLimit() {
+        if (roomType == ChatRoomType.GROUP) {
+            return journey.getPost().getRecruitCapacity();
+        }
+        return 2;
     }
 }
