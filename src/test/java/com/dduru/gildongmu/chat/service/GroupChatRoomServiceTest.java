@@ -61,7 +61,7 @@ class GroupChatRoomServiceTest {
             Long roomId = 100L;
             Long ownerId = 10L;
             Long inviteeId = 20L;
-            ChatRoom room = createGroupRoom(roomId, 10L, 1L, ownerId, ChatRoomStatus.PENDING, 3);
+            ChatRoom room = createGroupRoom(roomId, 10L, 1L, ownerId, ChatRoomStatus.ACTIVE, 3);
 
             when(chatRoomRepository.getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP)).thenReturn(room);
             when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(createUser(inviteeId, "invitee"));
@@ -88,7 +88,7 @@ class GroupChatRoomServiceTest {
             Long roomId = 100L;
             Long ownerId = 10L;
             Long inviteeId = 20L;
-            ChatRoom room = createGroupRoom(roomId, journeyId, postId, ownerId, ChatRoomStatus.PENDING, 3);
+            ChatRoom room = createGroupRoom(roomId, journeyId, postId, ownerId, ChatRoomStatus.ACTIVE, 3);
 
             when(chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP)).thenReturn(room);
             when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(createUser(inviteeId, "invitee"));
@@ -195,7 +195,7 @@ class GroupChatRoomServiceTest {
         Journey journey = Journey.create(post);
         ReflectionTestUtils.setField(journey, "id", journeyId);
 
-        ChatRoom room = ChatRoom.createPendingGroupChat(journey);
+        ChatRoom room = ChatRoom.createGroupChat(journey);
         ReflectionTestUtils.setField(room, "id", roomId);
         ReflectionTestUtils.setField(room, "status", status);
         return room;

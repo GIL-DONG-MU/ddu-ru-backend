@@ -153,7 +153,7 @@ class JourneyQueryServiceTest {
 
             Journey journey = create(journeyId, createPost(postId, 1L, "제주도 2박 3일 여행", "제주", LocalDate.now().plusDays(5), LocalDate.now().plusDays(7)));
             PostDetailResponse postDetail = createPostDetailResponse(postId);
-            ChatRoom groupRoom = ChatRoom.createPendingGroupChat(journey);
+            ChatRoom groupRoom = ChatRoom.createGroupChat(journey);
             ReflectionTestUtils.setField(groupRoom, "id", roomId);
 
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);

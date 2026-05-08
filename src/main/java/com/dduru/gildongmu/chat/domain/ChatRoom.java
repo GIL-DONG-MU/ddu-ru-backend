@@ -48,7 +48,7 @@ public class ChatRoom extends BaseTimeEntity {
         this.journey = journey;
         this.roomType = roomType;
         this.maxCapacity = maxCapacity;
-        this.status = status != null ? status : ChatRoomStatus.PENDING;
+        this.status = status != null ? status : ChatRoomStatus.ACTIVE;
     }
 
     public static ChatRoom forPrivateChat(Post post) {
@@ -60,25 +60,19 @@ public class ChatRoom extends BaseTimeEntity {
                 .build();
     }
 
-    public static ChatRoom createPendingGroupChat(Journey journey) {
+    public static ChatRoom createGroupChat(Journey journey) {
         validateRoomContext(null, journey, ChatRoomType.GROUP);
         int capacity = journey.getPost().getRecruitCapacity();
         return ChatRoom.builder()
                 .journey(journey)
                 .roomType(ChatRoomType.GROUP)
                 .maxCapacity(capacity)
-                .status(ChatRoomStatus.PENDING)
+                .status(ChatRoomStatus.ACTIVE)
                 .build();
     }
 
     public boolean canAccommodate(int participantCount) {
         return participantCount <= maxCapacity;
-    }
-
-    public void activateIfPending() {
-        if (this.status == ChatRoomStatus.PENDING) {
-            this.status = ChatRoomStatus.ACTIVE;
-        }
     }
 
     public Post getContextPost() {

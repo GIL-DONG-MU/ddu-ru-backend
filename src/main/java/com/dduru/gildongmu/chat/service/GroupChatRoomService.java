@@ -78,10 +78,10 @@ public class GroupChatRoomService {
     }
 
     /**
-     * 나의 여정 생성 직후 호출. 여정당 그룹 단톡 1개를 PENDING으로 만들고 작성자를 HOST로 둔다.
+     * 나의 여정 생성 직후 호출. 여정당 그룹 단톡 1개를 만들고 작성자를 HOST로 둔다.
      */
-    public void createPendingRoomForJourney(Journey journey, User author) {
-        ChatRoom room = chatRoomRepository.save(ChatRoom.createPendingGroupChat(journey));
+    public void createRoomForJourney(Journey journey, User author) {
+        ChatRoom room = chatRoomRepository.save(ChatRoom.createGroupChat(journey));
         chatRoomMemberRepository.save(ChatRoomMember.create(room, author, ChatMemberRole.HOST));
         log.info("그룹 채팅방 생성 - roomId={}, journeyId={}, hostId={}", room.getId(), journey.getId(), author.getId());
     }

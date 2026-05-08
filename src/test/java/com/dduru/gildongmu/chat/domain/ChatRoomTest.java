@@ -70,7 +70,7 @@ class ChatRoomTest {
         @DisplayName("그룹 채팅방 생성 시 journey가 없으면 커스텀 예외가 발생한다")
         void missingJourneyInGroupFactoryThrowsCustomException() {
             InvalidChatRoomContextException exception = catchThrowableOfType(
-                    () -> ChatRoom.createPendingGroupChat(null),
+                    () -> ChatRoom.createGroupChat(null),
                     InvalidChatRoomContextException.class
             );
 

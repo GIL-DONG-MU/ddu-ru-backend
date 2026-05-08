@@ -71,7 +71,7 @@ public class PostService {
 
         Journey savedJourney = journeyRepository.save(Journey.create(savedPost));
         journeyMemberRepository.save(JourneyMember.createHost(savedJourney, user));
-        groupChatRoomService.createPendingRoomForJourney(savedJourney, user);
+        groupChatRoomService.createRoomForJourney(savedJourney, user);
 
         log.info("게시글 생성됨 - postId={}, userId={}", savedPost.getId(), userId);
         return new PostCreateResponse(savedPost.getId());
