@@ -5,7 +5,6 @@ import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
-import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
@@ -39,11 +38,6 @@ public class GroupChatRoomService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final ChatMessageSendService chatMessageSendService;
-
-    public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long roomId, GroupChatInviteRequest request) {
-        ChatRoom chatRoom = chatRoomRepository.getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP);
-        return inviteMemberOrGetRoom(userId, chatRoom, request.inviteeUserId());
-    }
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long journeyId, Long inviteeUserId) {
         ChatRoom chatRoom = chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP);

@@ -1,7 +1,5 @@
 package com.dduru.gildongmu.chat.controller;
 
-import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
-import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
@@ -10,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -29,24 +26,5 @@ public interface ChatApiDocs {
     ResponseEntity<ApiResult<PrivateChatRoomCreateResponse>> createPrivateRoom(
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "게시글 ID", required = true) @PathVariable Long postId
-    );
-
-    @Operation(
-            summary = "그룹 채팅 멤버 초대",
-            description = "방장이 기존 그룹 채팅방에 사용자를 1명 초대합니다. 이미 참여 중이면 조회해서 리턴합니다."
-    )
-    @ApiResponse(responseCode = "200", description = "성공")
-    @ApiErrorResponses({
-            ErrorCode.UNAUTHORIZED,
-            ErrorCode.CHAT_ROOM_NOT_FOUND,
-            ErrorCode.CHAT_ROOM_CLOSED,
-            ErrorCode.CHAT_ROOM_CAPACITY_EXCEEDED,
-            ErrorCode.CHAT_ROOM_INVITE_ACCESS_DENIED,
-            ErrorCode.INVALID_INPUT_VALUE
-    })
-    ResponseEntity<ApiResult<GroupChatInviteMemberResponse>> inviteMemberToGroupRoom(
-            @Parameter(hidden = true) Long userId,
-            @Parameter(description = "채팅방 ID", required = true) @PathVariable Long roomId,
-            @Valid GroupChatInviteRequest request
     );
 }

@@ -3,7 +3,6 @@ package com.dduru.gildongmu.chat.service;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
-import com.dduru.gildongmu.chat.dto.request.GroupChatInviteRequest;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
@@ -31,7 +30,6 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,31 +48,6 @@ class GroupChatRoomServiceTest {
 
     @InjectMocks
     private GroupChatRoomService groupChatRoomService;
-
-    @Nested
-    @DisplayName("roomId 진입점")
-    class InviteWithRoomId {
-
-        @Test
-        @DisplayName("기존 멤버면 새 초대 없이 반환한다")
-        void returnsExistingMember() {
-            Long roomId = 100L;
-            Long ownerId = 10L;
-            Long inviteeId = 20L;
-            ChatRoom room = createGroupRoom(roomId, 10L, 1L, ownerId, ChatRoomStatus.ACTIVE, 3);
-
-            when(chatRoomRepository.getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP)).thenReturn(room);
-            when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(createUser(inviteeId, "invitee"));
-            when(chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, inviteeId)).thenReturn(true);
-
-            GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(ownerId, roomId, new GroupChatInviteRequest(inviteeId));
-
-            assertThat(response.roomId()).isEqualTo(roomId);
-            assertThat(response.isNewInvitee()).isFalse();
-            verify(chatRoomRepository).getByIdAndRoomTypeWithLockOrThrow(roomId, ChatRoomType.GROUP);
-            verify(chatRoomMemberRepository, never()).save(any());
-        }
-    }
 
     @Nested
     @DisplayName("journeyId 진입점")
