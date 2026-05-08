@@ -54,31 +54,28 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("userId2") Long userId2
     );
 
-    Optional<ChatRoom> findByIdAndRoomType(Long roomId, ChatRoomType chatRoomType);
+    Optional<ChatRoom> findByJourneyIdAndRoomType(Long journeyId, ChatRoomType roomType);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT r
             FROM ChatRoom r
-            WHERE r.id = :roomId
-              AND r.roomType = :chatRoomType
-            """)
-    Optional<ChatRoom> findByIdAndRoomTypeWithLock(
-            @Param("roomId") Long roomId,
-            @Param("chatRoomType") ChatRoomType chatRoomType
-    );
-
-    Optional<ChatRoom> findByPostIdAndRoomType(Long postId, ChatRoomType roomType);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            SELECT r
-            FROM ChatRoom r
-            WHERE r.post.id = :postId
+            WHERE r.journey.post.id = :postId
               AND r.roomType = :roomType
             """)
-    Optional<ChatRoom> findByPostIdAndRoomTypeWithLock(
+    Optional<ChatRoom> findByJourneyPostIdAndRoomType(
             @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
+            WHERE r.journey.id = :journeyId
+              AND r.roomType = :roomType
+            """)
+    Optional<ChatRoom> findByJourneyIdAndRoomTypeWithLock(
+            @Param("journeyId") Long journeyId,
             @Param("roomType") ChatRoomType roomType
     );
 
@@ -86,13 +83,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
         return findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
 
-    default ChatRoom getByIdAndRoomTypeWithLockOrThrow(Long roomId, ChatRoomType chatRoomType) {
-        return findByIdAndRoomTypeWithLock(roomId, chatRoomType)
-                .orElseThrow(ChatRoomNotFoundException::new);
-    }
-
-    default ChatRoom getByPostIdAndRoomTypeWithLockOrThrow(Long postId, ChatRoomType roomType) {
-        return findByPostIdAndRoomTypeWithLock(postId, roomType)
+    default ChatRoom getByJourneyIdAndRoomTypeWithLock(Long journeyId, ChatRoomType roomType) {
+        return findByJourneyIdAndRoomTypeWithLock(journeyId, roomType)
                 .orElseThrow(ChatRoomNotFoundException::new);
     }
 }

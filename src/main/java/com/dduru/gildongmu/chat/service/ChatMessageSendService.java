@@ -60,7 +60,7 @@ public class ChatMessageSendService {
     }
 
     private void saveSystemMessageAndBroadcast(ChatRoom room, ChatSystemMessagePayload systemMessage) {
-        ChatMessage chatMessage = saveMessageAndActivateRoomIfFirstMessage(room, null, ChatMessageType.SYSTEM,
+        ChatMessage chatMessage = saveAndFlushMessage(room, null, ChatMessageType.SYSTEM,
                 chatSystemMessageFactory.serialize(systemMessage)
         );
         broadcastAfterCommit(toPayload(chatMessage), room.getId());
@@ -73,20 +73,8 @@ public class ChatMessageSendService {
     }
 
     private void saveUserMessageAndBroadcast(ChatRoom room, User sender, ChatMessageType messageType, String content) {
-        ChatMessage chatMessage = saveMessageAndActivateRoomIfFirstMessage(room, sender, messageType, content);
+        ChatMessage chatMessage = saveAndFlushMessage(room, sender, messageType, content);
         broadcastAfterCommit(toPayload(chatMessage), room.getId());
-    }
-
-    private ChatMessage saveMessageAndActivateRoomIfFirstMessage(
-            ChatRoom room,
-            User sender,
-            ChatMessageType messageType,
-            String content
-    ) {
-        long beforeMessageCount = chatMessageRepository.countByRoom_Id(room.getId());
-        ChatMessage message = saveAndFlushMessage(room, sender, messageType, content);
-        activateRoomIfFirstMessage(room, beforeMessageCount);
-        return message;
     }
 
     private ChatMessage saveAndFlushMessage(ChatRoom room, User sender, ChatMessageType messageType, String content) {
@@ -95,14 +83,8 @@ public class ChatMessageSendService {
         return message;
     }
 
-    private void activateRoomIfFirstMessage(ChatRoom room, long beforeMessageCount) {
-        if (beforeMessageCount == 0) {
-            room.activateIfPending();
-        }
-    }
-
     private ChatMessageBroadcastPayload toPayload(ChatMessage message) {
-        Post post = message.getRoom().getPost();
+        Post post = message.getRoom().getContextPost();
 
         if (message.getMessageType() == ChatMessageType.SYSTEM) {
             return ChatMessageBroadcastPayload.ofSystemMessage(message, post, chatSystemMessageFactory);

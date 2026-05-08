@@ -61,7 +61,8 @@ row 삭제 이벤트:
 
 ### 4.3 Group Chat Room
 
-- 게시글당 그룹방 1개를 가진다.
+- 나의 여정(`journey`)당 그룹방 1개를 가진다.
+- 공개 모집글(`post`)이 아니라 참여 후 워크스페이스(`journey`)의 채팅방으로 본다.
 - 게시글 삭제/마감과 분리된 생명주기를 가진다.
 - 현재 그룹방 인원은 `ChatRoomMember` row로만 판단한다.
 
@@ -235,7 +236,11 @@ row 삭제 이벤트:
 
 권장 규칙:
 
-- 그룹방은 게시글당 1개
+- 1:1 채팅방은 `post_id`를 가진다.
+- 그룹방은 `journey_id`를 가진다.
+- `PRIVATE`: `post_id IS NOT NULL`, `journey_id IS NULL`
+- `GROUP`: `post_id IS NULL`, `journey_id IS NOT NULL`
+- 그룹방은 나의 여정당 1개이므로 `UNIQUE(journey_id)`를 둔다.
 - 1:1 채팅방은 게시글 단위 + 사용자 쌍 기준 재사용
 - 그룹방 정원은 `recruit_capacity`와 동일하게 둔다. `recruit_capacity` 자체가 이미 방장을 포함한 총원이다.
 
@@ -274,7 +279,7 @@ row 삭제 이벤트:
 - 1:1 채팅방 생성/재사용
 - 그룹방 멤버 초대
 - 그룹방 정원 검증
-- 게시글 생성 시 그룹방 생성
+- 나의 여정 생성 시 그룹방 생성
 
 ### 9.4 현재 오케스트레이션 원칙
 

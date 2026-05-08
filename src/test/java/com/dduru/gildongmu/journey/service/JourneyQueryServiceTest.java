@@ -153,17 +153,14 @@ class JourneyQueryServiceTest {
 
             Journey journey = create(journeyId, createPost(postId, 1L, "제주도 2박 3일 여행", "제주", LocalDate.now().plusDays(5), LocalDate.now().plusDays(7)));
             PostDetailResponse postDetail = createPostDetailResponse(postId);
-            ChatRoom groupRoom = ChatRoom.builder()
-                    .roomType(ChatRoomType.GROUP)
-                    .maxCapacity(4)
-                    .build();
+            ChatRoom groupRoom = ChatRoom.createGroupChat(journey);
             ReflectionTestUtils.setField(groupRoom, "id", roomId);
 
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(true);
             when(postService.getDetail(journey.getPost(), userId)).thenReturn(postDetail);
-            when(chatRoomRepository.findByPostIdAndRoomType(postId, ChatRoomType.GROUP))
+            when(chatRoomRepository.findByJourneyIdAndRoomType(journeyId, ChatRoomType.GROUP))
                     .thenReturn(Optional.of(groupRoom));
 
             JourneyDetailResponse response = journeyQueryService.retrieveMyJourneyDetail(journeyId, userId);
@@ -193,7 +190,7 @@ class JourneyQueryServiceTest {
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
             verify(postService, never()).getDetail(any(Post.class), anyLong());
-            verify(chatRoomRepository, never()).findByPostIdAndRoomType(200L, ChatRoomType.GROUP);
+            verify(chatRoomRepository, never()).findByJourneyIdAndRoomType(100L, ChatRoomType.GROUP);
         }
 
         @Test
@@ -211,7 +208,7 @@ class JourneyQueryServiceTest {
             verify(journeyMemberRepository, never()).existsByJourneyIdAndUserIdAndStatus(anyLong(), anyLong(), any());
             verify(postService, never()).getDetail(anyLong(), anyLong());
             verify(postService, never()).getDetail(any(Post.class), anyLong());
-            verify(chatRoomRepository, never()).findByPostIdAndRoomType(anyLong(), any());
+            verify(chatRoomRepository, never()).findByJourneyIdAndRoomType(anyLong(), any());
         }
     }
 

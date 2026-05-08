@@ -14,7 +14,7 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             FROM ChatRoomMember m
             WHERE m.room.id = :roomId
               AND m.user.id = :participantUserId
-              AND m.room.status IN ('ACTIVE', 'PENDING')
+              AND m.room.status = 'ACTIVE'
             """)
     boolean existsByChatRoom_IdAndUser_Id(@Param("roomId") Long roomId, @Param("participantUserId") Long participantUserId);
 }

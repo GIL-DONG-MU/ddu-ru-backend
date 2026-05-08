@@ -161,7 +161,7 @@ class PostServiceTest {
             assertThat(savedPost.getMaxAge()).isEqualTo(35);
             verify(journeyRepository).save(any());
             verify(journeyMemberRepository).save(any());
-            verify(groupChatRoomService).createPendingRoomForPost(savedPost, user);
+            verify(groupChatRoomService).createRoomForJourney(any(Journey.class), eq(user));
         }
 
         @Test
