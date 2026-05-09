@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -32,15 +33,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.warn("Validation Exception: {}", e.getMessage());
-        FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
+        return ResponseEntity.badRequest().body(buildFieldErrorResponse(e.getBindingResult().getFieldErrors().get(0)));
+    }
 
-        ErrorResponse response = ErrorResponse.ofField(
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleBindException(BindException e) {
+        log.warn("Bind Exception: {}", e.getMessage());
+        return ResponseEntity.badRequest().body(buildFieldErrorResponse(e.getBindingResult().getFieldErrors().get(0)));
+    }
+
+    private ErrorResponse buildFieldErrorResponse(FieldError fieldError) {
+        return ErrorResponse.ofField(
                 ErrorCode.INVALID_INPUT_VALUE,
                 fieldError.getField(),
                 fieldError.getDefaultMessage()
         );
-
-        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
