@@ -1,8 +1,11 @@
 package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +18,29 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
     Optional<JourneyMember> findByJourneyIdAndUserId(Long journeyId, Long userId);
 
     boolean existsByJourneyIdAndUserIdAndStatus(Long journeyId, Long userId, JourneyMemberStatus status);
+
+    boolean existsByJourneyIdAndUserIdAndRoleAndStatus(
+            Long journeyId,
+            Long userId,
+            JourneyMemberRole role,
+            JourneyMemberStatus status
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT jm
+            FROM JourneyMember jm
+            JOIN FETCH jm.journey j
+            JOIN FETCH j.post
+            JOIN FETCH jm.user
+            WHERE j.id = :journeyId
+              AND jm.user.id = :userId
+              AND jm.status = 'ACTIVE'
+            """)
+    Optional<JourneyMember> findActiveMemberForUpdate(
+            @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId
+    );
 
     @Query("""
             SELECT jm

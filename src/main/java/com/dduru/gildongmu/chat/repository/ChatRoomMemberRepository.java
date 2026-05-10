@@ -6,8 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
     int countByRoom(ChatRoom room);
+
+    Optional<ChatRoomMember> findByRoomIdAndUserId(Long roomId, Long userId);
 
     @Query("""
             SELECT COUNT(m) > 0

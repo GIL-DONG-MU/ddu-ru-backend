@@ -59,6 +59,10 @@ public class ChatMessageSendService {
         saveSystemMessageAndBroadcast(room, chatSystemMessageFactory.userInvited(inviteeUserId, actorUserId));
     }
 
+    public void publishUserKicked(ChatRoom room, long targetUserId, long actorUserId) {
+        saveSystemMessageAndBroadcast(room, chatSystemMessageFactory.userKicked(targetUserId, actorUserId));
+    }
+
     private void saveSystemMessageAndBroadcast(ChatRoom room, ChatSystemMessagePayload systemMessage) {
         ChatMessage chatMessage = saveAndFlushMessage(room, null, ChatMessageType.SYSTEM,
                 chatSystemMessageFactory.serialize(systemMessage)
