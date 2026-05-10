@@ -104,6 +104,7 @@ class ChatMessageQueryServiceTest {
             Post post = createPost(1L, host, "코끼리 아저씨");
             ChatRoom room = createPrivateRoom(roomId, post, ChatRoomStatus.ACTIVE);
             ChatRoomMember currentMember = createMember(room, host, ChatMemberRole.HOST, memberCreatedAt);
+            ChatRoomMember guestMember = createMember(room, guest, ChatMemberRole.GUEST, memberCreatedAt);
 
             ChatMessage oldestReturned = createMessage(102L, room, host, ChatMessageType.IMAGE,
                     "https://cdn.example.com/chats/image.jpg", memberCreatedAt.plusMinutes(2));
@@ -115,9 +116,11 @@ class ChatMessageQueryServiceTest {
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
             when(chatRoomMemberRepository.findByRoomIdAndUserId(roomId, currentUserId)).thenReturn(Optional.of(currentMember));
             when(chatRoomMemberRepository.findByRoomIdWithUserProfile(roomId))
-                    .thenReturn(List.of(currentMember, createMember(room, guest, ChatMemberRole.GUEST, memberCreatedAt)));
+                    .thenReturn(List.of(currentMember, guestMember));
             when(chatMessageRepository.findVisibleMessages(eq(roomId), eq(null), eq(memberCreatedAt), any(Pageable.class)))
                     .thenReturn(List.of(newestReturned, oldestReturned, lookAhead));
+            when(chatRoomMemberRepository.findByRoomIdWithLastReadMessage(roomId))
+                    .thenReturn(List.of(currentMember, guestMember));
 
             ChatMessagesResponse response = chatMessageQueryService.retrieveMessages(
                     currentUserId,
@@ -139,7 +142,9 @@ class ChatMessageQueryServiceTest {
                     .isEqualTo("https://cdn.example.com/chats/image.jpg");
             assertThat(response.messages().get(0).sender().isHost()).isTrue();
             assertThat(response.messages().get(0).isMine()).isTrue();
+            assertThat(response.messages().get(0).unreadCount()).isEqualTo(1);
             assertThat(response.messages().get(1).content()).isEqualTo("시간 다르면 다르게 뜨도록");
+            assertThat(response.messages().get(1).unreadCount()).isEqualTo(1);
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             verify(chatMessageRepository).findVisibleMessages(eq(roomId), eq(null), eq(memberCreatedAt), pageableCaptor.capture());
@@ -191,6 +196,58 @@ class ChatMessageQueryServiceTest {
                     .isEqualTo("guestNick 님이 그룹 채팅방에 참여했습니다.");
             assertThat(response.messages().get(0).systemMessage().actorUserId()).isEqualTo(hostUserId);
             assertThat(response.messages().get(0).systemMessage().inviteeUserId()).isEqualTo(inviteeUserId);
+        }
+
+        @Test
+        @DisplayName("그룹 메시지 unreadCount는 sender, 읽은 멤버, 메시지 이후 참여자를 제외하고 계산한다")
+        void calculatesGroupUnreadCount() {
+            Long roomId = 200L;
+            Long hostUserId = 10L;
+            Long unreadUserId = 20L;
+            Long readUserId = 30L;
+            Long newcomerUserId = 40L;
+            LocalDateTime memberCreatedAt = LocalDateTime.of(2026, 5, 9, 9, 0);
+            User host = createUser(hostUserId, "host", "hostNick");
+            User unreadMemberUser = createUser(unreadUserId, "unread", "unreadNick");
+            User readMemberUser = createUser(readUserId, "read", "readNick");
+            User newcomer = createUser(newcomerUserId, "newcomer", "newcomerNick");
+            Post post = createPost(1L, host, "그룹 unreadCount");
+            Journey journey = createJourney(30L, post, "그룹 여정");
+            ChatRoom room = createGroupRoom(roomId, journey, ChatRoomStatus.ACTIVE);
+
+            ChatMessage message = createMessage(501L, room, host, ChatMessageType.TEXT,
+                    "읽음 수 계산", memberCreatedAt.plusMinutes(10));
+            ChatMessage readCursor = createMessage(600L, room, readMemberUser, ChatMessageType.TEXT,
+                    "읽은 위치", memberCreatedAt.plusMinutes(11));
+            ChatRoomMember hostMember = createMember(room, host, ChatMemberRole.HOST, memberCreatedAt);
+            ChatRoomMember unreadMember = createMember(room, unreadMemberUser, ChatMemberRole.GUEST, memberCreatedAt);
+            ChatRoomMember readMember = createMember(room, readMemberUser, ChatMemberRole.GUEST, readCursor, memberCreatedAt);
+            ChatRoomMember newcomerMember = createMember(
+                    room,
+                    newcomer,
+                    ChatMemberRole.GUEST,
+                    memberCreatedAt.plusMinutes(20)
+            );
+
+            when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
+            when(chatRoomMemberRepository.findByRoomIdAndUserId(roomId, hostUserId)).thenReturn(Optional.of(hostMember));
+            when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(30L, hostUserId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(true);
+            when(journeyMemberRepository.countByJourneyIdAndStatus(30L, JourneyMemberStatus.ACTIVE)).thenReturn(4);
+            when(chatMessageRepository.findVisibleMessages(eq(roomId), eq(null), eq(memberCreatedAt), any(Pageable.class)))
+                    .thenReturn(List.of(message));
+            when(chatRoomMemberRepository.findByRoomIdWithLastReadMessage(roomId))
+                    .thenReturn(List.of(hostMember, unreadMember, readMember, newcomerMember));
+
+            ChatMessagesResponse response = chatMessageQueryService.retrieveMessages(
+                    hostUserId,
+                    roomId,
+                    new ChatMessageRetrieveRequest(null, 20)
+            );
+
+            assertThat(response.messages()).hasSize(1);
+            assertThat(response.messages().get(0).messageId()).isEqualTo(message.getId());
+            assertThat(response.messages().get(0).unreadCount()).isEqualTo(1);
         }
     }
 
@@ -328,7 +385,18 @@ class ChatMessageQueryServiceTest {
     }
 
     private ChatRoomMember createMember(ChatRoom room, User user, ChatMemberRole role, LocalDateTime createdAt) {
+        return createMember(room, user, role, null, createdAt);
+    }
+
+    private ChatRoomMember createMember(
+            ChatRoom room,
+            User user,
+            ChatMemberRole role,
+            ChatMessage lastReadMessage,
+            LocalDateTime createdAt
+    ) {
         ChatRoomMember member = ChatRoomMember.create(room, user, role);
+        ReflectionTestUtils.setField(member, "lastReadMessage", lastReadMessage);
         ReflectionTestUtils.setField(member, "createdAt", createdAt);
         return member;
     }

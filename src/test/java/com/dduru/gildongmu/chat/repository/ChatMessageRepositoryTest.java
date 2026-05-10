@@ -71,6 +71,29 @@ class ChatMessageRepositoryTest {
                 .containsExactly(visible2.getId(), visible1.getId());
     }
 
+    @Test
+    @DisplayName("findByIdAndRoomId는 지정한 방에 속한 메시지만 조회한다")
+    void findByIdAndRoomIdReturnsOnlyMessageInRoom() {
+        User host = persistUser("host", 3);
+        User guest = persistUser("guest", 4);
+        Destination destination = persistDestination();
+        Post post = persistPost(host, destination);
+        ChatRoom room = entityManager.persist(ChatRoom.forPrivateChat(post));
+        ChatRoom otherRoom = entityManager.persist(ChatRoom.forPrivateChat(post));
+        ChatMessage message = persistMessage(room, host, "target");
+        ChatMessage otherRoomMessage = persistMessage(otherRoom, guest, "other");
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(chatMessageRepository.findByIdAndRoomId(message.getId(), room.getId()))
+                .isPresent()
+                .get()
+                .extracting(ChatMessage::getId)
+                .isEqualTo(message.getId());
+        assertThat(chatMessageRepository.findByIdAndRoomId(otherRoomMessage.getId(), room.getId()))
+                .isEmpty();
+    }
+
     private User persistUser(String name, int suffix) {
         User user = User.builder()
                 .email(name + suffix + "@example.com")
