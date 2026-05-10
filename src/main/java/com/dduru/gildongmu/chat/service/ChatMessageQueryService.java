@@ -86,11 +86,12 @@ public class ChatMessageQueryService {
 
         Map<Long, ChatSystemMessagePayload> systemPayloads = deserializeSystemPayloads(orderedMessages);
         Map<Long, User> systemUsers = loadUsersForSystemMessages(systemPayloads.values());
+        Map<Long, Integer> unreadCounts = calculateUnreadCounts(roomId, orderedMessages);
 
         return new ChatMessagesResponse(
                 toRoomInfo(room, userId),
                 new ChatMessagePageResponse(size, hasNext, nextCursor),
-                toMessageResponses(orderedMessages, room, userId, systemPayloads, systemUsers)
+                toMessageResponses(orderedMessages, room, userId, systemPayloads, systemUsers, unreadCounts)
         );
     }
 
@@ -162,6 +163,49 @@ public class ChatMessageQueryService {
         List<ChatMessage> orderedMessages = new ArrayList<>(pageMessages);
         reverse(orderedMessages);
         return orderedMessages;
+    }
+
+    private Map<Long, Integer> calculateUnreadCounts(Long roomId, List<ChatMessage> messages) {
+        boolean hasUnreadCountTarget = messages.stream()
+                .anyMatch(message -> message.getMessageType() != ChatMessageType.SYSTEM);
+        if (!hasUnreadCountTarget) {
+            return Map.of();
+        }
+
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByRoomIdWithLastReadMessage(roomId);
+        Map<Long, Integer> unreadCounts = new HashMap<>();
+
+        for (ChatMessage message : messages) {
+            if (message.getMessageType() == ChatMessageType.SYSTEM) {
+                continue;
+            }
+            unreadCounts.put(message.getId(), calculateUnreadCount(message, members));
+        }
+        return unreadCounts;
+    }
+
+    private static int calculateUnreadCount(ChatMessage message, List<ChatRoomMember> members) {
+        int unreadCount = 0;
+        for (ChatRoomMember member : members) {
+            if (isSender(message, member) || joinedAfterMessage(member, message) || hasReadMessage(member, message)) {
+                continue;
+            }
+            unreadCount++;
+        }
+        return unreadCount;
+    }
+
+    private static boolean isSender(ChatMessage message, ChatRoomMember member) {
+        return message.getSender() != null && message.getSender().getId().equals(member.getUser().getId());
+    }
+
+    private static boolean joinedAfterMessage(ChatRoomMember member, ChatMessage message) {
+        return member.getCreatedAt().isAfter(message.getCreatedAt());
+    }
+
+    private static boolean hasReadMessage(ChatRoomMember member, ChatMessage message) {
+        ChatMessage lastReadMessage = member.getLastReadMessage();
+        return lastReadMessage != null && lastReadMessage.getId() >= message.getId();
     }
 
     private ChatRoomInfoResponse toRoomInfo(ChatRoom room, Long userId) {
@@ -249,11 +293,19 @@ public class ChatMessageQueryService {
             ChatRoom room,
             Long currentUserId,
             Map<Long, ChatSystemMessagePayload> systemPayloads,
-            Map<Long, User> systemUsers
+            Map<Long, User> systemUsers,
+            Map<Long, Integer> unreadCounts
     ) {
         Long hostUserId = room.getContextPost().getUser().getId();
         return messages.stream()
-                .map(message -> toMessageResponse(message, hostUserId, currentUserId, systemPayloads, systemUsers))
+                .map(message -> toMessageResponse(
+                        message,
+                        hostUserId,
+                        currentUserId,
+                        systemPayloads,
+                        systemUsers,
+                        unreadCounts
+                ))
                 .toList();
     }
 
@@ -262,11 +314,22 @@ public class ChatMessageQueryService {
             Long hostUserId,
             Long currentUserId,
             Map<Long, ChatSystemMessagePayload> systemPayloads,
-            Map<Long, User> systemUsers
+            Map<Long, User> systemUsers,
+            Map<Long, Integer> unreadCounts
     ) {
         return switch (message.getMessageType()) {
-            case TEXT -> ChatMessageItemResponse.forText(message, hostUserId, currentUserId);
-            case IMAGE -> ChatMessageItemResponse.forImage(message, hostUserId, currentUserId);
+            case TEXT -> ChatMessageItemResponse.forText(
+                    message,
+                    hostUserId,
+                    currentUserId,
+                    unreadCounts.get(message.getId())
+            );
+            case IMAGE -> ChatMessageItemResponse.forImage(
+                    message,
+                    hostUserId,
+                    currentUserId,
+                    unreadCounts.get(message.getId())
+            );
             case SYSTEM -> ChatMessageItemResponse.forSystem(
                     message,
                     systemPayloads.get(message.getId()),
