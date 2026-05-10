@@ -1,7 +1,9 @@
 package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.chat.dto.request.ChatMessageRetrieveRequest;
+import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatMessagesResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
@@ -15,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Chat", description = "채팅 API")
 @SecurityRequirement(name = "JWT")
@@ -51,5 +54,23 @@ public interface ChatApiDocs {
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "채팅방 ID", required = true) Long chatRoomId,
             @Valid @ParameterObject ChatMessageRetrieveRequest request
+    );
+
+    @Operation(
+            summary = "채팅방 메시지 읽음 처리",
+            description = "현재 사용자의 채팅방 읽음 위치를 lastReadMessageId까지 갱신합니다. 기존 읽음 위치보다 같거나 과거인 경우 updated=false로 응답합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "읽음 처리 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.CHAT_ROOM_NOT_FOUND,
+            ErrorCode.CHAT_MESSAGE_NOT_FOUND,
+            ErrorCode.CHAT_ACCESS_DENIED
+    })
+    ResponseEntity<ApiResult<ChatReadResponse>> readMessages(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(description = "채팅방 ID", required = true) Long chatRoomId,
+            @Valid @RequestBody ChatReadRequest request
     );
 }

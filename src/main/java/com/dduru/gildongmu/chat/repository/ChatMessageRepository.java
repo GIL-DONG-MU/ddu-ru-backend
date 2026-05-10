@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     @Query("""
@@ -28,4 +29,15 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     );
 
     boolean existsByIdAndRoom_Id(Long messageId, Long roomId);
+
+    @Query("""
+            SELECT m
+            FROM ChatMessage m
+            WHERE m.id = :messageId
+              AND m.room.id = :roomId
+            """)
+    Optional<ChatMessage> findByIdAndRoomId(
+            @Param("messageId") Long messageId,
+            @Param("roomId") Long roomId
+    );
 }
