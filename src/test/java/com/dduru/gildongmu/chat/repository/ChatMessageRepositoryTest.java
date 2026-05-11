@@ -94,6 +94,44 @@ class ChatMessageRepositoryTest {
                 .isEmpty();
     }
 
+    @Test
+    @DisplayName("커서 메시지 존재 여부는 방과 visibleFrom 조건을 함께 적용한다")
+    void existsByIdAndRoomAndCreatedAtGreaterThanEqualAppliesVisibleFrom() {
+        User host = persistUser("host", 1);
+        Destination destination = persistDestination();
+        Post post = persistPost(host, destination);
+        ChatRoom room = entityManager.persist(ChatRoom.forPrivateChat(post));
+        ChatRoom otherRoom = entityManager.persist(ChatRoom.forPrivateChat(post));
+
+        ChatMessage oldMessage = persistMessage(room, host, "old");
+        ChatMessage visibleMessage = persistMessage(room, host, "visible");
+        ChatMessage otherRoomMessage = persistMessage(otherRoom, host, "other");
+
+        entityManager.flush();
+        updateCreatedAt(oldMessage, LocalDateTime.of(2026, 5, 9, 8, 59));
+        updateCreatedAt(visibleMessage, LocalDateTime.of(2026, 5, 9, 9, 0));
+        updateCreatedAt(otherRoomMessage, LocalDateTime.of(2026, 5, 9, 9, 10));
+        entityManager.clear();
+
+        LocalDateTime visibleFrom = LocalDateTime.of(2026, 5, 9, 9, 0);
+
+        assertThat(chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                visibleMessage.getId(),
+                room.getId(),
+                visibleFrom
+        )).isTrue();
+        assertThat(chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                oldMessage.getId(),
+                room.getId(),
+                visibleFrom
+        )).isFalse();
+        assertThat(chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                otherRoomMessage.getId(),
+                room.getId(),
+                visibleFrom
+        )).isFalse();
+    }
+
     private User persistUser(String name, int suffix) {
         User user = User.builder()
                 .email(name + suffix + "@example.com")

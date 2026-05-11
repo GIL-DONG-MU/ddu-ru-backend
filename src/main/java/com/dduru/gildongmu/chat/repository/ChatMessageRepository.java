@@ -28,8 +28,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             Pageable pageable
     );
 
-    boolean existsByIdAndRoom_Id(Long messageId, Long roomId);
-
     @Query("""
             SELECT m
             FROM ChatMessage m
@@ -40,4 +38,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             @Param("messageId") Long messageId,
             @Param("roomId") Long roomId
     );
+
+    boolean existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(Long messageId, Long roomId, LocalDateTime visibleFrom);
 }

@@ -9,14 +9,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -30,16 +32,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<ErrorResponse> handleValidationException(BindException e) {
         log.warn("Validation Exception: {}", e.getMessage());
-        return ResponseEntity.badRequest().body(buildFieldErrorResponse(e.getBindingResult().getFieldErrors().get(0)));
+        return ResponseEntity.badRequest().body(buildValidationErrorResponse(e.getBindingResult()));
     }
 
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ErrorResponse> handleBindException(BindException e) {
-        log.warn("Bind Exception: {}", e.getMessage());
-        return ResponseEntity.badRequest().body(buildFieldErrorResponse(e.getBindingResult().getFieldErrors().get(0)));
+    private ErrorResponse buildValidationErrorResponse(BindingResult bindingResult) {
+        FieldError fieldError = bindingResult.getFieldError();
+        if (fieldError != null) {
+            return buildFieldErrorResponse(fieldError);
+        }
+
+        ObjectError globalError = bindingResult.getGlobalError();
+        if (globalError != null) {
+            return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, globalError.getDefaultMessage());
+        }
+
+        return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
     }
 
     private ErrorResponse buildFieldErrorResponse(FieldError fieldError) {
