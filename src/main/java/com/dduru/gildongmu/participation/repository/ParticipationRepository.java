@@ -29,7 +29,6 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
     Optional<Participation> findByPostIdAndUserId(Long postId, Long userId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Participation> findByPostIdAndUserIdAndStatus(Long postId, Long userId, ParticipationStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
