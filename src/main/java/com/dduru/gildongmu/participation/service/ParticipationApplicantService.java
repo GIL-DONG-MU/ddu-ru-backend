@@ -77,7 +77,7 @@ public class ParticipationApplicantService {
             return MyParticipationStatus.NONE;
         }
         return participationRepository.findByPostIdAndUserId(postId, currentUserId)
-                .map(ParticipationApplicantService::toMyParticipationStatus)
+                .map(participation -> toMyParticipationStatus(postId, currentUserId, participation))
                 .orElse(MyParticipationStatus.NONE);
     }
 
@@ -90,13 +90,23 @@ public class ParticipationApplicantService {
         log.info("참여신청 취소(삭제) - participationId: {}, postId: {}, userId: {}", participationId, participation.getPost().getId(), userId);
     }
 
-    private static MyParticipationStatus toMyParticipationStatus(Participation participation) {
+    private MyParticipationStatus toMyParticipationStatus(Long postId, Long userId, Participation participation) {
+        if (participation.isApproved() && hasJourneyMemberStatus(postId, userId, JourneyMemberStatus.REMOVED)) {
+            return MyParticipationStatus.REMOVED_BY_HOST;
+        }
+
         return switch (participation.getStatus()) {
             case PENDING -> MyParticipationStatus.PENDING;
             case CONTACTING -> MyParticipationStatus.CONTACTING;
             case APPROVED -> MyParticipationStatus.APPROVED;
             case REJECTED -> MyParticipationStatus.REJECTED;
         };
+    }
+
+    private boolean hasJourneyMemberStatus(Long postId, Long userId, JourneyMemberStatus status) {
+        return journeyMemberRepository.findStatusByJourneyPostIdAndUserId(postId, userId)
+                .filter(status::equals)
+                .isPresent();
     }
 
     private void validateParticipationAllowed(Post post, User applicant) {
@@ -106,8 +116,10 @@ public class ParticipationApplicantService {
     }
 
     private MyParticipationResponse toApplicationResponse(Long applicantUserId, Participation participation) {
+        Long postId = participation.getPost().getId();
         ChatRoomIds roomIds = resolveChatRoomIds(applicantUserId, participation);
-        return MyParticipationResponse.from(participation, roomIds.privateRoomId(), roomIds.groupRoomId());
+        MyParticipationStatus status = toMyParticipationStatus(postId, applicantUserId, participation);
+        return MyParticipationResponse.from(participation, status, roomIds.privateRoomId(), roomIds.groupRoomId());
     }
 
     private ChatRoomIds resolveChatRoomIds(Long applicantUserId, Participation participation) {
@@ -119,7 +131,9 @@ public class ParticipationApplicantService {
             );
             case APPROVED -> new ChatRoomIds(
                     null,
-                    findGroupRoomId(post.getId())
+                    hasJourneyMemberStatus(post.getId(), applicantUserId, JourneyMemberStatus.ACTIVE)
+                            ? findGroupRoomId(post.getId())
+                            : null
             );
             case PENDING, REJECTED -> new ChatRoomIds(null, null);
         };

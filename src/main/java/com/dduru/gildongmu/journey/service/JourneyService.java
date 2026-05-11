@@ -9,7 +9,6 @@ import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
-import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
@@ -20,6 +19,7 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +40,7 @@ public class JourneyService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ParticipationRepository participationRepository;
+    private final PostRepository postRepository;
     private final ChatMessageSendService chatMessageSendService;
     private final S3ImageUrlValidator s3ImageUrlValidator;
 
@@ -61,11 +62,12 @@ public class JourneyService {
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
         validateRemovableMember(member, hostUserId);
 
-        Post post = member.getJourney().getPost();
+        Long postId = member.getJourney().getPost().getId();
+        Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
         member.remove();
-        // 실제 접근 권한은 journey_member에서 끊고, 참여 신청 이력은 별도 상태로 남긴다.
-        participationRepository.findByPostIdAndUserIdAndStatus(post.getId(), memberUserId, ParticipationStatus.APPROVED)
-                .ifPresent(post::removeApprovedParticipationByHost);
+        // 신청 승인 이력은 유지하고, 현재 멤버십에 맞춰 모집 인원만 줄인다.
+        participationRepository.findByPostIdAndUserIdAndStatus(postId, memberUserId, ParticipationStatus.APPROVED)
+                .ifPresent(post::excludeApprovedParticipation);
         findGroupChatRoomAndRemoveMember(journeyId, hostUserId, memberUserId);
 
         log.info("나의 여정 멤버 내보내기 완료 - journeyId={}, hostUserId={}, memberUserId={}",
@@ -78,12 +80,7 @@ public class JourneyService {
     }
 
     private void validateHostAuthority(Long journeyId, Long hostUserId) {
-        boolean isActiveHost = journeyMemberRepository.existsByJourneyIdAndUserIdAndRoleAndStatus(
-                journeyId,
-                hostUserId,
-                JourneyMemberRole.HOST,
-                JourneyMemberStatus.ACTIVE
-        );
+        boolean isActiveHost = journeyMemberRepository.existsActiveHost(journeyId, hostUserId);
         if (!isActiveHost) {
             throw new JourneyAccessDeniedException();
         }

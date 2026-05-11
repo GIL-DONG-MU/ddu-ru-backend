@@ -5,5 +5,6 @@ public enum MyParticipationStatus {
     PENDING,
     CONTACTING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    REMOVED_BY_HOST
 }

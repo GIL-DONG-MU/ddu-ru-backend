@@ -3,6 +3,7 @@ package com.dduru.gildongmu.participation.dto.response;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -17,8 +18,8 @@ public record MyParticipationResponse(
         String postTitle,
         @Schema(description = "게시글 대표 이미지 URL")
         String photoUrl,
-        @Schema(description = "신청 상태", allowableValues = {"PENDING", "CONTACTING", "APPROVED", "REJECTED"})
-        ParticipationStatus status,
+        @Schema(description = "내 신청 화면 기준 상태", allowableValues = {"PENDING", "CONTACTING", "APPROVED", "REJECTED", "REMOVED_BY_HOST"})
+        MyParticipationStatus status,
         @Schema(description = "신청 시각(상대 시각은 클라이언트에서 계산)")
         LocalDateTime appliedAt,
         @Schema(description = "대기 중일 때만 신청 취소 가능")
@@ -30,11 +31,12 @@ public record MyParticipationResponse(
 ) {
     public static MyParticipationResponse from(
             Participation participation,
+            MyParticipationStatus status,
             Long privateRoomId,
             Long groupRoomId
     ) {
         Post post = participation.getPost();
-        ParticipationStatus status = participation.getStatus();
+        ParticipationStatus participationStatus = participation.getStatus();
         return new MyParticipationResponse(
                 participation.getId(),
                 post.getId(),
@@ -42,7 +44,7 @@ public record MyParticipationResponse(
                 post.getPhotoUrl(),
                 status,
                 participation.getCreatedAt(),
-                status == ParticipationStatus.PENDING,
+                participationStatus == ParticipationStatus.PENDING,
                 privateRoomId,
                 groupRoomId
         );

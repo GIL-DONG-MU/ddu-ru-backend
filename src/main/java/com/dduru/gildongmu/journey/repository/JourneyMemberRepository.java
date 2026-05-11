@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyMember;
-import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,11 +18,17 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
 
     boolean existsByJourneyIdAndUserIdAndStatus(Long journeyId, Long userId, JourneyMemberStatus status);
 
-    boolean existsByJourneyIdAndUserIdAndRoleAndStatus(
-            Long journeyId,
-            Long userId,
-            JourneyMemberRole role,
-            JourneyMemberStatus status
+    @Query("""
+            SELECT COUNT(jm) > 0
+            FROM JourneyMember jm
+            WHERE jm.journey.id = :journeyId
+              AND jm.user.id = :userId
+              AND jm.role = 'HOST'
+              AND jm.status = 'ACTIVE'
+            """)
+    boolean existsActiveHost(
+            @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -39,6 +44,17 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             """)
     Optional<JourneyMember> findActiveMemberForUpdate(
             @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            SELECT jm.status
+            FROM JourneyMember jm
+            WHERE jm.journey.post.id = :postId
+              AND jm.user.id = :userId
+            """)
+    Optional<JourneyMemberStatus> findStatusByJourneyPostIdAndUserId(
+            @Param("postId") Long postId,
             @Param("userId") Long userId
     );
 
