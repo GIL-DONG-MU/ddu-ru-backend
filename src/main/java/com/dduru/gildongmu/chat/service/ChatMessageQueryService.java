@@ -16,7 +16,6 @@ import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatMessageNotFoundException;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
-import com.dduru.gildongmu.chat.exception.InvalidChatMessageRetrieveRequestException;
 import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
@@ -25,8 +24,6 @@ import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -35,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -51,7 +47,6 @@ import static java.util.Collections.reverse;
 @Transactional(readOnly = true)
 public class ChatMessageQueryService {
 
-    private final Validator validator;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatMessageRepository chatMessageRepository;
@@ -61,7 +56,6 @@ public class ChatMessageQueryService {
 
     public ChatMessagesResponse retrieveMessages(Long userId, Long roomId, ChatMessageRetrieveRequest request) {
         ChatMessageRetrieveRequest normalizedRequest = normalizeRequest(request);
-        validateRequest(normalizedRequest);
 
         ChatRoom room = chatRoomRepository.getByIdWithContextOrThrow(roomId);
         validateRoomRetrievable(room);
@@ -100,19 +94,6 @@ public class ChatMessageQueryService {
             return new ChatMessageRetrieveRequest(null, null);
         }
         return request;
-    }
-
-    private void validateRequest(ChatMessageRetrieveRequest request) {
-        Set<ConstraintViolation<ChatMessageRetrieveRequest>> violations = validator.validate(request);
-        if (violations.isEmpty()) {
-            return;
-        }
-
-        ConstraintViolation<ChatMessageRetrieveRequest> violation = violations.stream()
-                .min(Comparator.comparing(candidate -> candidate.getPropertyPath().toString()))
-                .orElseThrow();
-
-        throw InvalidChatMessageRetrieveRequestException.fromMessage(violation.getMessage());
     }
 
     private static void validateRoomRetrievable(ChatRoom room) {

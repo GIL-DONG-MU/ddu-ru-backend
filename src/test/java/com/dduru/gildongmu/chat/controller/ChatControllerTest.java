@@ -120,6 +120,30 @@ class ChatControllerTest {
     }
 
     @Test
+    @DisplayName("size가 최대값보다 크면 INVALID_INPUT_VALUE 응답을 받는다")
+    void tooLargeSizeReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/chat-rooms/{chatRoomId}/messages", 1L)
+                        .param("size", "51"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.data.errorCode").value("INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.data.field").value("size"));
+
+        org.mockito.Mockito.verifyNoInteractions(chatMessageQueryService);
+    }
+
+    @Test
+    @DisplayName("beforeMessageId가 0 이하이면 INVALID_INPUT_VALUE 응답을 받는다")
+    void invalidBeforeMessageIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/chat-rooms/{chatRoomId}/messages", 1L)
+                        .param("beforeMessageId", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.data.errorCode").value("INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.data.field").value("beforeMessageId"));
+
+        org.mockito.Mockito.verifyNoInteractions(chatMessageQueryService);
+    }
+
+    @Test
     @DisplayName("query type mismatch도 INVALID_INPUT_VALUE 응답을 받는다")
     void invalidQueryTypeReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/chat-rooms/{chatRoomId}/messages", 1L)

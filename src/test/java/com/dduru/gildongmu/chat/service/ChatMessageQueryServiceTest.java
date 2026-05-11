@@ -12,12 +12,10 @@ import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatMessageNotFoundException;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
-import com.dduru.gildongmu.chat.exception.InvalidChatMessageRetrieveRequestException;
 import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.system.ChatSystemMessageFactory;
-import jakarta.validation.Validation;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -79,7 +77,6 @@ class ChatMessageQueryServiceTest {
     @BeforeEach
     void setUp() {
         chatMessageQueryService = new ChatMessageQueryService(
-                Validation.buildDefaultValidatorFactory().getValidator(),
                 chatRoomRepository,
                 chatRoomMemberRepository,
                 chatMessageRepository,
@@ -197,38 +194,6 @@ class ChatMessageQueryServiceTest {
     @Nested
     @DisplayName("검증 실패")
     class ValidationFailure {
-
-        @Test
-        @DisplayName("size가 1보다 작으면 입력값 예외가 발생한다")
-        void invalidSmallSizeThrowsException() {
-            assertThatThrownBy(() -> chatMessageQueryService.retrieveMessages(
-                    10L,
-                    100L,
-                    new ChatMessageRetrieveRequest(null, 0)
-            )).isInstanceOf(InvalidChatMessageRetrieveRequestException.class);
-
-            verify(chatRoomRepository, never()).getByIdWithContextOrThrow(any());
-        }
-
-        @Test
-        @DisplayName("size가 50보다 크면 입력값 예외가 발생한다")
-        void invalidLargeSizeThrowsException() {
-            assertThatThrownBy(() -> chatMessageQueryService.retrieveMessages(
-                    10L,
-                    100L,
-                    new ChatMessageRetrieveRequest(null, 51)
-            )).isInstanceOf(InvalidChatMessageRetrieveRequestException.class);
-        }
-
-        @Test
-        @DisplayName("beforeMessageId가 0 이하이면 입력값 예외가 발생한다")
-        void invalidBeforeMessageIdThrowsException() {
-            assertThatThrownBy(() -> chatMessageQueryService.retrieveMessages(
-                    10L,
-                    100L,
-                    new ChatMessageRetrieveRequest(0L, 20)
-            )).isInstanceOf(InvalidChatMessageRetrieveRequestException.class);
-        }
 
         @Test
         @DisplayName("DELETED 방은 찾을 수 없는 방으로 처리한다")
