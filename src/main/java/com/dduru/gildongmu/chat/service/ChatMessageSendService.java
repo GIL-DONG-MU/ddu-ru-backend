@@ -68,7 +68,7 @@ public class ChatMessageSendService {
     }
 
     private ChatRoomMember getSenderMember(Long senderUserId, Long roomId) {
-        return chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, senderUserId)
+        return chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, senderUserId)
                 .orElseThrow(ChatAccessDeniedException::new);
     }
 

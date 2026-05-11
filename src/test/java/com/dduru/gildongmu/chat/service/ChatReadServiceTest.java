@@ -97,7 +97,7 @@ class ChatReadServiceTest {
                     "읽음 처리할 메시지", LocalDateTime.of(2026, 5, 9, 9, 10));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(message.getId(), roomId)).thenReturn(Optional.of(message));
 
             ChatReadResponse response = chatReadService.read(userId, roomId, new ChatReadRequest(message.getId()));
@@ -131,7 +131,7 @@ class ChatReadServiceTest {
                     "읽음 처리할 메시지", LocalDateTime.of(2026, 5, 9, 9, 10));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(message.getId(), roomId)).thenReturn(Optional.of(message));
 
             TransactionSynchronizationManager.initSynchronization();
@@ -167,7 +167,7 @@ class ChatReadServiceTest {
             ChatRoomMember member = createMember(room, user, currentLastRead, LocalDateTime.of(2026, 5, 9, 9, 0));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(oldMessage.getId(), roomId)).thenReturn(Optional.of(oldMessage));
 
             ChatReadResponse response = chatReadService.read(userId, roomId, new ChatReadRequest(oldMessage.getId()));
@@ -190,7 +190,7 @@ class ChatReadServiceTest {
             ChatRoomMember member = createMember(room, user, currentLastRead, LocalDateTime.of(2026, 5, 9, 9, 0));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(currentLastRead.getId(), roomId))
                     .thenReturn(Optional.of(currentLastRead));
 
@@ -217,7 +217,7 @@ class ChatReadServiceTest {
                     "{}", LocalDateTime.of(2026, 5, 9, 9, 10));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(message.getId(), roomId)).thenReturn(Optional.of(message));
 
             ChatReadResponse response = chatReadService.read(userId, roomId, new ChatReadRequest(message.getId()));
@@ -255,7 +255,7 @@ class ChatReadServiceTest {
             ChatRoom room = createPrivateRoom(roomId, createPost(100L, user), ChatRoomStatus.ACTIVE);
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.empty());
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> chatReadService.read(userId, roomId, new ChatReadRequest(123L)))
                     .isInstanceOf(ChatAccessDeniedException.class);
@@ -274,7 +274,7 @@ class ChatReadServiceTest {
             ChatRoomMember member = createMember(room, user, null, LocalDateTime.of(2026, 5, 9, 9, 0));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(30L, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
@@ -294,7 +294,7 @@ class ChatReadServiceTest {
             ChatRoomMember member = createMember(room, user, null, LocalDateTime.of(2026, 5, 9, 9, 0));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(999L, roomId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> chatReadService.read(userId, roomId, new ChatReadRequest(999L)))
@@ -315,7 +315,7 @@ class ChatReadServiceTest {
                     "참여 전 메시지", LocalDateTime.of(2026, 5, 9, 9, 9));
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
-            when(chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)).thenReturn(Optional.of(member));
+            when(chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)).thenReturn(Optional.of(member));
             when(chatMessageRepository.findByIdAndRoomId(message.getId(), roomId)).thenReturn(Optional.of(message));
 
             assertThatThrownBy(() -> chatReadService.read(userId, roomId, new ChatReadRequest(message.getId())))

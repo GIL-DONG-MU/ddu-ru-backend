@@ -36,7 +36,7 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             WHERE m.room.id = :roomId
               AND m.user.id = :userId
             """)
-    Optional<ChatRoomMember> findByRoomIdAndUserIdForUpdate(
+    Optional<ChatRoomMember> findByRoomIdAndUserIdWithLock(
             @Param("roomId") Long roomId,
             @Param("userId") Long userId
     );

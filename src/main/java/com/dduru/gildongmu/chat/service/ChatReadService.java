@@ -41,7 +41,7 @@ public class ChatReadService {
         ChatRoom room = chatRoomRepository.getByIdWithContextOrThrow(roomId);
         validateRoomReadable(room);
 
-        ChatRoomMember currentMember = chatRoomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, userId)
+        ChatRoomMember currentMember = chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, userId)
                 .orElseThrow(ChatAccessDeniedException::new);
         validateGroupAccess(room, userId);
 
