@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.id = :id")
     Optional<User> findWithProfileById(@Param("id") Long id);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.id IN :ids")
+    List<User> findAllWithProfileByIdIn(@Param("ids") Collection<Long> ids);
 
     default User getWithProfileByIdOrThrow(Long id) {
         return findWithProfileById(id)

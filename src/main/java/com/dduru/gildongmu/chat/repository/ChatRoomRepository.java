@@ -59,6 +59,16 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("""
             SELECT r
             FROM ChatRoom r
+            LEFT JOIN FETCH r.post p
+            LEFT JOIN FETCH r.journey j
+            LEFT JOIN FETCH j.post
+            WHERE r.id = :roomId
+            """)
+    Optional<ChatRoom> findByIdWithContext(@Param("roomId") Long roomId);
+
+    @Query("""
+            SELECT r
+            FROM ChatRoom r
             WHERE r.journey.post.id = :postId
               AND r.roomType = :roomType
             """)
@@ -81,6 +91,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     default ChatRoom getByIdOrThrow(Long roomId) {
         return findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
+    }
+
+    default ChatRoom getByIdWithContextOrThrow(Long roomId) {
+        return findByIdWithContext(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
 
     default ChatRoom getByJourneyIdAndRoomTypeWithLock(Long journeyId, ChatRoomType roomType) {

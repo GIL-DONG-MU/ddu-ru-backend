@@ -8,14 +8,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -29,18 +32,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<ErrorResponse> handleValidationException(BindException e) {
         log.warn("Validation Exception: {}", e.getMessage());
-        FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
+        return ResponseEntity.badRequest().body(buildValidationErrorResponse(e.getBindingResult()));
+    }
 
-        ErrorResponse response = ErrorResponse.ofField(
+    private ErrorResponse buildValidationErrorResponse(BindingResult bindingResult) {
+        FieldError fieldError = bindingResult.getFieldError();
+        if (fieldError != null) {
+            return buildFieldErrorResponse(fieldError);
+        }
+
+        ObjectError globalError = bindingResult.getGlobalError();
+        if (globalError != null) {
+            return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, globalError.getDefaultMessage());
+        }
+
+        return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
+    }
+
+    private ErrorResponse buildFieldErrorResponse(FieldError fieldError) {
+        return ErrorResponse.ofField(
                 ErrorCode.INVALID_INPUT_VALUE,
                 fieldError.getField(),
                 fieldError.getDefaultMessage()
         );
-
-        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

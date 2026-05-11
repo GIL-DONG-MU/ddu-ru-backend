@@ -18,6 +18,8 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
 
     boolean existsByJourneyIdAndUserIdAndStatus(Long journeyId, Long userId, JourneyMemberStatus status);
 
+    int countByJourneyIdAndStatus(Long journeyId, JourneyMemberStatus status);
+
     @Query("""
             SELECT COUNT(jm) > 0
             FROM JourneyMember jm

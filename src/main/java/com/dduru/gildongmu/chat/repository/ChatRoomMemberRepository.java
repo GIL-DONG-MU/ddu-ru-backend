@@ -2,16 +2,62 @@ package com.dduru.gildongmu.chat.repository;
 
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.ChatRoomMember;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
     int countByRoom(ChatRoom room);
 
-    Optional<ChatRoomMember> findByRoomIdAndUserId(Long roomId, Long userId);
+    @Query("""
+            SELECT m
+            FROM ChatRoomMember m
+            JOIN FETCH m.user u
+            LEFT JOIN FETCH u.profile
+            LEFT JOIN FETCH m.lastReadMessage
+            WHERE m.room.id = :roomId
+              AND m.user.id = :userId
+            """)
+    Optional<ChatRoomMember> findByRoomIdAndUserId(
+            @Param("roomId") Long roomId,
+            @Param("userId") Long userId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT m
+            FROM ChatRoomMember m
+            LEFT JOIN FETCH m.lastReadMessage
+            WHERE m.room.id = :roomId
+              AND m.user.id = :userId
+            """)
+    Optional<ChatRoomMember> findByRoomIdAndUserIdWithLock(
+            @Param("roomId") Long roomId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            SELECT m
+            FROM ChatRoomMember m
+            JOIN FETCH m.user u
+            LEFT JOIN FETCH u.profile
+            WHERE m.room.id = :roomId
+            """)
+    List<ChatRoomMember> findByRoomIdWithUserProfile(@Param("roomId") Long roomId);
+
+    @Query("""
+            SELECT m
+            FROM ChatRoomMember m
+            JOIN FETCH m.user
+            LEFT JOIN FETCH m.lastReadMessage
+            WHERE m.room.id = :roomId
+            """)
+    List<ChatRoomMember> findByRoomIdWithLastReadMessage(@Param("roomId") Long roomId);
 
     @Query("""
             SELECT COUNT(m) > 0

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.constants.ChatDestinationPaths;
 import com.dduru.gildongmu.chat.constants.ChatMessageConstants;
 import com.dduru.gildongmu.chat.domain.ChatMessage;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
+import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageBroadcastPayload;
@@ -48,11 +49,11 @@ public class ChatMessageSendService {
     public void sendUserMessage(Long senderUserId, Long roomId, ChatMessageSendRequest request) {
         ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
         validateRoomOpen(room);
-        checkSenderIsMember(senderUserId, roomId);
+        ChatRoomMember senderMember = getSenderMember(senderUserId, roomId);
 
         User sender = userRepository.getWithProfileByIdOrThrow(senderUserId);
         String content = resolveUserMessageContent(request);
-        saveUserMessageAndBroadcast(room, sender, request.messageType(), content);
+        saveUserMessageAndBroadcast(room, sender, senderMember, request.messageType(), content);
     }
 
     public void publishUserInvited(ChatRoom room, long inviteeUserId, long actorUserId) {
@@ -70,14 +71,20 @@ public class ChatMessageSendService {
         broadcastAfterCommit(toPayload(chatMessage), room.getId());
     }
 
-    private void checkSenderIsMember(Long senderUserId, Long roomId) {
-        if (!chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, senderUserId)) {
-            throw new ChatAccessDeniedException();
-        }
+    private ChatRoomMember getSenderMember(Long senderUserId, Long roomId) {
+        return chatRoomMemberRepository.findByRoomIdAndUserIdWithLock(roomId, senderUserId)
+                .orElseThrow(ChatAccessDeniedException::new);
     }
 
-    private void saveUserMessageAndBroadcast(ChatRoom room, User sender, ChatMessageType messageType, String content) {
+    private void saveUserMessageAndBroadcast(
+            ChatRoom room,
+            User sender,
+            ChatRoomMember senderMember,
+            ChatMessageType messageType,
+            String content
+    ) {
         ChatMessage chatMessage = saveAndFlushMessage(room, sender, messageType, content);
+        senderMember.readUpTo(chatMessage);
         broadcastAfterCommit(toPayload(chatMessage), room.getId());
     }
 
