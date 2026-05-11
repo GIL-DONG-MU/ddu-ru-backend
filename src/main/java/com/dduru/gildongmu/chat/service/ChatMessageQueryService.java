@@ -32,6 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -68,7 +69,7 @@ public class ChatMessageQueryService {
         ChatRoomMember currentMember = chatRoomMemberRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(ChatAccessDeniedException::new);
         validateGroupAccess(room, userId);
-        validateCursor(roomId, normalizedRequest.beforeMessageId());
+        validateCursor(roomId, normalizedRequest.beforeMessageId(), currentMember.getCreatedAt());
 
         int size = normalizedRequest.sizeOrDefault();
 
@@ -135,11 +136,15 @@ public class ChatMessageQueryService {
         }
     }
 
-    private void validateCursor(Long roomId, Long beforeMessageId) {
+    private void validateCursor(Long roomId, Long beforeMessageId, LocalDateTime visibleFrom) {
         if (beforeMessageId == null) {
             return;
         }
-        if (!chatMessageRepository.existsByIdAndRoom_Id(beforeMessageId, roomId)) {
+        if (!chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                beforeMessageId,
+                roomId,
+                visibleFrom
+        )) {
             throw new ChatMessageNotFoundException();
         }
     }

@@ -303,7 +303,37 @@ class ChatMessageQueryServiceTest {
 
             when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
             when(chatRoomMemberRepository.findByRoomIdAndUserId(roomId, userId)).thenReturn(Optional.of(currentMember));
-            when(chatMessageRepository.existsByIdAndRoom_Id(beforeMessageId, roomId)).thenReturn(false);
+            when(chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                    beforeMessageId,
+                    roomId,
+                    memberCreatedAt
+            )).thenReturn(false);
+
+            assertThatThrownBy(() -> chatMessageQueryService.retrieveMessages(
+                    userId,
+                    roomId,
+                    new ChatMessageRetrieveRequest(beforeMessageId, 20)
+            )).isInstanceOf(ChatMessageNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("커서 메시지가 입장 전 메시지이면 메시지 not found 예외가 발생한다")
+        void cursorBeforeMemberJoinedThrowsNotFound() {
+            Long roomId = 100L;
+            Long userId = 10L;
+            Long beforeMessageId = 999L;
+            LocalDateTime memberCreatedAt = LocalDateTime.of(2026, 5, 9, 9, 0);
+            User host = createUser(userId, "host", "hostNick");
+            ChatRoom room = createPrivateRoom(roomId, createPost(1L, host, "커서 검증 방"), ChatRoomStatus.ACTIVE);
+            ChatRoomMember currentMember = createMember(room, host, ChatMemberRole.HOST, memberCreatedAt);
+
+            when(chatRoomRepository.getByIdWithContextOrThrow(roomId)).thenReturn(room);
+            when(chatRoomMemberRepository.findByRoomIdAndUserId(roomId, userId)).thenReturn(Optional.of(currentMember));
+            when(chatMessageRepository.existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(
+                    beforeMessageId,
+                    roomId,
+                    memberCreatedAt
+            )).thenReturn(false);
 
             assertThatThrownBy(() -> chatMessageQueryService.retrieveMessages(
                     userId,
