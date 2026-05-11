@@ -78,6 +78,24 @@ class PostTest {
         }
     }
 
+    @Nested
+    @DisplayName("승인된 참여자 제거")
+    class RemoveApprovedParticipation {
+
+        @Test
+        @DisplayName("APPROVED 참여자를 현재 모집 인원에서 제외하면 모집 인원이 감소한다")
+        void approvedChangesStatusAndRecruitCount() {
+            Post post = createPost();
+            Participation participation = createParticipation(post);
+            post.approveParticipation(participation);
+
+            post.excludeApprovedParticipation(participation);
+
+            assertThat(participation.isApproved()).isTrue();
+            assertThat(post.getRecruitCount()).isEqualTo(1);
+        }
+    }
+
     private Post createPost() {
         User author = User.builder()
                 .email("author@example.com")
