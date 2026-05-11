@@ -15,6 +15,7 @@ import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +34,7 @@ public class ChatReadService {
     private final ChatMessageRepository chatMessageRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final TimeProvider timeProvider;
 
     @Transactional
     public ChatReadResponse read(Long userId, Long roomId, ChatReadRequest request) {
@@ -91,7 +91,7 @@ public class ChatReadService {
                 roomId,
                 readerUserId,
                 lastReadMessageId,
-                LocalDateTime.now()
+                timeProvider.now()
         );
         String destination = ChatDestinationPaths.topicRoom(roomId);
 

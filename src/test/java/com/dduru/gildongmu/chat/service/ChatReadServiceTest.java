@@ -16,6 +16,7 @@ import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.repository.ChatMessageRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -44,6 +45,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -52,6 +54,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ChatReadService 테스트")
 class ChatReadServiceTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 11, 21, 35);
 
     @Mock
     private ChatRoomRepository chatRoomRepository;
@@ -68,16 +72,21 @@ class ChatReadServiceTest {
     @Mock
     private SimpMessagingTemplate simpMessagingTemplate;
 
+    @Mock
+    private TimeProvider timeProvider;
+
     private ChatReadService chatReadService;
 
     @BeforeEach
     void setUp() {
+        lenient().when(timeProvider.now()).thenReturn(NOW);
         chatReadService = new ChatReadService(
                 chatRoomRepository,
                 chatRoomMemberRepository,
                 chatMessageRepository,
                 journeyMemberRepository,
-                simpMessagingTemplate
+                simpMessagingTemplate,
+                timeProvider
         );
     }
 
@@ -116,7 +125,7 @@ class ChatReadServiceTest {
             assertThat(payloadCaptor.getValue().roomId()).isEqualTo(roomId);
             assertThat(payloadCaptor.getValue().readerUserId()).isEqualTo(userId);
             assertThat(payloadCaptor.getValue().lastReadMessageId()).isEqualTo(message.getId());
-            assertThat(payloadCaptor.getValue().readAt()).isNotNull();
+            assertThat(payloadCaptor.getValue().readAt()).isEqualTo(NOW);
         }
 
         @Test
