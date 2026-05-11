@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -77,7 +78,10 @@ public class ParticipationApplicantService {
             return MyParticipationStatus.NONE;
         }
         return participationRepository.findByPostIdAndUserId(postId, currentUserId)
-                .map(participation -> toMyParticipationStatus(postId, currentUserId, participation))
+                .map(participation -> toMyParticipationStatus(
+                        participation,
+                        findJourneyMemberStatusIfApproved(postId, currentUserId, participation)
+                ))
                 .orElse(MyParticipationStatus.NONE);
     }
 
@@ -90,8 +94,12 @@ public class ParticipationApplicantService {
         log.info("참여신청 취소(삭제) - participationId: {}, postId: {}, userId: {}", participationId, participation.getPost().getId(), userId);
     }
 
-    private MyParticipationStatus toMyParticipationStatus(Long postId, Long userId, Participation participation) {
-        if (participation.isApproved() && hasJourneyMemberStatus(postId, userId, JourneyMemberStatus.REMOVED)) {
+    private MyParticipationStatus toMyParticipationStatus(
+            Participation participation,
+            Optional<JourneyMemberStatus> journeyMemberStatus
+    ) {
+        // 내보내기는 신청 상태가 아니라 현재 여정 멤버십 상태로 응답에만 표현한다.
+        if (participation.isApproved() && hasJourneyMemberStatus(journeyMemberStatus, JourneyMemberStatus.REMOVED)) {
             return MyParticipationStatus.REMOVED_BY_HOST;
         }
 
@@ -103,9 +111,26 @@ public class ParticipationApplicantService {
         };
     }
 
-    private boolean hasJourneyMemberStatus(Long postId, Long userId, JourneyMemberStatus status) {
-        return journeyMemberRepository.findStatusByJourneyPostIdAndUserId(postId, userId)
-                .filter(status::equals)
+    private Optional<JourneyMemberStatus> findJourneyMemberStatus(Long postId, Long userId) {
+        return journeyMemberRepository.findStatusByJourneyPostIdAndUserId(postId, userId);
+    }
+
+    private Optional<JourneyMemberStatus> findJourneyMemberStatusIfApproved(
+            Long postId,
+            Long userId,
+            Participation participation
+    ) {
+        if (!participation.isApproved()) {
+            return Optional.empty();
+        }
+        return findJourneyMemberStatus(postId, userId);
+    }
+
+    private static boolean hasJourneyMemberStatus(
+            Optional<JourneyMemberStatus> journeyMemberStatus,
+            JourneyMemberStatus status
+    ) {
+        return journeyMemberStatus.filter(status::equals)
                 .isPresent();
     }
 
@@ -117,21 +142,29 @@ public class ParticipationApplicantService {
 
     private MyParticipationResponse toApplicationResponse(Long applicantUserId, Participation participation) {
         Long postId = participation.getPost().getId();
-        ChatRoomIds roomIds = resolveChatRoomIds(applicantUserId, participation);
-        MyParticipationStatus status = toMyParticipationStatus(postId, applicantUserId, participation);
+        Optional<JourneyMemberStatus> journeyMemberStatus = findJourneyMemberStatusIfApproved(
+                postId,
+                applicantUserId,
+                participation
+        );
+        ChatRoomIds roomIds = resolveChatRoomIds(participation, journeyMemberStatus);
+        MyParticipationStatus status = toMyParticipationStatus(participation, journeyMemberStatus);
         return MyParticipationResponse.from(participation, status, roomIds.privateRoomId(), roomIds.groupRoomId());
     }
 
-    private ChatRoomIds resolveChatRoomIds(Long applicantUserId, Participation participation) {
+    private ChatRoomIds resolveChatRoomIds(
+            Participation participation,
+            Optional<JourneyMemberStatus> journeyMemberStatus
+    ) {
         Post post = participation.getPost();
         return switch (participation.getStatus()) {
             case CONTACTING -> new ChatRoomIds(
-                    findActivePrivateRoomId(applicantUserId, post),
+                    findActivePrivateRoomId(participation.getUser().getId(), post),
                     null
             );
             case APPROVED -> new ChatRoomIds(
                     null,
-                    hasJourneyMemberStatus(post.getId(), applicantUserId, JourneyMemberStatus.ACTIVE)
+                    hasJourneyMemberStatus(journeyMemberStatus, JourneyMemberStatus.ACTIVE)
                             ? findGroupRoomId(post.getId())
                             : null
             );
