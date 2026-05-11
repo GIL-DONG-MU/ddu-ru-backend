@@ -51,4 +51,13 @@ public class ChatRoomMember extends BaseTimeEntity {
                 .role(role)
                 .build();
     }
+
+    public boolean readUpTo(ChatMessage message) {
+        if (lastReadMessage != null && lastReadMessage.getId() >= message.getId()) {
+            return false;
+        }
+
+        this.lastReadMessage = message;
+        return true;
+    }
 }

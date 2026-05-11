@@ -20,7 +20,12 @@ public record ChatMessageItemResponse(
         Integer unreadCount,
         LocalDateTime createdAt
 ) {
-    public static ChatMessageItemResponse forText(ChatMessage message, Long hostUserId, Long currentUserId) {
+    public static ChatMessageItemResponse forText(
+            ChatMessage message,
+            Long hostUserId,
+            Long currentUserId,
+            Integer unreadCount
+    ) {
         return new ChatMessageItemResponse(
                 message.getId(),
                 message.getMessageType(),
@@ -29,12 +34,17 @@ public record ChatMessageItemResponse(
                 message.getContent(),
                 List.of(),
                 null,
-                null,
+                unreadCount,
                 message.getCreatedAt()
         );
     }
 
-    public static ChatMessageItemResponse forImage(ChatMessage message, Long hostUserId, Long currentUserId) {
+    public static ChatMessageItemResponse forImage(
+            ChatMessage message,
+            Long hostUserId,
+            Long currentUserId,
+            Integer unreadCount
+    ) {
         return new ChatMessageItemResponse(
                 message.getId(),
                 message.getMessageType(),
@@ -43,7 +53,7 @@ public record ChatMessageItemResponse(
                 null,
                 List.of(ChatMessageImageResponse.from(message.getContent())),
                 null,
-                null,
+                unreadCount,
                 message.getCreatedAt()
         );
     }
