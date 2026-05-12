@@ -87,9 +87,7 @@ public class JourneyService {
     }
 
     private Post getPostForMemberRemoval(Long journeyId) {
-        Long postId = journeyRepository.getByIdWithPostOrThrow(journeyId)
-                .getPost()
-                .getId();
+        Long postId = journeyRepository.getPostIdByIdOrThrow(journeyId);
         return postRepository.getActiveByIdWithLockOrThrow(postId);
     }
 

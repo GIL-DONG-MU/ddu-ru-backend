@@ -248,7 +248,7 @@ class JourneyServiceTest {
             ChatRoomMember chatRoomMember = ChatRoomMember.create(room, memberUser, ChatMemberRole.GUEST);
 
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
-            when(journeyRepository.getByIdWithPostOrThrow(journeyId)).thenReturn(journey);
+            when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
             when(journeyMemberRepository.findActiveMemberWithLock(journeyId, memberUserId))
                     .thenReturn(Optional.of(member));
@@ -299,7 +299,7 @@ class JourneyServiceTest {
             JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser());
 
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
-            when(journeyRepository.getByIdWithPostOrThrow(journeyId)).thenReturn(journey);
+            when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
             when(journeyMemberRepository.findActiveMemberWithLock(journeyId, hostUserId))
                     .thenReturn(Optional.of(hostMember));
