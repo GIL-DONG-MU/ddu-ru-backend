@@ -4,6 +4,7 @@ public enum S3ImageDirectory {
     POSTS("posts"),
     PROFILES("profiles"),
     JOURNEYS("journeys"),
+    JOURNEY_POSTS("journeys/posts"),
     CHATS("chats");
 
     private final String directory;
