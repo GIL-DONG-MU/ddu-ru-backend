@@ -2,11 +2,15 @@ package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +21,57 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
     boolean existsByJourneyIdAndUserIdAndStatus(Long journeyId, Long userId, JourneyMemberStatus status);
 
     int countByJourneyIdAndStatus(Long journeyId, JourneyMemberStatus status);
+
+    @Query("""
+            SELECT COUNT(jm) > 0
+            FROM JourneyMember jm
+            WHERE jm.journey.id = :journeyId
+              AND jm.user.id = :userId
+              AND jm.role = 'HOST'
+              AND jm.status = 'ACTIVE'
+            """)
+    boolean existsActiveHost(
+            @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT jm
+            FROM JourneyMember jm
+            JOIN FETCH jm.journey j
+            JOIN FETCH j.post
+            JOIN FETCH jm.user
+            WHERE j.id = :journeyId
+              AND jm.user.id = :userId
+              AND jm.status = 'ACTIVE'
+            """)
+    Optional<JourneyMember> findActiveMemberWithLock(
+            @Param("journeyId") Long journeyId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            SELECT jm.status
+            FROM JourneyMember jm
+            WHERE jm.journey.post.id = :postId
+              AND jm.user.id = :userId
+            """)
+    Optional<JourneyMemberStatus> findStatusByJourneyPostIdAndUserId(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            SELECT new com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult(jm.journey.post.id, jm.status)
+            FROM JourneyMember jm
+            WHERE jm.journey.post.id IN :postIds
+              AND jm.user.id = :userId
+            """)
+    List<JourneyMemberStatusQueryResult> findStatusesByJourneyPostIdsAndUserId(
+            @Param("postIds") Collection<Long> postIds,
+            @Param("userId") Long userId
+    );
 
     @Query("""
             SELECT jm

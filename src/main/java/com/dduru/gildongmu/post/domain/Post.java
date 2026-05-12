@@ -193,7 +193,7 @@ public class Post extends BaseTimeEntity {
         incrementRecruitCount();
     }
 
-    public void removeApprovedParticipation(Participation participation) {
+    public void decrementRecruitCountIfApproved(Participation participation) {
         if (!participation.isApproved()) {
             return;
         }

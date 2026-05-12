@@ -14,10 +14,12 @@
 
 - 게시글 신청 상태는 `PENDING`, `CONTACTING`, `APPROVED`, `REJECTED`만 사용한다.
 - 게시글 신청 취소 시 `Participation` row를 삭제한다.
-- 승인 후 사용자가 그룹방을 나가면 `Participation` row도 삭제한다.
-- 방장이 승인된 사용자를 그룹방에서 내보내면 `Participation` row도 삭제한다.
+- 승인 이후의 실제 여행 접근 권한은 `journey_members`로 판단한다.
+- 방장이 승인된 사용자를 내보내면 `journey_members.status = REMOVED`로 변경하고 `Participation` row는 승인 이력으로 유지한다.
+- 내보내진 사용자는 그룹 채팅방의 `ChatRoomMember` row를 삭제한다.
 - 신청이 `REJECTED` 되면 row는 유지되며 재신청할 수 없다.
 - 모집 가능 여부는 `Post.recruitCount < recruitCapacity` 기준으로 판단한다.
+- 나의 여정 접근 권한은 `journey_members.status = ACTIVE` 기준으로 판단한다.
 - 그룹방 현재 인원은 `ChatRoomMember` 기준으로 계산한다.
 - 게시글이 마감되거나 삭제되어도 그룹 채팅방은 삭제하지 않는다.
 - 정원이 가득 차면 신규 신청, 연락 시작, 승인이 모두 불가하다.
@@ -44,7 +46,7 @@
 
 ### 4.2 Participation
 
-현재 유효한 신청만 보관한다.
+참여 신청과 승인 이력을 보관한다.
 
 상태:
 
@@ -56,8 +58,8 @@
 row 삭제 이벤트:
 
 - 신청자 취소
-- 승인 후 신청자의 그룹방 자진 이탈
-- 승인 후 방장의 그룹방 내보내기
+
+승인 이후 내보내기 여부는 `participations.status`가 아니라 `journey_members.status`로 표현한다.
 
 ### 4.3 Group Chat Room
 
@@ -126,17 +128,24 @@ row 삭제 이벤트:
 
 ### 5.7 그룹방 자진 이탈
 
-1. 승인된 사용자가 그룹방을 나간다.
-2. 해당 사용자의 그룹방 멤버 row를 삭제한다.
-3. 해당 사용자의 `Participation` row도 삭제한다.
-4. 결과적으로 승인 정원 1칸이 비게 된다.
+아직 별도 API와 정책을 확정하지 않은 흐름이다.
+
+정책 후보:
+
+1. 승인된 사용자가 나의 여정을 직접 나간다.
+2. 해당 사용자의 `journey_members.status`를 `LEFT`로 변경한다.
+3. 해당 사용자의 그룹방 멤버 row를 삭제한다.
+4. `Participation` row는 승인 이력으로 유지할지 별도 확정한다.
+5. `Post.recruitCount`를 1 감소시켜 승인 정원 1칸이 비게 한다.
 
 ### 5.8 방장이 승인자 내보내기
 
-1. 방장이 승인된 사용자를 그룹방에서 내보낸다.
-2. 해당 사용자의 그룹방 멤버 row를 삭제한다.
-3. 해당 사용자의 `Participation` row도 삭제한다.
-4. 결과적으로 승인 정원 1칸이 비게 된다.
+1. 방장이 승인된 사용자를 나의 여정에서 내보낸다.
+2. 해당 사용자의 `journey_members.status`를 `REMOVED`로 변경한다.
+3. 해당 사용자의 그룹방 멤버 row를 삭제한다.
+4. 해당 사용자의 `Participation` row는 `APPROVED` 승인 이력으로 유지한다.
+5. `Post.recruitCount`를 1 감소시켜 승인 정원 1칸이 비게 한다.
+6. 내 신청 내역 응답에서는 `journey_members.status = REMOVED`를 기준으로 `REMOVED_BY_HOST`를 계산해서 내려준다.
 
 ### 5.9 정원 가득 참
 
@@ -165,8 +174,8 @@ row 삭제 이벤트:
 | `CONTACTING` | 거절하기 | `REJECTED` | row 유지 |
 | `PENDING` | 신청자 취소 | 삭제 | row 삭제 |
 | `CONTACTING` | 신청자 취소 | 삭제 | row 삭제 |
-| `APPROVED` | 신청자 그룹방 나가기 | 삭제 | row 삭제 + 그룹방 멤버 삭제 |
-| `APPROVED` | 방장 내보내기 | 삭제 | row 삭제 + 그룹방 멤버 삭제 |
+| `APPROVED` | 신청자 그룹방 나가기 | 정책 확정 필요 | `journey_members.status = LEFT` 사용 후보 |
+| `APPROVED` | 방장 내보내기 | `APPROVED` 유지 | `journey_members.status = REMOVED` + 그룹방 멤버 삭제 |
 
 ## 7. 정원 규칙
 
@@ -225,7 +234,8 @@ row 삭제 이벤트:
 이 제약을 유지하는 이유:
 
 - `REJECTED` row가 남아 있으면 재신청을 막을 수 있다.
-- 신청 취소/자진 이탈/방장 내보내기는 row 삭제이므로 다시 신청 가능하다.
+- 신청 취소는 row 삭제이므로 다시 신청 가능하다.
+- 방장 내보내기는 승인 이력을 유지하고 `journey_members.status = REMOVED`로 현재 멤버십만 차단한다.
 
 권장 인덱스:
 
@@ -287,16 +297,16 @@ row 삭제 이벤트:
 
 - 연락 시작: 1:1 채팅방 생성/재사용 + 필요 시 `CONTACTING` 전환
 - 승인: 그룹방 초대 + `Participation APPROVED` + `recruitCount` 증가
+- 방장 내보내기: `journey_members.status = REMOVED` + 그룹방 멤버 삭제 + `recruitCount` 감소
 
 후속 설계 메모:
 
-- 그룹방 자진 이탈 시 그룹방 멤버 삭제 + `Participation` 삭제
-- 그룹방 내보내기 시 그룹방 멤버 삭제 + `Participation` 삭제
+- 그룹방 자진 이탈 시 `journey_members.status = LEFT`를 사용할지 별도 확정 필요
 
 ## 10. 예외 규칙
 
 - `REJECTED` 상태면 재신청 불가
-- 그룹방을 나가거나 내보내진 경우는 row 삭제이므로 재신청 가능
+- 방장에게 내보내진 경우는 승인 이력을 유지하되 나의 여정 접근과 그룹방 접근이 차단된다.
 - 게시글 `CLOSED` 상태면 신청 생성, 연락 시작, 승인 불가
 - 정원이 가득 찬 경우 신청 생성, 연락 시작, 승인 불가
 - `APPROVED`, `REJECTED` 상태에서는 `채팅하기`, `수락하기` 불가

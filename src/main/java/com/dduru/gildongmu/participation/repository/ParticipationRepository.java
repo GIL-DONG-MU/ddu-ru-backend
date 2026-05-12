@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.participation.repository;
 
 import com.dduru.gildongmu.participation.domain.Participation;
+import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.exception.ParticipationNotFoundException;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,8 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
     List<Participation> findMyApplicationsForVisiblePosts(@Param("userId") Long userId);
 
     Optional<Participation> findByPostIdAndUserId(Long postId, Long userId);
+
+    Optional<Participation> findByPostIdAndUserIdAndStatus(Long postId, Long userId, ParticipationStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

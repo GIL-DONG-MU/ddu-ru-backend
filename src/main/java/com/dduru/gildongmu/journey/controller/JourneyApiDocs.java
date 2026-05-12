@@ -62,4 +62,19 @@ public interface JourneyApiDocs {
             @Parameter(hidden = true) Long userId,
             JourneyUpdateRequest request
     );
+
+    @Operation(
+            summary = "나의 여정 멤버 내보내기",
+            description = "active host가 특정 나의 여정 멤버를 내보냅니다. 멤버십을 REMOVED로 변경하고 그룹 채팅방 멤버십도 함께 제거합니다."
+    )
+    @ApiResponse(responseCode = "204", description = "내보내기 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.JOURNEY_ACCESS_DENIED
+    })
+    ResponseEntity<ApiResult<Void>> removeJourneyMember(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(description = "내보낼 멤버의 사용자 ID") Long memberUserId,
+            @Parameter(hidden = true) Long userId
+    );
 }
