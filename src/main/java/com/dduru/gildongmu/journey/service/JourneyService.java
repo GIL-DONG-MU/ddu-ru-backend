@@ -94,7 +94,7 @@ public class JourneyService {
     }
 
     private JourneyMember getActiveMemberForUpdate(Long journeyId, Long memberUserId) {
-        return journeyMemberRepository.findActiveMemberForUpdate(journeyId, memberUserId)
+        return journeyMemberRepository.findActiveMemberWithLock(journeyId, memberUserId)
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
 

@@ -46,7 +46,7 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
               AND jm.user.id = :userId
               AND jm.status = 'ACTIVE'
             """)
-    Optional<JourneyMember> findActiveMemberForUpdate(
+    Optional<JourneyMember> findActiveMemberWithLock(
             @Param("journeyId") Long journeyId,
             @Param("userId") Long userId
     );

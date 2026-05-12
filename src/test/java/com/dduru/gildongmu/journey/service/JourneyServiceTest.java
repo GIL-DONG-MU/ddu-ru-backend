@@ -250,7 +250,7 @@ class JourneyServiceTest {
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getByIdWithPostOrThrow(journeyId)).thenReturn(journey);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
-            when(journeyMemberRepository.findActiveMemberForUpdate(journeyId, memberUserId))
+            when(journeyMemberRepository.findActiveMemberWithLock(journeyId, memberUserId))
                     .thenReturn(Optional.of(member));
             when(participationRepository.findByPostIdAndUserIdAndStatus(post.getId(), memberUserId, ParticipationStatus.APPROVED))
                     .thenReturn(Optional.of(participation));
@@ -271,7 +271,7 @@ class JourneyServiceTest {
             InOrder inOrder = inOrder(journeyMemberRepository, postRepository);
             inOrder.verify(journeyMemberRepository).existsActiveHost(journeyId, hostUserId);
             inOrder.verify(postRepository).getActiveByIdWithLockOrThrow(post.getId());
-            inOrder.verify(journeyMemberRepository).findActiveMemberForUpdate(journeyId, memberUserId);
+            inOrder.verify(journeyMemberRepository).findActiveMemberWithLock(journeyId, memberUserId);
         }
 
         @Test
@@ -286,7 +286,7 @@ class JourneyServiceTest {
             assertThatThrownBy(() -> journeyService.removeMember(journeyId, requesterUserId, memberUserId))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
-            verify(journeyMemberRepository, never()).findActiveMemberForUpdate(journeyId, memberUserId);
+            verify(journeyMemberRepository, never()).findActiveMemberWithLock(journeyId, memberUserId);
         }
 
         @Test
@@ -301,7 +301,7 @@ class JourneyServiceTest {
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getByIdWithPostOrThrow(journeyId)).thenReturn(journey);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
-            when(journeyMemberRepository.findActiveMemberForUpdate(journeyId, hostUserId))
+            when(journeyMemberRepository.findActiveMemberWithLock(journeyId, hostUserId))
                     .thenReturn(Optional.of(hostMember));
 
             assertThatThrownBy(() -> journeyService.removeMember(journeyId, hostUserId, hostUserId))
