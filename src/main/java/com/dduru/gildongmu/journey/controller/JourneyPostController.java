@@ -3,6 +3,7 @@ package com.dduru.gildongmu.journey.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
@@ -69,6 +70,18 @@ public class JourneyPostController implements JourneyPostApiDocs {
     ) {
         JourneyPostResponse response = journeyPostService.updatePost(journeyId, journeyPostId, userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PatchMapping("/{journeyPostId}/notice")
+    public ResponseEntity<ApiResult<Void>> updatePostNotice(
+            @PathVariable Long journeyId,
+            @PathVariable Long journeyPostId,
+            @CurrentUser Long userId,
+            @Valid @RequestBody JourneyPostNoticeUpdateRequest request
+    ) {
+        journeyPostService.updatePostNotice(journeyId, journeyPostId, userId, request);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
     @Override

@@ -6,12 +6,14 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
@@ -34,6 +36,7 @@ import java.util.List;
 public class JourneyPostService {
     private static final int TITLE_MAX_LENGTH = 30;
     private static final int CONTENT_MAX_LENGTH = 300;
+    private static final int NOTICE_LIMIT = 3;
 
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
@@ -100,9 +103,26 @@ public class JourneyPostService {
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
 
-        journeyPost.delete(userId, timeProvider.now());
+        journeyPost.softDelete(userId, timeProvider.now());
         log.info("나의 여정 게시글 삭제됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
+    }
+
+    public void updatePostNotice(
+            Long journeyId,
+            Long journeyPostId,
+            Long userId,
+            JourneyPostNoticeUpdateRequest request
+    ) {
+        validateActiveHost(journeyId, userId);
+
+        JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+        boolean nextNotice = Boolean.TRUE.equals(request.isNotice());
+        validateNoticeLimitBeforeMarking(journeyId, journeyPost, nextNotice);
+
+        journeyPost.updateNoticeStatus(nextNotice);
+        log.info("나의 여정 게시글 공지 상태 변경됨 - journeyId={}, journeyPostId={}, isNotice={}, userId={}",
+                journeyId, journeyPostId, nextNotice, userId);
     }
 
     private JourneyPost createJourneyPost(Journey journey, User author, JourneyPostCreateRequest request) {
@@ -146,6 +166,26 @@ public class JourneyPostService {
             throw new JourneyPostAccessDeniedException();
         }
         return journeyPost;
+    }
+
+    private void validateActiveHost(Long journeyId, Long userId) {
+        // 같은 여정의 공지 개수 검사와 상태 변경을 직렬화해 최대 3개 정책을 지킨다.
+        journeyRepository.getByIdWithLockOrThrow(journeyId);
+        boolean isActiveHost = journeyMemberRepository.existsActiveHost(journeyId, userId);
+        if (!isActiveHost) {
+            throw new JourneyAccessDeniedException();
+        }
+    }
+
+    private void validateNoticeLimitBeforeMarking(Long journeyId, JourneyPost journeyPost, boolean nextNotice) {
+        if (!nextNotice || journeyPost.isNotice()) {
+            return;
+        }
+
+        long noticeCount = journeyPostRepository.countActiveNoticesByJourneyId(journeyId);
+        if (noticeCount >= NOTICE_LIMIT) {
+            throw new JourneyPostNoticeLimitExceededException();
+        }
     }
 
     private Long findActiveHostUserId(Long journeyId) {

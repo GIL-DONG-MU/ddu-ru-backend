@@ -94,10 +94,14 @@ public class JourneyPost extends BaseTimeEntity {
         }
     }
 
-    public void delete(Long deletedBy, LocalDateTime deletedAt) {
+    public void softDelete(Long deletedBy, LocalDateTime deletedAt) {
         this.isDeleted = true;
         this.deletedBy = deletedBy;
         this.deletedAt = deletedAt;
+    }
+
+    public void updateNoticeStatus(boolean isNotice) {
+        this.isNotice = isNotice;
     }
 
     public boolean isAuthor(Long userId) {

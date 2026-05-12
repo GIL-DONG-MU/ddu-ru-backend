@@ -57,7 +57,7 @@ public class JourneyService {
     }
 
     public void removeMember(Long journeyId, Long hostUserId, Long memberUserId) {
-        validateHostAuthority(journeyId, hostUserId);
+        validateActiveHost(journeyId, hostUserId);
 
         Post post = getPostForMemberRemoval(journeyId);
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
@@ -79,7 +79,7 @@ public class JourneyService {
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
 
-    private void validateHostAuthority(Long journeyId, Long hostUserId) {
+    private void validateActiveHost(Long journeyId, Long hostUserId) {
         boolean isActiveHost = journeyMemberRepository.existsActiveHost(journeyId, hostUserId);
         if (!isActiveHost) {
             throw new JourneyAccessDeniedException();

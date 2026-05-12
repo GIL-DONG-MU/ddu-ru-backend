@@ -12,6 +12,15 @@ import java.util.Optional;
 public interface JourneyPostRepository extends JpaRepository<JourneyPost, Long> {
 
     @Query("""
+            SELECT COUNT(jp)
+            FROM JourneyPost jp
+            WHERE jp.journey.id = :journeyId
+              AND jp.isNotice = true
+              AND jp.isDeleted = false
+            """)
+    long countActiveNoticesByJourneyId(@Param("journeyId") Long journeyId);
+
+    @Query("""
             SELECT jp
             FROM JourneyPost jp
             JOIN FETCH jp.author author
