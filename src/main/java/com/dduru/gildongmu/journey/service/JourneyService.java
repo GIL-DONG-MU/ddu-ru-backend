@@ -67,7 +67,7 @@ public class JourneyService {
         member.remove();
         // 신청 승인 이력은 유지하고, 현재 멤버십에 맞춰 모집 인원만 줄인다.
         participationRepository.findByPostIdAndUserIdAndStatus(postId, memberUserId, ParticipationStatus.APPROVED)
-                .ifPresent(post::excludeApprovedParticipation);
+                .ifPresent(post::decrementRecruitCountIfApproved);
         findGroupChatRoomAndRemoveMember(journeyId, hostUserId, memberUserId);
 
         log.info("나의 여정 멤버 내보내기 완료 - journeyId={}, hostUserId={}, memberUserId={}",

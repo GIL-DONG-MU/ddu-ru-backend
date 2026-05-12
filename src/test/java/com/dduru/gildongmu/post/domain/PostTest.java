@@ -89,7 +89,7 @@ class PostTest {
             Participation participation = createParticipation(post);
             post.approveParticipation(participation);
 
-            post.excludeApprovedParticipation(participation);
+            post.decrementRecruitCountIfApproved(participation);
 
             assertThat(participation.isApproved()).isTrue();
             assertThat(post.getRecruitCount()).isEqualTo(1);
