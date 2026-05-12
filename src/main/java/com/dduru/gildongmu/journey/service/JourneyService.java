@@ -59,11 +59,11 @@ public class JourneyService {
     public void removeMember(Long journeyId, Long hostUserId, Long memberUserId) {
         validateHostAuthority(journeyId, hostUserId);
 
+        Post post = getPostForMemberRemoval(journeyId);
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
         validateRemovableMember(member);
 
-        Long postId = member.getJourney().getPost().getId();
-        Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
+        Long postId = post.getId();
         member.remove();
         // 신청 승인 이력은 유지하고, 현재 멤버십에 맞춰 모집 인원만 줄인다.
         participationRepository.findByPostIdAndUserIdAndStatus(postId, memberUserId, ParticipationStatus.APPROVED)
@@ -84,6 +84,13 @@ public class JourneyService {
         if (!isActiveHost) {
             throw new JourneyAccessDeniedException();
         }
+    }
+
+    private Post getPostForMemberRemoval(Long journeyId) {
+        Long postId = journeyRepository.getByIdWithPostOrThrow(journeyId)
+                .getPost()
+                .getId();
+        return postRepository.getActiveByIdWithLockOrThrow(postId);
     }
 
     private JourneyMember getActiveMemberForUpdate(Long journeyId, Long memberUserId) {

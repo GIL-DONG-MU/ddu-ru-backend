@@ -30,6 +30,14 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
     @Query("""
             SELECT j
             FROM Journey j
+            JOIN FETCH j.post
+            WHERE j.id = :journeyId
+            """)
+    Optional<Journey> findByIdWithPost(@Param("journeyId") Long journeyId);
+
+    @Query("""
+            SELECT j
+            FROM Journey j
             JOIN FETCH j.post p
             JOIN FETCH p.destination
             WHERE j.id = :journeyId
@@ -42,6 +50,11 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
 
     default Journey getByPostIdOrThrow(Long postId) {
         return findByPostId(postId).orElseThrow(JourneyNotFoundException::new);
+    }
+
+    default Journey getByIdWithPostOrThrow(Long journeyId) {
+        return findByIdWithPost(journeyId)
+                .orElseThrow(JourneyNotFoundException::new);
     }
 
     default Journey getByIdWithPostContextOrThrow(Long journeyId) {
