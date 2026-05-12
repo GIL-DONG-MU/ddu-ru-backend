@@ -3,6 +3,7 @@ package com.dduru.gildongmu.chat.repository;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.dto.query.ChatRoomIdByPostIdQueryResult;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.LockModeType;
@@ -11,6 +12,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
@@ -74,6 +77,17 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             """)
     Optional<ChatRoom> findByJourneyPostIdAndRoomType(
             @Param("postId") Long postId,
+            @Param("roomType") ChatRoomType roomType
+    );
+
+    @Query("""
+            SELECT new com.dduru.gildongmu.chat.dto.query.ChatRoomIdByPostIdQueryResult(r.journey.post.id, r.id)
+            FROM ChatRoom r
+            WHERE r.journey.post.id IN :postIds
+              AND r.roomType = :roomType
+            """)
+    List<ChatRoomIdByPostIdQueryResult> findRoomIdsByJourneyPostIdsAndRoomType(
+            @Param("postIds") Collection<Long> postIds,
             @Param("roomType") ChatRoomType roomType
     );
 

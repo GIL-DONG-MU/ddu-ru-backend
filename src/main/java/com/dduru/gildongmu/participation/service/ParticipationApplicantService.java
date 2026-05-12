@@ -1,10 +1,11 @@
 package com.dduru.gildongmu.participation.service;
 
-import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.dto.query.ChatRoomIdByPostIdQueryResult;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
@@ -29,7 +30,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -59,8 +63,12 @@ public class ParticipationApplicantService {
 
     @Transactional(readOnly = true)
     public List<MyParticipationResponse> retrieveMyApplications(Long userId) {
-        return participationRepository.findMyApplicationsForVisiblePosts(userId).stream()
-                .map(participation -> toApplicationResponse(userId, participation))
+        List<Participation> participations = participationRepository.findMyApplicationsForVisiblePosts(userId);
+        Map<Long, JourneyMemberStatus> journeyMemberStatusesByPostId = findJourneyMemberStatusesByPostId(userId, participations);
+        Map<Long, Long> groupRoomIdsByPostId = findGroupRoomIdsByPostId(journeyMemberStatusesByPostId);
+
+        return participations.stream()
+                .map(participation -> toApplicationResponse(participation, journeyMemberStatusesByPostId, groupRoomIdsByPostId))
                 .toList();
     }
 
@@ -140,21 +148,70 @@ public class ParticipationApplicantService {
         ensureNoDuplicateApplication(post.getId(), applicant.getId());
     }
 
-    private MyParticipationResponse toApplicationResponse(Long applicantUserId, Participation participation) {
+    private Map<Long, JourneyMemberStatus> findJourneyMemberStatusesByPostId(Long userId, List<Participation> participations) {
+        // 실제 여정 멤버십은 승인 이후에만 생성되므로 APPROVED 신청만 조회한다.
+        Set<Long> approvedPostIds = participations.stream()
+                .filter(Participation::isApproved)
+                .map(participation -> participation.getPost().getId())
+                .collect(Collectors.toSet());
+        if (approvedPostIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return journeyMemberRepository.findStatusesByJourneyPostIdsAndUserId(approvedPostIds, userId).stream()
+                .collect(Collectors.toMap(
+                        JourneyMemberStatusQueryResult::postId,
+                        JourneyMemberStatusQueryResult::status,
+                        (first, second) -> first
+                ));
+    }
+
+    private Map<Long, Long> findGroupRoomIdsByPostId(Map<Long, JourneyMemberStatus> journeyMemberStatusesByPostId) {
+        Set<Long> activePostIds = journeyMemberStatusesByPostId.entrySet().stream()
+                .filter(entry -> entry.getValue() == JourneyMemberStatus.ACTIVE)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        if (activePostIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return chatRoomRepository.findRoomIdsByJourneyPostIdsAndRoomType(activePostIds, ChatRoomType.GROUP).stream()
+                .collect(Collectors.toMap(
+                        ChatRoomIdByPostIdQueryResult::postId,
+                        ChatRoomIdByPostIdQueryResult::roomId,
+                        (first, second) -> first
+                ));
+    }
+
+    private MyParticipationResponse toApplicationResponse(
+            Participation participation,
+            Map<Long, JourneyMemberStatus> journeyMemberStatusesByPostId,
+            Map<Long, Long> groupRoomIdsByPostId
+    ) {
         Long postId = participation.getPost().getId();
-        Optional<JourneyMemberStatus> journeyMemberStatus = findJourneyMemberStatusIfApproved(
-                postId,
-                applicantUserId,
-                participation
+        Optional<JourneyMemberStatus> journeyMemberStatus = getJourneyMemberStatusIfApproved(
+                participation,
+                journeyMemberStatusesByPostId
         );
-        ChatRoomIds roomIds = resolveChatRoomIds(participation, journeyMemberStatus);
+        ChatRoomIds roomIds = resolveChatRoomIds(participation, journeyMemberStatus, groupRoomIdsByPostId);
         MyParticipationStatus status = toMyParticipationStatus(participation, journeyMemberStatus);
         return MyParticipationResponse.from(participation, status, roomIds.privateRoomId(), roomIds.groupRoomId());
     }
 
+    private static Optional<JourneyMemberStatus> getJourneyMemberStatusIfApproved(
+            Participation participation,
+            Map<Long, JourneyMemberStatus> journeyMemberStatusesByPostId
+    ) {
+        if (!participation.isApproved()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(journeyMemberStatusesByPostId.get(participation.getPost().getId()));
+    }
+
     private ChatRoomIds resolveChatRoomIds(
             Participation participation,
-            Optional<JourneyMemberStatus> journeyMemberStatus
+            Optional<JourneyMemberStatus> journeyMemberStatus,
+            Map<Long, Long> groupRoomIdsByPostId
     ) {
         Post post = participation.getPost();
         return switch (participation.getStatus()) {
@@ -165,7 +222,7 @@ public class ParticipationApplicantService {
             case APPROVED -> new ChatRoomIds(
                     null,
                     hasJourneyMemberStatus(journeyMemberStatus, JourneyMemberStatus.ACTIVE)
-                            ? findGroupRoomId(post.getId())
+                            ? groupRoomIdsByPostId.get(post.getId())
                             : null
             );
             case PENDING, REJECTED -> new ChatRoomIds(null, null);
@@ -180,12 +237,6 @@ public class ParticipationApplicantService {
                 applicantUserId,
                 post.getUser().getId()
         ).orElse(null);
-    }
-
-    private Long findGroupRoomId(Long postId) {
-        return chatRoomRepository.findByJourneyPostIdAndRoomType(postId, ChatRoomType.GROUP)
-                .map(ChatRoom::getId)
-                .orElse(null);
     }
 
     private static void validateApplicantOwnership(Long userId, Participation participation) {

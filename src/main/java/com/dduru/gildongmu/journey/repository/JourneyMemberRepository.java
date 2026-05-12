@@ -2,6 +2,7 @@ package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +59,17 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             """)
     Optional<JourneyMemberStatus> findStatusByJourneyPostIdAndUserId(
             @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            SELECT new com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult(jm.journey.post.id, jm.status)
+            FROM JourneyMember jm
+            WHERE jm.journey.post.id IN :postIds
+              AND jm.user.id = :userId
+            """)
+    List<JourneyMemberStatusQueryResult> findStatusesByJourneyPostIdsAndUserId(
+            @Param("postIds") Collection<Long> postIds,
             @Param("userId") Long userId
     );
 
