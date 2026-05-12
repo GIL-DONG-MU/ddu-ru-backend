@@ -11,12 +11,14 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
@@ -220,6 +222,114 @@ class JourneyPostServiceTest {
     }
 
     @Nested
+    @DisplayName("게시글 공지 지정/해제")
+    class UpdateNotice {
+
+        @Test
+        @DisplayName("active host는 게시글을 공지로 지정할 수 있다")
+        void activeHostCanMarkNotice() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
+            JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
+
+            givenActiveHost(journeyId, hostUserId, journey);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+            when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(2L);
+
+            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+
+            assertThat(journeyPost.isNotice()).isTrue();
+        }
+
+        @Test
+        @DisplayName("공지 게시글이 이미 3개이면 추가 지정할 수 없다")
+        void cannotMarkNoticeWhenLimitExceeded() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
+            JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
+
+            givenActiveHost(journeyId, hostUserId, journey);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+            when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(3L);
+
+            assertThatThrownBy(() -> journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request))
+                    .isInstanceOf(JourneyPostNoticeLimitExceededException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_POST_NOTICE_LIMIT_EXCEEDED);
+
+            assertThat(journeyPost.isNotice()).isFalse();
+        }
+
+        @Test
+        @DisplayName("공지 해제는 개수 제한을 검사하지 않는다")
+        void unmarkNoticeDoesNotCheckLimit() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
+            journeyPost.updateNoticeStatus(true);
+            JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(false);
+
+            givenActiveHost(journeyId, hostUserId, journey);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+
+            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+
+            assertThat(journeyPost.isNotice()).isFalse();
+            verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
+        }
+
+        @Test
+        @DisplayName("이미 공지인 게시글을 다시 공지로 지정하면 개수 제한을 검사하지 않는다")
+        void alreadyNoticeDoesNotCheckLimit() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
+            journeyPost.updateNoticeStatus(true);
+            JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
+
+            givenActiveHost(journeyId, hostUserId, journey);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+
+            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+
+            assertThat(journeyPost.isNotice()).isTrue();
+            verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
+        }
+
+        @Test
+        @DisplayName("active host가 아니면 공지 상태를 변경할 수 없다")
+        void nonHostCannotUpdateNotice() {
+            Long journeyId = 1L;
+            Long userId = 20L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, 10L);
+            JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
+
+            when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
+            when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
+
+            assertThatThrownBy(() -> journeyPostService.updatePostNotice(journeyId, journeyPostId, userId, request))
+                    .isInstanceOf(JourneyAccessDeniedException.class);
+
+            verify(journeyPostRepository, never()).getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+        }
+    }
+
+    @Nested
     @DisplayName("게시글 수정/삭제")
     class UpdateAndDelete {
 
@@ -330,6 +440,11 @@ class JourneyPostServiceTest {
     private void givenActiveHost(Long journeyId, Long hostUserId) {
         when(journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId))
                 .thenReturn(Optional.of(hostUserId));
+    }
+
+    private void givenActiveHost(Long journeyId, Long hostUserId, Journey journey) {
+        when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
+        when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
     }
 
     private Journey createJourney(Long journeyId, Long ownerId) {
