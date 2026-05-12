@@ -60,7 +60,7 @@ public class JourneyService {
         validateHostAuthority(journeyId, hostUserId);
 
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
-        validateRemovableMember(member, hostUserId);
+        validateRemovableMember(member);
 
         Long postId = member.getJourney().getPost().getId();
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
@@ -91,8 +91,8 @@ public class JourneyService {
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
 
-    private static void validateRemovableMember(JourneyMember member, Long hostUserId) {
-        if (member.isHost() || member.getUser().getId().equals(hostUserId)) {
+    private static void validateRemovableMember(JourneyMember member) {
+        if (member.isHost()) {
             throw new JourneyAccessDeniedException();
         }
     }
