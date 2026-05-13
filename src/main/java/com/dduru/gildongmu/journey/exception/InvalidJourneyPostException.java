@@ -13,10 +13,6 @@ public class InvalidJourneyPostException extends BusinessException {
         return new InvalidJourneyPostException(ErrorCode.JOURNEY_POST_EMPTY_PATCH);
     }
 
-    public static InvalidJourneyPostException invalidTitle() {
-        return new InvalidJourneyPostException(ErrorCode.JOURNEY_POST_INVALID_TITLE);
-    }
-
     public static InvalidJourneyPostException invalidContent() {
         return new InvalidJourneyPostException(ErrorCode.JOURNEY_POST_INVALID_CONTENT);
     }

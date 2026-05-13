@@ -60,7 +60,6 @@ public interface JourneyPostApiDocs {
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.JOURNEY_NOT_FOUND,
             ErrorCode.JOURNEY_ACCESS_DENIED,
-            ErrorCode.JOURNEY_POST_INVALID_TITLE,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })
@@ -83,7 +82,6 @@ public interface JourneyPostApiDocs {
             ErrorCode.JOURNEY_POST_NOT_FOUND,
             ErrorCode.JOURNEY_POST_ACCESS_DENIED,
             ErrorCode.JOURNEY_POST_EMPTY_PATCH,
-            ErrorCode.JOURNEY_POST_INVALID_TITLE,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })

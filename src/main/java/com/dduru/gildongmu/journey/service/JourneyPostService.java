@@ -32,7 +32,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
-    private static final int TITLE_MAX_LENGTH = 30;
     private static final int CONTENT_MAX_LENGTH = 300;
 
     private final JourneyRepository journeyRepository;
@@ -83,13 +82,12 @@ public class JourneyPostService {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
-        String title = normalizeTitlePatch(request.title());
         String content = normalizeContentPatch(request.content());
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
-        validateHasAnyPatch(title, content, applyImageUrlPatch);
+        validateHasAnyPatch(content, applyImageUrlPatch);
 
-        updateJourneyPost(journeyPost, title, content, applyImageUrlPatch, imageUrl);
+        updateJourneyPost(journeyPost, content, applyImageUrlPatch, imageUrl);
         journeyPostRepository.flush();
 
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
@@ -109,7 +107,6 @@ public class JourneyPostService {
         return JourneyPost.create(
                 journey,
                 author,
-                normalizeTitle(request.title()),
                 normalizeContent(request.content()),
                 normalizeImageUrl(request.imageUrl())
         );
@@ -117,12 +114,11 @@ public class JourneyPostService {
 
     private void updateJourneyPost(
             JourneyPost journeyPost,
-            String title,
             String content,
             boolean applyImageUrlPatch,
             String imageUrl
     ) {
-        journeyPost.update(title, content, applyImageUrlPatch, imageUrl);
+        journeyPost.update(content, applyImageUrlPatch, imageUrl);
     }
 
     private Journey getAccessibleJourney(Long journeyId, Long userId) {
@@ -153,30 +149,10 @@ public class JourneyPostService {
                 .orElse(null);
     }
 
-    private void validateHasAnyPatch(String title, String content, boolean applyImageUrlPatch) {
-        if (title == null && content == null && !applyImageUrlPatch) {
+    private void validateHasAnyPatch(String content, boolean applyImageUrlPatch) {
+        if (content == null && !applyImageUrlPatch) {
             throw InvalidJourneyPostException.emptyPatch();
         }
-    }
-
-    private String normalizeTitle(String title) {
-        if (!StringUtils.hasText(title)) {
-            throw InvalidJourneyPostException.invalidTitle();
-        }
-
-        String normalizedTitle = title.trim();
-        int length = normalizedTitle.codePointCount(0, normalizedTitle.length());
-        if (length > TITLE_MAX_LENGTH) {
-            throw InvalidJourneyPostException.invalidTitle();
-        }
-        return normalizedTitle;
-    }
-
-    private String normalizeTitlePatch(String title) {
-        if (title == null) {
-            return null;
-        }
-        return normalizeTitle(title);
     }
 
     private String normalizeContent(String content) {

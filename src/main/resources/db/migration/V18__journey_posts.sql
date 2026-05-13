@@ -3,7 +3,6 @@ CREATE TABLE journey_posts
     id             BIGINT AUTO_INCREMENT PRIMARY KEY,
     journey_id     BIGINT       NOT NULL,
     author_user_id BIGINT       NOT NULL,
-    title          VARCHAR(30)  NOT NULL,
     content        VARCHAR(300) NOT NULL,
     image_url      TEXT         NULL,
     is_notice      BOOLEAN      NOT NULL DEFAULT FALSE,

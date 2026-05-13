@@ -100,7 +100,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             User author = createUser(userId, "author");
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
-                    "  제주공항 집합  ",
                     "  출발 30분 전에 만나요.  ",
                     S3_HOST + "/journeys/posts/notice.png"
             );
@@ -117,7 +116,6 @@ class JourneyPostServiceTest {
             JourneyPostResponse response = journeyPostService.createPost(journeyId, userId, request);
 
             assertThat(response.journeyPostId()).isEqualTo(101L);
-            assertThat(response.title()).isEqualTo("제주공항 집합");
             assertThat(response.content()).isEqualTo("출발 30분 전에 만나요.");
             assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/notice.png");
             assertThat(response.isAuthor()).isTrue();
@@ -131,14 +129,13 @@ class JourneyPostServiceTest {
         }
 
         @Test
-        @DisplayName("공백 제목이면 예외가 발생한다")
-        void blankTitleThrowsException() {
+        @DisplayName("공백 내용이면 예외가 발생한다")
+        void blankContentThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
                     "   ",
-                    "내용입니다.",
                     null
             );
 
@@ -149,7 +146,7 @@ class JourneyPostServiceTest {
             assertThatThrownBy(() -> journeyPostService.createPost(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyPostException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.JOURNEY_POST_INVALID_TITLE);
+                    .isEqualTo(ErrorCode.JOURNEY_POST_INVALID_CONTENT);
 
             verify(journeyPostRepository, never()).saveAndFlush(any());
         }
@@ -161,7 +158,6 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
-                    "제주공항 집합",
                     "출발 30분 전에 만나요.",
                     "https://example.com/image.png"
             );
@@ -232,7 +228,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
             JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(
-                    "수정된 제목",
                     "수정된 내용입니다.",
                     null
             );
@@ -244,10 +239,8 @@ class JourneyPostServiceTest {
 
             JourneyPostResponse response = journeyPostService.updatePost(journeyId, journeyPostId, userId, request);
 
-            assertThat(response.title()).isEqualTo("수정된 제목");
             assertThat(response.content()).isEqualTo("수정된 내용입니다.");
             assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/old.png");
-            assertThat(journeyPost.getTitle()).isEqualTo("수정된 제목");
             assertThat(journeyPost.getContent()).isEqualTo("수정된 내용입니다.");
             verify(journeyPostRepository).flush();
         }
@@ -260,7 +253,7 @@ class JourneyPostServiceTest {
             Long journeyPostId = 101L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
-            JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(null, null, null);
+            JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(null, null);
 
             givenActiveMember(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
@@ -284,7 +277,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(
-                    "수정된 제목",
                     "수정된 내용입니다.",
                     null
             );
@@ -343,7 +335,6 @@ class JourneyPostServiceTest {
         JourneyPost journeyPost = JourneyPost.create(
                 journey,
                 author,
-                "기존 제목",
                 "기존 내용입니다.",
                 S3_HOST + "/journeys/posts/old.png"
         );

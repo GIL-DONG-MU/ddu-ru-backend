@@ -28,9 +28,6 @@ public class JourneyPost extends BaseTimeEntity {
     @JoinColumn(name = "author_user_id", nullable = false)
     private User author;
 
-    @Column(nullable = false, length = 30)
-    private String title;
-
     @Column(nullable = false, length = 300)
     private String content;
 
@@ -53,13 +50,11 @@ public class JourneyPost extends BaseTimeEntity {
     private JourneyPost(
             Journey journey,
             User author,
-            String title,
             String content,
             String imageUrl
     ) {
         this.journey = journey;
         this.author = author;
-        this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
         this.isNotice = false;
@@ -69,23 +64,18 @@ public class JourneyPost extends BaseTimeEntity {
     public static JourneyPost create(
             Journey journey,
             User author,
-            String title,
             String content,
             String imageUrl
     ) {
         return JourneyPost.builder()
                 .journey(journey)
                 .author(author)
-                .title(title)
                 .content(content)
                 .imageUrl(imageUrl)
                 .build();
     }
 
-    public void update(String title, String content, boolean applyImageUrlPatch, String imageUrl) {
-        if (title != null) {
-            this.title = title;
-        }
+    public void update(String content, boolean applyImageUrlPatch, String imageUrl) {
         if (content != null) {
             this.content = content;
         }

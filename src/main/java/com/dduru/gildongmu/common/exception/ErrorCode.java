@@ -94,7 +94,6 @@ public enum ErrorCode {
     JOURNEY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 게시글을 찾을 수 없습니다."),
     JOURNEY_POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 게시글에 대한 권한이 없습니다."),
     JOURNEY_POST_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 게시글 내용이 없습니다."),
-    JOURNEY_POST_INVALID_TITLE(HttpStatus.BAD_REQUEST, "게시글 제목은 1자 이상 30자 이하여야 합니다."),
     JOURNEY_POST_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "게시글 내용은 1자 이상 300자 이하여야 합니다."),
 
     // 신고 (REPORT)
