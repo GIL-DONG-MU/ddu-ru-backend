@@ -6,6 +6,7 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
@@ -22,10 +23,12 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -44,12 +47,31 @@ public class JourneyPostService {
     private final TimeProvider timeProvider;
 
     @Transactional(readOnly = true)
-    public JourneyPostListResponse retrievePosts(Long journeyId, Long userId) {
+    public JourneyPostListResponse retrievePosts(Long journeyId, Long userId, JourneyPostListRequest request) {
+        JourneyPostListRequest normalizedRequest = normalizeRequest(request);
         Journey journey = getAccessibleJourney(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
+        JourneyPost cursorPost = findCursorPost(journeyId, normalizedRequest.cursor());
+        int size = normalizedRequest.sizeOrDefault();
 
-        List<JourneyPost> journeyPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(journeyId);
-        return JourneyPostListResponse.of(journey.getId(), journeyPosts, userId, hostUserId, profileImageResolver);
+        List<JourneyPost> fetchedPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
+                journeyId,
+                cursorPost == null ? null : cursorPost.isNotice(),
+                cursorPost == null ? null : cursorPost.getCreatedAt(),
+                cursorPost == null ? null : cursorPost.getId(),
+                PageRequest.of(0, size + 1)
+        );
+        boolean hasNext = fetchedPosts.size() > size;
+        List<JourneyPost> journeyPosts = trimLookAheadPosts(fetchedPosts, size);
+
+        return JourneyPostListResponse.of(
+                journey.getId(),
+                journeyPosts,
+                hasNext,
+                userId,
+                hostUserId,
+                profileImageResolver
+        );
     }
 
     @Transactional(readOnly = true)
@@ -120,6 +142,27 @@ public class JourneyPostService {
             String imageUrl
     ) {
         journeyPost.update(content, applyImageUrlPatch, imageUrl);
+    }
+
+    private static JourneyPostListRequest normalizeRequest(JourneyPostListRequest request) {
+        if (request == null) {
+            return new JourneyPostListRequest(null, null);
+        }
+        return request;
+    }
+
+    private JourneyPost findCursorPost(Long journeyId, Long cursor) {
+        if (cursor == null) {
+            return null;
+        }
+        return journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(cursor, journeyId);
+    }
+
+    private static List<JourneyPost> trimLookAheadPosts(List<JourneyPost> posts, int size) {
+        if (posts.size() <= size) {
+            return posts;
+        }
+        return new ArrayList<>(posts.subList(0, size));
     }
 
     private Journey getAccessibleJourney(Long journeyId, Long userId) {

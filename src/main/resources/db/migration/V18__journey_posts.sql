@@ -17,6 +17,3 @@ CREATE TABLE journey_posts
 
 CREATE INDEX idx_journey_posts_journey_deleted_notice_created
     ON journey_posts (journey_id, is_deleted, is_notice, created_at, id);
-
-CREATE INDEX idx_journey_posts_author
-    ON journey_posts (author_user_id);
