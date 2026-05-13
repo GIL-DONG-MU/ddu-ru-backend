@@ -1,12 +1,14 @@
 package com.dduru.gildongmu.journey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JourneyPost extends BaseTimeEntity {
+    private static final int CONTENT_MAX_LENGTH = 300;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,9 +30,6 @@ public class JourneyPost extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_user_id", nullable = false)
     private User author;
-
-    @Column(nullable = false, length = 30)
-    private String title;
 
     @Column(nullable = false, length = 300)
     private String content;
@@ -53,14 +53,12 @@ public class JourneyPost extends BaseTimeEntity {
     private JourneyPost(
             Journey journey,
             User author,
-            String title,
             String content,
             String imageUrl
     ) {
         this.journey = journey;
         this.author = author;
-        this.title = title;
-        this.content = content;
+        this.content = validateContent(content);
         this.imageUrl = imageUrl;
         this.isNotice = false;
         this.isDeleted = false;
@@ -69,32 +67,31 @@ public class JourneyPost extends BaseTimeEntity {
     public static JourneyPost create(
             Journey journey,
             User author,
-            String title,
             String content,
             String imageUrl
     ) {
         return JourneyPost.builder()
                 .journey(journey)
                 .author(author)
-                .title(title)
                 .content(content)
                 .imageUrl(imageUrl)
                 .build();
     }
 
-    public void update(String title, String content, boolean applyImageUrlPatch, String imageUrl) {
-        if (title != null) {
-            this.title = title;
-        }
+    public void update(String content, boolean applyImageUrlPatch, String imageUrl) {
         if (content != null) {
-            this.content = content;
+            updateContent(content);
         }
         if (applyImageUrlPatch) {
             this.imageUrl = imageUrl;
         }
     }
 
-    public void softDelete(Long deletedBy, LocalDateTime deletedAt) {
+    private void updateContent(String content) {
+        this.content = validateContent(content);
+    }
+
+    public void delete(Long deletedBy, LocalDateTime deletedAt) {
         this.isDeleted = true;
         this.deletedBy = deletedBy;
         this.deletedAt = deletedAt;
@@ -106,5 +103,17 @@ public class JourneyPost extends BaseTimeEntity {
 
     public boolean isAuthor(Long userId) {
         return author.getId().equals(userId);
+    }
+
+    private static String validateContent(String content) {
+        if (!StringUtils.hasText(content)) {
+            throw InvalidJourneyPostException.invalidContent();
+        }
+
+        int length = content.codePointCount(0, content.length());
+        if (length > CONTENT_MAX_LENGTH) {
+            throw InvalidJourneyPostException.invalidContent();
+        }
+        return content;
     }
 }

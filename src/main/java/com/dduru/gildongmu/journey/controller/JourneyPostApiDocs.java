@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Journey Posts", description = "나의 여정 게시판 API")
@@ -21,17 +24,20 @@ public interface JourneyPostApiDocs {
 
     @Operation(
             summary = "나의 여정 게시글 목록 조회",
-            description = "active journey member가 같은 여정의 게시글 목록을 조회합니다."
+            description = "active journey member가 같은 여정의 게시글 목록을 cursor 기반으로 조회합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
+            ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.JOURNEY_NOT_FOUND,
-            ErrorCode.JOURNEY_ACCESS_DENIED
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_POST_NOT_FOUND
     })
     ResponseEntity<ApiResult<JourneyPostListResponse>> retrievePosts(
             @Parameter(description = "여정 ID") Long journeyId,
-            @Parameter(hidden = true) Long userId
+            @Parameter(hidden = true) Long userId,
+            @Valid @ParameterObject JourneyPostListRequest request
     );
 
     @Operation(
@@ -61,7 +67,6 @@ public interface JourneyPostApiDocs {
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.JOURNEY_NOT_FOUND,
             ErrorCode.JOURNEY_ACCESS_DENIED,
-            ErrorCode.JOURNEY_POST_INVALID_TITLE,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })
@@ -84,7 +89,6 @@ public interface JourneyPostApiDocs {
             ErrorCode.JOURNEY_POST_NOT_FOUND,
             ErrorCode.JOURNEY_POST_ACCESS_DENIED,
             ErrorCode.JOURNEY_POST_EMPTY_PATCH,
-            ErrorCode.JOURNEY_POST_INVALID_TITLE,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })

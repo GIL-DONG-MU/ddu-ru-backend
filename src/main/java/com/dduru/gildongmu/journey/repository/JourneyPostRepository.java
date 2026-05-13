@@ -2,10 +2,12 @@ package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.exception.JourneyPostNotFoundException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,12 +31,39 @@ public interface JourneyPostRepository extends JpaRepository<JourneyPost, Long> 
             LEFT JOIN FETCH profile.bgColor
             WHERE jp.journey.id = :journeyId
               AND jp.isDeleted = false
+              AND (
+                    :cursorId IS NULL
+                    OR (
+                        :cursorNotice = true
+                        AND jp.isNotice = true
+                        AND (
+                            jp.createdAt < :cursorCreatedAt
+                            OR (jp.createdAt = :cursorCreatedAt AND jp.id < :cursorId)
+                        )
+                    )
+                    OR (
+                        :cursorNotice = true
+                        AND jp.isNotice = false
+                    )
+                    OR (
+                        :cursorNotice = false
+                        AND jp.isNotice = false
+                        AND (
+                            jp.createdAt < :cursorCreatedAt
+                            OR (jp.createdAt = :cursorCreatedAt AND jp.id < :cursorId)
+                        )
+                    )
+              )
             ORDER BY jp.isNotice DESC,
                      jp.createdAt DESC,
                      jp.id DESC
             """)
     List<JourneyPost> findActivePostsByJourneyIdWithAuthorProfile(
-            @Param("journeyId") Long journeyId
+            @Param("journeyId") Long journeyId,
+            @Param("cursorNotice") Boolean cursorNotice,
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable
     );
 
     @Query("""

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.journey.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
@@ -32,9 +33,10 @@ public class JourneyPostController implements JourneyPostApiDocs {
     @GetMapping
     public ResponseEntity<ApiResult<JourneyPostListResponse>> retrievePosts(
             @PathVariable Long journeyId,
-            @CurrentUser Long userId
+            @CurrentUser Long userId,
+            @Valid JourneyPostListRequest request
     ) {
-        JourneyPostListResponse response = journeyPostService.retrievePosts(journeyId, userId);
+        JourneyPostListResponse response = journeyPostService.retrievePosts(journeyId, userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 

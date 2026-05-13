@@ -6,12 +6,14 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -23,10 +25,12 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -34,8 +38,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
-    private static final int TITLE_MAX_LENGTH = 30;
-    private static final int CONTENT_MAX_LENGTH = 300;
     private static final int NOTICE_LIMIT = 3;
 
     private final JourneyRepository journeyRepository;
@@ -47,12 +49,31 @@ public class JourneyPostService {
     private final TimeProvider timeProvider;
 
     @Transactional(readOnly = true)
-    public JourneyPostListResponse retrievePosts(Long journeyId, Long userId) {
+    public JourneyPostListResponse retrievePosts(Long journeyId, Long userId, JourneyPostListRequest request) {
+        JourneyPostListRequest normalizedRequest = normalizeRequest(request);
         Journey journey = getAccessibleJourney(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
+        JourneyPost cursorPost = findCursorPost(journeyId, normalizedRequest.cursor());
+        int size = normalizedRequest.sizeOrDefault();
 
-        List<JourneyPost> journeyPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(journeyId);
-        return JourneyPostListResponse.of(journey.getId(), journeyPosts, userId, hostUserId, profileImageResolver);
+        List<JourneyPost> fetchedPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
+                journeyId,
+                cursorPost == null ? null : cursorPost.isNotice(),
+                cursorPost == null ? null : cursorPost.getCreatedAt(),
+                cursorPost == null ? null : cursorPost.getId(),
+                PageRequest.of(0, size + 1)
+        );
+        boolean hasNext = fetchedPosts.size() > size;
+        List<JourneyPost> journeyPosts = trimLookAheadPosts(fetchedPosts, size);
+
+        return JourneyPostListResponse.of(
+                journey.getId(),
+                journeyPosts,
+                hasNext,
+                userId,
+                hostUserId,
+                profileImageResolver
+        );
     }
 
     @Transactional(readOnly = true)
@@ -86,13 +107,12 @@ public class JourneyPostService {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
-        String title = normalizeTitlePatch(request.title());
-        String content = normalizeContentPatch(request.content());
+        String content = normalizeContent(request.content());
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
-        validateHasAnyPatch(title, content, applyImageUrlPatch);
+        validateHasAnyPatch(content, applyImageUrlPatch);
 
-        updateJourneyPost(journeyPost, title, content, applyImageUrlPatch, imageUrl);
+        updateJourneyPost(journeyPost, content, applyImageUrlPatch, imageUrl);
         journeyPostRepository.flush();
 
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
@@ -103,7 +123,7 @@ public class JourneyPostService {
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
 
-        journeyPost.softDelete(userId, timeProvider.now());
+        journeyPost.delete(userId, timeProvider.now());
         log.info("나의 여정 게시글 삭제됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
     }
@@ -129,7 +149,6 @@ public class JourneyPostService {
         return JourneyPost.create(
                 journey,
                 author,
-                normalizeTitle(request.title()),
                 normalizeContent(request.content()),
                 normalizeImageUrl(request.imageUrl())
         );
@@ -137,12 +156,32 @@ public class JourneyPostService {
 
     private void updateJourneyPost(
             JourneyPost journeyPost,
-            String title,
             String content,
             boolean applyImageUrlPatch,
             String imageUrl
     ) {
-        journeyPost.update(title, content, applyImageUrlPatch, imageUrl);
+        journeyPost.update(content, applyImageUrlPatch, imageUrl);
+    }
+
+    private static JourneyPostListRequest normalizeRequest(JourneyPostListRequest request) {
+        if (request == null) {
+            return new JourneyPostListRequest(null, null);
+        }
+        return request;
+    }
+
+    private JourneyPost findCursorPost(Long journeyId, Long cursor) {
+        if (cursor == null) {
+            return null;
+        }
+        return journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(cursor, journeyId);
+    }
+
+    private static List<JourneyPost> trimLookAheadPosts(List<JourneyPost> posts, int size) {
+        if (posts.size() <= size) {
+            return posts;
+        }
+        return new ArrayList<>(posts.subList(0, size));
     }
 
     private Journey getAccessibleJourney(Long journeyId, Long userId) {
@@ -190,53 +229,17 @@ public class JourneyPostService {
 
     private Long findActiveHostUserId(Long journeyId) {
         return journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId)
-                .orElse(null);
+                .orElseThrow(JourneyHostNotFoundException::new);
     }
 
-    private void validateHasAnyPatch(String title, String content, boolean applyImageUrlPatch) {
-        if (title == null && content == null && !applyImageUrlPatch) {
+    private void validateHasAnyPatch(String content, boolean applyImageUrlPatch) {
+        if (content == null && !applyImageUrlPatch) {
             throw InvalidJourneyPostException.emptyPatch();
         }
     }
 
-    private String normalizeTitle(String title) {
-        if (!StringUtils.hasText(title)) {
-            throw InvalidJourneyPostException.invalidTitle();
-        }
-
-        String normalizedTitle = title.trim();
-        int length = normalizedTitle.codePointCount(0, normalizedTitle.length());
-        if (length > TITLE_MAX_LENGTH) {
-            throw InvalidJourneyPostException.invalidTitle();
-        }
-        return normalizedTitle;
-    }
-
-    private String normalizeTitlePatch(String title) {
-        if (title == null) {
-            return null;
-        }
-        return normalizeTitle(title);
-    }
-
     private String normalizeContent(String content) {
-        if (!StringUtils.hasText(content)) {
-            throw InvalidJourneyPostException.invalidContent();
-        }
-
-        String normalizedContent = content.trim();
-        int length = normalizedContent.codePointCount(0, normalizedContent.length());
-        if (length > CONTENT_MAX_LENGTH) {
-            throw InvalidJourneyPostException.invalidContent();
-        }
-        return normalizedContent;
-    }
-
-    private String normalizeContentPatch(String content) {
-        if (content == null) {
-            return null;
-        }
-        return normalizeContent(content);
+        return content == null ? null : content.trim();
     }
 
     private String normalizeImageUrl(String imageUrl) {
