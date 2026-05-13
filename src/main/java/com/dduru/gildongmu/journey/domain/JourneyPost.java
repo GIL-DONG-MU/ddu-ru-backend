@@ -1,12 +1,14 @@
 package com.dduru.gildongmu.journey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JourneyPost extends BaseTimeEntity {
+    private static final int CONTENT_MAX_LENGTH = 300;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,7 +58,7 @@ public class JourneyPost extends BaseTimeEntity {
     ) {
         this.journey = journey;
         this.author = author;
-        this.content = content;
+        this.content = validateContent(content);
         this.imageUrl = imageUrl;
         this.isNotice = false;
         this.isDeleted = false;
@@ -77,11 +80,15 @@ public class JourneyPost extends BaseTimeEntity {
 
     public void update(String content, boolean applyImageUrlPatch, String imageUrl) {
         if (content != null) {
-            this.content = content;
+            updateContent(content);
         }
         if (applyImageUrlPatch) {
             this.imageUrl = imageUrl;
         }
+    }
+
+    private void updateContent(String content) {
+        this.content = validateContent(content);
     }
 
     public void delete(Long deletedBy, LocalDateTime deletedAt) {
@@ -92,5 +99,17 @@ public class JourneyPost extends BaseTimeEntity {
 
     public boolean isAuthor(Long userId) {
         return author.getId().equals(userId);
+    }
+
+    private static String validateContent(String content) {
+        if (!StringUtils.hasText(content)) {
+            throw InvalidJourneyPostException.invalidContent();
+        }
+
+        int length = content.codePointCount(0, content.length());
+        if (length > CONTENT_MAX_LENGTH) {
+            throw InvalidJourneyPostException.invalidContent();
+        }
+        return content;
     }
 }

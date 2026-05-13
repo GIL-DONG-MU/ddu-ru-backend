@@ -36,8 +36,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
-    private static final int CONTENT_MAX_LENGTH = 300;
-
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
@@ -200,16 +198,7 @@ public class JourneyPostService {
     }
 
     private String normalizeContent(String content) {
-        if (!StringUtils.hasText(content)) {
-            throw InvalidJourneyPostException.invalidContent();
-        }
-
-        String normalizedContent = content.trim();
-        int length = normalizedContent.codePointCount(0, normalizedContent.length());
-        if (length > CONTENT_MAX_LENGTH) {
-            throw InvalidJourneyPostException.invalidContent();
-        }
-        return normalizedContent;
+        return content == null ? null : content.trim();
     }
 
     private String normalizeContentPatch(String content) {
