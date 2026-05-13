@@ -103,7 +103,7 @@ public class JourneyPostService {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
-        String content = normalizeContentPatch(request.content());
+        String content = normalizeContent(request.content());
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
         validateHasAnyPatch(content, applyImageUrlPatch);
@@ -199,13 +199,6 @@ public class JourneyPostService {
 
     private String normalizeContent(String content) {
         return content == null ? null : content.trim();
-    }
-
-    private String normalizeContentPatch(String content) {
-        if (content == null) {
-            return null;
-        }
-        return normalizeContent(content);
     }
 
     private String normalizeImageUrl(String imageUrl) {
