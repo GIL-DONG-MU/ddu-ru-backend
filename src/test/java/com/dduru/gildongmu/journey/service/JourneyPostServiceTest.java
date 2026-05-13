@@ -16,6 +16,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
@@ -210,6 +211,25 @@ class JourneyPostServiceTest {
 
             assertThatThrownBy(() -> journeyPostService.retrievePosts(journeyId, userId))
                     .isInstanceOf(JourneyAccessDeniedException.class);
+
+            verify(journeyPostRepository, never()).findActivePostsByJourneyIdWithAuthorProfile(journeyId);
+        }
+
+        @Test
+        @DisplayName("active host가 없으면 예외가 발생한다")
+        void missingActiveHostThrowsException() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, userId);
+
+            givenActiveMember(journeyId, userId, journey);
+            when(journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> journeyPostService.retrievePosts(journeyId, userId))
+                    .isInstanceOf(JourneyHostNotFoundException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_HOST_NOT_FOUND);
 
             verify(journeyPostRepository, never()).findActivePostsByJourneyIdWithAuthorProfile(journeyId);
         }

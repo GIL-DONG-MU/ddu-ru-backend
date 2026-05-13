@@ -11,6 +11,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
@@ -146,7 +147,7 @@ public class JourneyPostService {
 
     private Long findActiveHostUserId(Long journeyId) {
         return journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId)
-                .orElse(null);
+                .orElseThrow(JourneyHostNotFoundException::new);
     }
 
     private void validateHasAnyPatch(String content, boolean applyImageUrlPatch) {
