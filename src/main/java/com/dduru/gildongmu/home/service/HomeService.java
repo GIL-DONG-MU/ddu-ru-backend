@@ -2,11 +2,15 @@ package com.dduru.gildongmu.home.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.dto.response.HomeResponse;
+import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
+import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
+import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,8 +25,11 @@ public class HomeService {
     private static final String DEFAULT_THUMBNAIL_URL = "https://example.com/trip-thumbnail.jpg";
 
     private final TimeProvider timeProvider;
+    private final UserOnboardingRepository userOnboardingRepository;
 
+    @Transactional(readOnly = true)
     public HomeResponse retrieveHome(Long userId) {
+        HomeResponse.ViewerStatus viewerStatus = resolveViewerStatus(userId);
         LocalDate today = timeProvider.today();
         LocalDateTime updateDateTime = timeProvider.now().withSecond(0).withNano(0);
 
@@ -30,13 +37,39 @@ public class HomeService {
         LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
 
         return new HomeResponse(
-                upcomingTrip(upcomingStartDate, upcomingEndDate, today),
+                viewerStatus,
+                isMember(viewerStatus) ? upcomingTrip(upcomingStartDate, upcomingEndDate, today) : null,
                 popularDestinations(updateDateTime),
-                mateRecommendation(upcomingStartDate, upcomingEndDate),
+                isSurveyCompleted(viewerStatus) ? mateRecommendation(upcomingStartDate, upcomingEndDate) : null,
                 superHosts(upcomingStartDate),
                 sameDestinationTrips(upcomingStartDate),
-                sameAgeTrips(upcomingStartDate)
+                isMember(viewerStatus) ? sameAgeTrips(upcomingStartDate) : null
         );
+    }
+
+    private HomeResponse.ViewerStatus resolveViewerStatus(Long userId) {
+        if (userId == null) {
+            return HomeResponse.ViewerStatus.GUEST;
+        }
+
+        return userOnboardingRepository.findByUser_Id(userId)
+                .map(this::toViewerStatus)
+                .orElse(HomeResponse.ViewerStatus.MEMBER_SURVEY_REQUIRED);
+    }
+
+    private HomeResponse.ViewerStatus toViewerStatus(UserOnboarding onboarding) {
+        if (onboarding.getSurveyStatus() == SurveyStatus.COMPLETED) {
+            return HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
+        }
+        return HomeResponse.ViewerStatus.MEMBER_SURVEY_REQUIRED;
+    }
+
+    private boolean isMember(HomeResponse.ViewerStatus viewerStatus) {
+        return viewerStatus != HomeResponse.ViewerStatus.GUEST;
+    }
+
+    private boolean isSurveyCompleted(HomeResponse.ViewerStatus viewerStatus) {
+        return viewerStatus == HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
     }
 
     private HomeResponse.UpcomingTripResponse upcomingTrip(

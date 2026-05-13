@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.common.config;
 
 import com.dduru.gildongmu.common.resolver.CurrentUserArgumentResolver;
+import com.dduru.gildongmu.common.resolver.OptionalCurrentUserArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -16,10 +17,12 @@ import java.util.List;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final CurrentUserArgumentResolver currentUserArgumentResolver;
+    private final OptionalCurrentUserArgumentResolver optionalCurrentUserArgumentResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(currentUserArgumentResolver);
+        resolvers.add(optionalCurrentUserArgumentResolver);
     }
 
     @Override

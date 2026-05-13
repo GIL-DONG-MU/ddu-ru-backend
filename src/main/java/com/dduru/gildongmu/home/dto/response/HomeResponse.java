@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record HomeResponse(
+        ViewerStatus viewerStatus,
         UpcomingTripResponse upcomingTrip,
         PopularDestinationsResponse popularDestinations,
         MateRecommendationResponse mateRecommendation,
@@ -16,6 +17,12 @@ public record HomeResponse(
         List<SameDestinationTripResponse> sameDestinationTrips,
         List<SameAgeTripResponse> sameAgeTrips
 ) {
+
+    public enum ViewerStatus {
+        GUEST,
+        MEMBER_SURVEY_REQUIRED,
+        MEMBER_SURVEY_COMPLETED
+    }
 
     public record UpcomingTripResponse(
             Long journeyId,
