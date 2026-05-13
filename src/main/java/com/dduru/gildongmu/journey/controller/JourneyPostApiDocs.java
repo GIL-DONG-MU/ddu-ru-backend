@@ -8,6 +8,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -103,7 +104,7 @@ public interface JourneyPostApiDocs {
             summary = "나의 여정 게시글 공지 지정/해제",
             description = "active host가 특정 게시글의 공지 여부를 변경합니다. 공지는 여정당 최대 3개까지 설정할 수 있습니다."
     )
-    @ApiResponse(responseCode = "204", description = "공지 상태 변경 성공")
+    @ApiResponse(responseCode = "200", description = "공지 상태 변경 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.INVALID_INPUT_VALUE,
@@ -112,7 +113,7 @@ public interface JourneyPostApiDocs {
             ErrorCode.JOURNEY_POST_NOT_FOUND,
             ErrorCode.JOURNEY_POST_NOTICE_LIMIT_EXCEEDED
     })
-    ResponseEntity<ApiResult<Void>> updatePostNotice(
+    ResponseEntity<ApiResult<JourneyPostNoticeUpdateResponse>> updatePostNotice(
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(description = "나의 여정 게시글 ID") Long journeyPostId,
             @Parameter(hidden = true) Long userId,

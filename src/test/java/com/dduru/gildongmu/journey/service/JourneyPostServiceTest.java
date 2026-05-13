@@ -15,6 +15,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
@@ -322,9 +323,16 @@ class JourneyPostServiceTest {
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(2L);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isTrue();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isTrue();
         }
 
         @Test
@@ -366,9 +374,16 @@ class JourneyPostServiceTest {
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isFalse();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isFalse();
             verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }
@@ -388,9 +403,16 @@ class JourneyPostServiceTest {
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isTrue();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isTrue();
             verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }

@@ -10,6 +10,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
@@ -128,7 +129,7 @@ public class JourneyPostService {
                 journeyId, journeyPostId, userId);
     }
 
-    public void updatePostNotice(
+    public JourneyPostNoticeUpdateResponse updatePostNotice(
             Long journeyId,
             Long journeyPostId,
             Long userId,
@@ -143,6 +144,7 @@ public class JourneyPostService {
         journeyPost.updateNoticeStatus(nextNotice);
         log.info("나의 여정 게시글 공지 상태 변경됨 - journeyId={}, journeyPostId={}, isNotice={}, userId={}",
                 journeyId, journeyPostId, nextNotice, userId);
+        return JourneyPostNoticeUpdateResponse.from(journeyPost);
     }
 
     private JourneyPost createJourneyPost(Journey journey, User author, JourneyPostCreateRequest request) {

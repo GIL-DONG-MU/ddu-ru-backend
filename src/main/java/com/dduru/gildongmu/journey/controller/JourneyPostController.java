@@ -7,6 +7,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.service.JourneyPostService;
 import jakarta.validation.Valid;
@@ -76,14 +77,19 @@ public class JourneyPostController implements JourneyPostApiDocs {
 
     @Override
     @PatchMapping("/{journeyPostId}/notice")
-    public ResponseEntity<ApiResult<Void>> updatePostNotice(
+    public ResponseEntity<ApiResult<JourneyPostNoticeUpdateResponse>> updatePostNotice(
             @PathVariable Long journeyId,
             @PathVariable Long journeyPostId,
             @CurrentUser Long userId,
             @Valid @RequestBody JourneyPostNoticeUpdateRequest request
     ) {
-        journeyPostService.updatePostNotice(journeyId, journeyPostId, userId, request);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
+        JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                journeyId,
+                journeyPostId,
+                userId,
+                request
+        );
+        return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
