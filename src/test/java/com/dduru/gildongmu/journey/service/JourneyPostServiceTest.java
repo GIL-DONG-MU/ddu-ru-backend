@@ -209,6 +209,7 @@ class JourneyPostServiceTest {
             assertThat(response.posts().get(0).journeyPostId()).isEqualTo(101L);
             assertThat(response.posts().get(0).isAuthor()).isFalse();
             assertThat(response.posts().get(0).author().isHost()).isFalse();
+            assertThat(response.posts().get(0).commentCount()).isZero();
             assertThat(response.nextCursor()).isEqualTo(101L);
             assertThat(response.hasNext()).isTrue();
             assertThat(response.size()).isEqualTo(1);

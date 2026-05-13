@@ -14,7 +14,8 @@ public record JourneyPostResponse(
         boolean isNotice,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean isAuthor
+        boolean isAuthor,
+        long commentCount
 ) {
     public static JourneyPostResponse from(
             JourneyPost journeyPost,
@@ -34,7 +35,8 @@ public record JourneyPostResponse(
                 journeyPost.isNotice(),
                 journeyPost.getCreatedAt(),
                 journeyPost.getModifiedAt(),
-                journeyPost.isAuthor(currentUserId)
+                journeyPost.isAuthor(currentUserId),
+                0L
         );
     }
 }
