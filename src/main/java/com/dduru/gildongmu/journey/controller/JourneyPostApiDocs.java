@@ -21,7 +21,7 @@ public interface JourneyPostApiDocs {
 
     @Operation(
             summary = "나의 여정 게시글 목록 조회",
-            description = "active journey member가 같은 여정의 게시글 목록을 조회합니다."
+            description = "active journey member가 같은 여정의 게시글 목록과 댓글 개수, 최신 댓글 미리보기 최대 2개를 조회합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({

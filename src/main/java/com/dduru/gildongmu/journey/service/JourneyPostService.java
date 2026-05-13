@@ -4,7 +4,9 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
+import com.dduru.gildongmu.journey.domain.JourneyPostComment;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.query.JourneyPostCommentCountQueryResult;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
@@ -15,6 +17,7 @@ import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
@@ -28,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,10 +42,12 @@ public class JourneyPostService {
     private static final int TITLE_MAX_LENGTH = 30;
     private static final int CONTENT_MAX_LENGTH = 300;
     private static final int NOTICE_LIMIT = 3;
+    private static final int COMMENT_PREVIEW_LIMIT = 2;
 
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
+    private final JourneyPostCommentRepository journeyPostCommentRepository;
     private final UserRepository userRepository;
     private final S3ImageUrlValidator s3ImageUrlValidator;
     private final ProfileImageResolver profileImageResolver;
@@ -52,7 +59,21 @@ public class JourneyPostService {
         Long hostUserId = findActiveHostUserId(journeyId);
 
         List<JourneyPost> journeyPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(journeyId);
-        return JourneyPostListResponse.of(journey.getId(), journeyPosts, userId, hostUserId, profileImageResolver);
+        List<Long> journeyPostIds = journeyPosts.stream()
+                .map(JourneyPost::getId)
+                .toList();
+        Map<Long, Long> commentCountsByPostId = findCommentCountsByPostId(journeyPostIds);
+        Map<Long, List<JourneyPostComment>> previewCommentsByPostId = findPreviewCommentsByPostId(journeyPostIds);
+
+        return JourneyPostListResponse.of(
+                journey.getId(),
+                journeyPosts,
+                userId,
+                hostUserId,
+                profileImageResolver,
+                commentCountsByPostId,
+                previewCommentsByPostId
+        );
     }
 
     @Transactional(readOnly = true)
@@ -191,6 +212,29 @@ public class JourneyPostService {
     private Long findActiveHostUserId(Long journeyId) {
         return journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId)
                 .orElse(null);
+    }
+
+    private Map<Long, Long> findCommentCountsByPostId(List<Long> journeyPostIds) {
+        if (journeyPostIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return journeyPostCommentRepository.findCommentCountsByJourneyPostIds(journeyPostIds).stream()
+                .collect(Collectors.toMap(
+                        JourneyPostCommentCountQueryResult::journeyPostId,
+                        JourneyPostCommentCountQueryResult::commentCount
+                ));
+    }
+
+    private Map<Long, List<JourneyPostComment>> findPreviewCommentsByPostId(List<Long> journeyPostIds) {
+        if (journeyPostIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return journeyPostCommentRepository
+                .findLatestPreviewCommentsByJourneyPostIdsWithAuthorProfile(journeyPostIds, COMMENT_PREVIEW_LIMIT)
+                .stream()
+                .collect(Collectors.groupingBy(comment -> comment.getJourneyPost().getId()));
     }
 
     private void validateHasAnyPatch(String title, String content, boolean applyImageUrlPatch) {

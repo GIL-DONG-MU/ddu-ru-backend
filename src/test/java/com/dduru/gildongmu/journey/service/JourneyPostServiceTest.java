@@ -9,7 +9,9 @@ import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
+import com.dduru.gildongmu.journey.domain.JourneyPostComment;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.query.JourneyPostCommentCountQueryResult;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
@@ -20,6 +22,7 @@ import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -65,6 +68,8 @@ class JourneyPostServiceTest {
     @Mock
     private JourneyPostRepository journeyPostRepository;
     @Mock
+    private JourneyPostCommentRepository journeyPostCommentRepository;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private ProfileImageResolver profileImageResolver;
@@ -83,6 +88,7 @@ class JourneyPostServiceTest {
                 journeyRepository,
                 journeyMemberRepository,
                 journeyPostRepository,
+                journeyPostCommentRepository,
                 userRepository,
                 new S3ImageUrlValidator(s3Properties),
                 profileImageResolver,
@@ -188,19 +194,31 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(101L, journey, createUser(20L, "author"));
+            JourneyPostComment firstComment = createComment(11L, journeyPost, createUser(30L, "commenter-1"));
+            JourneyPostComment secondComment = createComment(12L, journeyPost, createUser(40L, "commenter-2"));
 
             givenActiveMember(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
             when(journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(journeyId))
                     .thenReturn(List.of(journeyPost));
+            when(journeyPostCommentRepository.findCommentCountsByJourneyPostIds(List.of(101L)))
+                    .thenReturn(List.of(new JourneyPostCommentCountQueryResult(101L, 5L)));
+            when(journeyPostCommentRepository.findLatestPreviewCommentsByJourneyPostIdsWithAuthorProfile(List.of(101L), 2L))
+                    .thenReturn(List.of(firstComment, secondComment));
 
             JourneyPostListResponse response = journeyPostService.retrievePosts(journeyId, userId);
 
             assertThat(response.journeyId()).isEqualTo(journeyId);
             assertThat(response.posts()).hasSize(1);
-            assertThat(response.posts().get(0).journeyPostId()).isEqualTo(101L);
-            assertThat(response.posts().get(0).isAuthor()).isFalse();
-            assertThat(response.posts().get(0).author().isHost()).isFalse();
+            JourneyPostResponse post = response.posts().get(0);
+            assertThat(post.journeyPostId()).isEqualTo(101L);
+            assertThat(post.isAuthor()).isFalse();
+            assertThat(post.author().isHost()).isFalse();
+            assertThat(post.commentCount()).isEqualTo(5L);
+            assertThat(post.hasMoreComments()).isTrue();
+            assertThat(post.previewComments())
+                    .extracting(comment -> comment.commentId())
+                    .containsExactly(11L, 12L);
         }
 
         @Test
@@ -464,6 +482,16 @@ class JourneyPostServiceTest {
         );
         ReflectionTestUtils.setField(journeyPost, "id", journeyPostId);
         return journeyPost;
+    }
+
+    private JourneyPostComment createComment(Long commentId, JourneyPost journeyPost, User author) {
+        JourneyPostComment comment = JourneyPostComment.create(
+                journeyPost,
+                author,
+                "기존 댓글입니다."
+        );
+        ReflectionTestUtils.setField(comment, "id", commentId);
+        return comment;
     }
 
     private Post createPost(Long postId, Long ownerId) {
