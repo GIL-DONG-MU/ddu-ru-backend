@@ -316,7 +316,8 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
+            givenLockedJourney(journeyId, journey);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(2L);
@@ -336,7 +337,8 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
+            givenLockedJourney(journeyId, journey);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(3L);
@@ -360,13 +362,14 @@ class JourneyPostServiceTest {
             journeyPost.updateNoticeStatus(true);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(false);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
             journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
 
             assertThat(journeyPost.isNotice()).isFalse();
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }
 
@@ -381,13 +384,14 @@ class JourneyPostServiceTest {
             journeyPost.updateNoticeStatus(true);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
             journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
 
             assertThat(journeyPost.isNotice()).isTrue();
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }
 
@@ -397,15 +401,14 @@ class JourneyPostServiceTest {
             Long journeyId = 1L;
             Long userId = 20L;
             Long journeyPostId = 101L;
-            Journey journey = createJourney(journeyId, 10L);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
 
             assertThatThrownBy(() -> journeyPostService.updatePostNotice(journeyId, journeyPostId, userId, request))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         }
     }
@@ -519,8 +522,11 @@ class JourneyPostServiceTest {
                 .thenReturn(Optional.of(hostUserId));
     }
 
-    private void givenActiveHost(Long journeyId, Long hostUserId, Journey journey) {
+    private void givenLockedJourney(Long journeyId, Journey journey) {
         when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
+    }
+
+    private void givenActiveHostPermission(Long journeyId, Long hostUserId) {
         when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
     }
 

@@ -138,7 +138,7 @@ public class JourneyPostService {
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         boolean nextNotice = Boolean.TRUE.equals(request.isNotice());
-        validateNoticeLimitBeforeMarking(journeyId, journeyPost, nextNotice);
+        validateNoticeLimitBeforeMarking(journeyId, userId, journeyPost, nextNotice);
 
         journeyPost.updateNoticeStatus(nextNotice);
         log.info("나의 여정 게시글 공지 상태 변경됨 - journeyId={}, journeyPostId={}, isNotice={}, userId={}",
@@ -208,18 +208,25 @@ public class JourneyPostService {
     }
 
     private void validateActiveHost(Long journeyId, Long userId) {
-        // 같은 여정의 공지 개수 검사와 상태 변경을 직렬화해 최대 3개 정책을 지킨다.
-        journeyRepository.getByIdWithLockOrThrow(journeyId);
         boolean isActiveHost = journeyMemberRepository.existsActiveHost(journeyId, userId);
         if (!isActiveHost) {
             throw new JourneyAccessDeniedException();
         }
     }
 
-    private void validateNoticeLimitBeforeMarking(Long journeyId, JourneyPost journeyPost, boolean nextNotice) {
+    private void validateNoticeLimitBeforeMarking(
+            Long journeyId,
+            Long userId,
+            JourneyPost journeyPost,
+            boolean nextNotice
+    ) {
         if (!nextNotice || journeyPost.isNotice()) {
             return;
         }
+
+        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 3개 정책을 보장한다.
+        journeyRepository.getByIdWithLockOrThrow(journeyId);
+        validateActiveHost(journeyId, userId);
 
         long noticeCount = journeyPostRepository.countActiveNoticesByJourneyId(journeyId);
         if (noticeCount >= NOTICE_LIMIT) {
