@@ -23,6 +23,15 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
     int countByJourneyIdAndStatus(Long journeyId, JourneyMemberStatus status);
 
     @Query("""
+            SELECT jm.user.id
+            FROM JourneyMember jm
+            WHERE jm.journey.id = :journeyId
+              AND jm.role = 'HOST'
+              AND jm.status = 'ACTIVE'
+            """)
+    Optional<Long> findActiveHostUserIdByJourneyId(@Param("journeyId") Long journeyId);
+
+    @Query("""
             SELECT COUNT(jm) > 0
             FROM JourneyMember jm
             WHERE jm.journey.id = :journeyId

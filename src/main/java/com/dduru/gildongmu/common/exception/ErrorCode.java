@@ -88,9 +88,14 @@ public enum ErrorCode {
     // 나의 여정 (JOURNEY)
     JOURNEY_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정을 찾을 수 없습니다."),
     JOURNEY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "나의 여정에 접근할 권한이 없습니다."),
+    JOURNEY_HOST_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "나의 여정 호스트 정보를 찾을 수 없습니다."),
     JOURNEY_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "제목 또는 대표 사진 중 하나는 입력해야 합니다."),
     JOURNEY_INVALID_TITLE_LENGTH(HttpStatus.BAD_REQUEST, "제목은 5자 이상 40자 이하여야 합니다."),
     JOURNEY_INVALID_PHOTO_URL(HttpStatus.BAD_REQUEST, "대표 사진 URL 형식이 올바르지 않습니다."),
+    JOURNEY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 게시글을 찾을 수 없습니다."),
+    JOURNEY_POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 게시글에 대한 권한이 없습니다."),
+    JOURNEY_POST_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 게시글 내용이 없습니다."),
+    JOURNEY_POST_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "게시글 내용은 1자 이상 300자 이하여야 합니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
