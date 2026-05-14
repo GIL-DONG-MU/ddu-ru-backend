@@ -97,6 +97,10 @@ public class JourneyPost extends BaseTimeEntity {
         this.deletedAt = deletedAt;
     }
 
+    public void updateNoticeStatus(boolean isNotice) {
+        this.isNotice = isNotice;
+    }
+
     public boolean isAuthor(Long userId) {
         return author.getId().equals(userId);
     }

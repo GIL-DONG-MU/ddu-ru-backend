@@ -3,7 +3,9 @@ package com.dduru.gildongmu.journey.repository;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,6 +14,14 @@ import java.util.Optional;
 public interface JourneyRepository extends JpaRepository<Journey, Long> {
 
     Optional<Journey> findByPostId(Long postId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT j
+            FROM Journey j
+            WHERE j.id = :journeyId
+            """)
+    Optional<Journey> findByIdWithLock(@Param("journeyId") Long journeyId);
 
     @Query("""
             SELECT j
@@ -45,6 +55,10 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
 
     default Journey getByIdOrThrow(Long journeyId) {
         return findById(journeyId).orElseThrow(JourneyNotFoundException::new);
+    }
+
+    default Journey getByIdWithLockOrThrow(Long journeyId) {
+        return findByIdWithLock(journeyId).orElseThrow(JourneyNotFoundException::new);
     }
 
     default Journey getByPostIdOrThrow(Long postId) {

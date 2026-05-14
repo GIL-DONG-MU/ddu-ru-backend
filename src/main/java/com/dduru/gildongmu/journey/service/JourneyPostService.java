@@ -7,13 +7,16 @@ import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
@@ -36,6 +39,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
+    private static final int NOTICE_LIMIT = 3;
+
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
@@ -124,6 +129,24 @@ public class JourneyPostService {
                 journeyId, journeyPostId, userId);
     }
 
+    public JourneyPostNoticeUpdateResponse updatePostNotice(
+            Long journeyId,
+            Long journeyPostId,
+            Long userId,
+            JourneyPostNoticeUpdateRequest request
+    ) {
+        validateActiveHost(journeyId, userId);
+
+        JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+        boolean nextNotice = Boolean.TRUE.equals(request.isNotice());
+        validateNoticeLimitBeforeMarking(journeyId, userId, journeyPost, nextNotice);
+
+        journeyPost.updateNoticeStatus(nextNotice);
+        log.info("나의 여정 게시글 공지 상태 변경됨 - journeyId={}, journeyPostId={}, isNotice={}, userId={}",
+                journeyId, journeyPostId, nextNotice, userId);
+        return JourneyPostNoticeUpdateResponse.from(journeyPost);
+    }
+
     private JourneyPost createJourneyPost(Journey journey, User author, JourneyPostCreateRequest request) {
         return JourneyPost.create(
                 journey,
@@ -184,6 +207,33 @@ public class JourneyPostService {
             throw new JourneyPostAccessDeniedException();
         }
         return journeyPost;
+    }
+
+    private void validateActiveHost(Long journeyId, Long userId) {
+        boolean isActiveHost = journeyMemberRepository.existsActiveHost(journeyId, userId);
+        if (!isActiveHost) {
+            throw new JourneyAccessDeniedException();
+        }
+    }
+
+    private void validateNoticeLimitBeforeMarking(
+            Long journeyId,
+            Long userId,
+            JourneyPost journeyPost,
+            boolean nextNotice
+    ) {
+        if (!nextNotice || journeyPost.isNotice()) {
+            return;
+        }
+
+        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 3개 정책을 보장한다.
+        journeyRepository.getByIdWithLockOrThrow(journeyId);
+        validateActiveHost(journeyId, userId);
+
+        long noticeCount = journeyPostRepository.countActiveNoticesByJourneyId(journeyId);
+        if (noticeCount >= NOTICE_LIMIT) {
+            throw new JourneyPostNoticeLimitExceededException();
+        }
     }
 
     private Long findActiveHostUserId(Long journeyId) {
