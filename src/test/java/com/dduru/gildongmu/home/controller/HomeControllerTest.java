@@ -27,6 +27,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -48,13 +49,13 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.viewerStatus").value("GUEST"))
-                .andExpect(jsonPath("$.data.upcomingTrip").doesNotExist())
+                .andExpect(jsonPath("$.data.upcomingTrip").value(nullValue()))
                 .andExpect(jsonPath("$.data.popularDestinations.destinations.length()").value(7))
                 .andExpect(jsonPath("$.data.popularDestinations.destinations[0].regionName").value("제주도"))
-                .andExpect(jsonPath("$.data.mateRecommendation").doesNotExist())
+                .andExpect(jsonPath("$.data.mateRecommendation").value(nullValue()))
                 .andExpect(jsonPath("$.data.superHosts[0].status").value("OPEN"))
                 .andExpect(jsonPath("$.data.sameDestinationTrips[0].postId").value(601))
-                .andExpect(jsonPath("$.data.sameAgeTrips").doesNotExist());
+                .andExpect(jsonPath("$.data.sameAgeTrips").value(nullValue()));
 
         verifyNoInteractions(userOnboardingRepository);
     }
@@ -72,7 +73,7 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.viewerStatus").value("MEMBER_SURVEY_REQUIRED"))
                 .andExpect(jsonPath("$.data.upcomingTrip.journeyId").value(102))
                 .andExpect(jsonPath("$.data.upcomingTrip.dDay").value(12))
-                .andExpect(jsonPath("$.data.mateRecommendation").doesNotExist())
+                .andExpect(jsonPath("$.data.mateRecommendation").value(nullValue()))
                 .andExpect(jsonPath("$.data.superHosts[0].status").value("OPEN"))
                 .andExpect(jsonPath("$.data.sameDestinationTrips[0].postId").value(601))
                 .andExpect(jsonPath("$.data.sameAgeTrips[0].postId").value(701));
