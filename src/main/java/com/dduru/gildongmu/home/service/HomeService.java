@@ -21,8 +21,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HomeService {
 
-    private static final String DEFAULT_PROFILE_IMAGE_URL = "https://example.com/profile.jpg";
-    private static final String DEFAULT_THUMBNAIL_URL = "https://example.com/trip-thumbnail.jpg";
+    private static final String DEFAULT_PROFILE_IMAGE_URL = "https://img1.newsis.com/2022/07/05/NISI20220705_0001034620_web.jpg?rnd=20220705105652";
+    private static final String DEFAULT_THUMBNAIL_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Karina_at_Love_Your_W_event_2025.jpg/500px-Karina_at_Love_Your_W_event_2025.jpg";
 
     private final TimeProvider timeProvider;
     private final UserOnboardingRepository userOnboardingRepository;
@@ -106,8 +106,6 @@ public class HomeService {
             LocalDate startDate,
             LocalDate endDate
     ) {
-        HomeResponse.HostResponse host = uploadedHost("여행자민지", 28, Gender.F);
-
         return new HomeResponse.MateRecommendationResponse(
                 true,
                 3,
@@ -120,7 +118,7 @@ public class HomeService {
                                 "제주 서귀포",
                                 startDate,
                                 endDate,
-                                host,
+                                uploadedHost("여행자민지", 28, Gender.F),
                                 3,
                                 4,
                                 "제주 서쪽 해안을 따라 사진 찍고 카페를 둘러볼 동행을 찾아요.",
@@ -158,7 +156,7 @@ public class HomeService {
                         List.of("힐링", "자연", "느긋한"),
                         uploadedHost("해돋이호스트", 28, Gender.F),
                         723,
-                        "https://example.com/sunrise.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 ),
                 new HomeResponse.SuperHostResponse(
                         502L,
@@ -172,7 +170,7 @@ public class HomeService {
                         List.of("맛집", "야경", "산책"),
                         avatarHost("부산가이드", 34, Gender.M, 3L),
                         681,
-                        "https://example.com/busan-night.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 ),
                 new HomeResponse.SuperHostResponse(
                         503L,
@@ -186,7 +184,7 @@ public class HomeService {
                         List.of("바다", "사진", "카페"),
                         uploadedHost("바다수집가", 29, Gender.F),
                         598,
-                        "https://example.com/gangneung-sea.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 )
         );
     }
@@ -211,7 +209,7 @@ public class HomeService {
                         baseStartDate.plusDays(6),
                         2,
                         4,
-                        "https://example.com/udo.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 ),
                 new HomeResponse.SameDestinationTripResponse(
                         603L,
@@ -221,7 +219,7 @@ public class HomeService {
                         baseStartDate.plusDays(11),
                         1,
                         3,
-                        "https://example.com/olle.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 )
         );
     }
@@ -244,7 +242,7 @@ public class HomeService {
                         baseStartDate.plusDays(4),
                         2,
                         5,
-                        "https://example.com/gamcheon.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 ),
                 new HomeResponse.SameAgeTripResponse(
                         703L,
@@ -253,7 +251,7 @@ public class HomeService {
                         baseStartDate.plusDays(7),
                         4,
                         6,
-                        "https://example.com/jeonju.jpg"
+                        DEFAULT_THUMBNAIL_URL
                 )
         );
     }
@@ -276,7 +274,7 @@ public class HomeService {
                 nickname,
                 new HomeResponse.ProfileImageInfoResponse(
                         ProfileImageType.AVATAR,
-                        "https://example.com/avatar.png",
+                        DEFAULT_PROFILE_IMAGE_URL,
                         bgColorId
                 ),
                 age,
