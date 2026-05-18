@@ -55,22 +55,22 @@ public class HomeService {
         return toViewerStatus(userOnboardingRepository.getByUserIdOrThrow(userId));
     }
 
-    private HomeResponse.ViewerStatus toViewerStatus(UserOnboarding onboarding) {
+    private static HomeResponse.ViewerStatus toViewerStatus(UserOnboarding onboarding) {
         if (onboarding.getSurveyStatus() == SurveyStatus.COMPLETED) {
             return HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
         }
         return HomeResponse.ViewerStatus.MEMBER_SURVEY_REQUIRED;
     }
 
-    private boolean isMember(HomeResponse.ViewerStatus viewerStatus) {
+    private static boolean isMember(HomeResponse.ViewerStatus viewerStatus) {
         return viewerStatus != HomeResponse.ViewerStatus.GUEST;
     }
 
-    private boolean isSurveyCompleted(HomeResponse.ViewerStatus viewerStatus) {
+    private static boolean isSurveyCompleted(HomeResponse.ViewerStatus viewerStatus) {
         return viewerStatus == HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
     }
 
-    private HomeResponse.UpcomingTripResponse upcomingTrip(
+    private static HomeResponse.UpcomingTripResponse upcomingTrip(
             LocalDate startDate,
             LocalDate endDate,
             LocalDate today
@@ -87,7 +87,7 @@ public class HomeService {
         );
     }
 
-    private HomeResponse.PopularDestinationsResponse popularDestinations(LocalDateTime updateDateTime) {
+    private static HomeResponse.PopularDestinationsResponse popularDestinations(LocalDateTime updateDateTime) {
         return new HomeResponse.PopularDestinationsResponse(
                 updateDateTime,
                 List.of(
@@ -102,7 +102,7 @@ public class HomeService {
         );
     }
 
-    private HomeResponse.MateRecommendationResponse mateRecommendation(
+    private static HomeResponse.MateRecommendationResponse mateRecommendation(
             LocalDate startDate,
             LocalDate endDate
     ) {
@@ -144,7 +144,7 @@ public class HomeService {
         );
     }
 
-    private List<HomeResponse.SuperHostResponse> superHosts(LocalDate baseStartDate) {
+    private static List<HomeResponse.SuperHostResponse> superHosts(LocalDate baseStartDate) {
         return List.of(
                 new HomeResponse.SuperHostResponse(
                         501L,
@@ -191,7 +191,7 @@ public class HomeService {
         );
     }
 
-    private List<HomeResponse.SameDestinationTripResponse> sameDestinationTrips(LocalDate baseStartDate) {
+    private static List<HomeResponse.SameDestinationTripResponse> sameDestinationTrips(LocalDate baseStartDate) {
         return List.of(
                 new HomeResponse.SameDestinationTripResponse(
                         601L,
@@ -226,7 +226,7 @@ public class HomeService {
         );
     }
 
-    private List<HomeResponse.SameAgeTripResponse> sameAgeTrips(LocalDate baseStartDate) {
+    private static List<HomeResponse.SameAgeTripResponse> sameAgeTrips(LocalDate baseStartDate) {
         return List.of(
                 new HomeResponse.SameAgeTripResponse(
                         701L,
@@ -258,7 +258,7 @@ public class HomeService {
         );
     }
 
-    private HomeResponse.HostResponse uploadedHost(String nickname, int age, Gender gender) {
+    private static HomeResponse.HostResponse uploadedHost(String nickname, int age, Gender gender) {
         return new HomeResponse.HostResponse(
                 nickname,
                 new HomeResponse.ProfileImageInfoResponse(
@@ -271,7 +271,7 @@ public class HomeService {
         );
     }
 
-    private HomeResponse.HostResponse avatarHost(String nickname, int age, Gender gender, Long bgColorId) {
+    private static HomeResponse.HostResponse avatarHost(String nickname, int age, Gender gender, Long bgColorId) {
         return new HomeResponse.HostResponse(
                 nickname,
                 new HomeResponse.ProfileImageInfoResponse(
