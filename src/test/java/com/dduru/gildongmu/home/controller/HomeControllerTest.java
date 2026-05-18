@@ -1,11 +1,13 @@
 package com.dduru.gildongmu.home.controller;
 
 import com.dduru.gildongmu.common.annotation.OptionalCurrentUser;
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.exception.GlobalExceptionHandler;
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.service.HomeService;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
+import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -24,7 +26,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -62,7 +63,7 @@ class HomeControllerTest {
     @DisplayName("설문 미완료 회원은 계정 기반 개인화 데이터만 조회한다")
     void retrieveHome_memberSurveyRequired() throws Exception {
         UserOnboardingRepository userOnboardingRepository = mock(UserOnboardingRepository.class);
-        when(userOnboardingRepository.findByUser_Id(10L)).thenReturn(Optional.of(new UserOnboarding(user())));
+        when(userOnboardingRepository.getByUserIdOrThrow(10L)).thenReturn(new UserOnboarding(user()));
         MockMvc mockMvc = mockMvcWithUser(10L, userOnboardingRepository);
 
         mockMvc.perform(get("/api/v1/home"))
@@ -83,7 +84,7 @@ class HomeControllerTest {
         UserOnboarding onboarding = new UserOnboarding(user());
         onboarding.completeSurvey();
         UserOnboardingRepository userOnboardingRepository = mock(UserOnboardingRepository.class);
-        when(userOnboardingRepository.findByUser_Id(10L)).thenReturn(Optional.of(onboarding));
+        when(userOnboardingRepository.getByUserIdOrThrow(10L)).thenReturn(onboarding);
         MockMvc mockMvc = mockMvcWithUser(10L, userOnboardingRepository);
 
         mockMvc.perform(get("/api/v1/home"))
@@ -98,6 +99,21 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.superHosts[0].status").value("OPEN"))
                 .andExpect(jsonPath("$.data.sameDestinationTrips[0].postId").value(601))
                 .andExpect(jsonPath("$.data.sameAgeTrips[0].postId").value(701));
+    }
+
+    @Test
+    @DisplayName("회원의 온보딩 정보가 없으면 not found 예외가 발생한다")
+    void retrieveHome_memberOnboardingNotFound() throws Exception {
+        UserOnboardingRepository userOnboardingRepository = mock(UserOnboardingRepository.class);
+        when(userOnboardingRepository.getByUserIdOrThrow(10L))
+                .thenThrow(new UserOnboardingNotFoundException());
+        MockMvc mockMvc = mockMvcWithUser(10L, userOnboardingRepository);
+
+        mockMvc.perform(get("/api/v1/home"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.data.errorCode").value(ErrorCode.USER_ONBOARDING_NOT_FOUND.name()))
+                .andExpect(jsonPath("$.data.message").value(ErrorCode.USER_ONBOARDING_NOT_FOUND.getMessage()));
     }
 
     private MockMvc mockMvcWithUser(Long userId, UserOnboardingRepository userOnboardingRepository) {

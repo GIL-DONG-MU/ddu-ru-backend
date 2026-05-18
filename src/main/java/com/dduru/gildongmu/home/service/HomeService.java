@@ -52,9 +52,7 @@ public class HomeService {
             return HomeResponse.ViewerStatus.GUEST;
         }
 
-        return userOnboardingRepository.findByUser_Id(userId)
-                .map(this::toViewerStatus)
-                .orElse(HomeResponse.ViewerStatus.MEMBER_SURVEY_REQUIRED);
+        return toViewerStatus(userOnboardingRepository.getByUserIdOrThrow(userId));
     }
 
     private HomeResponse.ViewerStatus toViewerStatus(UserOnboarding onboarding) {
