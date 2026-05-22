@@ -66,7 +66,7 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             WHERE jm.journey.post.id = :postId
               AND jm.user.id = :userId
             """)
-    Optional<JourneyMemberStatus> findStatusByJourneyPostIdAndUserId(
+    Optional<JourneyMemberStatus> findStatusByPostIdAndUserId(
             @Param("postId") Long postId,
             @Param("userId") Long userId
     );
@@ -77,7 +77,7 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             WHERE jm.journey.post.id IN :postIds
               AND jm.user.id = :userId
             """)
-    List<JourneyMemberStatusQueryResult> findStatusesByJourneyPostIdsAndUserId(
+    List<JourneyMemberStatusQueryResult> findStatusesByPostIdsAndUserId(
             @Param("postIds") Collection<Long> postIds,
             @Param("userId") Long userId
     );
@@ -131,7 +131,7 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
                      jm.joinedAt ASC,
                      jm.id ASC
             """)
-    List<JourneyMember> findByJourneyPostIdAndStatusWithMemberProfiles(
+    List<JourneyMember> findByPostIdAndStatusWithMemberProfiles(
             @Param("postId") Long postId,
             @Param("status") JourneyMemberStatus status
     );

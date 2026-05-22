@@ -149,7 +149,7 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 20L;
             Journey journey = createJourney(journeyId, 10L);
-            JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"));
+            JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"), LocalDateTime.now());
             member.remove(LocalDateTime.now());
             JourneyUpdateRequest request = new JourneyUpdateRequest("새 제목", null);
 
@@ -246,7 +246,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, hostUserId);
             Post post = journey.getPost();
             User memberUser = createUser(memberUserId, "member");
-            JourneyMember member = JourneyMember.createMember(journey, memberUser);
+            JourneyMember member = JourneyMember.createMember(journey, memberUser, LocalDateTime.now());
             Participation participation = Participation.createParticipation(post, memberUser, "같이 가고 싶어요.");
             post.approveParticipation(participation);
             ChatRoom room = createGroupChatRoom(roomId, journey);
@@ -302,7 +302,7 @@ class JourneyServiceTest {
             Long hostUserId = 10L;
             Journey journey = createJourney(journeyId, hostUserId);
             Post post = journey.getPost();
-            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser());
+            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser(), LocalDateTime.now());
 
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());

@@ -216,8 +216,8 @@ class JourneyQueryServiceTest {
 
     private JourneyMember journeyMember(Journey journey, Long userId, boolean isHost) {
         JourneyMember journeyMember = isHost
-                ? JourneyMember.createHost(journey, createUser(userId, "host-" + userId))
-                : JourneyMember.createMember(journey, createUser(userId, "member-" + userId));
+                ? JourneyMember.createHost(journey, createUser(userId, "host-" + userId), LocalDateTime.now())
+                : JourneyMember.createMember(journey, createUser(userId, "member-" + userId), LocalDateTime.now());
         ReflectionTestUtils.setField(journeyMember, "status", JourneyMemberStatus.ACTIVE);
         return journeyMember;
     }
