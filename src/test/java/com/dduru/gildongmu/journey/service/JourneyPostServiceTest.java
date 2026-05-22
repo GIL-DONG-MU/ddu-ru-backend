@@ -11,12 +11,15 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
+import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostNoticeUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -38,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -48,6 +52,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -102,7 +107,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             User author = createUser(userId, "author");
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
-                    "  제주공항 집합  ",
                     "  출발 30분 전에 만나요.  ",
                     S3_HOST + "/journeys/posts/notice.png"
             );
@@ -119,7 +123,6 @@ class JourneyPostServiceTest {
             JourneyPostResponse response = journeyPostService.createPost(journeyId, userId, request);
 
             assertThat(response.journeyPostId()).isEqualTo(101L);
-            assertThat(response.title()).isEqualTo("제주공항 집합");
             assertThat(response.content()).isEqualTo("출발 30분 전에 만나요.");
             assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/notice.png");
             assertThat(response.isAuthor()).isTrue();
@@ -133,14 +136,13 @@ class JourneyPostServiceTest {
         }
 
         @Test
-        @DisplayName("공백 제목이면 예외가 발생한다")
-        void blankTitleThrowsException() {
+        @DisplayName("공백 내용이면 예외가 발생한다")
+        void blankContentThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
                     "   ",
-                    "내용입니다.",
                     null
             );
 
@@ -151,7 +153,7 @@ class JourneyPostServiceTest {
             assertThatThrownBy(() -> journeyPostService.createPost(journeyId, userId, request))
                     .isInstanceOf(InvalidJourneyPostException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.JOURNEY_POST_INVALID_TITLE);
+                    .isEqualTo(ErrorCode.JOURNEY_POST_INVALID_CONTENT);
 
             verify(journeyPostRepository, never()).saveAndFlush(any());
         }
@@ -163,7 +165,6 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
-                    "제주공항 집합",
                     "출발 30분 전에 만나요.",
                     "https://example.com/image.png"
             );
@@ -188,19 +189,69 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(101L, journey, createUser(20L, "author"));
+            JourneyPost lookAheadPost = createJourneyPost(100L, journey, createUser(30L, "next"));
 
             givenActiveMember(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
-            when(journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(journeyId))
-                    .thenReturn(List.of(journeyPost));
+            when(journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
+                    eq(journeyId),
+                    eq(null),
+                    eq(null),
+                    eq(null),
+                    any(Pageable.class)
+            )).thenReturn(List.of(journeyPost, lookAheadPost));
 
-            JourneyPostListResponse response = journeyPostService.retrievePosts(journeyId, userId);
+            JourneyPostListResponse response = journeyPostService.retrievePosts(
+                    journeyId,
+                    userId,
+                    new JourneyPostListRequest(null, 1)
+            );
 
             assertThat(response.journeyId()).isEqualTo(journeyId);
             assertThat(response.posts()).hasSize(1);
             assertThat(response.posts().get(0).journeyPostId()).isEqualTo(101L);
             assertThat(response.posts().get(0).isAuthor()).isFalse();
             assertThat(response.posts().get(0).author().isHost()).isFalse();
+            assertThat(response.posts().get(0).commentCount()).isZero();
+            assertThat(response.nextCursor()).isEqualTo(101L);
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.size()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("cursor가 있으면 cursor 이후 게시글을 조회한다")
+        void retrievePostsWithCursor() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Long cursor = 102L;
+            LocalDateTime cursorCreatedAt = LocalDateTime.of(2026, 5, 13, 14, 0);
+            Journey journey = createJourney(journeyId, userId);
+            JourneyPost cursorPost = createJourneyPost(cursor, journey, createUser(20L, "cursor"));
+            JourneyPost olderPost = createJourneyPost(101L, journey, createUser(30L, "older"));
+            setCreatedAt(cursorPost, cursorCreatedAt);
+
+            givenActiveMember(journeyId, userId, journey);
+            givenActiveHost(journeyId, userId);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(cursor, journeyId))
+                    .thenReturn(cursorPost);
+            when(journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
+                    eq(journeyId),
+                    eq(false),
+                    eq(cursorCreatedAt),
+                    eq(cursor),
+                    any(Pageable.class)
+            )).thenReturn(List.of(olderPost));
+
+            JourneyPostListResponse response = journeyPostService.retrievePosts(
+                    journeyId,
+                    userId,
+                    new JourneyPostListRequest(cursor, 20)
+            );
+
+            assertThat(response.posts()).hasSize(1);
+            assertThat(response.posts().get(0).journeyPostId()).isEqualTo(101L);
+            assertThat(response.nextCursor()).isNull();
+            assertThat(response.hasNext()).isFalse();
         }
 
         @Test
@@ -214,10 +265,41 @@ class JourneyPostServiceTest {
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
-            assertThatThrownBy(() -> journeyPostService.retrievePosts(journeyId, userId))
+            assertThatThrownBy(() -> journeyPostService.retrievePosts(journeyId, userId, new JourneyPostListRequest(null, null)))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
-            verify(journeyPostRepository, never()).findActivePostsByJourneyIdWithAuthorProfile(journeyId);
+            verify(journeyPostRepository, never()).findActivePostsByJourneyIdWithAuthorProfile(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+            );
+        }
+
+        @Test
+        @DisplayName("active host가 없으면 예외가 발생한다")
+        void missingActiveHostThrowsException() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, userId);
+
+            givenActiveMember(journeyId, userId, journey);
+            when(journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> journeyPostService.retrievePosts(journeyId, userId, new JourneyPostListRequest(null, null)))
+                    .isInstanceOf(JourneyHostNotFoundException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_HOST_NOT_FOUND);
+
+            verify(journeyPostRepository, never()).findActivePostsByJourneyIdWithAuthorProfile(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+            );
         }
     }
 
@@ -235,14 +317,22 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
+            givenLockedJourney(journeyId, journey);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(2L);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isTrue();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isTrue();
         }
 
         @Test
@@ -255,7 +345,8 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
+            givenLockedJourney(journeyId, journey);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(3L);
@@ -279,13 +370,21 @@ class JourneyPostServiceTest {
             journeyPost.updateNoticeStatus(true);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(false);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isFalse();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isFalse();
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }
 
@@ -300,13 +399,21 @@ class JourneyPostServiceTest {
             journeyPost.updateNoticeStatus(true);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            givenActiveHost(journeyId, hostUserId, journey);
+            givenActiveHostPermission(journeyId, hostUserId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
-            journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request);
+            JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
+                    journeyId,
+                    journeyPostId,
+                    hostUserId,
+                    request
+            );
 
             assertThat(journeyPost.isNotice()).isTrue();
+            assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
+            assertThat(response.isNotice()).isTrue();
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).countActiveNoticesByJourneyId(journeyId);
         }
 
@@ -316,15 +423,14 @@ class JourneyPostServiceTest {
             Long journeyId = 1L;
             Long userId = 20L;
             Long journeyPostId = 101L;
-            Journey journey = createJourney(journeyId, 10L);
             JourneyPostNoticeUpdateRequest request = new JourneyPostNoticeUpdateRequest(true);
 
-            when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
 
             assertThatThrownBy(() -> journeyPostService.updatePostNotice(journeyId, journeyPostId, userId, request))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
+            verify(journeyRepository, never()).getByIdWithLockOrThrow(journeyId);
             verify(journeyPostRepository, never()).getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         }
     }
@@ -342,7 +448,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
             JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(
-                    "수정된 제목",
                     "수정된 내용입니다.",
                     null
             );
@@ -354,10 +459,8 @@ class JourneyPostServiceTest {
 
             JourneyPostResponse response = journeyPostService.updatePost(journeyId, journeyPostId, userId, request);
 
-            assertThat(response.title()).isEqualTo("수정된 제목");
             assertThat(response.content()).isEqualTo("수정된 내용입니다.");
             assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/old.png");
-            assertThat(journeyPost.getTitle()).isEqualTo("수정된 제목");
             assertThat(journeyPost.getContent()).isEqualTo("수정된 내용입니다.");
             verify(journeyPostRepository).flush();
         }
@@ -370,7 +473,7 @@ class JourneyPostServiceTest {
             Long journeyPostId = 101L;
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
-            JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(null, null, null);
+            JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(null, null);
 
             givenActiveMember(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
@@ -394,7 +497,6 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
             JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(
-                    "수정된 제목",
                     "수정된 내용입니다.",
                     null
             );
@@ -442,8 +544,11 @@ class JourneyPostServiceTest {
                 .thenReturn(Optional.of(hostUserId));
     }
 
-    private void givenActiveHost(Long journeyId, Long hostUserId, Journey journey) {
+    private void givenLockedJourney(Long journeyId, Journey journey) {
         when(journeyRepository.getByIdWithLockOrThrow(journeyId)).thenReturn(journey);
+    }
+
+    private void givenActiveHostPermission(Long journeyId, Long hostUserId) {
         when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
     }
 
@@ -458,12 +563,15 @@ class JourneyPostServiceTest {
         JourneyPost journeyPost = JourneyPost.create(
                 journey,
                 author,
-                "기존 제목",
                 "기존 내용입니다.",
                 S3_HOST + "/journeys/posts/old.png"
         );
         ReflectionTestUtils.setField(journeyPost, "id", journeyPostId);
         return journeyPost;
+    }
+
+    private void setCreatedAt(JourneyPost journeyPost, LocalDateTime createdAt) {
+        ReflectionTestUtils.setField(journeyPost, "createdAt", createdAt);
     }
 
     private Post createPost(Long postId, Long ownerId) {

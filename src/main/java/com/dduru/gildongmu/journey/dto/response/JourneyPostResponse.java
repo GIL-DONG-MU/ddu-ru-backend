@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 public record JourneyPostResponse(
         Long journeyPostId,
         ParticipantInfo author,
-        String title,
         String content,
         String imageUrl,
         boolean isNotice,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        boolean isAuthor
+        boolean isAuthor,
+        long commentCount
 ) {
     public static JourneyPostResponse from(
             JourneyPost journeyPost,
@@ -30,13 +30,13 @@ public record JourneyPostResponse(
                         hostUserId != null && hostUserId.equals(journeyPost.getAuthor().getId()),
                         profileImageResolver
                 ),
-                journeyPost.getTitle(),
                 journeyPost.getContent(),
                 journeyPost.getImageUrl(),
                 journeyPost.isNotice(),
                 journeyPost.getCreatedAt(),
                 journeyPost.getModifiedAt(),
-                journeyPost.isAuthor(currentUserId)
+                journeyPost.isAuthor(currentUserId),
+                0L
         );
     }
 }

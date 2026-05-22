@@ -5,10 +5,6 @@ import jakarta.validation.constraints.Size;
 
 public record JourneyPostCreateRequest(
         @NotBlank
-        @Size(max = 30)
-        String title,
-
-        @NotBlank
         @Size(max = 300)
         String content,
 
