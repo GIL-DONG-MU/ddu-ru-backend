@@ -10,6 +10,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyPostCommentListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostCommentResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostCommentException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostCommentAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
@@ -170,7 +171,7 @@ public class JourneyPostCommentService {
 
     private Long findActiveHostUserId(Long journeyId) {
         return journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId)
-                .orElse(null);
+                .orElseThrow(JourneyHostNotFoundException::new);
     }
 
     private int normalizeCommentLimit(Integer limit) {
