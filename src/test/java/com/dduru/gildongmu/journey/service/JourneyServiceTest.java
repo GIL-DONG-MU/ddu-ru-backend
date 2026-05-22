@@ -10,6 +10,7 @@ import com.dduru.gildongmu.chat.service.ChatMessageSendService;
 import com.dduru.gildongmu.common.config.S3Properties;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -69,6 +70,8 @@ class JourneyServiceTest {
     private PostRepository postRepository;
     @Mock
     private ChatMessageSendService chatMessageSendService;
+    @Mock
+    private TimeProvider timeProvider;
 
     private JourneyService journeyService;
 
@@ -85,7 +88,8 @@ class JourneyServiceTest {
                 participationRepository,
                 postRepository,
                 chatMessageSendService,
-                new S3ImageUrlValidator(s3Properties)
+                new S3ImageUrlValidator(s3Properties),
+                timeProvider
         );
     }
 

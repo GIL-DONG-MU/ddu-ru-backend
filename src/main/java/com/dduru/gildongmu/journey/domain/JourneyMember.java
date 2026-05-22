@@ -81,9 +81,9 @@ public class JourneyMember extends BaseTimeEntity {
         this.removedAt = null;
     }
 
-    public void remove() {
+    public void remove(LocalDateTime removedAt) {
         this.status = JourneyMemberStatus.REMOVED;
-        this.removedAt = LocalDateTime.now();
+        this.removedAt = removedAt;
     }
 
     public boolean isHost() {
