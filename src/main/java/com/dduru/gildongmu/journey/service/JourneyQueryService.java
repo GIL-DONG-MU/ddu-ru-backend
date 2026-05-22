@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.journey.service;
 
+import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -41,15 +41,8 @@ public class JourneyQueryService {
         List<JourneyMember> completedJourneyMembers = journeyMemberRepository
                 .findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);
 
-        Comparator<JourneyMainCardResponse> activeSortOrder = Comparator
-                .comparing(JourneyMainCardResponse::startDate)
-                .thenComparing(JourneyMainCardResponse::journeyId, Comparator.reverseOrder());
-        Comparator<JourneyMainCardResponse> completedSortOrder = Comparator
-                .comparing(JourneyMainCardResponse::endDate, Comparator.reverseOrder())
-                .thenComparing(JourneyMainCardResponse::journeyId, Comparator.reverseOrder());
-
-        List<JourneyMainCardResponse> activeJourneys = toJourneyCards(activeJourneyMembers, activeSortOrder, today);
-        List<JourneyMainCardResponse> completedJourneys = toJourneyCards(completedJourneyMembers, completedSortOrder, today);
+        List<JourneyMainCardResponse> activeJourneys = toJourneyCards(activeJourneyMembers, today);
+        List<JourneyMainCardResponse> completedJourneys = toJourneyCards(completedJourneyMembers, today);
 
         return JourneyMainListResponse.of(activeJourneys, completedJourneys);
     }
@@ -61,21 +54,16 @@ public class JourneyQueryService {
         // journey는 제목/대표 사진만 직접 가지고, 상단 카드에 필요한 나머지 값은 연결된 post에서 읽는다.
         PostDetailResponse post = postService.getDetail(journey.getPost(), userId);
         Long groupRoomId = chatRoomRepository.findByJourneyIdAndRoomType(journey.getId(), ChatRoomType.GROUP)
-                .map(chatRoom -> chatRoom.getId())
+                .map(ChatRoom::getId)
                 .orElse(null);
 
         return JourneyDetailResponse.from(journey, groupRoomId, post);
     }
 
-    private List<JourneyMainCardResponse> toJourneyCards(
-            List<JourneyMember> journeyMembers,
-            Comparator<JourneyMainCardResponse> sortOrder,
-            LocalDate today
-    ) {
+    private List<JourneyMainCardResponse> toJourneyCards(List<JourneyMember> journeyMembers, LocalDate today) {
         // journey_members는 journey/user unique 제약을 가지므로 카드 조립 시 별도 중복제거가 필요 없다.
         return journeyMembers.stream()
                 .map(journeyMember -> JourneyMainCardResponse.fromJourneyMember(journeyMember, today))
-                .sorted(sortOrder)
                 .toList();
     }
 
