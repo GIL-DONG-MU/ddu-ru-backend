@@ -8,11 +8,33 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostComment, Long> {
 
     long countByJourneyPost_IdAndIsDeletedFalse(Long journeyPostId);
+
+    @Query("""
+            SELECT c.journeyPost.id, COUNT(c)
+            FROM JourneyPostComment c
+            WHERE c.journeyPost.id IN :postIds
+              AND c.isDeleted = false
+            GROUP BY c.journeyPost.id
+            """)
+    List<Object[]> findCommentCountsByJourneyPostIds(@Param("postIds") List<Long> postIds);
+
+    default Map<Long, Long> getCommentCountsByJourneyPostIds(List<Long> postIds) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+        return findCommentCountsByJourneyPostIds(postIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
 
     @Query("""
             SELECT c

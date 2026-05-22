@@ -21,7 +21,8 @@ public record JourneyPostResponse(
             JourneyPost journeyPost,
             Long currentUserId,
             Long hostUserId,
-            ProfileImageResolver profileImageResolver
+            ProfileImageResolver profileImageResolver,
+            long commentCount
     ) {
         return new JourneyPostResponse(
                 journeyPost.getId(),
@@ -36,7 +37,7 @@ public record JourneyPostResponse(
                 journeyPost.getCreatedAt(),
                 journeyPost.getModifiedAt(),
                 journeyPost.isAuthor(currentUserId),
-                0L
+                commentCount
         );
     }
 }

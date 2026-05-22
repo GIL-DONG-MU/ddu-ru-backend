@@ -4,6 +4,7 @@ import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 
 import java.util.List;
+import java.util.Map;
 
 public record JourneyPostListResponse(
         Long journeyId,
@@ -18,10 +19,14 @@ public record JourneyPostListResponse(
             boolean hasNext,
             Long currentUserId,
             Long hostUserId,
-            ProfileImageResolver profileImageResolver
+            ProfileImageResolver profileImageResolver,
+            Map<Long, Long> commentCountByPostId
     ) {
         List<JourneyPostResponse> posts = journeyPosts.stream()
-                .map(post -> JourneyPostResponse.from(post, currentUserId, hostUserId, profileImageResolver))
+                .map(post -> JourneyPostResponse.from(
+                        post, currentUserId, hostUserId, profileImageResolver,
+                        commentCountByPostId.getOrDefault(post.getId(), 0L)
+                ))
                 .toList();
         Long nextCursor = hasNext && !journeyPosts.isEmpty()
                 ? journeyPosts.get(journeyPosts.size() - 1).getId()

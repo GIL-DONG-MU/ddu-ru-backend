@@ -23,6 +23,7 @@ import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -47,6 +48,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +72,8 @@ class JourneyPostServiceTest {
     @Mock
     private JourneyPostRepository journeyPostRepository;
     @Mock
+    private JourneyPostCommentRepository journeyPostCommentRepository;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private ProfileImageResolver profileImageResolver;
@@ -88,6 +92,7 @@ class JourneyPostServiceTest {
                 journeyRepository,
                 journeyMemberRepository,
                 journeyPostRepository,
+                journeyPostCommentRepository,
                 userRepository,
                 new S3ImageUrlValidator(s3Properties),
                 profileImageResolver,
@@ -200,6 +205,8 @@ class JourneyPostServiceTest {
                     eq(null),
                     any(Pageable.class)
             )).thenReturn(List.of(journeyPost, lookAheadPost));
+            when(journeyPostCommentRepository.getCommentCountsByJourneyPostIds(List.of(101L)))
+                    .thenReturn(Map.of(101L, 3L));
 
             JourneyPostListResponse response = journeyPostService.retrievePosts(
                     journeyId,
@@ -212,7 +219,7 @@ class JourneyPostServiceTest {
             assertThat(response.posts().get(0).journeyPostId()).isEqualTo(101L);
             assertThat(response.posts().get(0).isAuthor()).isFalse();
             assertThat(response.posts().get(0).author().isHost()).isFalse();
-            assertThat(response.posts().get(0).commentCount()).isZero();
+            assertThat(response.posts().get(0).commentCount()).isEqualTo(3L);
             assertThat(response.nextCursor()).isEqualTo(101L);
             assertThat(response.hasNext()).isTrue();
             assertThat(response.size()).isEqualTo(1);
@@ -241,6 +248,8 @@ class JourneyPostServiceTest {
                     eq(cursor),
                     any(Pageable.class)
             )).thenReturn(List.of(olderPost));
+            when(journeyPostCommentRepository.getCommentCountsByJourneyPostIds(List.of(101L)))
+                    .thenReturn(Map.of());
 
             JourneyPostListResponse response = journeyPostService.retrievePosts(
                     journeyId,

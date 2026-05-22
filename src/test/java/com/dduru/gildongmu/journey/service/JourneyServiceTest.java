@@ -42,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,7 +150,7 @@ class JourneyServiceTest {
             Long userId = 20L;
             Journey journey = createJourney(journeyId, 10L);
             JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"));
-            member.remove();
+            member.remove(LocalDateTime.now());
             JourneyUpdateRequest request = new JourneyUpdateRequest("새 제목", null);
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
@@ -251,6 +252,7 @@ class JourneyServiceTest {
             ChatRoom room = createGroupChatRoom(roomId, journey);
             ChatRoomMember chatRoomMember = ChatRoomMember.create(room, memberUser, ChatMemberRole.GUEST);
 
+            when(timeProvider.now()).thenReturn(LocalDateTime.of(2026, 5, 13, 16, 20));
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
