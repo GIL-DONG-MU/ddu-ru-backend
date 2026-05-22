@@ -27,6 +27,7 @@ public record JourneyPostCommentListResponse(
                 comments.stream()
                         .map(comment -> JourneyPostCommentResponse.from(
                                 comment,
+                                journeyPostId,
                                 currentUserId,
                                 hostUserId,
                                 profileImageResolver

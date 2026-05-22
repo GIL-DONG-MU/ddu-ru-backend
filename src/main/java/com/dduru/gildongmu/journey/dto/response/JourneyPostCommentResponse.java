@@ -17,6 +17,7 @@ public record JourneyPostCommentResponse(
 ) {
     public static JourneyPostCommentResponse from(
             JourneyPostComment comment,
+            Long journeyPostId,
             Long currentUserId,
             Long hostUserId,
             ProfileImageResolver profileImageResolver
@@ -24,7 +25,7 @@ public record JourneyPostCommentResponse(
         Long authorUserId = comment.getAuthor().getId();
         return new JourneyPostCommentResponse(
                 comment.getId(),
-                comment.getJourneyPost().getId(),
+                journeyPostId,
                 ParticipantInfo.from(
                         comment.getAuthor(),
                         hostUserId != null && hostUserId.equals(authorUserId),

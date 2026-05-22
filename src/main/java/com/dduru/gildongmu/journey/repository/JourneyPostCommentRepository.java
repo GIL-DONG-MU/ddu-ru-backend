@@ -17,12 +17,11 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
     @Query("""
             SELECT c
             FROM JourneyPostComment c
-            JOIN FETCH c.journeyPost jp
             JOIN FETCH c.author author
             LEFT JOIN FETCH author.profile profile
             LEFT JOIN FETCH profile.avatar
             LEFT JOIN FETCH profile.bgColor
-            WHERE jp.id = :journeyPostId
+            WHERE c.journeyPost.id = :journeyPostId
               AND c.isDeleted = false
             ORDER BY c.createdAt DESC,
                      c.id DESC
@@ -35,13 +34,12 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
     @Query("""
             SELECT c
             FROM JourneyPostComment c
-            JOIN FETCH c.journeyPost jp
             JOIN FETCH c.author author
             LEFT JOIN FETCH author.profile profile
             LEFT JOIN FETCH profile.avatar
             LEFT JOIN FETCH profile.bgColor
             WHERE c.id = :commentId
-              AND jp.id = :journeyPostId
+              AND c.journeyPost.id = :journeyPostId
               AND c.isDeleted = false
             """)
     Optional<JourneyPostComment> findActiveCommentByIdAndJourneyPostIdWithAuthorProfile(

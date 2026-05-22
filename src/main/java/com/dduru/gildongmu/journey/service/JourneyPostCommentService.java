@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.journey.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.journey.domain.JourneyPostComment;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
@@ -93,7 +92,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 생성됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, savedComment.getId(), userId);
-        return JourneyPostCommentResponse.from(savedComment, userId, hostUserId, profileImageResolver);
+        return JourneyPostCommentResponse.from(savedComment, journeyPostId, userId, hostUserId, profileImageResolver);
     }
 
     public JourneyPostCommentResponse updateComment(
@@ -115,7 +114,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 수정됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, commentId, userId);
-        return JourneyPostCommentResponse.from(comment, userId, hostUserId, profileImageResolver);
+        return JourneyPostCommentResponse.from(comment, journeyPostId, userId, hostUserId, profileImageResolver);
     }
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {
@@ -149,9 +148,9 @@ public class JourneyPostCommentService {
     }
 
     private void validateActiveMember(Long journeyId, Long userId) {
-        Journey journey = journeyRepository.getByIdOrThrow(journeyId);
+        journeyRepository.getByIdOrThrow(journeyId);
         boolean isActiveMember = journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
-                journey.getId(),
+                journeyId,
                 userId,
                 JourneyMemberStatus.ACTIVE
         );
