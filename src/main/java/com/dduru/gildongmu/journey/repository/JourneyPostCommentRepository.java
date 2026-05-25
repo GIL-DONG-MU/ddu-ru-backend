@@ -16,7 +16,6 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
 
     long countByJourneyPost_IdAndIsDeletedFalse(Long journeyPostId);
 
-    // 각 게시글에서 자신보다 최신인 댓글 수가 previewLimit 미만인 댓글만 골라 게시글별 최신 N개를 만든다.
     @Query("""
             SELECT c
             FROM JourneyPostComment c
@@ -49,6 +48,7 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
             @Param("journeyPostIds") Collection<Long> journeyPostIds
     );
 
+    // 각 게시글에서 자신보다 최신인 댓글 수가 previewLimit 미만인 댓글만 골라 게시글별 최신 N개를 만든다.
     @Query("""
             SELECT c
             FROM JourneyPostComment c

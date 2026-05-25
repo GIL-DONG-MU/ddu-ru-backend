@@ -10,6 +10,7 @@ import com.dduru.gildongmu.chat.service.ChatMessageSendService;
 import com.dduru.gildongmu.common.config.S3Properties;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -41,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,6 +71,8 @@ class JourneyServiceTest {
     private PostRepository postRepository;
     @Mock
     private ChatMessageSendService chatMessageSendService;
+    @Mock
+    private TimeProvider timeProvider;
 
     private JourneyService journeyService;
 
@@ -85,7 +89,8 @@ class JourneyServiceTest {
                 participationRepository,
                 postRepository,
                 chatMessageSendService,
-                new S3ImageUrlValidator(s3Properties)
+                new S3ImageUrlValidator(s3Properties),
+                timeProvider
         );
     }
 
@@ -144,8 +149,8 @@ class JourneyServiceTest {
             Long journeyId = 1L;
             Long userId = 20L;
             Journey journey = createJourney(journeyId, 10L);
-            JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"));
-            member.remove();
+            JourneyMember member = JourneyMember.createMember(journey, createUser(userId, "member"), LocalDateTime.now());
+            member.remove(LocalDateTime.now());
             JourneyUpdateRequest request = new JourneyUpdateRequest("새 제목", null);
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
@@ -241,12 +246,13 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, hostUserId);
             Post post = journey.getPost();
             User memberUser = createUser(memberUserId, "member");
-            JourneyMember member = JourneyMember.createMember(journey, memberUser);
+            JourneyMember member = JourneyMember.createMember(journey, memberUser, LocalDateTime.now());
             Participation participation = Participation.createParticipation(post, memberUser, "같이 가고 싶어요.");
             post.approveParticipation(participation);
             ChatRoom room = createGroupChatRoom(roomId, journey);
             ChatRoomMember chatRoomMember = ChatRoomMember.create(room, memberUser, ChatMemberRole.GUEST);
 
+            when(timeProvider.now()).thenReturn(LocalDateTime.of(2026, 5, 13, 16, 20));
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
@@ -296,7 +302,7 @@ class JourneyServiceTest {
             Long hostUserId = 10L;
             Journey journey = createJourney(journeyId, hostUserId);
             Post post = journey.getPost();
-            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser());
+            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser(), LocalDateTime.now());
 
             when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
             when(journeyRepository.getPostIdByIdOrThrow(journeyId)).thenReturn(post.getId());

@@ -96,10 +96,12 @@ class JourneyQueryServiceTest {
             JourneyMember completedOwnedJourneyMember = journeyMember(create(13L, completedOwnedPost), userId, true);
             JourneyMember completedMemberJourneyMember = journeyMember(create(14L, completedMemberPost), userId, false);
 
+            // DB 쿼리는 startDate ASC, journeyId DESC로 정렬해 반환한다
             when(journeyMemberRepository.findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
-                    .thenReturn(List.of(activeOwnedJourneyMember, activeMemberJourneyMember));
+                    .thenReturn(List.of(activeMemberJourneyMember, activeOwnedJourneyMember));
+            // DB 쿼리는 endDate DESC, journeyId DESC로 정렬해 반환한다
             when(journeyMemberRepository.findCompletedJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, TODAY))
-                    .thenReturn(List.of(completedOwnedJourneyMember, completedMemberJourneyMember));
+                    .thenReturn(List.of(completedMemberJourneyMember, completedOwnedJourneyMember));
 
             JourneyMainListResponse response = journeyQueryService.retrieveMyJourneys(userId);
 
@@ -214,8 +216,8 @@ class JourneyQueryServiceTest {
 
     private JourneyMember journeyMember(Journey journey, Long userId, boolean isHost) {
         JourneyMember journeyMember = isHost
-                ? JourneyMember.createHost(journey, createUser(userId, "host-" + userId))
-                : JourneyMember.createMember(journey, createUser(userId, "member-" + userId));
+                ? JourneyMember.createHost(journey, createUser(userId, "host-" + userId), LocalDateTime.now())
+                : JourneyMember.createMember(journey, createUser(userId, "member-" + userId), LocalDateTime.now());
         ReflectionTestUtils.setField(journeyMember, "status", JourneyMemberStatus.ACTIVE);
         return journeyMember;
     }

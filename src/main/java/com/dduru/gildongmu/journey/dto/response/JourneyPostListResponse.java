@@ -9,21 +9,15 @@ import java.util.Map;
 
 public record JourneyPostListResponse(
         Long journeyId,
-        List<JourneyPostResponse> posts
+        List<JourneyPostResponse> posts,
+        Long nextCursor,
+        boolean hasNext,
+        int size
 ) {
     public static JourneyPostListResponse of(
             Long journeyId,
             List<JourneyPost> journeyPosts,
-            Long currentUserId,
-            Long hostUserId,
-            ProfileImageResolver profileImageResolver
-    ) {
-        return of(journeyId, journeyPosts, currentUserId, hostUserId, profileImageResolver, Map.of(), Map.of());
-    }
-
-    public static JourneyPostListResponse of(
-            Long journeyId,
-            List<JourneyPost> journeyPosts,
+            boolean hasNext,
             Long currentUserId,
             Long hostUserId,
             ProfileImageResolver profileImageResolver,
@@ -43,7 +37,16 @@ public record JourneyPostListResponse(
                     );
                 })
                 .toList();
+        Long nextCursor = hasNext && !journeyPosts.isEmpty()
+                ? journeyPosts.get(journeyPosts.size() - 1).getId()
+                : null;
 
-        return new JourneyPostListResponse(journeyId, posts);
+        return new JourneyPostListResponse(
+                journeyId,
+                posts,
+                nextCursor,
+                hasNext,
+                posts.size()
+        );
     }
 }

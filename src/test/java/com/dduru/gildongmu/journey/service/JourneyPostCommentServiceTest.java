@@ -358,7 +358,6 @@ class JourneyPostCommentServiceTest {
         JourneyPost journeyPost = JourneyPost.create(
                 journey,
                 author,
-                "기존 제목",
                 "기존 내용입니다.",
                 null
         );

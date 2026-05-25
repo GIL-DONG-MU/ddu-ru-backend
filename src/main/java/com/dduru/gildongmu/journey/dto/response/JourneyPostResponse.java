@@ -11,7 +11,6 @@ import java.util.List;
 public record JourneyPostResponse(
         Long journeyPostId,
         ParticipantInfo author,
-        String title,
         String content,
         String imageUrl,
         boolean isNotice,
@@ -26,9 +25,10 @@ public record JourneyPostResponse(
             JourneyPost journeyPost,
             Long currentUserId,
             Long hostUserId,
-            ProfileImageResolver profileImageResolver
+            ProfileImageResolver profileImageResolver,
+            long commentCount
     ) {
-        return from(journeyPost, currentUserId, hostUserId, profileImageResolver, 0L, List.of());
+        return from(journeyPost, currentUserId, hostUserId, profileImageResolver, commentCount, List.of());
     }
 
     public static JourneyPostResponse from(
@@ -50,7 +50,6 @@ public record JourneyPostResponse(
                         hostUserId != null && hostUserId.equals(journeyPost.getAuthor().getId()),
                         profileImageResolver
                 ),
-                journeyPost.getTitle(),
                 journeyPost.getContent(),
                 journeyPost.getImageUrl(),
                 journeyPost.isNotice(),
