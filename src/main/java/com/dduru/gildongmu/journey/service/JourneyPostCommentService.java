@@ -120,7 +120,8 @@ public class JourneyPostCommentService {
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {
         getAccessibleJourneyPost(journeyId, journeyPostId, userId);
-        JourneyPostComment comment = getOwnedComment(journeyPostId, commentId, userId);
+        Long hostUserId = findActiveHostUserId(journeyId);
+        JourneyPostComment comment = getDeletableComment(journeyPostId, commentId, userId, hostUserId);
 
         comment.softDelete(userId, timeProvider.now());
         log.info("나의 여정 게시글 댓글 삭제됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
@@ -164,6 +165,15 @@ public class JourneyPostCommentService {
         JourneyPostComment comment = journeyPostCommentRepository
                 .getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId);
         if (!comment.isAuthor(userId)) {
+            throw new JourneyPostCommentAccessDeniedException();
+        }
+        return comment;
+    }
+
+    private JourneyPostComment getDeletableComment(Long journeyPostId, Long commentId, Long userId, Long hostUserId) {
+        JourneyPostComment comment = journeyPostCommentRepository
+                .getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId);
+        if (!comment.isAuthor(userId) && !userId.equals(hostUserId)) {
             throw new JourneyPostCommentAccessDeniedException();
         }
         return comment;
