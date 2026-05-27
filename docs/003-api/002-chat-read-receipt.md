@@ -1,4 +1,4 @@
-# Chat Read Receipt API Design
+# 002. Chat Read Receipt API Design
 
 ## 1. API 개요
 
@@ -448,4 +448,3 @@ public ChatReadResponse read(Long userId, Long roomId, ChatReadRequest request)
 - WebSocket READ 이벤트 발행 테스트
 - sender 자동 읽음 처리 테스트
 - 메시지 조회 `unreadCount` 계산 테스트
-
