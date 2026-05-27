@@ -1,4 +1,4 @@
-# Participation / Group Chat Final Design
+# 002. Participation / Group Chat Final Design
 
 ## 1. 목적
 
