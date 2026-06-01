@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.JourneyPostComment;
+import com.dduru.gildongmu.journey.dto.query.CommentCountQueryResult;
 import com.dduru.gildongmu.journey.exception.JourneyPostCommentNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,13 +18,13 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
     long countByJourneyPost_IdAndIsDeletedFalse(Long journeyPostId);
 
     @Query("""
-            SELECT c.journeyPost.id, COUNT(c)
+            SELECT new com.dduru.gildongmu.journey.dto.query.CommentCountQueryResult(c.journeyPost.id, COUNT(c))
             FROM JourneyPostComment c
             WHERE c.journeyPost.id IN :postIds
               AND c.isDeleted = false
             GROUP BY c.journeyPost.id
             """)
-    List<Object[]> findCommentCountsByJourneyPostIds(@Param("postIds") List<Long> postIds);
+    List<CommentCountQueryResult> findCommentCountsByJourneyPostIds(@Param("postIds") List<Long> postIds);
 
     default Map<Long, Long> getCommentCountsByJourneyPostIds(List<Long> postIds) {
         if (postIds.isEmpty()) {
@@ -31,8 +32,8 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
         }
         return findCommentCountsByJourneyPostIds(postIds).stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        CommentCountQueryResult::postId,
+                        CommentCountQueryResult::count
                 ));
     }
 

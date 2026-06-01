@@ -107,7 +107,7 @@ public class JourneyPostCommentService {
         String content = normalizeContentPatch(request.content());
         validateHasAnyPatch(content);
 
-        updateJourneyPostComment(comment, content);
+        comment.updateContent(content);
         journeyPostCommentRepository.flush();
 
         log.info("나의 여정 게시글 댓글 수정됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
@@ -136,25 +136,12 @@ public class JourneyPostCommentService {
         );
     }
 
-    private void updateJourneyPostComment(JourneyPostComment comment, String content) {
-        comment.updateContent(content);
-    }
-
     private JourneyPost getAccessibleJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
-        validateActiveMember(journeyId, userId);
-        return journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
-    }
-
-    private void validateActiveMember(Long journeyId, Long userId) {
         journeyRepository.getByIdOrThrow(journeyId);
-        boolean isActiveMember = journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
-                journeyId,
-                userId,
-                JourneyMemberStatus.ACTIVE
-        );
-        if (!isActiveMember) {
+        if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE)) {
             throw new JourneyAccessDeniedException();
         }
+        return journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
     }
 
     private JourneyPostComment getOwnedComment(Long journeyPostId, Long commentId, Long userId) {
