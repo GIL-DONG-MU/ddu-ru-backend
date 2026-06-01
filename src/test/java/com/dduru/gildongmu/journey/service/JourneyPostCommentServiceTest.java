@@ -282,6 +282,37 @@ class JourneyPostCommentServiceTest {
         }
 
         @Test
+        @DisplayName("공백으로 수정하면 예외가 발생한다")
+        void blankUpdateContentThrowsException() {
+            Long journeyId = 1L;
+            Long journeyPostId = 101L;
+            Long commentId = 11L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, 20L);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "host"));
+            JourneyPostComment comment = createComment(commentId, journeyPost, createUser(userId, "author"));
+            JourneyPostCommentUpdateRequest request = new JourneyPostCommentUpdateRequest("   ");
+
+            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenActiveHost(journeyId, 20L);
+            when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
+                    .thenReturn(comment);
+
+            assertThatThrownBy(() -> journeyPostCommentService.updateComment(
+                    journeyId,
+                    journeyPostId,
+                    commentId,
+                    userId,
+                    request
+            ))
+                    .isInstanceOf(InvalidJourneyPostCommentException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_POST_COMMENT_INVALID_CONTENT);
+
+            verify(journeyPostCommentRepository, never()).flush();
+        }
+
+        @Test
         @DisplayName("작성자가 아니면 댓글을 수정할 수 없다")
         void nonAuthorCannotUpdateComment() {
             Long journeyId = 1L;

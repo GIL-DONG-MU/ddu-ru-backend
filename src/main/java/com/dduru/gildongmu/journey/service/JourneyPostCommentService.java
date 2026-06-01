@@ -24,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.util.List;
 
 @Slf4j
@@ -33,7 +31,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostCommentService {
-    private static final int CONTENT_MAX_LENGTH = 300;
     private static final int DEFAULT_COMMENT_LIMIT = 20;
     private static final int MAX_COMMENT_LIMIT = 50;
 
@@ -191,16 +188,7 @@ public class JourneyPostCommentService {
     }
 
     private String normalizeContent(String content) {
-        if (!StringUtils.hasText(content)) {
-            throw InvalidJourneyPostCommentException.invalidContent();
-        }
-
-        String normalizedContent = content.trim();
-        int length = normalizedContent.codePointCount(0, normalizedContent.length());
-        if (length > CONTENT_MAX_LENGTH) {
-            throw InvalidJourneyPostCommentException.invalidContent();
-        }
-        return normalizedContent;
+        return content.trim();
     }
 
     private String normalizeContentPatch(String content) {

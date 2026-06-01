@@ -1,12 +1,14 @@
 package com.dduru.gildongmu.journey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.journey.exception.InvalidJourneyPostCommentException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JourneyPostComment extends BaseTimeEntity {
+    private static final int CONTENT_MAX_LENGTH = 300;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +47,7 @@ public class JourneyPostComment extends BaseTimeEntity {
     private JourneyPostComment(JourneyPost journeyPost, User author, String content) {
         this.journeyPost = journeyPost;
         this.author = author;
-        this.content = content;
+        this.content = validateContent(content);
         this.isDeleted = false;
     }
 
@@ -57,7 +60,18 @@ public class JourneyPostComment extends BaseTimeEntity {
     }
 
     public void updateContent(String content) {
-        this.content = content;
+        this.content = validateContent(content);
+    }
+
+    private static String validateContent(String content) {
+        if (!StringUtils.hasText(content)) {
+            throw InvalidJourneyPostCommentException.invalidContent();
+        }
+        int length = content.codePointCount(0, content.length());
+        if (length > CONTENT_MAX_LENGTH) {
+            throw InvalidJourneyPostCommentException.invalidContent();
+        }
+        return content;
     }
 
     public void softDelete(Long deletedBy, LocalDateTime deletedAt) {
