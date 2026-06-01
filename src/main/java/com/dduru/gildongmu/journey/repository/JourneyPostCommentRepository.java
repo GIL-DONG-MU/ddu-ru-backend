@@ -3,7 +3,6 @@ package com.dduru.gildongmu.journey.repository;
 import com.dduru.gildongmu.journey.domain.JourneyPostComment;
 import com.dduru.gildongmu.journey.dto.query.CommentCountQueryResult;
 import com.dduru.gildongmu.journey.exception.JourneyPostCommentNotFoundException;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,8 +49,7 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
                      c.id DESC
             """)
     List<JourneyPostComment> findActiveCommentsByJourneyPostIdWithAuthorProfile(
-            @Param("journeyPostId") Long journeyPostId,
-            Pageable pageable
+            @Param("journeyPostId") Long journeyPostId
     );
 
     @Query("""

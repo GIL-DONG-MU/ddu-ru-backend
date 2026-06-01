@@ -8,31 +8,24 @@ import java.util.List;
 public record JourneyPostCommentListResponse(
         Long journeyPostId,
         long commentCount,
-        boolean hasMore,
         List<JourneyPostCommentResponse> comments
 ) {
     public static JourneyPostCommentListResponse of(
             Long journeyPostId,
-            long commentCount,
-            boolean hasMore,
             List<JourneyPostComment> comments,
             Long currentUserId,
             Long hostUserId,
             ProfileImageResolver profileImageResolver
     ) {
-        return new JourneyPostCommentListResponse(
-                journeyPostId,
-                commentCount,
-                hasMore,
-                comments.stream()
-                        .map(comment -> JourneyPostCommentResponse.from(
-                                comment,
-                                journeyPostId,
-                                currentUserId,
-                                hostUserId,
-                                profileImageResolver
-                        ))
-                        .toList()
-        );
+        List<JourneyPostCommentResponse> commentResponses = comments.stream()
+                .map(comment -> JourneyPostCommentResponse.from(
+                        comment,
+                        journeyPostId,
+                        currentUserId,
+                        hostUserId,
+                        profileImageResolver
+                ))
+                .toList();
+        return new JourneyPostCommentListResponse(journeyPostId, commentResponses.size(), commentResponses);
     }
 }

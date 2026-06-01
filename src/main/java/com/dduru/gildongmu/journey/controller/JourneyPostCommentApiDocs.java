@@ -32,7 +32,6 @@ public interface JourneyPostCommentApiDocs {
     ResponseEntity<ApiResult<JourneyPostCommentListResponse>> retrieveComments(
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(description = "나의 여정 게시글 ID") Long journeyPostId,
-            @Parameter(description = "조회할 댓글 개수") Integer limit,
             @Parameter(hidden = true) Long userId
     );
 
@@ -82,7 +81,7 @@ public interface JourneyPostCommentApiDocs {
 
     @Operation(
             summary = "나의 여정 게시글 댓글 삭제",
-            description = "작성자 본인이 나의 여정 게시글 댓글을 soft delete 처리합니다."
+            description = "작성자 본인 또는 호스트가 나의 여정 게시글 댓글을 soft delete 처리합니다."
     )
     @ApiResponse(responseCode = "204", description = "삭제 성공")
     @ApiErrorResponses({

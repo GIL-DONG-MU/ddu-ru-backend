@@ -35,7 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -158,7 +157,7 @@ class JourneyPostCommentServiceTest {
     class Retrieve {
 
         @Test
-        @DisplayName("active member는 댓글 목록을 최신순 limit 기반으로 조회할 수 있다")
+        @DisplayName("active member는 댓글 목록을 전체 최신순으로 조회할 수 있다")
         void activeMemberCanRetrieveComments() {
             Long journeyId = 1L;
             Long journeyPostId = 101L;
@@ -171,30 +170,20 @@ class JourneyPostCommentServiceTest {
 
             givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
             givenActiveHost(journeyId, 20L);
-            when(journeyPostCommentRepository.findActiveCommentsByJourneyPostIdWithAuthorProfile(any(), any(Pageable.class)))
+            when(journeyPostCommentRepository.findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId))
                     .thenReturn(List.of(first, second, third));
-            when(journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId)).thenReturn(5L);
 
             JourneyPostCommentListResponse response = journeyPostCommentService.retrieveComments(
                     journeyId,
                     journeyPostId,
-                    userId,
-                    2
+                    userId
             );
 
             assertThat(response.journeyPostId()).isEqualTo(journeyPostId);
-            assertThat(response.commentCount()).isEqualTo(5L);
-            assertThat(response.hasMore()).isTrue();
-            assertThat(response.comments()).hasSize(2);
+            assertThat(response.commentCount()).isEqualTo(3L);
+            assertThat(response.comments()).hasSize(3);
             assertThat(response.comments().get(0).commentId()).isEqualTo(11L);
             assertThat(response.comments().get(1).isAuthor()).isTrue();
-
-            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-            verify(journeyPostCommentRepository).findActiveCommentsByJourneyPostIdWithAuthorProfile(
-                    any(),
-                    pageableCaptor.capture()
-            );
-            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(3);
         }
 
         @Test
@@ -209,7 +198,7 @@ class JourneyPostCommentServiceTest {
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
-            assertThatThrownBy(() -> journeyPostCommentService.retrieveComments(journeyId, journeyPostId, userId, 20))
+            assertThatThrownBy(() -> journeyPostCommentService.retrieveComments(journeyId, journeyPostId, userId))
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
             verify(journeyPostRepository, never()).getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
@@ -362,6 +351,51 @@ class JourneyPostCommentServiceTest {
             assertThat(comment.isDeleted()).isTrue();
             assertThat(comment.getDeletedBy()).isEqualTo(userId);
             assertThat(comment.getDeletedAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        @DisplayName("호스트는 다른 멤버의 댓글을 soft delete 처리할 수 있다")
+        void hostCanDeleteOtherMemberComment() {
+            Long journeyId = 1L;
+            Long journeyPostId = 101L;
+            Long commentId = 11L;
+            Long hostId = 20L;
+            Long memberId = 30L;
+            Journey journey = createJourney(journeyId, hostId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(hostId, "host"));
+            JourneyPostComment comment = createComment(commentId, journeyPost, createUser(memberId, "member"));
+
+            givenAccessiblePost(journeyId, journeyPostId, hostId, journey, journeyPost);
+            when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
+                    .thenReturn(comment);
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostId)).thenReturn(true);
+            when(timeProvider.now()).thenReturn(NOW);
+
+            journeyPostCommentService.deleteComment(journeyId, journeyPostId, commentId, hostId);
+
+            assertThat(comment.isDeleted()).isTrue();
+            assertThat(comment.getDeletedBy()).isEqualTo(hostId);
+            assertThat(comment.getDeletedAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        @DisplayName("작성자도 호스트도 아니면 댓글을 삭제할 수 없다")
+        void nonAuthorNonHostCannotDeleteComment() {
+            Long journeyId = 1L;
+            Long journeyPostId = 101L;
+            Long commentId = 11L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, 20L);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "host"));
+            JourneyPostComment comment = createComment(commentId, journeyPost, createUser(30L, "author"));
+
+            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
+                    .thenReturn(comment);
+            when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
+
+            assertThatThrownBy(() -> journeyPostCommentService.deleteComment(journeyId, journeyPostId, commentId, userId))
+                    .isInstanceOf(JourneyPostCommentAccessDeniedException.class);
         }
     }
 

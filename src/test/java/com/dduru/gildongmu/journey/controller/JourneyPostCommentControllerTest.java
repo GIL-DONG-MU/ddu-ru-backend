@@ -62,21 +62,18 @@ class JourneyPostCommentControllerTest {
         JourneyPostCommentListResponse response = new JourneyPostCommentListResponse(
                 journeyPostId,
                 5L,
-                true,
                 List.of()
         );
-        when(journeyPostCommentService.retrieveComments(journeyId, journeyPostId, 10L, 2))
+        when(journeyPostCommentService.retrieveComments(journeyId, journeyPostId, 10L))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments", journeyId, journeyPostId)
-                        .param("limit", "2"))
+        mockMvc.perform(get("/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments", journeyId, journeyPostId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.journeyPostId").value(101))
-                .andExpect(jsonPath("$.data.commentCount").value(5))
-                .andExpect(jsonPath("$.data.hasMore").value(true));
+                .andExpect(jsonPath("$.data.commentCount").value(5));
 
-        verify(journeyPostCommentService).retrieveComments(journeyId, journeyPostId, 10L, 2);
+        verify(journeyPostCommentService).retrieveComments(journeyId, journeyPostId, 10L);
     }
 
     @Test

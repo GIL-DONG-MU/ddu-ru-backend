@@ -21,7 +21,6 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -31,9 +30,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostCommentService {
-    private static final int DEFAULT_COMMENT_LIMIT = 20;
-    private static final int MAX_COMMENT_LIMIT = 50;
-
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
@@ -46,28 +42,16 @@ public class JourneyPostCommentService {
     public JourneyPostCommentListResponse retrieveComments(
             Long journeyId,
             Long journeyPostId,
-            Long userId,
-            Integer limit
+            Long userId
     ) {
         JourneyPost journeyPost = getAccessibleJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
-        int commentLimit = normalizeCommentLimit(limit);
 
-        List<JourneyPostComment> fetchedComments = journeyPostCommentRepository
-                .findActiveCommentsByJourneyPostIdWithAuthorProfile(
-                        journeyPostId,
-                        PageRequest.of(0, commentLimit + 1)
-                );
-        boolean hasMore = fetchedComments.size() > commentLimit;
-        List<JourneyPostComment> comments = hasMore
-                ? List.copyOf(fetchedComments.subList(0, commentLimit))
-                : fetchedComments;
-        long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
+        List<JourneyPostComment> comments = journeyPostCommentRepository
+                .findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId);
 
         return JourneyPostCommentListResponse.of(
                 journeyPost.getId(),
-                commentCount,
-                hasMore,
                 comments,
                 userId,
                 hostUserId,
@@ -117,7 +101,12 @@ public class JourneyPostCommentService {
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {
         getAccessibleJourneyPost(journeyId, journeyPostId, userId);
-        JourneyPostComment comment = getOwnedComment(journeyPostId, commentId, userId);
+        JourneyPostComment comment = journeyPostCommentRepository
+                .getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId);
+
+        if (!comment.isAuthor(userId) && !journeyMemberRepository.existsActiveHost(journeyId, userId)) {
+            throw new JourneyPostCommentAccessDeniedException();
+        }
 
         comment.softDelete(userId, timeProvider.now());
         log.info("나의 여정 게시글 댓글 삭제됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
@@ -156,16 +145,6 @@ public class JourneyPostCommentService {
     private Long findActiveHostUserId(Long journeyId) {
         return journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId)
                 .orElseThrow(JourneyHostNotFoundException::new);
-    }
-
-    private int normalizeCommentLimit(Integer limit) {
-        if (limit == null) {
-            return DEFAULT_COMMENT_LIMIT;
-        }
-        if (limit < 1) {
-            return 1;
-        }
-        return Math.min(limit, MAX_COMMENT_LIMIT);
     }
 
     private void validateHasAnyPatch(String content) {
