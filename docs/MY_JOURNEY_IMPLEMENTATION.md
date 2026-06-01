@@ -88,10 +88,10 @@
 
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
-| 댓글 목록 조회 (limit 기반) | `GET` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments` | ✅ 구현 |
+| 댓글 목록 조회 (전체) | `GET` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments` | ✅ 구현 |
 | 댓글 작성 | `POST` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments` | ✅ 구현 |
 | 댓글 수정 | `PATCH` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments/{commentId}` | ✅ 구현 |
-| 댓글 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments/{commentId}` | ✅ 구현 |
+| 댓글 삭제 (작성자 또는 호스트) | `DELETE` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/comments/{commentId}` | ✅ 구현 |
 
 ### 일정
 
@@ -149,7 +149,10 @@
 - **접근 제어**: 모든 나의 여정 API는 `journey_members.status = ACTIVE` 여부를 확인해 비멤버 접근을 차단한다.
 - **공지 최대 3개 제한**: 공지 지정 시 비관적 락(`SELECT FOR UPDATE`)으로 직렬화해 동시성을 제어한다.
 - **커서 기반 페이지네이션**: 게시글 목록은 공지 우선 → 최신순 정렬을 DB `ORDER BY`로 보장하며, look-ahead 방식으로 `hasNext`를 판단한다.
+- **댓글 전체 로드**: 댓글 목록은 게시글 상세 진입 시 전체를 한 번에 반환한다. 여정 멤버는 소규모 그룹으로 댓글 수가 구조적으로 제한되므로 페이지네이션 없이 전체 조회한다.
 - **댓글 수 N+1 방지**: 게시글 목록 조회 시 `GROUP BY` 벌크 쿼리로 댓글 수를 한 번에 집계한다.
 - **소프트 삭제**: 게시글(`JourneyPost`)과 댓글(`JourneyPostComment`) 모두 `isDeleted / deletedAt / deletedBy` 패턴을 사용한다.
+- **댓글 삭제 권한**: 댓글은 작성자 본인 또는 호스트가 삭제할 수 있다. 수정은 작성자 본인만 가능하다.
+- **content 검증 위치**: 댓글 content의 유효성(빈 값, 300자 초과)은 `JourneyPostComment` 도메인 내부에서 검증한다. 서비스는 trim만 수행한다.
 - **호스트 표시**: 게시글·댓글 응답에서 작성자가 호스트인지 여부를 `isHost` 필드로 함께 내려준다.
 - **그룹 채팅 연동**: 나의 여정 상세 응답에 `groupRoomId`를 포함해 프론트가 바로 채팅방으로 이동할 수 있게 한다.
