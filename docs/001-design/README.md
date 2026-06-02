@@ -7,6 +7,7 @@
 | [설계 문서 템플릿](./000-template.md) | 도메인, 데이터, 제품 흐름 문서 작성 양식 |
 | [도메인 명세](./001-domain.md) | 주요 도메인 책임, 관계, 상태 흐름 |
 | [데이터 명세](./002-data.md) | 주요 테이블, Flyway, 공통 시간 필드, 삭제 정책 |
+| [나의 여정 구현 현황](./003-my-journey-implementation.md) | 나의 여정 API, 도메인 구현 상태, 설계 포인트 |
 | [나의 여정 제품 흐름](./flows/001-my-journey-product-flow.md) | 승인 이후 여행 워크스페이스의 제품 흐름 |
 | [동행 신청/그룹 채팅 흐름](./flows/002-participation-group-chat-flow.md) | 참여 신청, 연락, 승인, 그룹방 생성 흐름 |
 

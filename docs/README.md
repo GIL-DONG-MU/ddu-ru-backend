@@ -33,6 +33,7 @@ docs/
 │   ├── 000-template.md
 │   ├── 001-domain.md
 │   ├── 002-data.md
+│   ├── 003-my-journey-implementation.md
 │   └── flows/
 ├── 002-architecture/
 │   ├── 000-template.md
@@ -71,6 +72,7 @@ docs/
 
 - [도메인 명세](./001-design/001-domain.md)
 - [데이터 명세](./001-design/002-data.md)
+- [나의 여정 구현 현황](./001-design/003-my-journey-implementation.md)
 - [제품/기능 흐름](./001-design/flows/)
 
 ### 002-architecture - 코드 구조

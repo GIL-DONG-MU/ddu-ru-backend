@@ -11,7 +11,7 @@
 - 권한 구조가 어떻게 나뉘는지
 
 API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된다.
-개발 진행 상태와 설계 포인트는 [MY_JOURNEY_IMPLEMENTATION.md](./MY_JOURNEY_IMPLEMENTATION.md)를 참고한다.
+개발 진행 상태와 설계 포인트는 [나의 여정 구현 현황](../003-my-journey-implementation.md)을 참고한다.
 
 ---
 

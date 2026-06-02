@@ -1,7 +1,7 @@
-# My Journey Implementation
+# 003. 나의 여정 구현 현황
 
 나의 여정 기능의 개발 진행 상태, 도메인 구조, 설계 포인트를 정리한 문서다.
-기획/제품 흐름은 [MY_JOURNEY_PRODUCT_FLOW.md](./MY_JOURNEY_PRODUCT_FLOW.md)를 참고한다.
+기획/제품 흐름은 [나의 여정 제품 흐름](./flows/001-my-journey-product-flow.md)을 참고한다.
 
 ---
 
