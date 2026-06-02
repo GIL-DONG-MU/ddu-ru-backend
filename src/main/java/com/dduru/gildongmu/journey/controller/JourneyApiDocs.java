@@ -9,6 +9,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -67,7 +68,7 @@ public interface JourneyApiDocs {
             summary = "나의 여정 멤버 내보내기",
             description = "active host가 특정 나의 여정 멤버를 내보냅니다. 멤버십을 REMOVED로 변경하고 그룹 채팅방 멤버십도 함께 제거합니다."
     )
-    @ApiResponse(responseCode = "204", description = "내보내기 성공")
+    @ApiResponse(responseCode = "204", description = "내보내기 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.JOURNEY_ACCESS_DENIED

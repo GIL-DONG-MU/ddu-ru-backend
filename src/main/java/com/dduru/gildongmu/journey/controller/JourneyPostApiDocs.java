@@ -12,6 +12,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -124,7 +125,7 @@ public interface JourneyPostApiDocs {
             summary = "나의 여정 게시글 삭제",
             description = "작성자 본인이 나의 여정 게시글을 soft delete 처리합니다."
     )
-    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.JOURNEY_NOT_FOUND,
