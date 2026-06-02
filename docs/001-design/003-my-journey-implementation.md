@@ -16,6 +16,7 @@
 | `journey_members` | 실제 협업 멤버 관리 (`HOST / MEMBER`, `ACTIVE / REMOVED / LEFT`) |
 | `journey_posts` | 여행 게시판 게시글 |
 | `journey_post_comments` | 게시글 댓글 |
+| `journey_schedules` | 여행 일정 아이템 |
 
 나의 여정 관련 권한과 목록 조회는 `journey_members`를 중심으로 판단한다.
 
@@ -47,7 +48,7 @@
 - 여행 게시판 → ✅ 완료
 - 댓글 → ✅ 완료
 - 공지 지정/해제 → ✅ 완료
-- 일정 → 🔜 구현예정
+- 일정 → ✅ 완료
 - 할 일 → 🔜 구현예정
 - 여행 정보 → 🔜 구현예정
 - 투표 → 🔜 구현예정
@@ -97,10 +98,10 @@
 
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
-| 일정 조회 | `GET` | `/api/v1/journeys/{journeyId}/schedules` | 🔜 구현예정 |
-| 일정 아이템 추가 | `POST` | `/api/v1/journeys/{journeyId}/schedules/{day}/items` | 🔜 구현예정 |
-| 일정 아이템 수정 | `PATCH` | `/api/v1/journeys/{journeyId}/schedules/{day}/items/{itemId}` | 🔜 구현예정 |
-| 일정 아이템 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/schedules/{day}/items/{itemId}` | 🔜 구현예정 |
+| 일정 목록 조회 (Day 그룹) | `GET` | `/api/v1/journeys/{journeyId}/schedules` | ✅ 구현 |
+| 일정 생성 | `POST` | `/api/v1/journeys/{journeyId}/schedules` | ✅ 구현 |
+| 일정 수정 | `PATCH` | `/api/v1/journeys/{journeyId}/schedules/{scheduleId}` | ✅ 구현 |
+| 일정 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/schedules/{scheduleId}` | ✅ 구현 |
 
 ### 할 일
 
@@ -137,7 +138,7 @@
 | 여행 멤버십 | `JourneyMember` | V13 | `JourneyService` | ✅ 구현 |
 | 여행 게시판 | `JourneyPost` | V18 | `JourneyPostService` | ✅ 구현 |
 | 댓글 | `JourneyPostComment` | V19 | `JourneyPostCommentService` | ✅ 구현 |
-| 일정 | - | - | - | 🔜 구현예정 |
+| 일정 | `JourneySchedule` | V20 | `JourneyScheduleService` | ✅ 구현 |
 | 할 일 | - | - | - | 🔜 구현예정 |
 | 여행 정보 | - | - | - | 🔜 구현예정 |
 | 투표 | - | - | - | 🔜 구현예정 |
@@ -151,8 +152,11 @@
 - **커서 기반 페이지네이션**: 게시글 목록은 공지 우선 → 최신순 정렬을 DB `ORDER BY`로 보장하며, look-ahead 방식으로 `hasNext`를 판단한다.
 - **댓글 전체 로드**: 댓글 목록은 게시글 상세 진입 시 전체를 한 번에 반환한다. 여정 멤버는 소규모 그룹으로 댓글 수가 구조적으로 제한되므로 페이지네이션 없이 전체 조회한다.
 - **댓글 수 N+1 방지**: 게시글 목록 조회 시 `GROUP BY` 벌크 쿼리로 댓글 수를 한 번에 집계한다.
-- **소프트 삭제**: 게시글(`JourneyPost`)과 댓글(`JourneyPostComment`) 모두 `isDeleted / deletedAt / deletedBy` 패턴을 사용한다.
+- **소프트 삭제**: 게시글(`JourneyPost`), 댓글(`JourneyPostComment`), 일정(`JourneySchedule`) 모두 `isDeleted / deletedAt / deletedBy` 패턴을 사용한다.
 - **댓글 삭제 권한**: 댓글은 작성자 본인 또는 호스트가 삭제할 수 있다. 수정은 작성자 본인만 가능하다.
 - **content 검증 위치**: 댓글 content의 유효성(빈 값, 300자 초과)은 `JourneyPostComment` 도메인 내부에서 검증한다. 서비스는 trim만 수행한다.
 - **호스트 표시**: 게시글·댓글 응답에서 작성자가 호스트인지 여부를 `isHost` 필드로 함께 내려준다.
 - **그룹 채팅 연동**: 나의 여정 상세 응답에 `groupRoomId`를 포함해 프론트가 바로 채팅방으로 이동할 수 있게 한다.
+- **일정 Day 그룹핑**: 일정 목록은 여행 시작일~종료일 전 구간을 Day 단위로 나눠 반환한다. 일정이 없는 날도 빈 Day 구조를 유지한다. `day` 값은 `scheduleDate - startDate + 1`로 서버가 계산하며 클라이언트는 보내지 않는다.
+- **일정 시간 제약**: 시작 시간(`startTime`)과 종료 시간(`endTime`) 모두 선택값이다. 종료 시간은 시작 시간이 있을 때만 허용하며, 이 제약은 엔티티 생성/수정 시 도메인 내부에서 검증한다.
+- **일정 수정·삭제 권한**: 일정은 작성자 여부와 관계없이 `ACTIVE` 멤버 전체가 수정·삭제할 수 있다. 협업 일정 관리 특성상 소유권 제한을 두지 않는다.
