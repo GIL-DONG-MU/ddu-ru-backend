@@ -101,6 +101,13 @@ public enum ErrorCode {
     JOURNEY_POST_COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 댓글에 대한 권한이 없습니다."),
     JOURNEY_POST_COMMENT_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 댓글 내용이 없습니다."),
     JOURNEY_POST_COMMENT_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "댓글 내용은 1자 이상 300자 이하여야 합니다."),
+    JOURNEY_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 일정을 찾을 수 없습니다."),
+    JOURNEY_SCHEDULE_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 일정 내용이 없습니다."),
+    JOURNEY_SCHEDULE_INVALID_DATE(HttpStatus.BAD_REQUEST, "일정 날짜는 여행 기간 내에서만 설정할 수 있습니다."),
+    JOURNEY_SCHEDULE_INVALID_TITLE(HttpStatus.BAD_REQUEST, "일정 제목은 1자 이상 30자 이하여야 합니다."),
+    JOURNEY_SCHEDULE_INVALID_MEMO(HttpStatus.BAD_REQUEST, "일정 메모는 100자 이하여야 합니다."),
+    JOURNEY_SCHEDULE_INVALID_PLACE_NAME(HttpStatus.BAD_REQUEST, "장소명은 30자 이하여야 합니다."),
+    JOURNEY_SCHEDULE_INVALID_TIME(HttpStatus.BAD_REQUEST, "종료 시간은 시작 시간이 설정된 경우에만 입력할 수 있습니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),
