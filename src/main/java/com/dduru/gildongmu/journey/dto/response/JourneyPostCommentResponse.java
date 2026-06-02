@@ -28,7 +28,7 @@ public record JourneyPostCommentResponse(
                 journeyPostId,
                 ParticipantInfo.from(
                         comment.getAuthor(),
-                        hostUserId != null && hostUserId.equals(authorUserId),
+                        hostUserId.equals(authorUserId),
                         profileImageResolver
                 ),
                 comment.getContent(),
