@@ -85,13 +85,8 @@ public class JourneyScheduleService {
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
 
         validateHasAnyPatch(title, category, scheduleDate, startTime, endTime, placeName, applyMemoPatch, applyImageUrlPatch);
-
-        LocalTime effectiveStartTime = startTime != null ? startTime : schedule.getStartTime();
-        LocalTime effectiveEndTime = endTime != null ? endTime : schedule.getEndTime();
-        JourneySchedule.validateTimeConstraint(effectiveStartTime, effectiveEndTime);
-
-        LocalDate effectiveDate = scheduleDate != null ? scheduleDate : schedule.getScheduleDate();
-        validateScheduleDate(effectiveDate, post.getStartDate(), post.getEndDate());
+        validateEffectiveTimeConstraint(schedule, startTime, endTime);
+        validateEffectiveScheduleDate(schedule, scheduleDate, post);
 
         updateJourneySchedule(schedule, title, category, scheduleDate, startTime, endTime, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
         journeyScheduleRepository.flush();
@@ -152,6 +147,17 @@ public class JourneyScheduleService {
             throw new JourneyAccessDeniedException();
         }
         return journey;
+    }
+
+    private static void validateEffectiveTimeConstraint(JourneySchedule schedule, LocalTime startTime, LocalTime endTime) {
+        LocalTime effectiveStartTime = startTime != null ? startTime : schedule.getStartTime();
+        LocalTime effectiveEndTime = endTime != null ? endTime : schedule.getEndTime();
+        JourneySchedule.validateTimeConstraint(effectiveStartTime, effectiveEndTime);
+    }
+
+    private static void validateEffectiveScheduleDate(JourneySchedule schedule, LocalDate scheduleDate, Post post) {
+        LocalDate effectiveDate = scheduleDate != null ? scheduleDate : schedule.getScheduleDate();
+        validateScheduleDate(effectiveDate, post.getStartDate(), post.getEndDate());
     }
 
     private static void validateScheduleDate(LocalDate scheduleDate, LocalDate startDate, LocalDate endDate) {
