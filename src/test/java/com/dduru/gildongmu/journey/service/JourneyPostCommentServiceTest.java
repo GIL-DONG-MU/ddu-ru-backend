@@ -404,7 +404,7 @@ class JourneyPostCommentServiceTest {
         when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                 .thenReturn(true);
         when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
-                .thenReturn(journeyPost); // validateJourneyPostAccess + createComment의 별도 fetch 모두 커버
+                .thenReturn(journeyPost);
     }
 
     private void givenActiveHost(Long journeyId, Long hostUserId) {
