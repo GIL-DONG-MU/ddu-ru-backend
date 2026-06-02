@@ -9,6 +9,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface AdminReportApiDocs {
 
     @Operation(summary = "신고 목록 조회", description = "신고 내역을 상태·페이지로 조회합니다. 상태를 생략하면 전체입니다.")
+    @ApiResponse(responseCode = "200", description = "신고 목록 조회 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.ACCESS_DENIED
@@ -32,6 +34,7 @@ public interface AdminReportApiDocs {
     );
 
     @Operation(summary = "신고 처리", description = "신고 상태·처리 메모를 갱신하고 처리자를 기록합니다.")
+    @ApiResponse(responseCode = "200", description = "신고 처리 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.REPORT_NOT_FOUND,

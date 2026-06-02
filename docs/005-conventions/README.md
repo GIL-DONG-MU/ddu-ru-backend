@@ -8,6 +8,7 @@
 | [팀 협업 컨벤션](./001-team.md) | Issue, branch, commit, PR 규칙 |
 | [예외 처리 전략](./002-exception.md) | 중앙 `ErrorCode` + 개별 예외 클래스 사용 기준 |
 | [팀 FAQ](./003-faq.md) | DTO, ApiDocs, Service, Repository 등 자주 묻는 질문 |
+| [Swagger API 명세 작성 가이드](./004-swagger-api-docs.md) | Swagger UI에 노출되는 API 명세 작성 기준 |
 
 ## 파일명 / 제목 규칙
 

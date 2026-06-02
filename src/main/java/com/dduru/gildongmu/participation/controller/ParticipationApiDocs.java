@@ -97,7 +97,6 @@ public interface ParticipationApiDocs {
             ErrorCode.POST_NOT_FOUND,
             ErrorCode.PARTICIPATION_NOT_FOUND,
             ErrorCode.POST_ACCESS_DENIED,
-            ErrorCode.PARTICIPATION_POST_MISMATCH,
             ErrorCode.RECRUITMENT_CLOSED,
             ErrorCode.RECRUITMENT_FULL,
             ErrorCode.PARTICIPATION_REJECTION_NOT_ALLOWED,

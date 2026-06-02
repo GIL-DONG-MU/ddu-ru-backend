@@ -8,6 +8,7 @@ import com.dduru.gildongmu.survey.dto.response.SurveyQuestionListResponse;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +24,10 @@ public interface SurveyApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_NOT_FOUND
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.PROFILE_NOT_FOUND,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND,
+            ErrorCode.AVATAR_PROFILE_NOT_FOUND
     })
     ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 
@@ -43,10 +47,11 @@ public interface SurveyApiDocs {
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
 
     @Operation(summary = "설문조사 스킵", description = "설문조사를 건너뛰고 온보딩 상태를 SKIPPED로 업데이트합니다.")
-    @ApiResponse(responseCode = "204", description = "스킵 성공")
+    @ApiResponse(responseCode = "204", description = "스킵 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_ONBOARDING_NOT_FOUND
+            ErrorCode.USER_ONBOARDING_NOT_FOUND,
+            ErrorCode.SURVEY_ALREADY_COMPLETED
     })
     ResponseEntity<ApiResult<Void>> skipSurvey(@Parameter(hidden = true) Long userId);
 }

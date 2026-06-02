@@ -17,6 +17,7 @@
 | 로컬 실행/Docker | [Docker 운영 가이드](./004-operations/003-docker.md) |
 | 배포/Blue-Green | [배포 파이프라인](./004-operations/002-deployment.md) |
 | PR/커밋/브랜치 | [팀 협업 컨벤션](./005-conventions/001-team.md) |
+| Swagger API 명세 작성 | [Swagger API 명세 작성 가이드](./005-conventions/004-swagger-api-docs.md) |
 | 채팅 API 설계 | [API 설계 문서](./003-api/) |
 | 의사결정 기록 | [ADR](./006-adr/) |
 | 새 문서 작성 | [공통 문서 템플릿](./000-template.md) |
@@ -54,7 +55,8 @@ docs/
 │   ├── 000-template.md
 │   ├── 001-team.md
 │   ├── 002-exception.md
-│   └── 003-faq.md
+│   ├── 003-faq.md
+│   └── 004-swagger-api-docs.md
 ├── 006-adr/
 │   ├── 000-template.md
 │   ├── 001-package-by-feature-controller-service-repository.md
@@ -105,6 +107,7 @@ Swagger보다 상세한 API별 처리 흐름, 예외, 테스트 케이스를 정
 - [팀 협업 컨벤션](./005-conventions/001-team.md)
 - [예외 처리 전략](./005-conventions/002-exception.md)
 - [팀 FAQ](./005-conventions/003-faq.md)
+- [Swagger API 명세 작성 가이드](./005-conventions/004-swagger-api-docs.md)
 
 ### 006-adr - 의사결정 기록
 

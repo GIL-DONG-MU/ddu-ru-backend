@@ -145,7 +145,6 @@ public class ApiErrorResponseDocsCustomizer {
                 
                 Map<String, Object> dataMap = new LinkedHashMap<>();
                 dataMap.put("errorCode", errorCode.name());
-                dataMap.put("field", null);
                 dataMap.put("message", errorCode.getMessage());
                 errorResponseMap.put("data", dataMap);
                 

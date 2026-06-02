@@ -65,7 +65,8 @@ public interface ProfileApiDocs {
             ErrorCode.UNAUTHORIZED,
             ErrorCode.INVALID_TOKEN,
             ErrorCode.PROFILE_NOT_FOUND,
-            ErrorCode.DUPLICATE_PHONE_NUMBER
+            ErrorCode.DUPLICATE_PHONE_NUMBER,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
     })
     ResponseEntity<ApiResult<Void>> setupInitialProfile(
             @Parameter(hidden = true) Long userId,
@@ -88,7 +89,9 @@ public interface ProfileApiDocs {
             ErrorCode.NICKNAME_CONTAINS_BAD_WORD,
             ErrorCode.NICKNAME_ALREADY_TAKEN,
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.PROFILE_NOT_FOUND
+            ErrorCode.PROFILE_NOT_FOUND,
+            ErrorCode.BG_COLOR_NOT_FOUND,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
     })
     ResponseEntity<ApiResult<Void>> updateProfile(
             @Parameter(hidden = true) Long userId,
