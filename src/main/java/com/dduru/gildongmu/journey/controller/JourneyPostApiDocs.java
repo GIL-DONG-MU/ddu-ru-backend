@@ -70,6 +70,9 @@ public interface JourneyPostApiDocs {
             ErrorCode.JOURNEY_NOT_FOUND,
             ErrorCode.JOURNEY_ACCESS_DENIED,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
+            ErrorCode.IMAGE_URL_INVALID_FORMAT,
+            ErrorCode.IMAGE_URL_NOT_ABSOLUTE,
+            ErrorCode.IMAGE_URL_INVALID_SCHEME,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })
     ResponseEntity<ApiResult<JourneyPostResponse>> createPost(
@@ -92,6 +95,9 @@ public interface JourneyPostApiDocs {
             ErrorCode.JOURNEY_POST_ACCESS_DENIED,
             ErrorCode.JOURNEY_POST_EMPTY_PATCH,
             ErrorCode.JOURNEY_POST_INVALID_CONTENT,
+            ErrorCode.IMAGE_URL_INVALID_FORMAT,
+            ErrorCode.IMAGE_URL_NOT_ABSOLUTE,
+            ErrorCode.IMAGE_URL_INVALID_SCHEME,
             ErrorCode.IMAGE_URL_NOT_ALLOWED
     })
     ResponseEntity<ApiResult<JourneyPostResponse>> updatePost(
