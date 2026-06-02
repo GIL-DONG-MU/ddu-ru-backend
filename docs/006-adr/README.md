@@ -7,6 +7,8 @@
 
 ## 목록
 
+- [ADR 템플릿](./000-template.md)
+
 | 번호 | 제목 | 상태 | 날짜 |
 |:---:|---|:---:|---|
 | 001 | [Package by Feature + Controller/Service/Repository 구조](./001-package-by-feature-controller-service-repository.md) | Proposed | TODO |
@@ -19,6 +21,7 @@
 
 ## 작성 규칙
 
+- `000-template.md`는 작성 양식입니다. 실제 ADR은 `001-*`부터 시작합니다.
 - 파일명: `{번호}-{kebab-case-title}.md`
 - 번호는 3자리, 순차 증가.
 - 제목도 같은 번호를 붙여 `# ADR-001: 결정 제목` 형식으로 작성.
@@ -31,34 +34,4 @@
 
 ## 템플릿
 
-ADR을 새로 추가할 때 아래 양식을 사용합니다.
-
-```markdown
-# ADR-XXX: 결정 제목
-
-- 상태: Proposed
-- 날짜: TODO
-- 결정자: TODO
-
-> TODO: 이 결정이 실제로 합의된 날짜, 참여자, 회의/PR/이슈 링크를 추가합니다.
-
-## 맥락
-
-어떤 상황에서 어떤 결정을 해야 했는지.
-
-## 결정
-
-무엇을 선택했는지.
-
-## 대안
-
-고려했지만 선택하지 않은 방법과 이유.
-
-## 결과
-
-좋은 점과 감수한 트레이드오프.
-
-## 관련 문서
-
-- TODO
-```
+- [ADR 템플릿](./000-template.md)
