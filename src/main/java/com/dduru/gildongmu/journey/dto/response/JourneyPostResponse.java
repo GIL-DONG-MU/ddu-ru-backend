@@ -21,13 +21,14 @@ public record JourneyPostResponse(
             JourneyPost journeyPost,
             Long currentUserId,
             Long hostUserId,
-            ProfileImageResolver profileImageResolver
+            ProfileImageResolver profileImageResolver,
+            long commentCount
     ) {
         return new JourneyPostResponse(
                 journeyPost.getId(),
                 ParticipantInfo.from(
                         journeyPost.getAuthor(),
-                        hostUserId != null && hostUserId.equals(journeyPost.getAuthor().getId()),
+                        hostUserId.equals(journeyPost.getAuthor().getId()),
                         profileImageResolver
                 ),
                 journeyPost.getContent(),
@@ -36,7 +37,7 @@ public record JourneyPostResponse(
                 journeyPost.getCreatedAt(),
                 journeyPost.getModifiedAt(),
                 journeyPost.isAuthor(currentUserId),
-                0L
+                commentCount
         );
     }
 }

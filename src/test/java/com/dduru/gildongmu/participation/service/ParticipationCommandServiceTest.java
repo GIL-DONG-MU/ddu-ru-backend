@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
@@ -57,6 +58,9 @@ class ParticipationCommandServiceTest {
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
+
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private ParticipationCommandService participationCommandService;

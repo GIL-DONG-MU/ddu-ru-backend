@@ -75,7 +75,7 @@ class ParticipationApplicantServiceTest {
 
             when(participationRepository.findMyApplicationsForVisiblePosts(userId))
                     .thenReturn(List.of(activeParticipation, removedParticipation, pendingParticipation));
-            when(journeyMemberRepository.findStatusesByJourneyPostIdsAndUserId(Set.of(activePostId, removedPostId), userId))
+            when(journeyMemberRepository.findStatusesByPostIdsAndUserId(Set.of(activePostId, removedPostId), userId))
                     .thenReturn(List.of(
                             new JourneyMemberStatusQueryResult(activePostId, JourneyMemberStatus.ACTIVE),
                             new JourneyMemberStatusQueryResult(removedPostId, JourneyMemberStatus.REMOVED)
@@ -93,8 +93,8 @@ class ParticipationApplicantServiceTest {
                     );
             assertThat(responses).extracting(MyParticipationResponse::groupRoomId)
                     .containsExactly(groupRoomId, null, null);
-            verify(journeyMemberRepository).findStatusesByJourneyPostIdsAndUserId(Set.of(activePostId, removedPostId), userId);
-            verify(journeyMemberRepository, never()).findStatusByJourneyPostIdAndUserId(anyLong(), anyLong());
+            verify(journeyMemberRepository).findStatusesByPostIdsAndUserId(Set.of(activePostId, removedPostId), userId);
+            verify(journeyMemberRepository, never()).findStatusByPostIdAndUserId(anyLong(), anyLong());
         }
     }
 
@@ -111,7 +111,7 @@ class ParticipationApplicantServiceTest {
 
             when(participationRepository.findByPostIdAndUserId(postId, userId))
                     .thenReturn(Optional.of(participation));
-            when(journeyMemberRepository.findStatusByJourneyPostIdAndUserId(postId, userId))
+            when(journeyMemberRepository.findStatusByPostIdAndUserId(postId, userId))
                     .thenReturn(Optional.of(JourneyMemberStatus.REMOVED));
 
             MyParticipationStatus status = participationApplicantService.getMyParticipationStatus(postId, userId, false);

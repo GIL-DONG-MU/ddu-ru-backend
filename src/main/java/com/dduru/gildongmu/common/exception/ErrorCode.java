@@ -97,6 +97,10 @@ public enum ErrorCode {
     JOURNEY_POST_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 게시글 내용이 없습니다."),
     JOURNEY_POST_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "게시글 내용은 1자 이상 300자 이하여야 합니다."),
     JOURNEY_POST_NOTICE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "공지 게시글은 최대 3개까지 설정할 수 있습니다."),
+    JOURNEY_POST_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 게시글 댓글을 찾을 수 없습니다."),
+    JOURNEY_POST_COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 댓글에 대한 권한이 없습니다."),
+    JOURNEY_POST_COMMENT_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 댓글 내용이 없습니다."),
+    JOURNEY_POST_COMMENT_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "댓글 내용은 1자 이상 300자 이하여야 합니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -45,6 +46,7 @@ public class ParticipationCommandService {
     private final ProfileImageResolver profileImageResolver;
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
+    private final TimeProvider timeProvider;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdWithLockOrThrow(participationId);
@@ -81,7 +83,7 @@ public class ParticipationCommandService {
         journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participantUserId)
                 .ifPresentOrElse(
                         JourneyMember::activate,
-                        () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser()))
+                        () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser(), timeProvider.now()))
                 );
         GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, journey.getId(), participantUserId);
         loggingStatusChange(participation);

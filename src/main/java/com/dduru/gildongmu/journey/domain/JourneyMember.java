@@ -52,27 +52,29 @@ public class JourneyMember extends BaseTimeEntity {
     private LocalDateTime removedAt;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private JourneyMember(Journey journey, User user, JourneyMemberRole role) {
+    private JourneyMember(Journey journey, User user, JourneyMemberRole role, LocalDateTime joinedAt) {
         this.journey = journey;
         this.user = user;
         this.role = role;
         this.status = JourneyMemberStatus.ACTIVE;
-        this.joinedAt = LocalDateTime.now();
+        this.joinedAt = joinedAt;
     }
 
-    public static JourneyMember createHost(Journey journey, User user) {
+    public static JourneyMember createHost(Journey journey, User user, LocalDateTime joinedAt) {
         return JourneyMember.builder()
                 .journey(journey)
                 .user(user)
                 .role(JourneyMemberRole.HOST)
+                .joinedAt(joinedAt)
                 .build();
     }
 
-    public static JourneyMember createMember(Journey journey, User user) {
+    public static JourneyMember createMember(Journey journey, User user, LocalDateTime joinedAt) {
         return JourneyMember.builder()
                 .journey(journey)
                 .user(user)
                 .role(JourneyMemberRole.MEMBER)
+                .joinedAt(joinedAt)
                 .build();
     }
 
@@ -81,9 +83,9 @@ public class JourneyMember extends BaseTimeEntity {
         this.removedAt = null;
     }
 
-    public void remove() {
+    public void remove(LocalDateTime removedAt) {
         this.status = JourneyMemberStatus.REMOVED;
-        this.removedAt = LocalDateTime.now();
+        this.removedAt = removedAt;
     }
 
     public boolean isHost() {
