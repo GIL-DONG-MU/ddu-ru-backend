@@ -44,14 +44,14 @@ public class JourneyPostCommentService {
             Long journeyPostId,
             Long userId
     ) {
-        JourneyPost journeyPost = getAccessibleJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyPostAccess(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
         List<JourneyPostComment> comments = journeyPostCommentRepository
                 .findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId);
 
         return JourneyPostCommentListResponse.of(
-                journeyPost.getId(),
+                journeyPostId,
                 comments,
                 userId,
                 hostUserId,
@@ -65,8 +65,9 @@ public class JourneyPostCommentService {
             Long userId,
             JourneyPostCommentCreateRequest request
     ) {
-        JourneyPost journeyPost = getAccessibleJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyPostAccess(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
+        JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         User author = userRepository.getByIdOrThrow(userId);
 
         JourneyPostComment comment = createJourneyPostComment(journeyPost, author, request);
@@ -84,7 +85,7 @@ public class JourneyPostCommentService {
             Long userId,
             JourneyPostCommentUpdateRequest request
     ) {
-        getAccessibleJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyPostAccess(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
         JourneyPostComment comment = getOwnedComment(journeyPostId, commentId, userId);
 
@@ -100,7 +101,7 @@ public class JourneyPostCommentService {
     }
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {
-        getAccessibleJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyPostAccess(journeyId, journeyPostId, userId);
         JourneyPostComment comment = journeyPostCommentRepository
                 .getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId);
 
@@ -125,12 +126,12 @@ public class JourneyPostCommentService {
         );
     }
 
-    private JourneyPost getAccessibleJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
+    private void validateJourneyPostAccess(Long journeyId, Long journeyPostId, Long userId) {
         journeyRepository.getByIdOrThrow(journeyId);
         if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE)) {
             throw new JourneyAccessDeniedException();
         }
-        return journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+        journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
     }
 
     private JourneyPostComment getOwnedComment(Long journeyPostId, Long commentId, Long userId) {
