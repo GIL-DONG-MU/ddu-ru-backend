@@ -6,9 +6,10 @@
 
 | 문서 | 설명 |
 |------|------|
-| [docs/README.md](docs/README.md) | 프로젝트 소개, 기술 스택, 빠른 시작, 로드맵 |
-| [docs/README.Docker.md](docs/README.Docker.md) | Docker 개발 환경·프로덕션 배포 |
-| [docs/FLYWAY.md](docs/FLYWAY.md) | DB 마이그레이션(Flyway) 사용 방법 |
+| [docs/README.md](docs/README.md) | 문서 인덱스와 읽는 순서 |
+| [docs/000-template.md](docs/000-template.md) | 공통 문서 작성 템플릿 |
+| [docs/004-operations/003-docker.md](docs/004-operations/003-docker.md) | Docker 개발 환경·프로덕션 배포 |
+| [docs/004-operations/004-flyway.md](docs/004-operations/004-flyway.md) | DB 마이그레이션(Flyway) 사용 방법 |
 
 - **API (로컬)**: http://localhost:8080/swagger-ui.html  
 - **Health**: http://localhost:8080/actuator/health  

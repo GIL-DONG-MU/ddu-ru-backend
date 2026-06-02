@@ -1,4 +1,4 @@
-# My Journey Product Flow
+# 001. My Journey Product Flow
 
 > 나의 여정은 참여가 확정된 여행의 멤버들이 함께 준비하고 운영하는 협업 공간이며,
 > 호스트는 최종 확정과 관리 권한을 갖고 참여자는 공동 편집 권한을 가진다.
@@ -11,7 +11,7 @@
 - 권한 구조가 어떻게 나뉘는지
 
 API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된다.
-개발 진행 상태와 설계 포인트는 [MY_JOURNEY_IMPLEMENTATION.md](./MY_JOURNEY_IMPLEMENTATION.md)를 참고한다.
+개발 진행 상태와 설계 포인트는 [나의 여정 구현 현황](../003-my-journey-implementation.md)을 참고한다.
 
 ---
 
