@@ -75,7 +75,7 @@ public class ParticipationApplicantService {
     @Transactional(readOnly = true)
     public List<ParticipantInfo> getParticipantsForPostDetail(Post post) {
         return journeyMemberRepository
-                .findByJourneyPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
+                .findByPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
                 .map(journeyMember -> ParticipantInfo.from(journeyMember.getUser(), journeyMember.isHost(), profileImageResolver))
                 .toList();
     }
@@ -120,7 +120,7 @@ public class ParticipationApplicantService {
     }
 
     private Optional<JourneyMemberStatus> findJourneyMemberStatus(Long postId, Long userId) {
-        return journeyMemberRepository.findStatusByJourneyPostIdAndUserId(postId, userId);
+        return journeyMemberRepository.findStatusByPostIdAndUserId(postId, userId);
     }
 
     private Optional<JourneyMemberStatus> findJourneyMemberStatusIfApproved(
@@ -158,7 +158,7 @@ public class ParticipationApplicantService {
             return Map.of();
         }
 
-        return journeyMemberRepository.findStatusesByJourneyPostIdsAndUserId(approvedPostIds, userId).stream()
+        return journeyMemberRepository.findStatusesByPostIdsAndUserId(approvedPostIds, userId).stream()
                 .collect(Collectors.toMap(
                         JourneyMemberStatusQueryResult::postId,
                         JourneyMemberStatusQueryResult::status,

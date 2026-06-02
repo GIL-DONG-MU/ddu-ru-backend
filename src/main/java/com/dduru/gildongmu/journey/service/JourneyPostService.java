@@ -18,6 +18,7 @@ import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
 import com.dduru.gildongmu.journey.exception.JourneyPostAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyPostNoticeLimitExceededException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
@@ -33,6 +34,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -44,6 +46,7 @@ public class JourneyPostService {
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
+    private final JourneyPostCommentRepository journeyPostCommentRepository;
     private final UserRepository userRepository;
     private final S3ImageUrlValidator s3ImageUrlValidator;
     private final ProfileImageResolver profileImageResolver;
@@ -67,13 +70,17 @@ public class JourneyPostService {
         boolean hasNext = fetchedPosts.size() > size;
         List<JourneyPost> journeyPosts = trimLookAheadPosts(fetchedPosts, size);
 
+        List<Long> postIds = journeyPosts.stream().map(JourneyPost::getId).toList();
+        Map<Long, Long> commentCountByPostId = journeyPostCommentRepository.getCommentCountsByJourneyPostIds(postIds);
+
         return JourneyPostListResponse.of(
                 journey.getId(),
                 journeyPosts,
                 hasNext,
                 userId,
                 hostUserId,
-                profileImageResolver
+                profileImageResolver,
+                commentCountByPostId
         );
     }
 
@@ -83,7 +90,8 @@ public class JourneyPostService {
         Long hostUserId = findActiveHostUserId(journeyId);
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver);
+        long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount);
     }
 
     public JourneyPostResponse createPost(Long journeyId, Long userId, JourneyPostCreateRequest request) {
@@ -96,7 +104,7 @@ public class JourneyPostService {
 
         log.info("나의 여정 게시글 생성됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, savedPost.getId(), userId);
-        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver);
+        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L);
     }
 
     public JourneyPostResponse updatePost(
@@ -118,7 +126,8 @@ public class JourneyPostService {
 
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver);
+        long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount);
     }
 
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {

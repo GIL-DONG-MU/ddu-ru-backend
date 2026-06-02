@@ -69,7 +69,6 @@ public interface JourneyPostRepository extends JpaRepository<JourneyPost, Long> 
     @Query("""
             SELECT jp
             FROM JourneyPost jp
-            JOIN FETCH jp.journey
             JOIN FETCH jp.author author
             LEFT JOIN FETCH author.profile profile
             LEFT JOIN FETCH profile.avatar

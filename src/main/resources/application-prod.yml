@@ -7,6 +7,9 @@ spring:
     enabled: true
     locations: classpath:db/migration
     validate-on-migrate: true
+    baseline-on-migrate: true
+    baseline-version: "18"
+
   datasource:
     url: jdbc:mysql://${RDS_ENDPOINT}:${RDS_PORT}/${RDS_DATABASE_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${RDS_USERNAME}

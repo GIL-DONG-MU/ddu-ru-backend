@@ -5,6 +5,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.service.ChatMessageSendService;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -43,6 +44,7 @@ public class JourneyService {
     private final PostRepository postRepository;
     private final ChatMessageSendService chatMessageSendService;
     private final S3ImageUrlValidator s3ImageUrlValidator;
+    private final TimeProvider timeProvider;
 
     public JourneyUpdateResponse updateBasicInfo(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = getUpdatableJourney(journeyId, userId);
@@ -64,7 +66,7 @@ public class JourneyService {
         validateRemovableMember(member);
 
         Long postId = post.getId();
-        member.remove();
+        member.remove(timeProvider.now());
         // 신청 승인 이력은 유지하고, 현재 멤버십에 맞춰 모집 인원만 줄인다.
         participationRepository.findByPostIdAndUserIdAndStatus(postId, memberUserId, ParticipationStatus.APPROVED)
                 .ifPresent(post::decrementRecruitCountIfApproved);
