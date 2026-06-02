@@ -24,7 +24,10 @@ public interface SurveyApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_NOT_FOUND
+            ErrorCode.USER_NOT_FOUND,
+            ErrorCode.PROFILE_NOT_FOUND,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND,
+            ErrorCode.AVATAR_PROFILE_NOT_FOUND
     })
     ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 
@@ -47,7 +50,8 @@ public interface SurveyApiDocs {
     @ApiResponse(responseCode = "204", description = "스킵 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_ONBOARDING_NOT_FOUND
+            ErrorCode.USER_ONBOARDING_NOT_FOUND,
+            ErrorCode.SURVEY_ALREADY_COMPLETED
     })
     ResponseEntity<ApiResult<Void>> skipSurvey(@Parameter(hidden = true) Long userId);
 }
