@@ -73,12 +73,12 @@ public class JourneyScheduleService {
 
         JourneySchedule schedule = journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId);
 
-        String title = request.title() != null ? request.title().trim() : null;
+        String title = normalizeText(request.title());
         ScheduleCategory category = request.category();
         LocalDate scheduleDate = request.scheduleDate();
         LocalTime startTime = request.startTime();
         LocalTime endTime = request.endTime();
-        String placeName = request.placeName() != null ? request.placeName().trim() : null;
+        String placeName = normalizeText(request.placeName());
         boolean applyMemoPatch = request.memo() != null;
         String memo = applyMemoPatch ? normalizeText(request.memo()) : null;
         boolean applyImageUrlPatch = request.imageUrl() != null;
@@ -111,7 +111,7 @@ public class JourneyScheduleService {
     private JourneySchedule createJourneySchedule(Journey journey, LocalDate scheduleDate, JourneyScheduleCreateRequest request) {
         return JourneySchedule.create(
                 journey,
-                request.title().trim(),
+                normalizeText(request.title()),
                 request.category(),
                 scheduleDate,
                 request.startTime(),
