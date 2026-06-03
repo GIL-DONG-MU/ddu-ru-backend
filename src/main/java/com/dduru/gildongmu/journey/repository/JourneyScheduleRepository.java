@@ -16,7 +16,7 @@ public interface JourneyScheduleRepository extends JpaRepository<JourneySchedule
             FROM JourneySchedule js
             WHERE js.journey.id = :journeyId
               AND js.isDeleted = false
-            ORDER BY js.scheduleDate ASC, js.startTime ASC NULLS LAST
+            ORDER BY js.scheduleDate ASC, js.startTime ASC NULLS LAST, js.id ASC
             """)
     List<JourneySchedule> findActiveSchedulesByJourneyId(@Param("journeyId") Long journeyId);
 
