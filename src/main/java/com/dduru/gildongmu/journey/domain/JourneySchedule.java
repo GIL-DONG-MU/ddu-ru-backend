@@ -162,7 +162,7 @@ public class JourneySchedule extends BaseTimeEntity {
         this.deletedAt = deletedAt;
     }
 
-    public static void validateTimeConstraint(LocalTime startTime, LocalTime endTime) {
+    private static void validateTimeConstraint(LocalTime startTime, LocalTime endTime) {
         if (endTime != null && startTime == null) {
             throw InvalidJourneyScheduleException.invalidScheduleTime();
         }
