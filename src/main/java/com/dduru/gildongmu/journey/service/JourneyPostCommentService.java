@@ -108,7 +108,7 @@ public class JourneyPostCommentService {
             throw new JourneyPostCommentAccessDeniedException();
         }
 
-        comment.softDelete(userId, timeProvider.now());
+        comment.delete(userId, timeProvider.now());
         log.info("나의 여정 게시글 댓글 삭제됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, commentId, userId);
     }
