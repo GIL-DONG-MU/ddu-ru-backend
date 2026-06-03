@@ -55,7 +55,7 @@ public class JourneyPostService {
     @Transactional(readOnly = true)
     public JourneyPostListResponse retrievePosts(Long journeyId, Long userId, JourneyPostListRequest request) {
         JourneyPostListRequest normalizedRequest = normalizeRequest(request);
-        Journey journey = getAccessibleJourney(journeyId, userId);
+        validateJourneyAccess(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
         JourneyPost cursorPost = findCursorPost(journeyId, normalizedRequest.cursor());
         int size = normalizedRequest.sizeOrDefault();
@@ -74,7 +74,7 @@ public class JourneyPostService {
         Map<Long, Long> commentCountByPostId = journeyPostCommentRepository.getCommentCountsByJourneyPostIds(postIds);
 
         return JourneyPostListResponse.of(
-                journey.getId(),
+                journeyId,
                 journeyPosts,
                 hasNext,
                 userId,
@@ -86,7 +86,7 @@ public class JourneyPostService {
 
     @Transactional(readOnly = true)
     public JourneyPostResponse retrievePost(Long journeyId, Long journeyPostId, Long userId) {
-        getAccessibleJourney(journeyId, userId);
+        validateJourneyAccess(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
@@ -195,6 +195,10 @@ public class JourneyPostService {
         return new ArrayList<>(posts.subList(0, size));
     }
 
+    private void validateJourneyAccess(Long journeyId, Long userId) {
+        getAccessibleJourney(journeyId, userId);
+    }
+
     private Journey getAccessibleJourney(Long journeyId, Long userId) {
         Journey journey = journeyRepository.getByIdOrThrow(journeyId);
         boolean isActiveMember = journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
@@ -209,7 +213,7 @@ public class JourneyPostService {
     }
 
     private JourneyPost getOwnedJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
-        getAccessibleJourney(journeyId, userId);
+        validateJourneyAccess(journeyId, userId);
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         if (!journeyPost.isAuthor(userId)) {
