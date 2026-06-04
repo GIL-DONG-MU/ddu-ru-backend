@@ -3,9 +3,11 @@ package com.dduru.gildongmu.journey.controller;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyDetailResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyMemberRoleResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -62,6 +64,41 @@ public interface JourneyApiDocs {
             @Parameter(description = "여정 ID") Long journeyId,
             @Parameter(hidden = true) Long userId,
             JourneyUpdateRequest request
+    );
+
+    @Operation(
+            summary = "나의 여정 멤버 역할 지정/수정",
+            description = "active host가 특정 멤버의 역할을 지정하거나 수정합니다. CUSTOM 타입 선택 시 customRoleLabel이 필수입니다."
+    )
+    @ApiResponse(responseCode = "200", description = "역할 지정 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_MEMBER_NOT_FOUND,
+            ErrorCode.JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL
+    })
+    ResponseEntity<ApiResult<JourneyMemberRoleResponse>> updateMemberRole(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(description = "역할을 지정할 멤버의 사용자 ID") Long memberUserId,
+            @Parameter(hidden = true) Long userId,
+            JourneyMemberRoleUpdateRequest request
+    );
+
+    @Operation(
+            summary = "나의 여정 멤버 역할 해제",
+            description = "active host가 특정 멤버의 역할을 해제합니다."
+    )
+    @ApiResponse(responseCode = "204", description = "역할 해제 성공", content = @Content())
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_MEMBER_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<Void>> clearMemberRole(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(description = "역할을 해제할 멤버의 사용자 ID") Long memberUserId,
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(

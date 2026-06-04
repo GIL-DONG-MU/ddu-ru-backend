@@ -11,10 +11,13 @@ import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
+import com.dduru.gildongmu.journey.dto.response.JourneyMemberRoleResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyMemberNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
@@ -56,6 +59,28 @@ public class JourneyService {
         journey.updateBasicInfo(title, photoUrl);
         log.info("나의 여정 기본 정보 수정됨 - journeyId={}, userId={}", journeyId, userId);
         return JourneyUpdateResponse.from(journey);
+    }
+
+    public JourneyMemberRoleResponse updateMemberRole(
+            Long journeyId,
+            Long hostUserId,
+            Long memberUserId,
+            JourneyMemberRoleUpdateRequest request
+    ) {
+        validateActiveHost(journeyId, hostUserId);
+        JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
+        member.updateRole(request.roleType(), request.customRoleLabel());
+        log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleType={}",
+                journeyId, hostUserId, memberUserId, request.roleType());
+        return JourneyMemberRoleResponse.from(member);
+    }
+
+    public void clearMemberRole(Long journeyId, Long hostUserId, Long memberUserId) {
+        validateActiveHost(journeyId, hostUserId);
+        JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
+        member.updateRole(null, null);
+        log.info("나의 여정 멤버 역할 해제됨 - journeyId={}, hostUserId={}, memberUserId={}",
+                journeyId, hostUserId, memberUserId);
     }
 
     public void removeMember(Long journeyId, Long hostUserId, Long memberUserId) {
@@ -138,6 +163,12 @@ public class JourneyService {
         if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
             throw InvalidJourneyBasicInfoException.invalidTitleLength();
         }
+    }
+
+    private JourneyMember findActiveMemberOrThrow(Long journeyId, Long memberUserId) {
+        return journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)
+                .filter(m -> m.getStatus() == JourneyMemberStatus.ACTIVE)
+                .orElseThrow(JourneyMemberNotFoundException::new);
     }
 
     private String normalizePhotoUrl(String photoUrl) {
