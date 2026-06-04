@@ -105,8 +105,9 @@ public class JourneyMember extends BaseTimeEntity {
 
     public void updateRole(JourneyRoleType roleType, String customRoleLabel) {
         if (roleType == JourneyRoleType.CUSTOM) {
-            validateCustomRoleLabel(customRoleLabel);
-            this.customRoleLabel = customRoleLabel.trim();
+            String trimmed = StringUtils.hasText(customRoleLabel) ? customRoleLabel.trim() : null;
+            validateCustomRoleLabel(trimmed);
+            this.customRoleLabel = trimmed;
         } else {
             this.customRoleLabel = null;
         }
