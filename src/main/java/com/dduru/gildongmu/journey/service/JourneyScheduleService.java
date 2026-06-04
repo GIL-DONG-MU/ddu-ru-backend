@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -49,10 +50,10 @@ public class JourneyScheduleService {
         Journey journey = getAccessibleJourneyWithPost(journeyId, userId);
         Post post = journey.getPost();
 
-        LocalDate scheduleDate = request.scheduleDate();
-        validateScheduleDate(scheduleDate, post.getStartDate(), post.getEndDate());
+        int dayOffset = request.dayOffset();
+        validateDayOffset(dayOffset, post.getStartDate(), post.getEndDate());
 
-        JourneySchedule schedule = createJourneySchedule(journey, scheduleDate, request);
+        JourneySchedule schedule = createJourneySchedule(journey, dayOffset, request);
         journeyScheduleRepository.saveAndFlush(schedule);
 
         log.info("나의 여정 일정 생성됨 - journeyId={}, scheduleId={}, userId={}",
@@ -75,7 +76,7 @@ public class JourneyScheduleService {
 
         String title = normalizeText(request.title());
         ScheduleCategory category = request.category();
-        LocalDate scheduleDate = request.scheduleDate();
+        Integer dayOffset = request.dayOffset();
         LocalTime startTime = request.startTime();
         LocalTime endTime = request.endTime();
         String placeName = normalizeText(request.placeName());
@@ -84,10 +85,10 @@ public class JourneyScheduleService {
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
 
-        validateHasAnyPatch(title, category, scheduleDate, startTime, endTime, placeName, applyMemoPatch, applyImageUrlPatch);
-        validateEffectiveScheduleDate(schedule, scheduleDate, post);
+        validateHasAnyPatch(title, category, dayOffset, startTime, endTime, placeName, applyMemoPatch, applyImageUrlPatch);
+        validateEffectiveDayOffset(schedule, dayOffset, post);
 
-        updateJourneySchedule(schedule, title, category, scheduleDate, startTime, endTime, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
+        schedule.update(title, category, dayOffset, startTime, endTime, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
         journeyScheduleRepository.flush();
 
         log.info("나의 여정 일정 수정됨 - journeyId={}, scheduleId={}, userId={}",
@@ -107,34 +108,18 @@ public class JourneyScheduleService {
                 journeyId, scheduleId, userId);
     }
 
-    private JourneySchedule createJourneySchedule(Journey journey, LocalDate scheduleDate, JourneyScheduleCreateRequest request) {
+    private JourneySchedule createJourneySchedule(Journey journey, int dayOffset, JourneyScheduleCreateRequest request) {
         return JourneySchedule.create(
                 journey,
                 normalizeText(request.title()),
                 request.category(),
-                scheduleDate,
+                dayOffset,
                 request.startTime(),
                 request.endTime(),
                 normalizeText(request.placeName()),
                 normalizeText(request.memo()),
                 normalizeImageUrl(request.imageUrl())
         );
-    }
-
-    private void updateJourneySchedule(
-            JourneySchedule schedule,
-            String title,
-            ScheduleCategory category,
-            LocalDate scheduleDate,
-            LocalTime startTime,
-            LocalTime endTime,
-            String placeName,
-            boolean applyMemoPatch,
-            String memo,
-            boolean applyImageUrlPatch,
-            String imageUrl
-    ) {
-        schedule.update(title, category, scheduleDate, startTime, endTime, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
     }
 
     private Journey getAccessibleJourneyWithPost(Long journeyId, Long userId) {
@@ -148,13 +133,14 @@ public class JourneyScheduleService {
         return journey;
     }
 
-    private static void validateEffectiveScheduleDate(JourneySchedule schedule, LocalDate scheduleDate, Post post) {
-        LocalDate effectiveDate = scheduleDate != null ? scheduleDate : schedule.getScheduleDate();
-        validateScheduleDate(effectiveDate, post.getStartDate(), post.getEndDate());
+    private static void validateEffectiveDayOffset(JourneySchedule schedule, Integer dayOffset, Post post) {
+        int effectiveDayOffset = dayOffset != null ? dayOffset : schedule.getDayOffset();
+        validateDayOffset(effectiveDayOffset, post.getStartDate(), post.getEndDate());
     }
 
-    private static void validateScheduleDate(LocalDate scheduleDate, LocalDate startDate, LocalDate endDate) {
-        if (scheduleDate.isBefore(startDate) || scheduleDate.isAfter(endDate)) {
+    private static void validateDayOffset(int dayOffset, LocalDate startDate, LocalDate endDate) {
+        int totalDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        if (dayOffset < 0 || dayOffset >= totalDays) {
             throw InvalidJourneyScheduleException.invalidScheduleDate();
         }
     }
@@ -162,14 +148,14 @@ public class JourneyScheduleService {
     private static void validateHasAnyPatch(
             String title,
             ScheduleCategory category,
-            LocalDate scheduleDate,
+            Integer dayOffset,
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
             boolean applyMemoPatch,
             boolean applyImageUrlPatch
     ) {
-        if (title == null && category == null && scheduleDate == null
+        if (title == null && category == null && dayOffset == null
                 && startTime == null && endTime == null && placeName == null
                 && !applyMemoPatch && !applyImageUrlPatch) {
             throw InvalidJourneyScheduleException.emptyPatch();

@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -38,8 +37,8 @@ public class JourneySchedule extends BaseTimeEntity {
     @Column(length = 50)
     private ScheduleCategory category;
 
-    @Column(name = "schedule_date", nullable = false)
-    private LocalDate scheduleDate;
+    @Column(name = "day_offset", nullable = false)
+    private int dayOffset;
 
     @Column(name = "start_time")
     private LocalTime startTime;
@@ -70,7 +69,7 @@ public class JourneySchedule extends BaseTimeEntity {
             Journey journey,
             String title,
             ScheduleCategory category,
-            LocalDate scheduleDate,
+            int dayOffset,
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
@@ -80,7 +79,7 @@ public class JourneySchedule extends BaseTimeEntity {
         this.journey = journey;
         this.title = validateTitle(title);
         this.category = category;
-        this.scheduleDate = scheduleDate;
+        this.dayOffset = dayOffset;
         validateTimeConstraint(startTime, endTime);
         this.startTime = startTime;
         this.endTime = endTime;
@@ -94,7 +93,7 @@ public class JourneySchedule extends BaseTimeEntity {
             Journey journey,
             String title,
             ScheduleCategory category,
-            LocalDate scheduleDate,
+            int dayOffset,
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
@@ -105,7 +104,7 @@ public class JourneySchedule extends BaseTimeEntity {
                 .journey(journey)
                 .title(title)
                 .category(category)
-                .scheduleDate(scheduleDate)
+                .dayOffset(dayOffset)
                 .startTime(startTime)
                 .endTime(endTime)
                 .placeName(placeName)
@@ -117,7 +116,7 @@ public class JourneySchedule extends BaseTimeEntity {
     public void update(
             String title,
             ScheduleCategory category,
-            LocalDate scheduleDate,
+            Integer dayOffset,
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
@@ -136,8 +135,8 @@ public class JourneySchedule extends BaseTimeEntity {
         if (category != null) {
             this.category = category;
         }
-        if (scheduleDate != null) {
-            this.scheduleDate = scheduleDate;
+        if (dayOffset != null) {
+            this.dayOffset = dayOffset;
         }
         if (startTime != null) {
             this.startTime = startTime;

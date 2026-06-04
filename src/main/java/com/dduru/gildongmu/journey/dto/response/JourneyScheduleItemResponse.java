@@ -10,19 +10,19 @@ public record JourneyScheduleItemResponse(
         Long scheduleId,
         String title,
         ScheduleCategory category,
-        LocalDate scheduleDate,
+        LocalDate date,
         LocalTime startTime,
         LocalTime endTime,
         String placeName,
         String memo,
         String imageUrl
 ) {
-    public static JourneyScheduleItemResponse from(JourneySchedule schedule) {
+    public static JourneyScheduleItemResponse from(JourneySchedule schedule, LocalDate startDate) {
         return new JourneyScheduleItemResponse(
                 schedule.getId(),
                 schedule.getTitle(),
                 schedule.getCategory(),
-                schedule.getScheduleDate(),
+                startDate.plusDays(schedule.getDayOffset()),
                 schedule.getStartTime(),
                 schedule.getEndTime(),
                 schedule.getPlaceName(),

@@ -1,11 +1,11 @@
 package com.dduru.gildongmu.journey.dto.request;
 
 import com.dduru.gildongmu.journey.domain.enums.ScheduleCategory;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record JourneyScheduleCreateRequest(
@@ -16,7 +16,8 @@ public record JourneyScheduleCreateRequest(
         ScheduleCategory category,
 
         @NotNull
-        LocalDate scheduleDate,
+        @Min(0)
+        Integer dayOffset,
 
         LocalTime startTime,
 

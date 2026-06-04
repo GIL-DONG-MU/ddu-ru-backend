@@ -24,18 +24,17 @@ public record JourneyScheduleListResponse(
         LocalDate startDate = post.getStartDate();
         LocalDate endDate = post.getEndDate();
 
-        Map<LocalDate, List<JourneyScheduleItemResponse>> schedulesByDate = schedules.stream()
+        Map<Integer, List<JourneyScheduleItemResponse>> schedulesByOffset = schedules.stream()
                 .collect(Collectors.groupingBy(
-                        JourneySchedule::getScheduleDate,
-                        Collectors.mapping(JourneyScheduleItemResponse::from, Collectors.toList())
+                        JourneySchedule::getDayOffset,
+                        Collectors.mapping(s -> JourneyScheduleItemResponse.from(s, startDate), Collectors.toList())
                 ));
 
         List<JourneyScheduleDayResponse> days = new ArrayList<>();
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         for (int i = 0; i < totalDays; i++) {
-            LocalDate date = startDate.plusDays(i);
-            List<JourneyScheduleItemResponse> daySchedules = schedulesByDate.getOrDefault(date, List.of());
-            days.add(new JourneyScheduleDayResponse(i + 1, date, daySchedules));
+            List<JourneyScheduleItemResponse> daySchedules = schedulesByOffset.getOrDefault(i, List.of());
+            days.add(new JourneyScheduleDayResponse(i + 1, startDate.plusDays(i), daySchedules));
         }
 
         return new JourneyScheduleListResponse(journeyId, startDate, endDate, days);

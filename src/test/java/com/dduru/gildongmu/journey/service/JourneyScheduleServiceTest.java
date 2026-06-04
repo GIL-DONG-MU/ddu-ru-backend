@@ -98,7 +98,7 @@ class JourneyScheduleServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(101L, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(101L, journey, 0);
 
             givenActiveMember(journeyId, userId, journey);
             when(journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId))
@@ -142,9 +142,9 @@ class JourneyScheduleServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule morning = createSchedule(101L, journey, START_DATE);
-            JourneySchedule afternoon = createSchedule(102L, journey, START_DATE);
-            JourneySchedule nextDay = createSchedule(103L, journey, START_DATE.plusDays(1));
+            JourneySchedule morning = createSchedule(101L, journey, 0);
+            JourneySchedule afternoon = createSchedule(102L, journey, 0);
+            JourneySchedule nextDay = createSchedule(103L, journey, 1);
 
             givenActiveMember(journeyId, userId, journey);
             when(journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId))
@@ -192,7 +192,7 @@ class JourneyScheduleServiceTest {
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
                     "오사카 성 관광",
                     ScheduleCategory.SIGHTSEEING,
-                    START_DATE,
+                    0,
                     START_TIME,
                     END_TIME,
                     "오사카 성",
@@ -217,7 +217,7 @@ class JourneyScheduleServiceTest {
             JourneySchedule saved = captor.getValue();
             assertThat(saved.getTitle()).isEqualTo("오사카 성 관광");
             assertThat(saved.getCategory()).isEqualTo(ScheduleCategory.SIGHTSEEING);
-            assertThat(saved.getScheduleDate()).isEqualTo(START_DATE);
+            assertThat(saved.getDayOffset()).isEqualTo(0);
             assertThat(saved.getStartTime()).isEqualTo(START_TIME);
             assertThat(saved.getEndTime()).isEqualTo(END_TIME);
             assertThat(saved.getPlaceName()).isEqualTo("오사카 성");
@@ -231,7 +231,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "자유 일정", null, START_DATE, START_TIME, END_TIME, "도톤보리", null, null
+                    "자유 일정", null, 0, START_TIME, END_TIME, "도톤보리", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -250,7 +250,7 @@ class JourneyScheduleServiceTest {
         }
 
         @Test
-        @DisplayName("여행 시작일과 종료일 경계 날짜는 허용된다")
+        @DisplayName("여행 첫째 날(dayOffset=0)과 마지막 날 일차는 허용된다")
         void boundaryDatesAreAllowed() {
             Long journeyId = 1L;
             Long userId = 10L;
@@ -264,24 +264,24 @@ class JourneyScheduleServiceTest {
             when(journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId)).thenReturn(List.of());
 
             JourneyScheduleCreateRequest startRequest = new JourneyScheduleCreateRequest(
-                    "시작일 일정", null, START_DATE, START_TIME, END_TIME, "장소A", null, null
+                    "시작일 일정", null, 0, START_TIME, END_TIME, "장소A", null, null
             );
             assertThat(journeyScheduleService.createSchedule(journeyId, userId, startRequest)).isNotNull();
 
             JourneyScheduleCreateRequest endRequest = new JourneyScheduleCreateRequest(
-                    "종료일 일정", null, END_DATE, START_TIME, END_TIME, "장소B", null, null
+                    "종료일 일정", null, 2, START_TIME, END_TIME, "장소B", null, null
             );
             assertThat(journeyScheduleService.createSchedule(journeyId, userId, endRequest)).isNotNull();
         }
 
         @Test
-        @DisplayName("여행 시작일보다 이전 날짜면 예외가 발생한다")
+        @DisplayName("dayOffset이 음수이면 예외가 발생한다")
         void beforeStartDateThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "전날 일정", null, START_DATE.minusDays(1), START_TIME, END_TIME, "장소", null, null
+                    "전날 일정", null, -1, START_TIME, END_TIME, "장소", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -295,13 +295,13 @@ class JourneyScheduleServiceTest {
         }
 
         @Test
-        @DisplayName("여행 종료일보다 이후 날짜면 예외가 발생한다")
+        @DisplayName("dayOffset이 여행 기간을 초과하면 예외가 발생한다")
         void afterEndDateThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "다음날 일정", null, END_DATE.plusDays(1), START_TIME, END_TIME, "장소", null, null
+                    "다음날 일정", null, 3, START_TIME, END_TIME, "장소", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -321,7 +321,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "시작만 있는 일정", null, START_DATE, START_TIME, null, "장소", null, null
+                    "시작만 있는 일정", null, 0, START_TIME, null, "장소", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -341,7 +341,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "시간 미정 일정", null, START_DATE, null, null, "장소", null, null
+                    "시간 미정 일정", null, 0, null, null, "장소", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -361,7 +361,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "잘못된 일정", null, START_DATE, null, END_TIME, "장소", null, null
+                    "잘못된 일정", null, 0, null, END_TIME, "장소", null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -381,7 +381,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "관광 일정", null, START_DATE, START_TIME, END_TIME, "장소",
+                    "관광 일정", null, 0, START_TIME, END_TIME, "장소",
                     null, "https://external.com/image.png"
             );
 
@@ -400,7 +400,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "관광 일정", null, START_DATE, START_TIME, END_TIME, "장소", null, null
+                    "관광 일정", null, 0, START_TIME, END_TIME, "장소", null, null
             );
 
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);
@@ -429,7 +429,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     "수정된 제목",
                     ScheduleCategory.CAFE,
@@ -466,7 +466,7 @@ class JourneyScheduleServiceTest {
             Long creatorId = 10L;
             Long otherMemberId = 20L;
             Journey journey = createJourney(journeyId, creatorId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(101L, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(101L, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     "다른 멤버가 수정", null, null, null, null, null, null, null
             );
@@ -482,15 +482,15 @@ class JourneyScheduleServiceTest {
         }
 
         @Test
-        @DisplayName("날짜를 변경할 때 여행 기간 외 날짜면 예외가 발생한다")
+        @DisplayName("일차를 변경할 때 여행 기간 외 일차면 예외가 발생한다")
         void updateToOutOfRangeDateThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, END_DATE.plusDays(1), null, null, null, null, null
+                    null, null, 3, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -506,13 +506,13 @@ class JourneyScheduleServiceTest {
         }
 
         @Test
-        @DisplayName("날짜를 변경하지 않으면 기존 날짜로 범위 검증을 통과한다")
+        @DisplayName("일차를 변경하지 않으면 기존 일차로 범위 검증을 통과한다")
         void noDateChangePassesValidation() {
             Long journeyId = 1L;
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     "수정된 제목", null, null, null, null, null, null, null
             );
@@ -533,7 +533,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     null, null, null, null, null, null, "", null
             );
@@ -555,7 +555,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     null, null, null, null, null, null, null, null
             );
@@ -600,7 +600,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createScheduleWithNoTime(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createScheduleWithNoTime(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
                     null, null, null, null, END_TIME, null, null, null
             );
@@ -654,7 +654,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(scheduleId, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
 
             givenActiveMember(journeyId, userId, journey);
             when(journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId))
@@ -675,7 +675,7 @@ class JourneyScheduleServiceTest {
             Long creatorId = 10L;
             Long otherMemberId = 20L;
             Journey journey = createJourney(journeyId, creatorId, START_DATE, END_DATE);
-            JourneySchedule schedule = createSchedule(101L, journey, START_DATE);
+            JourneySchedule schedule = createSchedule(101L, journey, 0);
 
             givenActiveMember(journeyId, otherMemberId, journey);
             when(journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(101L, journeyId))
@@ -742,12 +742,12 @@ class JourneyScheduleServiceTest {
         return journey;
     }
 
-    private JourneySchedule createSchedule(Long scheduleId, Journey journey, LocalDate date) {
+    private JourneySchedule createSchedule(Long scheduleId, Journey journey, int dayOffset) {
         JourneySchedule schedule = JourneySchedule.create(
                 journey,
                 "기존 일정 제목",
                 ScheduleCategory.SIGHTSEEING,
-                date,
+                dayOffset,
                 START_TIME,
                 END_TIME,
                 "기존 장소",
@@ -758,12 +758,12 @@ class JourneyScheduleServiceTest {
         return schedule;
     }
 
-    private JourneySchedule createScheduleWithNoTime(Long scheduleId, Journey journey, LocalDate date) {
+    private JourneySchedule createScheduleWithNoTime(Long scheduleId, Journey journey, int dayOffset) {
         JourneySchedule schedule = JourneySchedule.create(
                 journey,
                 "시간 미정 일정",
                 null,
-                date,
+                dayOffset,
                 null,
                 null,
                 "기존 장소",
