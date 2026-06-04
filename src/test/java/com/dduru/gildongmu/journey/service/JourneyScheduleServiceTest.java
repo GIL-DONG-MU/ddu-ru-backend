@@ -51,7 +51,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JourneyScheduleService 테스트")
 class JourneyScheduleServiceTest {
-    private static final String S3_HOST = "https://dummy-bucket.s3.ap-northeast-2.amazonaws.com";
     private static final LocalDate START_DATE = LocalDate.of(2026, 3, 10);
     private static final LocalDate END_DATE = LocalDate.of(2026, 3, 12);
     private static final LocalTime START_TIME = LocalTime.of(9, 0);
@@ -421,6 +420,50 @@ class JourneyScheduleServiceTest {
     @Nested
     @DisplayName("일정 수정")
     class UpdateSchedule {
+
+        @Test
+        @DisplayName("title을 공백 문자열로 보내면 예외가 발생한다")
+        void blankTitleThrowsException() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Long scheduleId = 101L;
+            Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
+            JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
+                    "   ", null, null, null, null, null, null, null
+            );
+
+            givenActiveMember(journeyId, userId, journey);
+            when(journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId))
+                    .thenReturn(schedule);
+
+            assertThatThrownBy(() -> journeyScheduleService.updateSchedule(journeyId, scheduleId, userId, request))
+                    .isInstanceOf(InvalidJourneyScheduleException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_SCHEDULE_INVALID_TITLE);
+        }
+
+        @Test
+        @DisplayName("placeName을 공백 문자열로 보내면 예외가 발생한다")
+        void blankPlaceNameThrowsException() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Long scheduleId = 101L;
+            Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
+            JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
+            JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
+                    null, null, null, null, null, "  ", null, null
+            );
+
+            givenActiveMember(journeyId, userId, journey);
+            when(journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId))
+                    .thenReturn(schedule);
+
+            assertThatThrownBy(() -> journeyScheduleService.updateSchedule(journeyId, scheduleId, userId, request))
+                    .isInstanceOf(InvalidJourneyScheduleException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_SCHEDULE_INVALID_PLACE_NAME);
+        }
 
         @Test
         @DisplayName("active member는 일정을 수정할 수 있다")

@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -74,12 +75,12 @@ public class JourneyScheduleService {
 
         JourneySchedule schedule = journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId);
 
-        String title = normalizeText(request.title());
+        String title = normalizePatchText(request.title(), InvalidJourneyScheduleException::invalidTitle);
         ScheduleCategory category = request.category();
         Integer dayOffset = request.dayOffset();
         LocalTime startTime = request.startTime();
         LocalTime endTime = request.endTime();
-        String placeName = normalizeText(request.placeName());
+        String placeName = normalizePatchText(request.placeName(), InvalidJourneyScheduleException::invalidPlaceName);
         boolean applyMemoPatch = request.memo() != null;
         String memo = applyMemoPatch ? normalizeText(request.memo()) : null;
         boolean applyImageUrlPatch = request.imageUrl() != null;
@@ -167,6 +168,17 @@ public class JourneyScheduleService {
             return null;
         }
         return s3ImageUrlValidator.validateAndNormalize(imageUrl, S3ImageDirectory.JOURNEY_SCHEDULES);
+    }
+
+    private static String normalizePatchText(String value, Supplier<? extends RuntimeException> blankException) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            throw blankException.get();
+        }
+        return trimmed;
     }
 
     private static String normalizeText(String value) {

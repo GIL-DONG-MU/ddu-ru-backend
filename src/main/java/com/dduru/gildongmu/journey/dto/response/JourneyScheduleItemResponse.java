@@ -10,7 +10,7 @@ public record JourneyScheduleItemResponse(
         Long scheduleId,
         String title,
         ScheduleCategory category,
-        LocalDate date,
+        LocalDate scheduleDate,
         LocalTime startTime,
         LocalTime endTime,
         String placeName,
