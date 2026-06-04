@@ -13,7 +13,7 @@
 |--------|------|
 | `posts` | 여행/모집글 루트 |
 | `participations` | 신청 과정 관리 (`PENDING / CONTACTING / APPROVED / REJECTED`) |
-| `journey_members` | 실제 협업 멤버 관리 (`HOST / MEMBER`, `ACTIVE / REMOVED / LEFT`) |
+| `journey_members` | 실제 협업 멤버 관리 (`HOST / MEMBER`, `ACTIVE / REMOVED / LEFT`) + 역할 라벨 (`role_type`, `custom_role_label`) |
 | `journey_posts` | 여행 게시판 게시글 |
 | `journey_post_comments` | 게시글 댓글 |
 | `journey_schedules` | 여행 일정 아이템 |
@@ -49,15 +49,17 @@
 - 댓글 → ✅ 완료
 - 공지 지정/해제 → ✅ 완료
 - 일정 → ✅ 완료
-- 할 일 → 🔜 구현예정
-- 여행 정보 → 🔜 구현예정
-- 투표 → 🔜 구현예정
+- 역할 지정 → ✅ 완료
+- 할 일 → ⏸️ 보류
+- 여행 정보 → ⏸️ 보류
+- 투표 → ⏸️ 보류
 
 ### 5단계. 호스트 전용 관리 기능 🔄 진행 중
 
 - 게시글 공지 설정/고정 → ✅ 완료
 - 참여자 내보내기 → ✅ 완료
-- 투표 확정 → 🔜 구현예정
+- 역할 지정/해제 → ✅ 완료
+- 투표 확정 → ⏸️ 보류
 - 여행 종료 → 🔜 구현예정
 
 ---
@@ -71,6 +73,8 @@
 | 메인 목록 조회 | `GET` | `/api/v1/users/me/journeys` | ✅ 구현 |
 | 상세 조회 | `GET` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
 | 기본 정보 수정 (제목·대표 사진) | `PATCH` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
+| 멤버 역할 지정/수정 (호스트 전용) | `PATCH` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
+| 멤버 역할 해제 (호스트 전용) | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
 | 참여자 내보내기 | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}` | ✅ 구현 |
 | 여행 종료 | - | - | 🔜 구현예정 |
 
@@ -105,28 +109,34 @@
 
 ### 할 일
 
+> ⏸️ 스코프 축소로 보류 (8월 출시 이후 검토)
+
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
-| 할 일 목록 조회 | `GET` | `/api/v1/journeys/{journeyId}/todos` | 🔜 구현예정 |
-| 할 일 추가 | `POST` | `/api/v1/journeys/{journeyId}/todos` | 🔜 구현예정 |
-| 할 일 상태 변경/수정 | `PATCH` | `/api/v1/journeys/{journeyId}/todos/{todoId}` | 🔜 구현예정 |
-| 할 일 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/todos/{todoId}` | 🔜 구현예정 |
+| 할 일 목록 조회 | `GET` | `/api/v1/journeys/{journeyId}/todos` | ⏸️ 보류 |
+| 할 일 추가 | `POST` | `/api/v1/journeys/{journeyId}/todos` | ⏸️ 보류 |
+| 할 일 상태 변경/수정 | `PATCH` | `/api/v1/journeys/{journeyId}/todos/{todoId}` | ⏸️ 보류 |
+| 할 일 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/todos/{todoId}` | ⏸️ 보류 |
 
 ### 여행 정보
 
+> ⏸️ 스코프 축소로 보류 (8월 출시 이후 검토)
+
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
-| 여행 정보 조회 | `GET` | `/api/v1/journeys/{journeyId}/info` | 🔜 구현예정 |
-| 여행 정보 추가/수정 | `PATCH` | `/api/v1/journeys/{journeyId}/info` | 🔜 구현예정 |
+| 여행 정보 조회 | `GET` | `/api/v1/journeys/{journeyId}/info` | ⏸️ 보류 |
+| 여행 정보 추가/수정 | `PATCH` | `/api/v1/journeys/{journeyId}/info` | ⏸️ 보류 |
 
 ### 투표
 
+> ⏸️ 스코프 축소로 보류 (8월 출시 이후 검토)
+
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
-| 투표 목록 조회 | `GET` | `/api/v1/journeys/{journeyId}/polls` | 🔜 구현예정 |
-| 투표 생성 | `POST` | `/api/v1/journeys/{journeyId}/polls` | 🔜 구현예정 |
-| 투표 참여 | `POST` | `/api/v1/journeys/{journeyId}/polls/{pollId}/votes` | 🔜 구현예정 |
-| 투표 확정 (호스트 전용) | `PATCH` | `/api/v1/journeys/{journeyId}/polls/{pollId}/finalize` | 🔜 구현예정 |
+| 투표 목록 조회 | `GET` | `/api/v1/journeys/{journeyId}/polls` | ⏸️ 보류 |
+| 투표 생성 | `POST` | `/api/v1/journeys/{journeyId}/polls` | ⏸️ 보류 |
+| 투표 참여 | `POST` | `/api/v1/journeys/{journeyId}/polls/{pollId}/votes` | ⏸️ 보류 |
+| 투표 확정 (호스트 전용) | `PATCH` | `/api/v1/journeys/{journeyId}/polls/{pollId}/finalize` | ⏸️ 보류 |
 
 ---
 
@@ -135,13 +145,14 @@
 | 도메인 | 엔티티 | DB 마이그레이션 | 서비스 | 상태 |
 |--------|--------|----------------|--------|------|
 | 여행 워크스페이스 | `Journey` | V14 | `JourneyQueryService`, `JourneyService` | ✅ 구현 |
-| 여행 멤버십 | `JourneyMember` | V13 | `JourneyService` | ✅ 구현 |
+| 여행 멤버십 | `JourneyMember` | V13, V14 | `JourneyService` | ✅ 구현 |
+| 멤버 역할 라벨 | `JourneyMember` (컬럼 추가) | V21 | `JourneyService` | ✅ 구현 |
 | 여행 게시판 | `JourneyPost` | V18 | `JourneyPostService` | ✅ 구현 |
 | 댓글 | `JourneyPostComment` | V19 | `JourneyPostCommentService` | ✅ 구현 |
 | 일정 | `JourneySchedule` | V20 | `JourneyScheduleService` | ✅ 구현 |
-| 할 일 | - | - | - | 🔜 구현예정 |
-| 여행 정보 | - | - | - | 🔜 구현예정 |
-| 투표 | - | - | - | 🔜 구현예정 |
+| 할 일 | - | - | - | ⏸️ 보류 |
+| 여행 정보 | - | - | - | ⏸️ 보류 |
+| 투표 | - | - | - | ⏸️ 보류 |
 
 ---
 
@@ -160,3 +171,4 @@
 - **일정 Day 그룹핑**: 일정 목록은 여행 시작일~종료일 전 구간을 Day 단위로 나눠 반환한다. 일정이 없는 날도 빈 Day 구조를 유지한다. `day` 값은 `scheduleDate - startDate + 1`로 서버가 계산하며 클라이언트는 보내지 않는다.
 - **일정 시간 제약**: 시작 시간(`startTime`)과 종료 시간(`endTime`) 모두 선택값이다. 종료 시간은 시작 시간이 있을 때만 허용하며, 이 제약은 엔티티 생성/수정 시 도메인 내부에서 검증한다.
 - **일정 수정·삭제 권한**: 일정은 작성자 여부와 관계없이 `ACTIVE` 멤버 전체가 수정·삭제할 수 있다. 협업 일정 관리 특성상 소유권 제한을 두지 않는다.
+- **멤버 역할 라벨**: `journey_members`에 `role_type` / `custom_role_label` 컬럼으로 관리한다. 기본 역할(총무·일정 담당 등) 5종과 직접 입력(`CUSTOM`) 중 하나를 선택하며, `CUSTOM`일 때만 `custom_role_label`이 사용된다. 지정·수정·해제는 호스트만 가능하며, 본인 포함 전 멤버에게 지정할 수 있다. 역할 해제는 별도 `DELETE` 엔드포인트로 분리해 PATCH의 `null = 변경 없음` 의미를 유지한다.
