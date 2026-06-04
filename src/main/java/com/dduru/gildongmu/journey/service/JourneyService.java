@@ -69,7 +69,7 @@ public class JourneyService {
     ) {
         validateActiveHost(journeyId, hostUserId);
         JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.updateRole(request.roleType(), request.customRoleLabel());
+        member.updateRole(request.roleType(), normalizeCustomRoleLabel(request.customRoleLabel()));
         log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleType={}",
                 journeyId, hostUserId, memberUserId, request.roleType());
         return JourneyMemberRoleResponse.from(member);
@@ -163,6 +163,13 @@ public class JourneyService {
         if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
             throw InvalidJourneyBasicInfoException.invalidTitleLength();
         }
+    }
+
+    private static String normalizeCustomRoleLabel(String label) {
+        if (!StringUtils.hasText(label)) {
+            return null;
+        }
+        return label.trim();
     }
 
     private JourneyMember findActiveMemberOrThrow(Long journeyId, Long memberUserId) {
