@@ -165,6 +165,9 @@ public class JourneySchedule extends BaseTimeEntity {
         if (endTime != null && startTime == null) {
             throw InvalidJourneyScheduleException.invalidScheduleTime();
         }
+        if (startTime != null && endTime != null && !startTime.isBefore(endTime)) {
+            throw InvalidJourneyScheduleException.invalidScheduleTime();
+        }
     }
 
     private static String validateTitle(String title) {
