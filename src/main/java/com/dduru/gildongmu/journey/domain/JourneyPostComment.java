@@ -74,7 +74,7 @@ public class JourneyPostComment extends BaseTimeEntity {
         return content;
     }
 
-    public void softDelete(Long deletedBy, LocalDateTime deletedAt) {
+    public void delete(Long deletedBy, LocalDateTime deletedAt) {
         this.isDeleted = true;
         this.deletedBy = deletedBy;
         this.deletedAt = deletedAt;
