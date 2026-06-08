@@ -4,7 +4,7 @@ public enum ScheduleCategory {
     MEAL,
     SIGHTSEEING,
     CAFE,
-    ACCOMMODATION,
+    REST,
     SHOPPING,
     ACTIVITY
 }
