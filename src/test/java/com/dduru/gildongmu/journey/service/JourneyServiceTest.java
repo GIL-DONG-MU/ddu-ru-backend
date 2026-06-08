@@ -16,10 +16,15 @@ import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
+import com.dduru.gildongmu.journey.domain.enums.JourneyRoleType;
+import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
+import com.dduru.gildongmu.journey.dto.response.JourneyMemberRoleResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
+import com.dduru.gildongmu.journey.exception.InvalidJourneyMemberRoleException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
+import com.dduru.gildongmu.journey.exception.JourneyMemberNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.participation.domain.Participation;
@@ -314,6 +319,226 @@ class JourneyServiceTest {
                     .isInstanceOf(JourneyAccessDeniedException.class);
 
             verify(chatRoomRepository, never()).findByJourneyIdAndRoomType(journeyId, ChatRoomType.GROUP);
+        }
+    }
+
+    @Nested
+    @DisplayName("나의 여정 멤버 역할 지정")
+    class UpdateMemberRole {
+
+        @Test
+        @DisplayName("호스트가 멤버에게 기본 역할을 지정할 수 있다")
+        void hostCanAssignRoleToMember() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.TREASURER, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            JourneyMemberRoleResponse response = journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request);
+
+            assertThat(response.memberUserId()).isEqualTo(memberUserId);
+            assertThat(response.roleType()).isEqualTo(JourneyRoleType.TREASURER);
+            assertThat(response.customRoleLabel()).isNull();
+            assertThat(member.getRoleType()).isEqualTo(JourneyRoleType.TREASURER);
+        }
+
+        @Test
+        @DisplayName("호스트가 본인에게 역할을 지정할 수 있다")
+        void hostCanAssignRoleToSelf() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser(), LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.SCHEDULE, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, hostUserId)).thenReturn(Optional.of(hostMember));
+
+            JourneyMemberRoleResponse response = journeyService.updateMemberRole(journeyId, hostUserId, hostUserId, request);
+
+            assertThat(response.roleType()).isEqualTo(JourneyRoleType.SCHEDULE);
+        }
+
+        @Test
+        @DisplayName("호스트가 CUSTOM 역할과 라벨을 지정할 수 있다")
+        void hostCanAssignCustomRole() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.CUSTOM, "식당 예약");
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            JourneyMemberRoleResponse response = journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request);
+
+            assertThat(response.roleType()).isEqualTo(JourneyRoleType.CUSTOM);
+            assertThat(response.customRoleLabel()).isEqualTo("식당 예약");
+            assertThat(member.getCustomRoleLabel()).isEqualTo("식당 예약");
+        }
+
+        @Test
+        @DisplayName("CUSTOM 역할에 라벨이 없으면 예외가 발생한다")
+        void throwsWhenCustomRoleLabelIsBlank() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.CUSTOM, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            assertThatThrownBy(() -> journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request))
+                    .isInstanceOf(InvalidJourneyMemberRoleException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL);
+        }
+
+        @Test
+        @DisplayName("CUSTOM 역할 라벨이 20자를 초과하면 예외가 발생한다")
+        void throwsWhenCustomRoleLabelExceedsMaxLength() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.CUSTOM, "가".repeat(21));
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            assertThatThrownBy(() -> journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request))
+                    .isInstanceOf(InvalidJourneyMemberRoleException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL);
+        }
+
+        @Test
+        @DisplayName("비호스트는 역할을 지정할 수 없다")
+        void nonHostCannotAssignRole() {
+            Long journeyId = 1L;
+            Long requesterUserId = 30L;
+            Long memberUserId = 20L;
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.TREASURER, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, requesterUserId)).thenReturn(false);
+
+            assertThatThrownBy(() -> journeyService.updateMemberRole(journeyId, requesterUserId, memberUserId, request))
+                    .isInstanceOf(JourneyAccessDeniedException.class);
+
+            verify(journeyMemberRepository, never()).findByJourneyIdAndUserId(journeyId, memberUserId);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 멤버에게 역할을 지정하면 예외가 발생한다")
+        void throwsWhenTargetMemberNotFound() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 99L;
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.PHOTO, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request))
+                    .isInstanceOf(JourneyMemberNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("REMOVED 상태의 멤버에게 역할을 지정하면 예외가 발생한다")
+        void throwsWhenTargetMemberIsInactive() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            member.remove(LocalDateTime.now());
+            JourneyMemberRoleUpdateRequest request = new JourneyMemberRoleUpdateRequest(JourneyRoleType.PHOTO, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            assertThatThrownBy(() -> journeyService.updateMemberRole(journeyId, hostUserId, memberUserId, request))
+                    .isInstanceOf(JourneyMemberNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("나의 여정 멤버 역할 해제")
+    class ClearMemberRole {
+
+        @Test
+        @DisplayName("호스트가 멤버 역할을 해제할 수 있다")
+        void hostCanClearMemberRole() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 20L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember member = JourneyMember.createMember(journey, createUser(memberUserId, "member"), LocalDateTime.now());
+            member.updateRole(JourneyRoleType.TREASURER, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.of(member));
+
+            journeyService.clearMemberRole(journeyId, hostUserId, memberUserId);
+
+            assertThat(member.getRoleType()).isNull();
+            assertThat(member.getCustomRoleLabel()).isNull();
+        }
+
+        @Test
+        @DisplayName("호스트가 본인 역할을 해제할 수 있다")
+        void hostCanClearOwnRole() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyMember hostMember = JourneyMember.createHost(journey, journey.getPost().getUser(), LocalDateTime.now());
+            hostMember.updateRole(JourneyRoleType.SCHEDULE, null);
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, hostUserId)).thenReturn(Optional.of(hostMember));
+
+            journeyService.clearMemberRole(journeyId, hostUserId, hostUserId);
+
+            assertThat(hostMember.getRoleType()).isNull();
+        }
+
+        @Test
+        @DisplayName("비호스트는 역할을 해제할 수 없다")
+        void nonHostCannotClearRole() {
+            Long journeyId = 1L;
+            Long requesterUserId = 30L;
+            Long memberUserId = 20L;
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, requesterUserId)).thenReturn(false);
+
+            assertThatThrownBy(() -> journeyService.clearMemberRole(journeyId, requesterUserId, memberUserId))
+                    .isInstanceOf(JourneyAccessDeniedException.class);
+
+            verify(journeyMemberRepository, never()).findByJourneyIdAndUserId(journeyId, memberUserId);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 멤버의 역할을 해제하면 예외가 발생한다")
+        void throwsWhenTargetMemberNotFound() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long memberUserId = 99L;
+
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(journeyMemberRepository.findByJourneyIdAndUserId(journeyId, memberUserId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> journeyService.clearMemberRole(journeyId, hostUserId, memberUserId))
+                    .isInstanceOf(JourneyMemberNotFoundException.class);
         }
     }
 
