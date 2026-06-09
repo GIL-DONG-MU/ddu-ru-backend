@@ -152,16 +152,27 @@ flowchart LR
 
 | 파라미터 | 타입 | 기본값 | 설명 |
 | --- | --- | --- | --- |
-| `keyword` | String | - | 제목/내용 검색 |
+| `keyword` | String | - | 제목·내용·여행지 도시/국가·태그 검색 |
 | `startDate` | LocalDate | - | 여행 시작일 이후 필터 |
 | `endDate` | LocalDate | - | 여행 종료일 이전 필터 |
-| `preferredGender` | Gender | - | 선호 성별 필터 |
-| `preferredAge` | Integer | - | 선호 연령 필터 |
+| `preferredGender` | Gender | - | 선호 성별 필터 (F/M 선택 시 상관없음(U) 게시글 포함) |
+| `minAge` | Integer | - | 선호 연령 최솟값 (포스트 나이 범위와 겹치는 게시글 반환) |
+| `maxAge` | Integer | - | 선호 연령 최댓값 |
 | `destinationId` | Long | - | 여행지 필터 |
-| `isRecruitOpen` | Boolean | - | 모집 중인 글만 필터 |
+| `recruitmentStatus` | PostRecruitmentStatus | - | 모집 상태 필터 (아래 참조) |
+| `companionType` | CompanionType | - | 동행 방식 필터 |
 | `sort` | PostSortType | `LATEST` | 정렬 조건 |
 | `cursor` | Long | - | 커서 기반 페이지네이션 (직전 마지막 항목의 postId) |
 | `size` | Integer | `10` | 페이지 크기 (최대 50) |
+
+### 모집 상태 필터 (recruitmentStatus)
+
+| 값 | 조건 |
+| --- | --- |
+| `OPEN` | status=OPEN AND 인원 여유 있음 |
+| `DEADLINE_NEAR` | status=OPEN AND 인원 여유 있음 AND 모집 마감일이 오늘~3일 이내 |
+| `FULL` | recruitCount >= recruitCapacity |
+| `CLOSED` | status=CLOSED |
 
 ### 정렬 조건 (sort)
 
@@ -224,6 +235,18 @@ SELECT pl.post_id
 FROM post_likes pl
 WHERE pl.user_id = :userId
   AND pl.post_id IN (:postIds)
+```
+
+#### isSuperHost / superHostEndsAt 처리 방식
+
+페이지 내 모든 게시글 ID를 한 번에 IN 쿼리로 활성 슈퍼호스트 노출 여부와 종료 시각을 벌크 조회해 N+1 없이 처리한다.
+
+```
+SELECT e.post_id, e.ended_at
+FROM super_host_exposures e
+WHERE e.post_id IN (:postIds)
+  AND e.status = 'ACTIVE'
+  AND e.ended_at > :now
 ```
 
 ---
@@ -294,7 +317,7 @@ AND 여행이 시작되지 않음
 AND 여행이 끝나지 않음
 ```
 
-여행이 시작된 다음 날부터는 `canEditPost = false`이다.
+여행 시작일 당일부터 `canEditPost = false`이다.
 
 ### myParticipationStatus
 

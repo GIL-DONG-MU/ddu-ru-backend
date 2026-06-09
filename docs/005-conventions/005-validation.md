@@ -51,13 +51,37 @@ Client 요청
 
 | 필드 종류 | 처리 방식 |
 |----------|----------|
-| 필수 문자열 | `trim()` 후 `@NotBlank`로 빈 값 차단 |
-| 선택 문자열 | `trim()` (빈 문자열은 그대로 — null 변환 안 함) |
+| 필수 문자열 | `strip()` 후 `@NotBlank`로 빈 값 차단 |
+| 선택 문자열 | `strip()` (빈 문자열은 그대로 — null 변환 안 함) |
+| 선택 필터 문자열 | `isBlank() ? null : strip()` (공백만 있으면 null로 정규화) |
 | 리스트 요소 | 각 요소 `strip()` + 비어있는 요소 제거 |
 | 숫자 / 날짜 / Enum | 정제 불필요, `@NotNull` / `@Min` / `@Max` 등 형식 검증만 |
 
+> **trim() 대신 strip()을 사용하는 이유**  
+> `trim()`은 ASCII 공백(코드값 ≤ 32)만 제거하지만, `strip()`은 유니코드 공백(전각 공백 `　` 등)까지 제거한다.  
+> 사용자 입력 문자열에는 `strip()`이 더 안전하다.
+
 > **선택 문자열을 null 변환하지 않는 이유**  
-> `null`은 "변경 없음(patch 없음)"을 의미하는 경우가 많다. 예를 들어 `photoUrl`이 `null`이면 기존 값 유지, `""`이면 여행지 기본 이미지로 대체로 처리된다. `trimToNull`로 의미를 왜곡하지 않는다.
+> `null`은 "변경 없음(patch 없음)"을 의미하는 경우가 많다. 예를 들어 `photoUrl`이 `null`이면 기존 값 유지, `""`이면 여행지 기본 이미지로 대체로 처리된다. `stripToNull`로 의미를 왜곡하지 않는다.
+
+### URL 필드 추가 검증
+
+이미지 URL처럼 단순 정제 외에 도메인 유효성이 필요한 필드는 Service 계층에서 `S3ImageUrlValidator`로 검증한다.  
+DTO에서는 정제만 하고, S3 도메인 여부 확인은 서비스에서 처리한다.
+
+```java
+// PostService.java
+private String resolvePhotoUrl(String photoUrl, Destination destination) {
+    if (StringUtils.hasText(photoUrl)) {
+        return s3ImageUrlValidator.validateAndNormalize(photoUrl, S3ImageDirectory.POSTS);
+    }
+    // photoUrl이 "" 또는 null → 여행지 기본 이미지로 대체
+    if (destination != null && StringUtils.hasText(destination.getImage())) {
+        return destination.getImage();
+    }
+    return null;
+}
+```
 
 ### 예시
 
@@ -74,9 +98,9 @@ public record PostCreateRequest(
         List<String> tags  // 각 요소 정제
 ) {
     public PostCreateRequest {
-        if (title != null)   title   = title.trim();
-        if (content != null) content = content.trim();
-        if (photoUrl != null) photoUrl = photoUrl.trim();
+        if (title != null)    title    = title.strip();
+        if (content != null)  content  = content.strip();
+        if (photoUrl != null) photoUrl = photoUrl.strip();
         if (tags != null) {
             tags = tags.stream()
                     .filter(t -> t != null && !t.strip().isEmpty())
