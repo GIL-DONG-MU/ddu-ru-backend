@@ -169,7 +169,7 @@ public class JourneyService {
         if (startDate == null || endDate == null) {
             throw InvalidJourneyBasicInfoException.incompleteTravelDate();
         }
-        if (!startDate.isBefore(endDate)) {
+        if (endDate.isBefore(startDate)) {
             throw InvalidJourneyBasicInfoException.invalidTravelDate();
         }
     }

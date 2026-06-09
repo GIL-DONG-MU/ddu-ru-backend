@@ -329,8 +329,8 @@ class JourneyServiceTest {
         }
 
         @Test
-        @DisplayName("시작일과 종료일이 같으면 예외가 발생한다")
-        void throwsWhenStartDateEqualsEndDate() {
+        @DisplayName("시작일과 종료일이 같으면 당일치기로 허용된다")
+        void allowsSameDayTrip() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
@@ -339,11 +339,13 @@ class JourneyServiceTest {
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));
+            when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 1))
+                    .thenReturn(List.of());
 
-            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
-                    .isInstanceOf(InvalidJourneyBasicInfoException.class)
-                    .extracting(e -> ((BusinessException) e).getErrorCode())
-                    .isEqualTo(ErrorCode.JOURNEY_INVALID_TRAVEL_DATE);
+            JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
+
+            assertThat(response.startDate()).isEqualTo(date);
+            assertThat(response.endDate()).isEqualTo(date);
         }
 
         @Test
