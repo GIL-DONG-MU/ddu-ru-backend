@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -47,13 +49,13 @@ public class PostQueryService {
 
         List<Long> postIds = posts.stream().map(Post::getId).toList();
         Set<Long> likedPostIds = fetchLikedPostIds(userId, postIds);
-        Set<Long> superHostPostIds = superHostService.findActiveSuperHostPostIds(postIds);
+        Map<Long, LocalDateTime> superHostExposures = superHostService.findActiveSuperHostExposures(postIds);
 
         List<PostSummaryResponse> summaries = posts.stream()
                 .map(post -> PostSummaryResponse.from(
                         post, profileImageResolver, today,
-                        superHostPostIds.contains(post.getId()),
-                        null,
+                        superHostExposures.containsKey(post.getId()),
+                        superHostExposures.get(post.getId()),
                         likedPostIds.contains(post.getId())
                 ))
                 .toList();

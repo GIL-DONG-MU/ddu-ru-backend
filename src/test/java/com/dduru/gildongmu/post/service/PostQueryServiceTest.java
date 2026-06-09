@@ -29,6 +29,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,7 +61,7 @@ class PostQueryServiceTest {
     void setUp() {
         when(timeProvider.today()).thenReturn(TODAY);
         lenient().when(profileImageResolver.resolve(any(Profile.class))).thenReturn(null);
-        lenient().when(superHostService.findActiveSuperHostPostIds(any())).thenReturn(Set.of());
+        lenient().when(superHostService.findActiveSuperHostExposures(any())).thenReturn(Map.of());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -119,7 +120,7 @@ class PostQueryServiceTest {
             postQueryService.retrieveAllWithFilter(request, userId);
 
             verify(postLikeRepository, never()).findLikedPostIdsByUserId(any(), any());
-            verify(superHostService, never()).findActiveSuperHostPostIds(any());
+            verify(superHostService, never()).findActiveSuperHostExposures(any());
         }
     }
 

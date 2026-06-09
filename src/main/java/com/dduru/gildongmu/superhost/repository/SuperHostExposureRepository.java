@@ -20,10 +20,10 @@ public interface SuperHostExposureRepository extends JpaRepository<SuperHostExpo
 
     boolean existsByPost_IdAndStatusAndEndedAtAfter(Long postId, SuperHostExposureStatus status, LocalDateTime now);
 
-    @Query("SELECT e.post.id FROM SuperHostExposure e WHERE e.post.id IN :postIds AND e.status = :status AND e.endedAt > :now")
-    Set<Long> findActivePostIds(@Param("postIds") Collection<Long> postIds,
-                                @Param("status") SuperHostExposureStatus status,
-                                @Param("now") LocalDateTime now);
+    @Query("SELECT e.post.id, e.endedAt FROM SuperHostExposure e WHERE e.post.id IN :postIds AND e.status = :status AND e.endedAt > :now")
+    List<Object[]> findActivePostIdsWithEndedAt(@Param("postIds") Collection<Long> postIds,
+                                                @Param("status") SuperHostExposureStatus status,
+                                                @Param("now") LocalDateTime now);
 
     @EntityGraph(attributePaths = "post")
     Optional<SuperHostExposure> findFirstByUser_IdAndStatusAndEndedAtAfterOrderByStartedAtDesc(

@@ -33,7 +33,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -135,9 +137,15 @@ public class SuperHostService {
     }
 
     @Transactional(readOnly = true)
-    public Set<Long> findActiveSuperHostPostIds(Collection<Long> postIds) {
-        if (postIds.isEmpty()) return Set.of();
-        return superHostExposureRepository.findActivePostIds(postIds, SuperHostExposureStatus.ACTIVE, timeProvider.now());
+    public Map<Long, LocalDateTime> findActiveSuperHostExposures(Collection<Long> postIds) {
+        if (postIds.isEmpty()) return Map.of();
+        return superHostExposureRepository
+                .findActivePostIdsWithEndedAt(postIds, SuperHostExposureStatus.ACTIVE, timeProvider.now())
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (LocalDateTime) row[1]
+                ));
     }
 
     public void cancelActiveExposureByPostId(Long postId) {
