@@ -155,6 +155,7 @@ public class Post extends BaseTimeEntity {
                                   boolean isAgeAny, Integer minAge, Integer maxAge,
                                   String photoUrl, String tags, CompanionType companionType) {
         validateDateRange(startDate, endDate);
+        validatePreferredAge(isAgeAny, minAge, maxAge);
 
         return Post.builder()
                 .user(user)
@@ -182,6 +183,11 @@ public class Post extends BaseTimeEntity {
                            String photoUrl, String tags, CompanionType companionType,
                            LocalDate today) {
         validateUpdatable(today);
+        validateDateRange(
+                startDate != null ? startDate : this.startDate,
+                endDate != null ? endDate : this.endDate
+        );
+        validatePreferredAge(isAgeAny, minAge, maxAge);
         applyBasicChanges(destination, title, content, startDate, endDate, recruitDeadline,
                 preferredGender, tags, companionType);
         this.isAgeAny = isAgeAny;
