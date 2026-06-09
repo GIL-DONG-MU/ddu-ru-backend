@@ -3,6 +3,8 @@ package com.dduru.gildongmu.post.service;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -54,6 +56,7 @@ public class PostService {
     private final SuperHostService superHostService;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
+    private final S3ImageUrlValidator s3ImageUrlValidator;
     private final TimeProvider timeProvider;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
@@ -248,7 +251,7 @@ public class PostService {
 
     private String resolvePhotoUrl(String photoUrl, Destination destination) {
         if (StringUtils.hasText(photoUrl)) {
-            return photoUrl;
+            return s3ImageUrlValidator.validateAndNormalize(photoUrl, S3ImageDirectory.POSTS);
         }
 
         if (destination != null && StringUtils.hasText(destination.getImage())) {

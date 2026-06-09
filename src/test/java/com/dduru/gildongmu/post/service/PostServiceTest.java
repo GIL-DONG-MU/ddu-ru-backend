@@ -3,6 +3,8 @@ package com.dduru.gildongmu.post.service;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -52,6 +54,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -76,6 +79,7 @@ class PostServiceTest {
     @Mock private JourneyRepository journeyRepository;
     @Mock private JourneyMemberRepository journeyMemberRepository;
     @Mock private TimeProvider timeProvider;
+    @Mock private S3ImageUrlValidator s3ImageUrlValidator;
 
     @InjectMocks
     private PostService postService;
@@ -83,6 +87,8 @@ class PostServiceTest {
     @BeforeEach
     void setUpTimeProvider() {
         lenient().when(timeProvider.today()).thenReturn(TODAY);
+        lenient().when(s3ImageUrlValidator.validateAndNormalize(anyString(), any(S3ImageDirectory.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
