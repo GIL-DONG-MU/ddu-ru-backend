@@ -270,6 +270,26 @@ class JourneyServiceTest {
             assertThat(response.endDate()).isEqualTo(newEnd);
             assertThat(journey.getPost().getStartDate()).isEqualTo(newStart);
             assertThat(journey.getPost().getEndDate()).isEqualTo(newEnd);
+            assertThat(journey.getPost().getRecruitDeadline()).isEqualTo(newEnd.minusDays(1));
+        }
+
+        @Test
+        @DisplayName("여행 날짜 수정 시 당일치기이면 recruitDeadline이 startDate 하루 전으로 갱신된다")
+        void updatesRecruitDeadlineForSameDayTrip() {
+            Long journeyId = 1L;
+            Long userId = 10L;
+            Journey journey = createJourney(journeyId, userId);
+            LocalDate date = LocalDate.now().plusDays(10);
+            JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, date, date);
+
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+                    .thenReturn(Optional.of(journey));
+            when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 1))
+                    .thenReturn(List.of());
+
+            journeyService.updateBasicInfo(journeyId, userId, request);
+
+            assertThat(journey.getPost().getRecruitDeadline()).isEqualTo(date.minusDays(1));
         }
 
         @Test

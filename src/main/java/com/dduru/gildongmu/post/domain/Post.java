@@ -181,6 +181,7 @@ public class Post extends BaseTimeEntity {
     public void updateTravelDates(LocalDate startDate, LocalDate endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
+        this.recruitDeadline = endDate.minusDays(1);
     }
 
     public void softDelete(Long userId) {
