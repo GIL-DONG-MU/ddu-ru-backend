@@ -113,6 +113,11 @@ public class JourneyMember extends BaseTimeEntity {
         this.roleType = roleType;
     }
 
+    public void clearRole() {
+        this.roleType = null;
+        this.customRoleLabel = null;
+    }
+
     private static void validateCustomRoleLabel(String label) {
         if (!StringUtils.hasText(label)) {
             throw InvalidJourneyMemberRoleException.invalidCustomRoleLabel();

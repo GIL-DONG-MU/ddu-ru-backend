@@ -72,7 +72,7 @@
 |------|--------|-----------|------|
 | 메인 목록 조회 | `GET` | `/api/v1/users/me/journeys` | ✅ 구현 |
 | 상세 조회 | `GET` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
-| 기본 정보 수정 (제목·대표 사진) | `PATCH` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
+| 기본 정보 수정 (제목·대표 사진·여행 날짜) | `PATCH` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
 | 멤버 역할 지정/수정 (호스트 전용) | `PATCH` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
 | 멤버 역할 해제 (호스트 전용) | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
 | 참여자 내보내기 | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}` | ✅ 구현 |
@@ -170,6 +170,8 @@
 - **그룹 채팅 연동**: 나의 여정 상세 응답에 `groupRoomId`를 포함해 프론트가 바로 채팅방으로 이동할 수 있게 한다.
 - **일정 상대 일차(dayOffset)**: 일정은 절대 날짜 대신 여행 시작일 기준 상대 일차(`dayOffset: 0, 1, 2...`)로 저장한다. 여행 날짜가 변경되어도 일정 데이터가 그대로 보존된다. 응답에서 실제 날짜는 `startDate.plusDays(dayOffset)`으로 계산해 내려준다.
 - **일정 Day 그룹핑**: 일정 목록은 `dayOffset` 기준으로 그룹핑해 Day 단위로 반환한다. 일정이 없는 날도 빈 Day 구조를 유지한다. `day` 번호는 `dayOffset + 1`이며 클라이언트는 보내지 않는다.
-- **일정 시간 제약**: 시작 시간(`startTime`)과 종료 시간(`endTime`) 모두 선택값이다. 종료 시간은 시작 시간이 있을 때만 허용하며, 이 제약은 엔티티 생성/수정 시 도메인 내부에서 검증한다.
+- **일정 시간 제약**: 시작 시간(`startTime`)과 종료 시간(`endTime`) 모두 선택값이다. 종료 시간은 시작 시간이 있을 때만 허용하며, 시작 시간이 종료 시간보다 같거나 늦으면 검증 오류다. 이 제약은 엔티티 생성/수정 시 도메인 내부에서 검증한다.
+- **일정 카테고리**: `MEAL / SIGHTSEEING / CAFE / REST / SHOPPING / ACTIVITY` 6종이다.
 - **일정 수정·삭제 권한**: 일정은 작성자 여부와 관계없이 `ACTIVE` 멤버 전체가 수정·삭제할 수 있다. 협업 일정 관리 특성상 소유권 제한을 두지 않는다.
+- **여행 날짜 수정**: 기본 정보 수정 API에서 `startDate` / `endDate`를 함께 입력하면 `posts` 테이블의 여행 날짜가 업데이트된다. 날짜는 항상 쌍으로 입력해야 하며(`startDate`만 또는 `endDate`만 입력 불가), `startDate`는 `endDate`보다 늦으면 안 된다 (당일치기 허용). 기간이 줄어드는 경우 새 기간 밖(`dayOffset >= 새 총 일수`)의 일정은 자동으로 소프트 삭제된다. 프론트에서 삭제 예정 일정이 있을 때 사전 안내 모달을 노출한다.
 - **멤버 역할 라벨**: `journey_members`에 `role_type` / `custom_role_label` 컬럼으로 관리한다. 기본 역할(총무·일정 담당 등) 5종과 직접 입력(`CUSTOM`) 중 하나를 선택하며, `CUSTOM`일 때만 `custom_role_label`이 사용된다. 지정·수정·해제는 호스트만 가능하며, 본인 포함 전 멤버에게 지정할 수 있다. 역할 해제는 별도 `DELETE` 엔드포인트로 분리해 PATCH의 `null = 변경 없음` 의미를 유지한다.

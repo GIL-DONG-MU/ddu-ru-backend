@@ -36,4 +36,16 @@ public interface JourneyScheduleRepository extends JpaRepository<JourneySchedule
         return findActiveByIdAndJourneyId(scheduleId, journeyId)
                 .orElseThrow(JourneyScheduleNotFoundException::new);
     }
+
+    @Query("""
+            SELECT js
+            FROM JourneySchedule js
+            WHERE js.journey.id = :journeyId
+              AND js.isDeleted = false
+              AND js.dayOffset >= :dayOffset
+            """)
+    List<JourneySchedule> findActiveSchedulesWithDayOffsetGreaterThanOrEqual(
+            @Param("journeyId") Long journeyId,
+            @Param("dayOffset") int dayOffset
+    );
 }
