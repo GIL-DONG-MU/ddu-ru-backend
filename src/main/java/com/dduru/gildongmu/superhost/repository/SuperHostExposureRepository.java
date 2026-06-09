@@ -10,13 +10,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface SuperHostExposureRepository extends JpaRepository<SuperHostExposure, Long> {
     boolean existsByUser_IdAndStatusAndEndedAtAfter(Long userId, SuperHostExposureStatus status, LocalDateTime now);
 
     boolean existsByPost_IdAndStatusAndEndedAtAfter(Long postId, SuperHostExposureStatus status, LocalDateTime now);
+
+    @Query("SELECT e.post.id FROM SuperHostExposure e WHERE e.post.id IN :postIds AND e.status = :status AND e.endedAt > :now")
+    Set<Long> findActivePostIds(@Param("postIds") Collection<Long> postIds,
+                                @Param("status") SuperHostExposureStatus status,
+                                @Param("now") LocalDateTime now);
 
     @EntityGraph(attributePaths = "post")
     Optional<SuperHostExposure> findFirstByUser_IdAndStatusAndEndedAtAfterOrderByStartedAtDesc(

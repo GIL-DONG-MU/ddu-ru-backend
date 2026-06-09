@@ -34,7 +34,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .leftJoin(post.user.profile, profile).fetchJoin()
                 .where(
                         isNotDeleted(),
-                        cursorCondition(cursorPost, request.sort()),
+                        cursorCondition(request.cursor(), cursorPost, request.sort()),
                         keywordCondition(request.keyword()),
                         dateRangeCondition(request.startDate(), request.endDate()),
                         genderCondition(request.preferredGender()),
@@ -59,21 +59,21 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return post.isDeleted.eq(false);
     }
 
-    private BooleanExpression cursorCondition(Post cursorPost, PostSortType sort) {
-        if (cursorPost == null) {
-            return null;
-        }
+    private BooleanExpression cursorCondition(Long cursorId, Post cursorPost, PostSortType sort) {
+        if (cursorId == null) return null;
         return switch (sort) {
-            case VIEW -> post.viewCount.lt(cursorPost.getViewCount())
-                    .or(post.viewCount.eq(cursorPost.getViewCount()).and(post.id.lt(cursorPost.getId())));
-            case LIKE -> post.likeCount.lt(cursorPost.getLikeCount())
-                    .or(post.likeCount.eq(cursorPost.getLikeCount()).and(post.id.lt(cursorPost.getId())));
-            default -> post.id.lt(cursorPost.getId());
+            case VIEW -> cursorPost == null ? null :
+                    post.viewCount.lt(cursorPost.getViewCount())
+                            .or(post.viewCount.eq(cursorPost.getViewCount()).and(post.id.lt(cursorId)));
+            case LIKE -> cursorPost == null ? null :
+                    post.likeCount.lt(cursorPost.getLikeCount())
+                            .or(post.likeCount.eq(cursorPost.getLikeCount()).and(post.id.lt(cursorId)));
+            default -> post.id.lt(cursorId);
         };
     }
 
     private BooleanExpression keywordCondition(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
+        if (keyword == null || keyword.isEmpty()) {
             return null;
         }
         return post.title.containsIgnoreCase(keyword)

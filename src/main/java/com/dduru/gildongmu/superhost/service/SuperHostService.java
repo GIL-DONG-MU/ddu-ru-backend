@@ -31,7 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -130,6 +132,12 @@ public class SuperHostService {
         return superHostExposureRepository.existsByPost_IdAndStatusAndEndedAtAfter(
                 postId, SuperHostExposureStatus.ACTIVE, timeProvider.now()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> findActiveSuperHostPostIds(Collection<Long> postIds) {
+        if (postIds.isEmpty()) return Set.of();
+        return superHostExposureRepository.findActivePostIds(postIds, SuperHostExposureStatus.ACTIVE, timeProvider.now());
     }
 
     public void cancelActiveExposureByPostId(Long postId) {
