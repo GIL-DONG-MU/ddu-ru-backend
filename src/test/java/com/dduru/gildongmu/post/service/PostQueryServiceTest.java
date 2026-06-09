@@ -13,6 +13,7 @@ import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
+import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,7 @@ class PostQueryServiceTest {
     @Mock private PostRepository postRepository;
     @Mock private PostLikeRepository postLikeRepository;
     @Mock private ProfileImageResolver profileImageResolver;
+    @Mock private SuperHostService superHostService;
     @Mock private TimeProvider timeProvider;
 
     @InjectMocks
@@ -58,6 +60,7 @@ class PostQueryServiceTest {
     void setUp() {
         when(timeProvider.today()).thenReturn(TODAY);
         lenient().when(profileImageResolver.resolve(any(Profile.class))).thenReturn(null);
+        lenient().when(superHostService.findActiveSuperHostPostIds(any())).thenReturn(Set.of());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -116,6 +119,7 @@ class PostQueryServiceTest {
             postQueryService.retrieveAllWithFilter(request, userId);
 
             verify(postLikeRepository, never()).findLikedPostIdsByUserId(any(), any());
+            verify(superHostService, never()).findActiveSuperHostPostIds(any());
         }
     }
 
@@ -182,11 +186,11 @@ class PostQueryServiceTest {
     class Cursor {
 
         @Test
-        @DisplayName("cursor가 있으면 해당 게시글을 조회해 cursorPost로 전달한다")
-        void withCursorFetchesCursorPost() {
+        @DisplayName("VIEW 정렬에서 cursor가 있으면 게시글을 조회해 cursorPost로 전달한다")
+        void viewSortWithCursorFetchesCursorPost() {
             Long cursorId = 100L;
             Post cursorPost = createPost(cursorId);
-            PostListRequest request = listRequest(5, cursorId);
+            PostListRequest request = listRequestWithSort(5, cursorId, PostSortType.VIEW);
 
             when(postRepository.findById(cursorId)).thenReturn(Optional.of(cursorPost));
             when(postRepository.findPostsWithFilters(any(), eq(cursorPost), any(Pageable.class)))
@@ -196,6 +200,20 @@ class PostQueryServiceTest {
 
             verify(postRepository).findById(cursorId);
             verify(postRepository).findPostsWithFilters(any(), eq(cursorPost), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("LATEST 정렬에서는 cursor가 있어도 게시글 조회를 하지 않는다")
+        void latestSortWithCursorSkipsCursorPostFetch() {
+            PostListRequest request = listRequest(5, 100L);
+
+            when(postRepository.findPostsWithFilters(any(), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of());
+
+            postQueryService.retrieveAllWithFilter(request, null);
+
+            verify(postRepository, never()).findById(any());
+            verify(postRepository).findPostsWithFilters(any(), isNull(), any(Pageable.class));
         }
 
         @Test
@@ -213,10 +231,10 @@ class PostQueryServiceTest {
         }
 
         @Test
-        @DisplayName("cursor에 해당하는 게시글이 없으면 null을 전달한다")
-        void cursorNotFoundPassesNull() {
+        @DisplayName("VIEW 정렬에서 cursor에 해당하는 게시글이 없으면 null을 전달한다")
+        void viewSortCursorNotFoundPassesNull() {
             Long cursorId = 999L;
-            PostListRequest request = listRequest(5, cursorId);
+            PostListRequest request = listRequestWithSort(5, cursorId, PostSortType.VIEW);
 
             when(postRepository.findById(cursorId)).thenReturn(Optional.empty());
             when(postRepository.findPostsWithFilters(any(), isNull(), any(Pageable.class)))
@@ -235,6 +253,10 @@ class PostQueryServiceTest {
 
     private PostListRequest listRequest(int size, Long cursor) {
         return new PostListRequest(cursor, size, null, null, null, null, null, null, null, PostSortType.LATEST);
+    }
+
+    private PostListRequest listRequestWithSort(int size, Long cursor, PostSortType sort) {
+        return new PostListRequest(cursor, size, null, null, null, null, null, null, null, sort);
     }
 
     private Post createPost(Long postId) {
