@@ -18,8 +18,9 @@ import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyMemberNotFoundException;
-import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.participation.domain.enums.ParticipationStatus;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
@@ -31,6 +32,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -41,6 +45,7 @@ public class JourneyService {
 
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
+    private final JourneyScheduleRepository journeyScheduleRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ParticipationRepository participationRepository;
@@ -54,9 +59,17 @@ public class JourneyService {
 
         String title = normalizeTitle(request.title());
         String photoUrl = normalizePhotoUrl(request.photoUrl());
-        validateHasAnyPatch(title, photoUrl);
+        LocalDate startDate = request.startDate();
+        LocalDate endDate = request.endDate();
+        validateHasAnyPatch(title, photoUrl, startDate, endDate);
+        validateTravelDatePatch(startDate, endDate);
 
         journey.updateBasicInfo(title, photoUrl);
+        if (startDate != null) {
+            deleteOutOfRangeSchedules(journeyId, userId, startDate, endDate);
+            journey.getPost().updateTravelDates(startDate, endDate);
+        }
+
         log.info("나의 여정 기본 정보 수정됨 - journeyId={}, userId={}", journeyId, userId);
         return JourneyUpdateResponse.from(journey);
     }
@@ -78,7 +91,7 @@ public class JourneyService {
     public void clearMemberRole(Long journeyId, Long hostUserId, Long memberUserId) {
         validateActiveHost(journeyId, hostUserId);
         JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.updateRole(null, null);
+        member.clearRole();
         log.info("나의 여정 멤버 역할 해제됨 - journeyId={}, hostUserId={}, memberUserId={}",
                 journeyId, hostUserId, memberUserId);
     }
@@ -143,10 +156,28 @@ public class JourneyService {
                 });
     }
 
-    private void validateHasAnyPatch(String title, String photoUrl) {
-        if (title == null && photoUrl == null) {
+    private void validateHasAnyPatch(String title, String photoUrl, LocalDate startDate, LocalDate endDate) {
+        if (title == null && photoUrl == null && startDate == null && endDate == null) {
             throw InvalidJourneyBasicInfoException.emptyPatch();
         }
+    }
+
+    private static void validateTravelDatePatch(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null && endDate == null) {
+            return;
+        }
+        if (startDate == null || endDate == null) {
+            throw InvalidJourneyBasicInfoException.incompleteTravelDate();
+        }
+        if (endDate.isBefore(startDate)) {
+            throw InvalidJourneyBasicInfoException.invalidTravelDate();
+        }
+    }
+
+    private void deleteOutOfRangeSchedules(Long journeyId, Long userId, LocalDate startDate, LocalDate endDate) {
+        int newTotalDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, newTotalDays)
+                .forEach(schedule -> schedule.delete(userId, timeProvider.now()));
     }
 
     private String normalizeTitle(String title) {

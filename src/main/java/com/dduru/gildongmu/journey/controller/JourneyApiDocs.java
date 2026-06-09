@@ -50,7 +50,7 @@ public interface JourneyApiDocs {
 
     @Operation(
             summary = "나의 여정 기본 정보 수정",
-            description = "active journey member가 나의 여정의 제목과 대표 사진을 수정합니다."
+            description = "active journey member가 나의 여정의 제목·대표 사진·여행 날짜를 수정합니다."
     )
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiErrorResponses({
@@ -58,7 +58,9 @@ public interface JourneyApiDocs {
             ErrorCode.JOURNEY_ACCESS_DENIED,
             ErrorCode.JOURNEY_EMPTY_PATCH,
             ErrorCode.JOURNEY_INVALID_TITLE_LENGTH,
-            ErrorCode.JOURNEY_INVALID_PHOTO_URL
+            ErrorCode.JOURNEY_INVALID_PHOTO_URL,
+            ErrorCode.JOURNEY_INCOMPLETE_TRAVEL_DATE,
+            ErrorCode.JOURNEY_INVALID_TRAVEL_DATE
     })
     ResponseEntity<ApiResult<JourneyUpdateResponse>> updateJourneyBasicInfo(
             @Parameter(description = "여정 ID") Long journeyId,
