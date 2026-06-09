@@ -47,9 +47,9 @@ public record PostCreateRequest(
         CompanionType companionType
 ) {
     public PostCreateRequest {
-        if (title != null) title = title.trim();
-        if (content != null) content = content.trim();
-        if (photoUrl != null) photoUrl = photoUrl.trim();
+        if (title != null) title = title.strip();
+        if (content != null) content = content.strip();
+        if (photoUrl != null) photoUrl = photoUrl.strip();
         if (tags != null) {
             tags = tags.stream()
                     .filter(t -> t != null && !t.strip().isEmpty())

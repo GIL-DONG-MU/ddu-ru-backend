@@ -25,6 +25,6 @@ public record PostListRequest(
     public PostListRequest {
         if (size == null || size <= 0 || size > 50) size = 10;
         if (sort == null) sort = PostSortType.LATEST;
-        if (keyword != null) keyword = keyword.isBlank() ? null : keyword.trim();
+        if (keyword != null) keyword = keyword.isBlank() ? null : keyword.strip();
     }
 }
