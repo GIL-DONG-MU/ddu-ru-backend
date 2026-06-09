@@ -69,6 +69,8 @@ public enum ErrorCode {
     RECRUIT_COUNT_BELOW_ZERO(HttpStatus.BAD_REQUEST, "모집된 인원이 1명 미만이 될 수 없습니다."),
     INVALID_POST_STATUS(HttpStatus.BAD_REQUEST, "모집이 완료된 게시글은 모집 상태를 변경할 수 없습니다."),
     INVALID_POST_TAGS(HttpStatus.BAD_REQUEST, "태그 형식이 올바르지 않습니다."),
+    INVALID_POST_TITLE(HttpStatus.BAD_REQUEST, "제목은 5자 이상 40자 이하여야 합니다."),
+    INVALID_POST_CONTENT(HttpStatus.BAD_REQUEST, "내용은 20자 이상 1000자 이하여야 합니다."),
 
     // 여행지 (DESTINATION)
     DESTINATION_NOT_FOUND(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."),
