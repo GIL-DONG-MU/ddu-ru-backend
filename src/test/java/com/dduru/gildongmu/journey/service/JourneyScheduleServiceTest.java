@@ -829,7 +829,7 @@ class JourneyScheduleServiceTest {
                 owner,
                 destination,
                 "오사카 3일 여행",
-                "테스트 본문",
+                "일정 서비스 테스트용 본문입니다. 충분한 길이로 작성합니다.",
                 startDate,
                 endDate,
                 4,
