@@ -337,7 +337,7 @@ public class Post extends BaseTimeEntity {
     }
 
     public boolean hasTravelStarted(LocalDate today) {
-        return today.isAfter(startDate);
+        return !today.isBefore(startDate);
     }
 
     public boolean hasTravelEnded(LocalDate today) {
