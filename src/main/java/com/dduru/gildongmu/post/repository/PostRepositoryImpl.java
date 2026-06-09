@@ -2,8 +2,10 @@ package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> findPostsWithFilters(PostListRequest request, Pageable pageable) {
+    public List<Post> findPostsWithFilters(PostListRequest request, Post cursorPost, Pageable pageable) {
         return queryFactory
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
@@ -32,7 +34,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .leftJoin(post.user.profile, profile).fetchJoin()
                 .where(
                         isNotDeleted(),
-                        cursorCondition(request.cursor()),
+                        cursorCondition(cursorPost, request.sort()),
                         keywordCondition(request.keyword()),
                         dateRangeCondition(request.startDate(), request.endDate()),
                         genderCondition(request.preferredGender()),
@@ -40,20 +42,34 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         destinationCondition(request.destinationId()),
                         recruitmentStatusCondition(request.isRecruitOpen())
                 )
-                .orderBy(post.id.desc())
+                .orderBy(sortOrder(request.sort()))
                 .limit(pageable.getPageSize())
                 .fetch();
+    }
+
+    private OrderSpecifier<?>[] sortOrder(PostSortType sort) {
+        return switch (sort) {
+            case VIEW -> new OrderSpecifier[]{post.viewCount.desc(), post.id.desc()};
+            case LIKE -> new OrderSpecifier[]{post.likeCount.desc(), post.id.desc()};
+            default -> new OrderSpecifier[]{post.id.desc()};
+        };
     }
 
     private BooleanExpression isNotDeleted() {
         return post.isDeleted.eq(false);
     }
 
-    private BooleanExpression cursorCondition(Long cursor) {
-        if (cursor == null) {
+    private BooleanExpression cursorCondition(Post cursorPost, PostSortType sort) {
+        if (cursorPost == null) {
             return null;
         }
-        return post.id.lt(cursor);
+        return switch (sort) {
+            case VIEW -> post.viewCount.lt(cursorPost.getViewCount())
+                    .or(post.viewCount.eq(cursorPost.getViewCount()).and(post.id.lt(cursorPost.getId())));
+            case LIKE -> post.likeCount.lt(cursorPost.getLikeCount())
+                    .or(post.likeCount.eq(cursorPost.getLikeCount()).and(post.id.lt(cursorPost.getId())));
+            default -> post.id.lt(cursorPost.getId());
+        };
     }
 
     private BooleanExpression keywordCondition(String keyword) {

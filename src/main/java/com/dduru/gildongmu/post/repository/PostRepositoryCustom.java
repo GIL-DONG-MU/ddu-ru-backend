@@ -7,5 +7,5 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface PostRepositoryCustom {
-    List<Post> findPostsWithFilters(PostListRequest request, Pageable pageable);
+    List<Post> findPostsWithFilters(PostListRequest request, Post cursorPost, Pageable pageable);
 }
