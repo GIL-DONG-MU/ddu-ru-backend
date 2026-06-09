@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.post.dto.request;
 
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.PostRecruitmentStatus;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,9 +15,11 @@ public record PostListRequest(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
         Gender preferredGender,
-        Integer preferredAge,
+        Integer minAge,
+        Integer maxAge,
         Long destinationId,
-        Boolean isRecruitOpen,
+        PostRecruitmentStatus recruitmentStatus,
+        CompanionType companionType,
         PostSortType sort
 ) {
     public PostListRequest {

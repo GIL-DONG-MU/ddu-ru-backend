@@ -34,7 +34,7 @@ public class PostQueryService {
         LocalDate today = timeProvider.today();
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         Post cursorPost = fetchCursorPost(request);
-        List<Post> posts = postRepository.findPostsWithFilters(request, cursorPost, pageable);
+        List<Post> posts = postRepository.findPostsWithFilters(request, today, cursorPost, pageable);
 
         boolean hasNext = posts.size() > request.size();
         if (hasNext) {
