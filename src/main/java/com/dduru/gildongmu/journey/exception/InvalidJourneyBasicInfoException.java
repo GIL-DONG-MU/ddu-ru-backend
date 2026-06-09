@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 
 public class InvalidJourneyBasicInfoException extends BusinessException {
+
     private InvalidJourneyBasicInfoException(ErrorCode errorCode) {
         super(errorCode);
     }
