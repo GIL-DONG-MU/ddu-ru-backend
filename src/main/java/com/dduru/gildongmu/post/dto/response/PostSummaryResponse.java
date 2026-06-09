@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.dto.response;
 
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
@@ -28,16 +29,18 @@ public record PostSummaryResponse(
         int likeCount,
         UserInfo author,
         boolean isSuperHost,
-        LocalDateTime superHostEndsAt
+        LocalDateTime superHostEndsAt,
+        CompanionType companionType,
+        boolean hasLiked
 ) {
     public static PostSummaryResponse from(
             Post post,
             ProfileImageResolver profileImageResolver,
             LocalDate today,
             boolean isSuperHost,
-            LocalDateTime superHostEndsAt
+            LocalDateTime superHostEndsAt,
+            boolean hasLiked
     ) {
-        String photoUrl = post.getPhotoUrl();
         UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
 
         return new PostSummaryResponse(
@@ -54,12 +57,14 @@ public record PostSummaryResponse(
                 post.getRecruitCapacity(),
                 post.getRecruitCount(),
                 post.getPreferredGender(),
-                photoUrl,
+                post.getPhotoUrl(),
                 post.getViewCount(),
                 post.getLikeCount(),
                 authorInfo,
                 isSuperHost,
-                superHostEndsAt
+                superHostEndsAt,
+                post.getCompanionType(),
+                hasLiked
         );
     }
 }

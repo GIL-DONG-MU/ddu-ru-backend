@@ -8,25 +8,23 @@ import com.dduru.gildongmu.user.domain.User;
 
 import java.time.LocalDate;
 
-public record ParticipantInfo(
+public record PostAuthorInfo(
         Long userId,
         String nickname,
         ProfileImageInfo profileImage,
-        boolean isHost,
         Gender gender,
-        LocalDate birthday
+        LocalDate birthday,
+        boolean isSuperHost
 ) {
-    public static ParticipantInfo from(User user, boolean isHost, ProfileImageResolver profileImageResolver) {
+    public static PostAuthorInfo from(User user, boolean isSuperHost, ProfileImageResolver profileImageResolver) {
         Profile profile = user.getProfile();
-        ProfileImageInfo profileImage = ProfileImageInfo.from(profile, profileImageResolver);
-
-        return new ParticipantInfo(
+        return new PostAuthorInfo(
                 user.getId(),
                 profile.getNickname(),
-                profileImage,
-                isHost,
+                ProfileImageInfo.from(profile, profileImageResolver),
                 profile.getGender(),
-                profile.getBirthday()
+                profile.getBirthday(),
+                isSuperHost
         );
     }
 }

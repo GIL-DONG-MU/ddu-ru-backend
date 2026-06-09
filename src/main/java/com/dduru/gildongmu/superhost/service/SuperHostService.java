@@ -94,7 +94,8 @@ public class SuperHostService {
                         profileImageResolver,
                         today,
                         true,
-                        exposure.getEndedAt()))
+                        exposure.getEndedAt(),
+                        false))
                 .toList();
 
         return SuperHostPostListResponse.of(responses);
@@ -122,6 +123,13 @@ public class SuperHostService {
                         exposure.getEndedAt()
                 ))
                 .orElseGet(() -> MySuperHostStatusResponse.of(unusedCount, false, null, null));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAuthorSuperHostForPost(Long postId) {
+        return superHostExposureRepository.existsByPost_IdAndStatusAndEndedAtAfter(
+                postId, SuperHostExposureStatus.ACTIVE, timeProvider.now()
+        );
     }
 
     public void cancelActiveExposureByPostId(Long postId) {

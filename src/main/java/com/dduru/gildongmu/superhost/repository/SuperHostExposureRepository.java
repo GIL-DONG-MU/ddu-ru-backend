@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface SuperHostExposureRepository extends JpaRepository<SuperHostExposure, Long> {
     boolean existsByUser_IdAndStatusAndEndedAtAfter(Long userId, SuperHostExposureStatus status, LocalDateTime now);
 
+    boolean existsByPost_IdAndStatusAndEndedAtAfter(Long postId, SuperHostExposureStatus status, LocalDateTime now);
+
     @EntityGraph(attributePaths = "post")
     Optional<SuperHostExposure> findFirstByUser_IdAndStatusAndEndedAtAfterOrderByStartedAtDesc(
             Long userId, SuperHostExposureStatus status, LocalDateTime now
