@@ -229,6 +229,7 @@ public class PostService {
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadline, LocalDate today) {
+        // isAgeAny/minAge/maxAge 중 하나라도 있으면 나이 조건 전체를 교체, 모두 null이면 기존 값 유지
         boolean applyPreferredAgePatch = hasAgePatch(request);
         boolean preferredAgeAny = applyPreferredAgePatch && Boolean.TRUE.equals(request.isAgeAny());
 

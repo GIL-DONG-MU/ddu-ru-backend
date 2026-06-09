@@ -64,6 +64,8 @@ public class PostQueryService {
     }
 
     private Post fetchCursorPost(PostListRequest request) {
+        // LATEST는 id 단독 비교라 entity 조회 없이 cursor id를 직접 사용
+        // VIEW/LIKE는 카운트 동점 처리를 위해 cursorPost의 카운트 값이 필요
         if (request.cursor() == null || request.sort() == PostSortType.LATEST) {
             return null;
         }

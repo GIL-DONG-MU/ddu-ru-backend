@@ -83,6 +83,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .or(post.content.containsIgnoreCase(keyword))
                 .or(destination.city.containsIgnoreCase(keyword))
                 .or(destination.countryName.containsIgnoreCase(keyword))
+                // tags는 JSON 배열 문자열로 저장되므로 containsIgnoreCase로 태그명 부분 일치 검색
                 .or(post.tags.containsIgnoreCase(keyword));
     }
 
