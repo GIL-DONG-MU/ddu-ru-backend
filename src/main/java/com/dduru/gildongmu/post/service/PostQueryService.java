@@ -55,7 +55,6 @@ public class PostQueryService {
                 .map(post -> PostSummaryResponse.from(
                         post, profileImageResolver, today,
                         superHostExposures.containsKey(post.getId()),
-                        superHostExposures.get(post.getId()),
                         likedPostIds.contains(post.getId())
                 ))
                 .toList();

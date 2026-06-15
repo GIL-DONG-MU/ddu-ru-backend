@@ -462,7 +462,7 @@ class PostServiceTest {
 
             when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
             when(postLikeRepository.existsByUserIdAndPostId(userId, postId)).thenReturn(false);
-            when(participationApplicantService.getParticipantsForPostDetail(post)).thenReturn(List.of());
+            when(participationApplicantService.getParticipantsForPostDetail(eq(post), any(LocalDate.class))).thenReturn(List.of());
             when(participationApplicantService.getMyParticipationStatus(postId, userId, true))
                     .thenReturn(MyParticipationStatus.NONE);
             when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/profile.png");
@@ -497,7 +497,7 @@ class PostServiceTest {
 
             when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
             when(postLikeRepository.existsByUserIdAndPostId(userId, postId)).thenReturn(false);
-            when(participationApplicantService.getParticipantsForPostDetail(post)).thenReturn(List.of());
+            when(participationApplicantService.getParticipantsForPostDetail(eq(post), any(LocalDate.class))).thenReturn(List.of());
             when(participationApplicantService.getMyParticipationStatus(postId, userId, true))
                     .thenReturn(MyParticipationStatus.NONE);
             when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/profile.png");

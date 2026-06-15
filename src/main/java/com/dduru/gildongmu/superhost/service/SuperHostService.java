@@ -98,7 +98,6 @@ public class SuperHostService {
                         profileImageResolver,
                         today,
                         true,
-                        exposure.getEndedAt(),
                         false))
                 .toList();
 

@@ -55,7 +55,7 @@ public record PostDetailResponse(
                                           ProfileImageResolver profileImageResolver,
                                           boolean isAuthorSuperHost) {
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
-        PostAuthorInfo authorInfo = PostAuthorInfo.from(post.getUser(), isAuthorSuperHost, profileImageResolver);
+        PostAuthorInfo authorInfo = PostAuthorInfo.from(post.getUser(), isAuthorSuperHost, profileImageResolver, today);
 
         String tripDurationText = JourneyDisplayCalculator.tripDurationText(post);
         String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, today);

@@ -7,6 +7,7 @@ import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 
 import java.time.LocalDate;
+import java.time.Period;
 
 public record ParticipantInfo(
         Long userId,
@@ -14,9 +15,9 @@ public record ParticipantInfo(
         ProfileImageInfo profileImage,
         boolean isHost,
         Gender gender,
-        LocalDate birthday
+        Integer ageGroup
 ) {
-    public static ParticipantInfo from(User user, boolean isHost, ProfileImageResolver profileImageResolver) {
+    public static ParticipantInfo from(User user, boolean isHost, ProfileImageResolver profileImageResolver, LocalDate today) {
         Profile profile = user.getProfile();
         ProfileImageInfo profileImage = ProfileImageInfo.from(profile, profileImageResolver);
 
@@ -26,7 +27,13 @@ public record ParticipantInfo(
                 profileImage,
                 isHost,
                 profile.getGender(),
-                profile.getBirthday()
+                toAgeGroup(profile.getBirthday(), today)
         );
+    }
+
+    private static Integer toAgeGroup(LocalDate birthday, LocalDate today) {
+        if (birthday == null) return null;
+        int age = Period.between(birthday, today).getYears();
+        return (age / 10) * 10;
     }
 }

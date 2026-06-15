@@ -134,7 +134,7 @@ public class PostService {
         boolean hasLiked = hasLiked(post.getId(), currentUserId);
         boolean isAuthorSuperHost = superHostService.isAuthorSuperHostForPost(post.getId());
 
-        List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
+        List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post, today);
         MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(post.getId(), currentUserId, isOwner);
 
         return PostDetailResponse.from(

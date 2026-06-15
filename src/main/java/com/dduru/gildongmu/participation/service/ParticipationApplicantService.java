@@ -29,6 +29,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,10 +74,10 @@ public class ParticipationApplicantService {
     }
 
     @Transactional(readOnly = true)
-    public List<ParticipantInfo> getParticipantsForPostDetail(Post post) {
+    public List<ParticipantInfo> getParticipantsForPostDetail(Post post, LocalDate today) {
         return journeyMemberRepository
                 .findByPostIdAndStatusWithMemberProfiles(post.getId(), JourneyMemberStatus.ACTIVE).stream()
-                .map(journeyMember -> ParticipantInfo.from(journeyMember.getUser(), journeyMember.isHost(), profileImageResolver))
+                .map(journeyMember -> ParticipantInfo.from(journeyMember.getUser(), journeyMember.isHost(), profileImageResolver, today))
                 .toList();
     }
 
