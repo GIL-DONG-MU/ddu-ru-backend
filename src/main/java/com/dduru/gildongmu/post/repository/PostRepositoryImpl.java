@@ -2,7 +2,7 @@ package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
-import com.dduru.gildongmu.post.domain.enums.PostRecruitmentStatus;
+import com.dduru.gildongmu.post.domain.enums.RecruitmentStatusFilter;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
@@ -123,17 +123,17 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return post.destination.id.eq(destinationId);
     }
 
-    private BooleanExpression recruitmentStatusCondition(PostRecruitmentStatus status, LocalDate today) {
-        if (status == null) return null;
+    private BooleanExpression recruitmentStatusCondition(RecruitmentStatusFilter status, LocalDate today) {
+        BooleanExpression openAndNotFull = post.status.eq(PostStatus.OPEN)
+                .and(post.recruitCount.lt(post.recruitCapacity));
+        if (status == null) return openAndNotFull;
         return switch (status) {
-            case OPEN -> post.status.eq(PostStatus.OPEN)
-                    .and(post.recruitCount.lt(post.recruitCapacity));
-            case DEADLINE_NEAR -> post.status.eq(PostStatus.OPEN)
-                    .and(post.recruitCount.lt(post.recruitCapacity))
+            case OPEN -> openAndNotFull;
+            case DEADLINE_NEAR -> openAndNotFull
                     .and(post.recruitDeadline.isNotNull())
                     .and(post.recruitDeadline.between(today, today.plusDays(DEADLINE_NEAR_DAYS)));
-            case FULL -> post.recruitCount.goe(post.recruitCapacity);
-            case CLOSED -> post.status.eq(PostStatus.CLOSED);
+            case CLOSED -> post.recruitCount.goe(post.recruitCapacity)
+                    .or(post.status.eq(PostStatus.CLOSED));
         };
     }
 
