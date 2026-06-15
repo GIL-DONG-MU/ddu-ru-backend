@@ -167,12 +167,13 @@ flowchart LR
 
 ### 모집 상태 필터 (recruitmentStatus)
 
+`recruitmentStatus`를 전달하지 않으면 `OPEN`과 동일하게 동작한다. (모집 중인 글만 반환)
+
 | 값 | 조건 |
 | --- | --- |
-| `OPEN` | status=OPEN AND 인원 여유 있음 |
+| `OPEN` (기본) | status=OPEN AND 인원 여유 있음 |
 | `DEADLINE_NEAR` | status=OPEN AND 인원 여유 있음 AND 모집 마감일이 오늘~3일 이내 |
-| `FULL` | recruitCount >= recruitCapacity |
-| `CLOSED` | status=CLOSED |
+| `CLOSED` | 인원 마감(recruitCount >= recruitCapacity) OR 호스트/자동 마감(status=CLOSED) |
 
 ### 정렬 조건 (sort)
 
@@ -205,25 +206,19 @@ flowchart LR
 | --- | --- | --- |
 | `id` | Long | 게시글 ID |
 | `title` | String | 제목 |
-| `content` | String | 내용 |
 | `status` | PostStatus | 모집 상태 |
 | `isFull` | Boolean | 정원 초과 여부 |
-| `daysUntilRecruitDeadline` | Integer | 모집 마감까지 남은 일수 |
-| `daysUntilTravelStart` | Integer | 여행 시작까지 남은 일수 |
 | `startDate` | LocalDate | 여행 시작일 |
 | `endDate` | LocalDate | 여행 종료일 |
 | `destination` | String | 여행지 도시명 |
 | `recruitCapacity` | Integer | 모집 정원 |
 | `recruitCount` | Integer | 현재 승인 인원 |
 | `preferredGender` | Gender | 선호 성별 |
-| `photoUrl` | String | 대표 사진 URL |
-| `viewCount` | Integer | 조회수 |
-| `likeCount` | Integer | 좋아요 수 |
-| `author` | UserInfo | 작성자 (userId, nickname, profileImage) |
-| `isSuperHost` | Boolean | 슈퍼호스트 노출 중 여부 |
-| `superHostEndsAt` | LocalDateTime | 슈퍼호스트 노출 종료 시각 |
 | `companionType` | CompanionType | 동행 방식 (`FULL` / `PARTIAL` / `MEAL`) |
+| `photoUrl` | String | 대표 사진 URL |
+| `likeCount` | Integer | 좋아요 수 |
 | `hasLiked` | Boolean | 현재 사용자의 좋아요 여부 |
+| `author` | PostAuthorInfo | 작성자 정보 (아래 참조) |
 
 #### hasLiked 처리 방식
 
@@ -237,12 +232,13 @@ WHERE pl.user_id = :userId
   AND pl.post_id IN (:postIds)
 ```
 
-#### isSuperHost / superHostEndsAt 처리 방식
+#### isSuperHost 처리 방식
 
-페이지 내 모든 게시글 ID를 한 번에 IN 쿼리로 활성 슈퍼호스트 노출 여부와 종료 시각을 벌크 조회해 N+1 없이 처리한다.
+페이지 내 모든 게시글 ID를 한 번에 IN 쿼리로 활성 슈퍼호스트 노출 여부를 벌크 조회해 N+1 없이 처리한다.
+조회 결과는 `author.isSuperHost` 필드로 반환된다.
 
 ```
-SELECT e.post_id, e.ended_at
+SELECT e.post_id
 FROM super_host_exposures e
 WHERE e.post_id IN (:postIds)
   AND e.status = 'ACTIVE'
@@ -277,7 +273,7 @@ WHERE e.post_id IN (:postIds)
 
 #### PostAuthorInfo (author 필드)
 
-목록 조회의 `UserInfo`와 달리, 상세 조회의 작성자 정보는 `PostAuthorInfo`를 사용한다.
+목록/상세 조회 모두 `PostAuthorInfo`를 사용한다.
 
 | 필드 | 타입 | 설명 |
 | --- | --- | --- |
@@ -285,7 +281,7 @@ WHERE e.post_id IN (:postIds)
 | `nickname` | String | 닉네임 |
 | `profileImage` | ProfileImageInfo | 프로필 이미지 (type, url, bgColorId) |
 | `gender` | Gender | 성별 |
-| `birthday` | LocalDate | 생년월일 |
+| `ageGroup` | Integer | 연령대 (10년 단위, ex. 20 / 30 / 40) |
 | `isSuperHost` | Boolean | 슈퍼호스트 노출 중 여부 |
 
 #### isSuperHost 판단 조건
@@ -306,7 +302,7 @@ AND ended_at > 현재 시각
 | `profileImage` | ProfileImageInfo | 프로필 이미지 |
 | `isHost` | Boolean | 호스트 여부 |
 | `gender` | Gender | 성별 |
-| `birthday` | LocalDate | 생년월일 |
+| `ageGroup` | Integer | 연령대 (10년 단위, ex. 20 / 30 / 40) |
 
 ### canEditPost 계산
 
