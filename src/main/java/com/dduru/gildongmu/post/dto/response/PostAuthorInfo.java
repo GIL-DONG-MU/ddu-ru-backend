@@ -3,11 +3,11 @@ package com.dduru.gildongmu.post.dto.response;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
+import com.dduru.gildongmu.profile.utils.AgeGroupCalculator;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 
 import java.time.LocalDate;
-import java.time.Period;
 
 public record PostAuthorInfo(
         Long userId,
@@ -24,14 +24,8 @@ public record PostAuthorInfo(
                 profile.getNickname(),
                 ProfileImageInfo.from(profile, profileImageResolver),
                 profile.getGender(),
-                toAgeGroup(profile.getBirthday(), today),
+                AgeGroupCalculator.toAgeGroup(profile.getBirthday(), today),
                 isSuperHost
         );
-    }
-
-    private static Integer toAgeGroup(LocalDate birthday, LocalDate today) {
-        if (birthday == null) return null;
-        int age = Period.between(birthday, today).getYears();
-        return (age / 10) * 10;
     }
 }
