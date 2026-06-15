@@ -177,13 +177,7 @@ public class PostService {
     }
 
     private boolean canEditPost(Post post, Long currentUserId, LocalDate today) {
-        if (!isOwner(post, currentUserId)) {
-            return false;
-        }
-
-        return !post.hasRecruitDeadlinePassed(today)
-                && !post.hasTravelEnded(today)
-                && !post.hasTravelStarted(today);
+        return isOwner(post, currentUserId) && post.isUpdatable(today);
     }
 
     private boolean hasLiked(Long postId, Long currentUserId) {

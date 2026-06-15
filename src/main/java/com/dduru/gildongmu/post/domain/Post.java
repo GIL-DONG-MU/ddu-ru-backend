@@ -326,6 +326,10 @@ public class Post extends BaseTimeEntity {
         return (int) ChronoUnit.DAYS.between(from, target);
     }
 
+    public boolean isUpdatable(LocalDate today) {
+        return !hasRecruitDeadlinePassed(today) && !hasTravelEnded(today) && !hasTravelStarted(today);
+    }
+
     public void validateUpdatable(LocalDate today) {
         if (hasRecruitDeadlinePassed(today)) {
             throw new RecruitDeadlinePassedException();
