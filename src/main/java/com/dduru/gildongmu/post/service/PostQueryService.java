@@ -35,8 +35,7 @@ public class PostQueryService {
     public PostListResponse retrieveAllWithFilter(PostListRequest request, Long userId) {
         LocalDate today = timeProvider.today();
         Pageable pageable = PageRequest.of(0, request.size() + 1);
-        Post cursorPost = fetchCursorPost(request);
-        List<Post> posts = postRepository.findPostsWithFilters(request, today, cursorPost, pageable);
+        List<Post> posts = postRepository.findPostsWithFilters(request, today, request.cursorValue(), pageable);
 
         boolean hasNext = posts.size() > request.size();
         if (hasNext) {
@@ -44,8 +43,10 @@ public class PostQueryService {
         }
 
         if (posts.isEmpty()) {
-            return PostListResponse.of(List.of(), false);
+            return PostListResponse.of(List.of(), false, null);
         }
+
+        Integer nextCursorValue = computeNextCursorValue(request.sort(), hasNext, posts);
 
         List<Long> postIds = posts.stream().map(Post::getId).toList();
         Set<Long> likedPostIds = fetchLikedPostIds(userId, postIds);
@@ -59,16 +60,13 @@ public class PostQueryService {
                 ))
                 .toList();
 
-        return PostListResponse.of(summaries, hasNext);
+        return PostListResponse.of(summaries, hasNext, nextCursorValue);
     }
 
-    private Post fetchCursorPost(PostListRequest request) {
-        // LATEST는 id 단독 비교라 entity 조회 없이 cursor id를 직접 사용
-        // VIEW/LIKE는 카운트 동점 처리를 위해 cursorPost의 카운트 값이 필요
-        if (request.cursor() == null || request.sort() == PostSortType.LATEST) {
-            return null;
-        }
-        return postRepository.findById(request.cursor()).orElse(null);
+    private Integer computeNextCursorValue(PostSortType sort, boolean hasNext, List<Post> posts) {
+        if (!hasNext || sort == PostSortType.LATEST) return null;
+        Post lastPost = posts.get(posts.size() - 1);
+        return sort == PostSortType.VIEW ? lastPost.getViewCount() : lastPost.getLikeCount();
     }
 
     private Set<Long> fetchLikedPostIds(Long userId, List<Long> postIds) {

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 
 public record PostListRequest(
         Long cursor,
+        Integer cursorValue,
         Integer size,
         String keyword,
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,

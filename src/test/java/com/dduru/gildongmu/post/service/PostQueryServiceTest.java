@@ -30,7 +30,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -163,7 +162,7 @@ class PostQueryServiceTest {
         }
 
         @Test
-        @DisplayName("hasNext가 true이면 nextCursor는 반환된 마지막 게시글의 ID다")
+        @DisplayName("LATEST 정렬에서 hasNext가 true이면 nextCursor는 마지막 게시글의 ID이고 nextCursorValue는 null이다")
         void nextCursorIsLastPostIdWhenHasNext() {
             int size = 2;
             PostListRequest request = listRequest(size, null);
@@ -175,6 +174,68 @@ class PostQueryServiceTest {
 
             assertThat(response.hasNext()).isTrue();
             assertThat(response.nextCursor()).isEqualTo(5L);
+            assertThat(response.nextCursorValue()).isNull();
+        }
+
+        @Test
+        @DisplayName("VIEW 정렬에서 hasNext가 true이면 nextCursorValue는 마지막 게시글의 viewCount다")
+        void nextCursorValueIsLastPostViewCountForViewSort() {
+            int size = 2;
+            PostListRequest request = listRequestWithSort(size, null, null, PostSortType.VIEW);
+            Post post1 = createPost(10L);
+            Post post2 = createPost(5L);
+            Post post3 = createPost(1L);
+            ReflectionTestUtils.setField(post1, "viewCount", 100);
+            ReflectionTestUtils.setField(post2, "viewCount", 50);
+            ReflectionTestUtils.setField(post3, "viewCount", 20);
+
+            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(post1, post2, post3));
+
+            PostListResponse response = postQueryService.retrieveAllWithFilter(request, null);
+
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.nextCursor()).isEqualTo(5L);
+            assertThat(response.nextCursorValue()).isEqualTo(50);
+        }
+
+        @Test
+        @DisplayName("LIKE 정렬에서 hasNext가 true이면 nextCursorValue는 마지막 게시글의 likeCount다")
+        void nextCursorValueIsLastPostLikeCountForLikeSort() {
+            int size = 2;
+            PostListRequest request = listRequestWithSort(size, null, null, PostSortType.LIKE);
+            Post post1 = createPost(10L);
+            Post post2 = createPost(5L);
+            Post post3 = createPost(1L);
+            ReflectionTestUtils.setField(post1, "likeCount", 30);
+            ReflectionTestUtils.setField(post2, "likeCount", 15);
+            ReflectionTestUtils.setField(post3, "likeCount", 5);
+
+            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(post1, post2, post3));
+
+            PostListResponse response = postQueryService.retrieveAllWithFilter(request, null);
+
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.nextCursor()).isEqualTo(5L);
+            assertThat(response.nextCursorValue()).isEqualTo(15);
+        }
+
+        @Test
+        @DisplayName("hasNext가 false이면 nextCursorValue는 항상 null이다")
+        void nextCursorValueIsNullWhenNoNextPage() {
+            int size = 2;
+            PostListRequest request = listRequestWithSort(size, null, null, PostSortType.VIEW);
+            Post post1 = createPost(10L);
+            ReflectionTestUtils.setField(post1, "viewCount", 100);
+
+            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(post1));
+
+            PostListResponse response = postQueryService.retrieveAllWithFilter(request, null);
+
+            assertThat(response.hasNext()).isFalse();
+            assertThat(response.nextCursorValue()).isNull();
         }
     }
 
@@ -187,25 +248,24 @@ class PostQueryServiceTest {
     class Cursor {
 
         @Test
-        @DisplayName("VIEW 정렬에서 cursor가 있으면 게시글을 조회해 cursorPost로 전달한다")
-        void viewSortWithCursorFetchesCursorPost() {
+        @DisplayName("VIEW 정렬에서 cursor와 cursorValue가 있으면 cursorValue를 레포지토리에 전달한다")
+        void viewSortWithCursorPassesCursorValue() {
             Long cursorId = 100L;
-            Post cursorPost = createPost(cursorId);
-            PostListRequest request = listRequestWithSort(5, cursorId, PostSortType.VIEW);
+            Integer cursorValue = 150;
+            PostListRequest request = listRequestWithSort(5, cursorId, cursorValue, PostSortType.VIEW);
 
-            when(postRepository.findById(cursorId)).thenReturn(Optional.of(cursorPost));
-            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), eq(cursorPost), any(Pageable.class)))
+            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), eq(cursorValue), any(Pageable.class)))
                     .thenReturn(List.of());
 
             postQueryService.retrieveAllWithFilter(request, null);
 
-            verify(postRepository).findById(cursorId);
-            verify(postRepository).findPostsWithFilters(any(), any(LocalDate.class), eq(cursorPost), any(Pageable.class));
+            verify(postRepository, never()).findById(any());
+            verify(postRepository).findPostsWithFilters(any(), any(LocalDate.class), eq(cursorValue), any(Pageable.class));
         }
 
         @Test
-        @DisplayName("LATEST 정렬에서는 cursor가 있어도 게시글 조회를 하지 않는다")
-        void latestSortWithCursorSkipsCursorPostFetch() {
+        @DisplayName("LATEST 정렬에서는 cursor가 있어도 cursorValue를 사용하지 않는다")
+        void latestSortWithCursorPassesNullCursorValue() {
             PostListRequest request = listRequest(5, 100L);
 
             when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
@@ -218,8 +278,8 @@ class PostQueryServiceTest {
         }
 
         @Test
-        @DisplayName("cursor가 없으면 cursorPost 조회를 하지 않고 null을 전달한다")
-        void withoutCursorSkipsCursorPostFetch() {
+        @DisplayName("cursor가 없으면 cursorValue 없이 조회한다")
+        void withoutCursorPassesNullCursorValue() {
             PostListRequest request = listRequest(5, null);
 
             when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
@@ -232,18 +292,16 @@ class PostQueryServiceTest {
         }
 
         @Test
-        @DisplayName("VIEW 정렬에서 cursor에 해당하는 게시글이 없으면 null을 전달한다")
-        void viewSortCursorNotFoundPassesNull() {
-            Long cursorId = 999L;
-            PostListRequest request = listRequestWithSort(5, cursorId, PostSortType.VIEW);
+        @DisplayName("VIEW 정렬에서 cursorValue가 없으면 null을 레포지토리에 전달한다")
+        void viewSortWithoutCursorValuePassesNull() {
+            PostListRequest request = listRequestWithSort(5, null, null, PostSortType.VIEW);
 
-            when(postRepository.findById(cursorId)).thenReturn(Optional.empty());
             when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
                     .thenReturn(List.of());
 
             postQueryService.retrieveAllWithFilter(request, null);
 
-            verify(postRepository).findById(cursorId);
+            verify(postRepository, never()).findById(any());
             verify(postRepository).findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class));
         }
     }
@@ -253,11 +311,11 @@ class PostQueryServiceTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     private PostListRequest listRequest(int size, Long cursor) {
-        return new PostListRequest(cursor, size, null, null, null, null, null, null, null, null, null, PostSortType.LATEST);
+        return new PostListRequest(cursor, null, size, null, null, null, null, null, null, null, null, null, PostSortType.LATEST);
     }
 
-    private PostListRequest listRequestWithSort(int size, Long cursor, PostSortType sort) {
-        return new PostListRequest(cursor, size, null, null, null, null, null, null, null, null, null, sort);
+    private PostListRequest listRequestWithSort(int size, Long cursor, Integer cursorValue, PostSortType sort) {
+        return new PostListRequest(cursor, cursorValue, size, null, null, null, null, null, null, null, null, null, sort);
     }
 
     private Post createPost(Long postId) {

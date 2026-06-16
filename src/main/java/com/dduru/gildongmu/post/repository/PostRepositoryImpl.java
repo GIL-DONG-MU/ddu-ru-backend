@@ -30,7 +30,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Post cursorPost, Pageable pageable) {
+    public List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Integer cursorValue, Pageable pageable) {
         return queryFactory
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
@@ -38,7 +38,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .leftJoin(post.user.profile, profile).fetchJoin()
                 .where(
                         isNotDeleted(),
-                        cursorCondition(request.cursor(), cursorPost, request.sort()),
+                        cursorCondition(request.cursor(), cursorValue, request.sort()),
                         keywordCondition(request.keyword()),
                         dateRangeCondition(request.startDate(), request.endDate()),
                         genderCondition(request.preferredGender()),
@@ -64,15 +64,15 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return post.isDeleted.eq(false);
     }
 
-    private BooleanExpression cursorCondition(Long cursorId, Post cursorPost, PostSortType sort) {
+    private BooleanExpression cursorCondition(Long cursorId, Integer cursorValue, PostSortType sort) {
         if (cursorId == null) return null;
         return switch (sort) {
-            case VIEW -> cursorPost == null ? null :
-                    post.viewCount.lt(cursorPost.getViewCount())
-                            .or(post.viewCount.eq(cursorPost.getViewCount()).and(post.id.lt(cursorId)));
-            case LIKE -> cursorPost == null ? null :
-                    post.likeCount.lt(cursorPost.getLikeCount())
-                            .or(post.likeCount.eq(cursorPost.getLikeCount()).and(post.id.lt(cursorId)));
+            case VIEW -> cursorValue == null ? null :
+                    post.viewCount.lt(cursorValue)
+                            .or(post.viewCount.eq(cursorValue).and(post.id.lt(cursorId)));
+            case LIKE -> cursorValue == null ? null :
+                    post.likeCount.lt(cursorValue)
+                            .or(post.likeCount.eq(cursorValue).and(post.id.lt(cursorId)));
             default -> post.id.lt(cursorId);
         };
     }

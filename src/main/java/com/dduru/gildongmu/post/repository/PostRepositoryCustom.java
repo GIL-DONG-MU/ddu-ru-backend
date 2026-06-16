@@ -8,5 +8,5 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface PostRepositoryCustom {
-    List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Post cursorPost, Pageable pageable);
+    List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Integer cursorValue, Pageable pageable);
 }
