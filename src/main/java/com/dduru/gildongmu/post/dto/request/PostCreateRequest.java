@@ -12,11 +12,9 @@ public record PostCreateRequest(
         Long destinationId,
 
         @NotBlank(message = "제목은 필수입니다")
-        @Size(min = 5, max = 40, message = "제목은 5자 이상 40자 이하여야 합니다")
         String title,
 
         @NotBlank(message = "내용은 필수입니다")
-        @Size(min = 20, max = 1000, message = "내용은 20자 이상 1000자 이하여야 합니다")
         String content,
 
         @NotNull(message = "여행 시작일은 필수입니다")
@@ -43,10 +41,20 @@ public record PostCreateRequest(
 
         String photoUrl,
 
-        @Size(max = 4, message = "태그는 최대 4개까지 가능합니다")
         List<String> tags,
 
         @NotNull(message = "동행 방식은 필수입니다")
         CompanionType companionType
 ) {
+    public PostCreateRequest {
+        if (title != null) title = title.strip();
+        if (content != null) content = content.strip();
+        if (photoUrl != null) photoUrl = photoUrl.strip();
+        if (tags != null) {
+            tags = tags.stream()
+                    .filter(t -> t != null && !t.strip().isEmpty())
+                    .map(String::strip)
+                    .toList();
+        }
+    }
 }

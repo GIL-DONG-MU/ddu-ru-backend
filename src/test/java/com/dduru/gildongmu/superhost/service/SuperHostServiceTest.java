@@ -218,8 +218,7 @@ class SuperHostServiceTest {
 
             assertThat(response.items()).hasSize(1);
             assertThat(response.items().get(0).id()).isEqualTo(10L);
-            assertThat(response.items().get(0).isSuperHost()).isTrue();
-            assertThat(response.items().get(0).superHostEndsAt()).isEqualTo(endsAt);
+            assertThat(response.items().get(0).author().isSuperHost()).isTrue();
         }
 
         @Test

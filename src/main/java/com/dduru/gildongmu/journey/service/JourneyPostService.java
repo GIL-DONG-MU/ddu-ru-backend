@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,16 +73,17 @@ public class JourneyPostService {
 
         List<Long> postIds = journeyPosts.stream().map(JourneyPost::getId).toList();
         Map<Long, Long> commentCountByPostId = journeyPostCommentRepository.getCommentCountsByJourneyPostIds(postIds);
+        LocalDate today = timeProvider.today();
 
-        return JourneyPostListResponse.of(
-                journeyId,
-                journeyPosts,
-                hasNext,
-                userId,
-                hostUserId,
-                profileImageResolver,
-                commentCountByPostId
-        );
+        List<JourneyPostResponse> posts = journeyPosts.stream()
+                .map(post -> JourneyPostResponse.from(
+                        post, userId, hostUserId, profileImageResolver,
+                        commentCountByPostId.getOrDefault(post.getId(), 0L),
+                        today
+                ))
+                .toList();
+
+        return JourneyPostListResponse.of(journeyId, posts, hasNext);
     }
 
     @Transactional(readOnly = true)
@@ -91,7 +93,7 @@ public class JourneyPostService {
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount);
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
     }
 
     public JourneyPostResponse createPost(Long journeyId, Long userId, JourneyPostCreateRequest request) {
@@ -104,7 +106,7 @@ public class JourneyPostService {
 
         log.info("나의 여정 게시글 생성됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, savedPost.getId(), userId);
-        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L);
+        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L, timeProvider.today());
     }
 
     public JourneyPostResponse updatePost(
@@ -127,7 +129,7 @@ public class JourneyPostService {
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount);
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
     }
 
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {

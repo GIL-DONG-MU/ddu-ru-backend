@@ -9,25 +9,23 @@ import com.dduru.gildongmu.user.domain.User;
 
 import java.time.LocalDate;
 
-public record ParticipantInfo(
+public record PostAuthorInfo(
         Long userId,
         String nickname,
         ProfileImageInfo profileImage,
-        boolean isHost,
         Gender gender,
-        Integer ageGroup
+        Integer ageGroup,
+        boolean isSuperHost
 ) {
-    public static ParticipantInfo from(User user, boolean isHost, ProfileImageResolver profileImageResolver, LocalDate today) {
+    public static PostAuthorInfo from(User user, boolean isSuperHost, ProfileImageResolver profileImageResolver, LocalDate today) {
         Profile profile = user.getProfile();
-        ProfileImageInfo profileImage = ProfileImageInfo.from(profile, profileImageResolver);
-
-        return new ParticipantInfo(
+        return new PostAuthorInfo(
                 user.getId(),
                 profile.getNickname(),
-                profileImage,
-                isHost,
+                ProfileImageInfo.from(profile, profileImageResolver),
                 profile.getGender(),
-                AgeGroupCalculator.toAgeGroup(profile.getBirthday(), today)
+                AgeGroupCalculator.toAgeGroup(profile.getBirthday(), today),
+                isSuperHost
         );
     }
 }

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.journey.domain.JourneyPost;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record JourneyPostResponse(
@@ -22,14 +23,16 @@ public record JourneyPostResponse(
             Long currentUserId,
             Long hostUserId,
             ProfileImageResolver profileImageResolver,
-            long commentCount
+            long commentCount,
+            LocalDate today
     ) {
         return new JourneyPostResponse(
                 journeyPost.getId(),
                 ParticipantInfo.from(
                         journeyPost.getAuthor(),
                         hostUserId.equals(journeyPost.getAuthor().getId()),
-                        profileImageResolver
+                        profileImageResolver,
+                        today
                 ),
                 journeyPost.getContent(),
                 journeyPost.getImageUrl(),

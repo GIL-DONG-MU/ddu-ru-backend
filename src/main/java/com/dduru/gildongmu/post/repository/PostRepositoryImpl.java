@@ -1,9 +1,13 @@
 package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.RecruitmentStatusFilter;
+import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.dto.request.PostListRequest;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +25,12 @@ import static com.dduru.gildongmu.profile.domain.QProfile.profile;
 @RequiredArgsConstructor
 public class PostRepositoryImpl implements PostRepositoryCustom {
 
+    private static final int DEADLINE_NEAR_DAYS = 3;
+
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> findPostsWithFilters(PostListRequest request, Pageable pageable) {
+    public List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Integer cursorValue, Pageable pageable) {
         return queryFactory
                 .selectFrom(post)
                 .leftJoin(post.destination, destination).fetchJoin()
@@ -32,89 +38,107 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .leftJoin(post.user.profile, profile).fetchJoin()
                 .where(
                         isNotDeleted(),
-                        cursorCondition(request.cursor()),
+                        cursorCondition(request.cursor(), cursorValue, request.sort()),
                         keywordCondition(request.keyword()),
                         dateRangeCondition(request.startDate(), request.endDate()),
                         genderCondition(request.preferredGender()),
-                        ageRangeCondition(request.preferredAge()),
+                        ageRangeCondition(request.minAge(), request.maxAge()),
                         destinationCondition(request.destinationId()),
-                        recruitmentStatusCondition(request.isRecruitOpen())
+                        recruitmentStatusCondition(request.recruitmentStatus(), today),
+                        companionTypeCondition(request.companionType())
                 )
-                .orderBy(post.id.desc())
+                .orderBy(sortOrder(request.sort()))
                 .limit(pageable.getPageSize())
                 .fetch();
+    }
+
+    private OrderSpecifier<?>[] sortOrder(PostSortType sort) {
+        return switch (sort) {
+            case VIEW -> new OrderSpecifier[]{post.viewCount.desc(), post.id.desc()};
+            case LIKE -> new OrderSpecifier[]{post.likeCount.desc(), post.id.desc()};
+            default -> new OrderSpecifier[]{post.id.desc()};
+        };
     }
 
     private BooleanExpression isNotDeleted() {
         return post.isDeleted.eq(false);
     }
 
-    private BooleanExpression cursorCondition(Long cursor) {
-        if (cursor == null) {
-            return null;
-        }
-        return post.id.lt(cursor);
+    private BooleanExpression cursorCondition(Long cursorId, Integer cursorValue, PostSortType sort) {
+        if (cursorId == null) return null;
+        return switch (sort) {
+            case VIEW -> cursorValue == null ? null :
+                    post.viewCount.lt(cursorValue)
+                            .or(post.viewCount.eq(cursorValue).and(post.id.lt(cursorId)));
+            case LIKE -> cursorValue == null ? null :
+                    post.likeCount.lt(cursorValue)
+                            .or(post.likeCount.eq(cursorValue).and(post.id.lt(cursorId)));
+            default -> post.id.lt(cursorId);
+        };
     }
 
     private BooleanExpression keywordCondition(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return null;
-        }
+        if (keyword == null) return null;
         return post.title.containsIgnoreCase(keyword)
-                .or(post.content.containsIgnoreCase(keyword));
+                .or(post.content.containsIgnoreCase(keyword))
+                .or(destination.city.containsIgnoreCase(keyword))
+                .or(destination.countryName.containsIgnoreCase(keyword))
+                // tags는 JSON 배열 문자열로 저장되므로 containsIgnoreCase로 태그명 부분 일치 검색
+                .or(post.tags.containsIgnoreCase(keyword));
     }
 
     private BooleanExpression dateRangeCondition(LocalDate startDate, LocalDate endDate) {
         BooleanExpression condition = null;
-
         if (startDate != null) {
             condition = post.endDate.goe(startDate);
         }
-
         if (endDate != null) {
             BooleanExpression endCondition = post.startDate.loe(endDate);
-            condition = (condition != null) ? condition.and(endCondition) : endCondition;
+            condition = condition != null ? condition.and(endCondition) : endCondition;
         }
-
         return condition;
     }
 
     private BooleanExpression genderCondition(Gender preferredGender) {
-        if (preferredGender == null || preferredGender == Gender.U) {
-            return null;
-        }
-        return post.preferredGender.eq(preferredGender);
+        if (preferredGender == null || preferredGender == Gender.U) return null;
+        return post.preferredGender.eq(preferredGender)
+                .or(post.preferredGender.eq(Gender.U));
     }
 
-    private BooleanExpression ageRangeCondition(Integer preferredAge) {
-        if (preferredAge == null) {
-            return null;
-        }
+    private BooleanExpression ageRangeCondition(Integer minAge, Integer maxAge) {
+        if (minAge == null && maxAge == null) return null;
         BooleanExpression ageAny = post.isAgeAny.eq(true);
-        BooleanExpression inRange = post.isAgeAny.eq(false)
-                .and(post.minAge.isNotNull())
-                .and(post.maxAge.isNotNull())
-                .and(post.minAge.loe(preferredAge))
-                .and(post.maxAge.goe(preferredAge));
+        BooleanExpression inRange = post.isAgeAny.eq(false);
+        if (minAge != null) {
+            inRange = inRange.and(post.maxAge.goe(minAge));
+        }
+        if (maxAge != null) {
+            inRange = inRange.and(post.minAge.loe(maxAge));
+        }
         return ageAny.or(inRange);
     }
 
     private BooleanExpression destinationCondition(Long destinationId) {
-        if (destinationId == null) {
-            return null;
-        }
+        if (destinationId == null) return null;
         return post.destination.id.eq(destinationId);
     }
 
-    private BooleanExpression recruitmentStatusCondition(Boolean isRecruitOpen) {
-        if (isRecruitOpen == null) {
-            return null;
-        }
+    private BooleanExpression recruitmentStatusCondition(RecruitmentStatusFilter status, LocalDate today) {
+        BooleanExpression openAndNotFull = post.status.eq(PostStatus.OPEN)
+                .and(post.recruitCount.lt(post.recruitCapacity));
+        if (status == null) return openAndNotFull;
+        return switch (status) {
+            case OPEN -> openAndNotFull;
+            case DEADLINE_NEAR -> openAndNotFull
+                    .and(post.recruitDeadline.isNotNull())
+                    .and(post.recruitDeadline.between(today, today.plusDays(DEADLINE_NEAR_DAYS)));
+            case CLOSED -> post.recruitCount.goe(post.recruitCapacity)
+                    .or(post.status.eq(PostStatus.CLOSED));
+        };
+    }
 
-        if (isRecruitOpen) {
-            return post.status.eq(PostStatus.OPEN);
-        } else {
-            return post.status.ne(PostStatus.OPEN);
-        }
+    private BooleanExpression companionTypeCondition(CompanionType companionType) {
+        if (companionType == null) return null;
+        return post.companionType.eq(companionType);
     }
 }

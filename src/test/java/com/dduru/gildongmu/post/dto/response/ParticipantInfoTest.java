@@ -8,6 +8,7 @@ import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -49,7 +50,7 @@ class ParticipantInfoTest {
         ProfileImageResolver profileImageResolver = mock(ProfileImageResolver.class);
         when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/default.png");
 
-        ParticipantInfo participantInfo = ParticipantInfo.from(user, true, profileImageResolver);
+        ParticipantInfo participantInfo = ParticipantInfo.from(user, true, profileImageResolver, LocalDate.of(2024, 1, 1));
 
         assertThat(participantInfo.profileImage().type()).isEqualTo(ProfileImageType.DEFAULT);
         assertThat(participantInfo.profileImage().url()).isEqualTo("https://example.com/default.png");
@@ -86,7 +87,7 @@ class ParticipantInfoTest {
         ProfileImageResolver profileImageResolver = mock(ProfileImageResolver.class);
         when(profileImageResolver.resolve(profile)).thenReturn("https://example.com/avatar.png");
 
-        ParticipantInfo participantInfo = ParticipantInfo.from(user, false, profileImageResolver);
+        ParticipantInfo participantInfo = ParticipantInfo.from(user, false, profileImageResolver, LocalDate.of(2024, 1, 1));
 
         assertThat(participantInfo.profileImage().type()).isEqualTo(ProfileImageType.AVATAR);
         assertThat(participantInfo.profileImage().url()).isEqualTo("https://example.com/avatar.png");

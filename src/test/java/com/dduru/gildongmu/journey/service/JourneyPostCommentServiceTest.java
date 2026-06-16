@@ -448,7 +448,7 @@ class JourneyPostCommentServiceTest {
                 owner,
                 destination,
                 "제주도 2박 3일 여행",
-                "댓글 테스트용 본문입니다.",
+                "댓글 테스트용 본문입니다. 충분한 길이로 작성합니다.",
                 LocalDate.now().plusDays(5),
                 LocalDate.now().plusDays(7),
                 4,

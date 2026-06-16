@@ -390,7 +390,7 @@ class ChatReadServiceTest {
                 owner,
                 null,
                 "채팅 읽음 테스트 게시글",
-                "채팅 읽음 테스트용 본문입니다.",
+                "채팅 읽음 테스트용 본문입니다. 충분한 길이로 작성합니다.",
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(2),
                 4,
