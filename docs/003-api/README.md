@@ -7,6 +7,7 @@ Swagger보다 상세한 설계 배경, 처리 흐름, 테스트 케이스가 필
 | [API 설계 문서 템플릿](./000-template.md) | Swagger보다 상세한 API 설계 문서 작성 양식 |
 | [채팅 메시지 조회 API](./001-chat-message-retrieve.md) | 커서 기반 메시지 조회, roomInfo, unreadCount 설계 |
 | [채팅 읽음 처리 API](./002-chat-read-receipt.md) | lastReadMessageId 갱신, READ 이벤트, unreadCount 연동 설계 |
+| [채팅방 목록 실시간 갱신](./003-chat-room-list-realtime.md) | 개인 WebSocket queue 기반 채팅방 목록 UPSERT/REMOVE 이벤트 설계 |
 
 ## 작성 기준
 
