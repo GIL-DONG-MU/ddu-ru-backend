@@ -15,6 +15,7 @@ import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.domain.enums.JourneyRoleType;
 import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
@@ -123,7 +124,7 @@ class JourneyServiceTest {
                     null
             );
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
@@ -136,11 +137,10 @@ class JourneyServiceTest {
         }
 
         @Test
-        @DisplayName("active 멤버도 제목과 대표 사진을 수정할 수 있다")
-        void activeMemberCanUpdateJourneyBasicInfo() {
+        @DisplayName("호스트가 아닌 active 멤버는 수정할 수 없다")
+        void nonHostActiveMemberCannotUpdateJourneyBasicInfo() {
             Long journeyId = 1L;
             Long userId = 20L;
-            Journey journey = createJourney(journeyId, 10L);
             JourneyUpdateRequest request = new JourneyUpdateRequest(
                     "멤버가 바꾼 제목",
                     S3_HOST + "/journeys/member-updated.png",
@@ -148,15 +148,11 @@ class JourneyServiceTest {
                     null
             );
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
-                    .thenReturn(Optional.of(journey));
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
+                    .thenReturn(Optional.empty());
 
-            JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
-
-            assertThat(response.title()).isEqualTo("멤버가 바꾼 제목");
-            assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/member-updated.png");
-            assertThat(journey.getTitle()).isEqualTo("멤버가 바꾼 제목");
-            assertThat(journey.getPhotoUrl()).isEqualTo(S3_HOST + "/journeys/member-updated.png");
+            assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
+                    .isInstanceOf(JourneyAccessDeniedException.class);
         }
 
         @Test
@@ -169,7 +165,7 @@ class JourneyServiceTest {
             member.remove(LocalDateTime.now());
             JourneyUpdateRequest request = new JourneyUpdateRequest("새 제목", null, null, null);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -184,7 +180,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, null, null);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -201,7 +197,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest("😀😀😀😀", null, null, null);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -218,7 +214,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, "http:test", null, null);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -240,7 +236,7 @@ class JourneyServiceTest {
                     null
             );
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             JourneyUpdateResponse response = journeyService.updateBasicInfo(journeyId, userId, request);
@@ -259,7 +255,7 @@ class JourneyServiceTest {
             LocalDate newEnd = LocalDate.now().plusDays(13);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, newStart, newEnd);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
             when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 4))
                     .thenReturn(List.of());
@@ -282,7 +278,7 @@ class JourneyServiceTest {
             LocalDate date = LocalDate.now().plusDays(10);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, date, date);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
             when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 1))
                     .thenReturn(List.of());
@@ -302,7 +298,7 @@ class JourneyServiceTest {
             LocalDate newEnd = LocalDate.now().plusDays(12);
             JourneyUpdateRequest request = new JourneyUpdateRequest("새로운 여행 제목", null, newStart, newEnd);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
             when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 3))
                     .thenReturn(List.of());
@@ -322,7 +318,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, LocalDate.now().plusDays(10), null);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -339,7 +335,7 @@ class JourneyServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, null, LocalDate.now().plusDays(10));
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -357,7 +353,7 @@ class JourneyServiceTest {
             LocalDate date = LocalDate.now().plusDays(10);
             JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, date, date);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
             when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 1))
                     .thenReturn(List.of());
@@ -380,7 +376,7 @@ class JourneyServiceTest {
                     LocalDate.now().plusDays(10)
             );
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
 
             assertThatThrownBy(() -> journeyService.updateBasicInfo(journeyId, userId, request))
@@ -403,7 +399,7 @@ class JourneyServiceTest {
             JourneySchedule outOfRangeSchedule = createSchedule(journey, 3);
             LocalDateTime deletedAt = LocalDateTime.of(2026, 6, 9, 12, 0);
 
-            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
+            when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST))
                     .thenReturn(Optional.of(journey));
             when(journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, 3))
                     .thenReturn(List.of(outOfRangeSchedule));

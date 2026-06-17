@@ -19,6 +19,18 @@ public final class JourneyDisplayCalculator {
                 : "당일치기";
     }
 
+    public static String startDDay(Post post, LocalDate today) {
+        LocalDate startDate = post.getStartDate();
+        LocalDate endDate = post.getEndDate();
+
+        if (today.isAfter(endDate)) return "완료";
+        if (today.isAfter(startDate)) return "여행 중";
+        if (today.isEqual(startDate)) return "D-Day";
+
+        int d = (int) ChronoUnit.DAYS.between(today, startDate);
+        return "D-" + d;
+    }
+
     public static String recruitDeadlineDDay(Post post, LocalDate today) {
         LocalDate deadline = post.getRecruitDeadline();
         if (deadline == null) {

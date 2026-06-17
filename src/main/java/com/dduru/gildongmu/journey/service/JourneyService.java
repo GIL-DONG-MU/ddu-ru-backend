@@ -10,6 +10,7 @@ import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
@@ -112,7 +113,7 @@ public class JourneyService {
     }
 
     private Journey getUpdatableJourney(Long journeyId, Long userId) {
-        return journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE)
+        return journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST)
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
 

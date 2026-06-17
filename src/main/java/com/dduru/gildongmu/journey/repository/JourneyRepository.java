@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.journey.repository;
 
 import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
 import jakarta.persistence.LockModeType;
@@ -30,11 +31,13 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
             WHERE j.id = :journeyId
               AND jm.user.id = :userId
               AND jm.status = :status
+              AND jm.role = :role
             """)
     Optional<Journey> findUpdatableJourneyByIdAndUserId(
             @Param("journeyId") Long journeyId,
             @Param("userId") Long userId,
-            @Param("status") JourneyMemberStatus status
+            @Param("status") JourneyMemberStatus status,
+            @Param("role") JourneyMemberRole role
     );
 
     @Query("""

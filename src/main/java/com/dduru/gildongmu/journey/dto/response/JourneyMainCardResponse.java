@@ -17,7 +17,7 @@ public record JourneyMainCardResponse(
         String destination,
         Integer recruitCount,
         Integer recruitCapacity,
-        String recruitDeadlineDDay,
+        String startDDay,
         boolean isOwner
 ) {
     public static JourneyMainCardResponse fromJourneyMember(JourneyMember journeyMember, LocalDate today) {
@@ -33,7 +33,7 @@ public record JourneyMainCardResponse(
                 post.getDestination().getCity(),
                 post.getRecruitCount(),
                 post.getRecruitCapacity(),
-                JourneyDisplayCalculator.recruitDeadlineDDay(post, today),
+                JourneyDisplayCalculator.startDDay(post, today),
                 journeyMember.isHost()
         );
     }
