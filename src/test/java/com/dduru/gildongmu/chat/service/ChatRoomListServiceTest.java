@@ -272,7 +272,7 @@ class ChatRoomListServiceTest {
                 host,
                 destination,
                 title,
-                "본문입니다.",
+                "채팅방 목록 테스트용 게시글 본문입니다.",
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(2),
                 4,

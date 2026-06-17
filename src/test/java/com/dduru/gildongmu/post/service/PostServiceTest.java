@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.post.service;
 
+import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
@@ -46,6 +47,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -80,6 +82,7 @@ class PostServiceTest {
     @Mock private JourneyMemberRepository journeyMemberRepository;
     @Mock private TimeProvider timeProvider;
     @Mock private S3ImageUrlValidator s3ImageUrlValidator;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PostService postService;
@@ -395,6 +398,26 @@ class PostServiceTest {
 
             assertThatThrownBy(() -> postService.update(postId, requesterId, updateRequest))
                     .isInstanceOf(PostAccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("게시글 수정에 성공하면 채팅방 목록 메타데이터 갱신 이벤트를 발행한다")
+        void updateSuccessPublishesPostUpdatedEvent() {
+            Long postId = 1L;
+            Long userId = 10L;
+            User owner = createUser(userId, "owner");
+            Post post = createBasicPost(postId, owner);
+
+            when(postRepository.getActiveByIdOrThrow(postId)).thenReturn(post);
+
+            PostUpdateRequest request = new PostUpdateRequest(
+                    null, "수정된 제목입니다", null, null, null, null, null, null, null, null, null, null, null
+            );
+
+            postService.update(postId, userId, request);
+
+            assertThat(post.getTitle()).isEqualTo("수정된 제목입니다");
+            verify(eventPublisher).publishEvent(new PostUpdatedEvent(postId));
         }
 
         @Test
