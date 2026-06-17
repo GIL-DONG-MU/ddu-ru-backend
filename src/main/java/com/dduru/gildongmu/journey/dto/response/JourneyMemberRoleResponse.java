@@ -9,10 +9,11 @@ public record JourneyMemberRoleResponse(
         String customRoleLabel
 ) {
     public static JourneyMemberRoleResponse from(JourneyMember member) {
+        JourneyRoleType roleType = member.getRoleType();
         return new JourneyMemberRoleResponse(
                 member.getUser().getId(),
-                member.getRoleType(),
-                member.getCustomRoleLabel()
+                roleType,
+                roleType == JourneyRoleType.CUSTOM ? member.getCustomRoleLabel() : null
         );
     }
 }

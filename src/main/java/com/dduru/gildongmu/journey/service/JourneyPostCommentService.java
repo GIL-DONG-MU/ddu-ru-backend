@@ -15,7 +15,6 @@ import com.dduru.gildongmu.journey.exception.JourneyPostCommentAccessDeniedExcep
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
-import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -31,7 +30,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostCommentService {
-    private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
     private final JourneyPostCommentRepository journeyPostCommentRepository;
@@ -128,7 +126,6 @@ public class JourneyPostCommentService {
     }
 
     private JourneyPost getAccessibleJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
-        journeyRepository.getByIdOrThrow(journeyId);
         if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE)) {
             throw new JourneyAccessDeniedException();
         }

@@ -42,7 +42,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
-    private static final int NOTICE_LIMIT = 3;
+    private static final int NOTICE_LIMIT = 5;
 
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
@@ -198,20 +198,15 @@ public class JourneyPostService {
     }
 
     private void validateJourneyAccess(Long journeyId, Long userId) {
-        getAccessibleJourney(journeyId, userId);
+        if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
+                journeyId, userId, JourneyMemberStatus.ACTIVE)) {
+            throw new JourneyAccessDeniedException();
+        }
     }
 
     private Journey getAccessibleJourney(Long journeyId, Long userId) {
-        Journey journey = journeyRepository.getByIdOrThrow(journeyId);
-        boolean isActiveMember = journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
-                journeyId,
-                userId,
-                JourneyMemberStatus.ACTIVE
-        );
-        if (!isActiveMember) {
-            throw new JourneyAccessDeniedException();
-        }
-        return journey;
+        validateJourneyAccess(journeyId, userId);
+        return journeyRepository.getByIdOrThrow(journeyId);
     }
 
     private JourneyPost getOwnedJourneyPost(Long journeyId, Long journeyPostId, Long userId) {

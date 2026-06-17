@@ -50,7 +50,7 @@ public interface JourneyApiDocs {
 
     @Operation(
             summary = "나의 여정 기본 정보 수정",
-            description = "active journey member가 나의 여정의 제목·대표 사진·여행 날짜를 수정합니다."
+            description = "active host가 나의 여정의 제목·대표 사진·여행 날짜를 수정합니다."
     )
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiErrorResponses({

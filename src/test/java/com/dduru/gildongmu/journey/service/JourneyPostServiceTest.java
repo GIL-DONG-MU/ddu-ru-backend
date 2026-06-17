@@ -116,7 +116,7 @@ class JourneyPostServiceTest {
                     S3_HOST + "/journeys/posts/notice.png"
             );
 
-            givenActiveMember(journeyId, userId, journey);
+            givenAccessibleJourney(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(author);
             when(journeyPostRepository.saveAndFlush(any(JourneyPost.class))).thenAnswer(invocation -> {
@@ -151,7 +151,7 @@ class JourneyPostServiceTest {
                     null
             );
 
-            givenActiveMember(journeyId, userId, journey);
+            givenAccessibleJourney(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(createUser(userId, "author"));
 
@@ -174,7 +174,7 @@ class JourneyPostServiceTest {
                     "https://example.com/image.png"
             );
 
-            givenActiveMember(journeyId, userId, journey);
+            givenAccessibleJourney(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(createUser(userId, "author"));
 
@@ -196,7 +196,7 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(101L, journey, createUser(20L, "author"));
             JourneyPost lookAheadPost = createJourneyPost(100L, journey, createUser(30L, "next"));
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             givenActiveHost(journeyId, userId);
             when(journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
                     eq(journeyId),
@@ -237,7 +237,7 @@ class JourneyPostServiceTest {
             JourneyPost olderPost = createJourneyPost(101L, journey, createUser(30L, "older"));
             setCreatedAt(cursorPost, cursorCreatedAt);
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             givenActiveHost(journeyId, userId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(cursor, journeyId))
                     .thenReturn(cursorPost);
@@ -270,7 +270,6 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, 20L);
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
@@ -293,7 +292,7 @@ class JourneyPostServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             when(journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId))
                     .thenReturn(Optional.empty());
 
@@ -345,7 +344,7 @@ class JourneyPostServiceTest {
         }
 
         @Test
-        @DisplayName("공지 게시글이 이미 3개이면 추가 지정할 수 없다")
+        @DisplayName("공지 게시글이 이미 5개이면 추가 지정할 수 없다")
         void cannotMarkNoticeWhenLimitExceeded() {
             Long journeyId = 1L;
             Long hostUserId = 10L;
@@ -358,7 +357,7 @@ class JourneyPostServiceTest {
             givenLockedJourney(journeyId, journey);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
-            when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(3L);
+            when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(5L);
 
             assertThatThrownBy(() -> journeyPostService.updatePostNotice(journeyId, journeyPostId, hostUserId, request))
                     .isInstanceOf(JourneyPostNoticeLimitExceededException.class)
@@ -461,7 +460,7 @@ class JourneyPostServiceTest {
                     null
             );
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             givenActiveHost(journeyId, userId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
@@ -484,7 +483,7 @@ class JourneyPostServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
             JourneyPostUpdateRequest request = new JourneyPostUpdateRequest(null, null);
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             givenActiveHost(journeyId, userId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
@@ -510,7 +509,7 @@ class JourneyPostServiceTest {
                     null
             );
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
 
@@ -529,7 +528,7 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(userId, "author"));
 
-            givenActiveMember(journeyId, userId, journey);
+            givenActiveMember(journeyId, userId);
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(timeProvider.now()).thenReturn(NOW);
@@ -542,10 +541,14 @@ class JourneyPostServiceTest {
         }
     }
 
-    private void givenActiveMember(Long journeyId, Long userId, Journey journey) {
-        when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
+    private void givenActiveMember(Long journeyId, Long userId) {
         when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                 .thenReturn(true);
+    }
+
+    private void givenAccessibleJourney(Long journeyId, Long userId, Journey journey) {
+        givenActiveMember(journeyId, userId);
+        when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
     }
 
     private void givenActiveHost(Long journeyId, Long hostUserId) {

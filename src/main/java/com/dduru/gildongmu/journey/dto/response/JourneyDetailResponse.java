@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.journey.dto.response;
 
 import com.dduru.gildongmu.journey.domain.Journey;
-import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 
 import java.time.LocalDate;
@@ -18,10 +17,16 @@ public record JourneyDetailResponse(
         String recruitDeadlineDDay,
         Integer recruitCapacity,
         boolean isOwner,
-        List<ParticipantInfo> participants
+        List<JourneyMemberInfo> members,
+        List<PinnedNoticeInfo> pinnedNotices
 ) {
-    public static JourneyDetailResponse from(Journey journey, Long groupRoomId, PostDetailResponse postDetail) {
-        // 상세 상단에 필요한 최소 정보만 남기고, journey와 post의 책임 경계가 드러나도록 조립한다.
+    public static JourneyDetailResponse from(
+            Journey journey,
+            Long groupRoomId,
+            PostDetailResponse postDetail,
+            List<JourneyMemberInfo> members,
+            List<PinnedNoticeInfo> pinnedNotices
+    ) {
         return new JourneyDetailResponse(
                 journey.getId(),
                 groupRoomId,
@@ -33,7 +38,8 @@ public record JourneyDetailResponse(
                 postDetail.recruitDeadlineDDay(),
                 postDetail.recruitCapacity(),
                 postDetail.isOwner(),
-                postDetail.participants()
+                members,
+                pinnedNotices
         );
     }
 }

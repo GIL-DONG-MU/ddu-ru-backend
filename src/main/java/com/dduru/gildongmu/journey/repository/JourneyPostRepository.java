@@ -25,6 +25,16 @@ public interface JourneyPostRepository extends JpaRepository<JourneyPost, Long> 
     @Query("""
             SELECT jp
             FROM JourneyPost jp
+            WHERE jp.journey.id = :journeyId
+              AND jp.isNotice = true
+              AND jp.isDeleted = false
+            ORDER BY jp.createdAt DESC
+            """)
+    List<JourneyPost> findPinnedNoticesByJourneyId(@Param("journeyId") Long journeyId);
+
+    @Query("""
+            SELECT jp
+            FROM JourneyPost jp
             JOIN FETCH jp.author author
             LEFT JOIN FETCH author.profile profile
             LEFT JOIN FETCH profile.avatar
