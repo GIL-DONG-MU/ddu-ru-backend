@@ -116,7 +116,6 @@ class ParticipationCommandServiceTest {
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
             when(journeyRepository.getByPostIdOrThrow(post.getId())).thenReturn(journey);
-            when(journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participantId)).thenReturn(java.util.Optional.empty());
             when(groupChatRoomService.inviteMemberOrGetRoom(ownerId, journey.getId(), participantId))
                     .thenReturn(new GroupChatInviteMemberResponse(roomId, true));
 
