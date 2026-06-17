@@ -53,6 +53,17 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     @Query("""
             SELECT m
             FROM ChatRoomMember m
+            JOIN FETCH m.user u
+            LEFT JOIN FETCH u.profile p
+            LEFT JOIN FETCH p.avatar
+            LEFT JOIN FETCH p.bgColor
+            WHERE m.room.id IN :roomIds
+            """)
+    List<ChatRoomMember> findByRoomIdsWithUserProfileImage(@Param("roomIds") List<Long> roomIds);
+
+    @Query("""
+            SELECT m
+            FROM ChatRoomMember m
             JOIN FETCH m.user
             LEFT JOIN FETCH m.lastReadMessage
             WHERE m.room.id = :roomId
