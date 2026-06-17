@@ -10,6 +10,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
 import com.dduru.gildongmu.chat.dto.ws.ChatReadEventPayload;
+import com.dduru.gildongmu.chat.event.ChatReadUpdatedEvent;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatMessageNotFoundException;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -75,6 +77,9 @@ class ChatReadServiceTest {
     @Mock
     private TimeProvider timeProvider;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private ChatReadService chatReadService;
 
     @BeforeEach
@@ -86,7 +91,8 @@ class ChatReadServiceTest {
                 chatMessageRepository,
                 journeyMemberRepository,
                 simpMessagingTemplate,
-                timeProvider
+                timeProvider,
+                eventPublisher
         );
     }
 
@@ -115,6 +121,7 @@ class ChatReadServiceTest {
             assertThat(response.lastReadMessageId()).isEqualTo(message.getId());
             assertThat(response.updated()).isTrue();
             assertThat(member.getLastReadMessage()).isEqualTo(message);
+            verify(eventPublisher).publishEvent(new ChatReadUpdatedEvent(roomId, userId));
 
             ArgumentCaptor<ChatReadEventPayload> payloadCaptor = ArgumentCaptor.forClass(ChatReadEventPayload.class);
             verify(simpMessagingTemplate).convertAndSend(
@@ -185,6 +192,7 @@ class ChatReadServiceTest {
             assertThat(response.updated()).isFalse();
             assertThat(member.getLastReadMessage()).isEqualTo(currentLastRead);
             verifyNoInteractions(simpMessagingTemplate);
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test
@@ -212,6 +220,7 @@ class ChatReadServiceTest {
             assertThat(response.lastReadMessageId()).isEqualTo(currentLastRead.getId());
             assertThat(response.updated()).isFalse();
             verifyNoInteractions(simpMessagingTemplate);
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test

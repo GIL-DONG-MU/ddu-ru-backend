@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.profile.service;
 
+import com.dduru.gildongmu.chat.event.ProfileUpdatedEvent;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,6 +43,9 @@ class ProfileManagementServiceTest {
 
     @Mock
     private OnboardingService onboardingService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ProfileManagementService profileManagementService;
@@ -86,6 +91,7 @@ class ProfileManagementServiceTest {
         verify(profileRepository).existsByNickname("뉴닉네임");
         verify(bgColorRepository, never()).getByIdOrThrow(anyLong());
         verify(onboardingService).completeProfile(1L);
+        verify(eventPublisher).publishEvent(new ProfileUpdatedEvent(1L));
     }
 
     @Test

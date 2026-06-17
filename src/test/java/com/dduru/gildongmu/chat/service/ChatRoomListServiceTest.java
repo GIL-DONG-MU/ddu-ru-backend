@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -152,6 +153,7 @@ class ChatRoomListServiceTest {
         assertThat(response.chatRooms().get(0).lastMessage().content()).isEqualTo("그룹 안녕하세요");
         assertThat(response.chatRooms().get(0).lastMessage().senderId()).isEqualTo(invitee.getId());
         assertThat(response.chatRooms().get(0).unreadCount()).isEqualTo(5L);
+        assertThat(response.chatRooms().get(0).activityAt()).isEqualTo(LocalDateTime.of(2026, 6, 13, 15, 0));
 
         assertThat(response.chatRooms().get(1).chatRoomId()).isEqualTo(privateRoom.getId());
         assertThat(response.chatRooms().get(1).displayName()).isEqualTo("guestNick");
@@ -160,6 +162,7 @@ class ChatRoomListServiceTest {
         assertThat(response.chatRooms().get(1).lastMessage().content()).isEqualTo("안녕하세요");
         assertThat(response.chatRooms().get(1).lastMessage().senderId()).isEqualTo(opponent.getId());
         assertThat(response.chatRooms().get(1).lastReadMessageId()).isEqualTo(privateReadCursor.getId());
+        assertThat(response.chatRooms().get(1).activityAt()).isEqualTo(LocalDateTime.of(2026, 6, 13, 14, 30));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         org.mockito.Mockito.verify(chatRoomRepository)
@@ -190,6 +193,53 @@ class ChatRoomListServiceTest {
         verify(chatRoomRepository, never()).findLastVisibleMessagesByRoomIds(any(), any());
         verify(chatRoomRepository, never()).countUnreadMessagesByRoomIds(any(), any());
         verify(chatRoomRepository, never()).countMembersByRoomIds(any());
+    }
+
+    @Test
+    @DisplayName("단건 채팅방 목록 item도 목록 조회와 같은 정책으로 조립한다")
+    void retrieveChatRoomItem() {
+        Long currentUserId = 10L;
+        User currentUser = createUser(currentUserId, "host", "hostNick");
+        User opponent = createUser(20L, "guest", "guestNick");
+        Destination destination = createDestination();
+        Post privatePost = createPost(100L, currentUser, destination, "제주 애월 2박 3일", "https://post/private.png");
+        ChatRoom privateRoom = createPrivateRoom(1L, privatePost, LocalDateTime.of(2026, 6, 1, 10, 0));
+        ChatRoomMember currentMember = createMember(privateRoom, currentUser, null);
+        ChatRoomMember opponentMember = createMember(privateRoom, opponent, null);
+        ChatMessage lastMessage = createMessage(
+                100L,
+                privateRoom,
+                opponent,
+                ChatMessageType.TEXT,
+                "안녕하세요",
+                LocalDateTime.of(2026, 6, 13, 14, 30)
+        );
+
+        when(chatRoomRepository.findActiveListItemByUserIdAndRoomId(currentUserId, privateRoom.getId()))
+                .thenReturn(Optional.of(new ChatRoomListQueryResult(
+                        currentMember,
+                        LocalDateTime.of(2026, 6, 13, 14, 30)
+                )));
+        when(chatRoomMemberRepository.findByRoomIdsWithUserProfileImage(List.of(privateRoom.getId())))
+                .thenReturn(List.of(currentMember, opponentMember));
+        when(chatRoomRepository.findLastVisibleMessagesByRoomIds(currentUserId, List.of(privateRoom.getId())))
+                .thenReturn(List.of(lastMessage));
+        when(chatRoomRepository.countUnreadMessagesByRoomIds(currentUserId, List.of(privateRoom.getId())))
+                .thenReturn(Map.of(privateRoom.getId(), 2L));
+        when(chatRoomRepository.countMembersByRoomIds(List.of(privateRoom.getId())))
+                .thenReturn(Map.of(privateRoom.getId(), 2L));
+        when(profileImageResolver.resolve(opponent.getProfile())).thenReturn("https://example.com/opponent.png");
+
+        var response = service.retrieveChatRoomItem(currentUserId, privateRoom.getId());
+
+        assertThat(response).isPresent();
+        assertThat(response.get().chatRoomId()).isEqualTo(privateRoom.getId());
+        assertThat(response.get().displayName()).isEqualTo("guestNick");
+        assertThat(response.get().postTitle()).isEqualTo("제주 애월 2박 3일");
+        assertThat(response.get().thumbnailUrl()).isEqualTo("https://example.com/opponent.png");
+        assertThat(response.get().lastMessage().content()).isEqualTo("안녕하세요");
+        assertThat(response.get().unreadCount()).isEqualTo(2L);
+        assertThat(response.get().activityAt()).isEqualTo(LocalDateTime.of(2026, 6, 13, 14, 30));
     }
 
     private User createUser(Long id, String name, String nickname) {

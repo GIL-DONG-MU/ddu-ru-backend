@@ -100,6 +100,7 @@ class ChatControllerTest {
                         ),
                         3L,
                         1200L,
+                        LocalDateTime.of(2026, 6, 13, 14, 30),
                         LocalDateTime.of(2026, 6, 1, 10, 0)
                 )),
                 new ChatRoomListPageResponse("next-cursor", true)
