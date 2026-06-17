@@ -9,6 +9,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
 import com.dduru.gildongmu.chat.dto.ws.ChatReadEventPayload;
+import com.dduru.gildongmu.chat.event.ChatReadUpdatedEvent;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatMessageNotFoundException;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
@@ -19,6 +20,7 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class ChatReadService {
     private final JourneyMemberRepository journeyMemberRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ChatReadResponse read(Long userId, Long roomId, ChatReadRequest request) {
@@ -53,6 +56,7 @@ public class ChatReadService {
         Long reflectedLastReadMessageId = currentMember.getLastReadMessage().getId();
 
         if (updated) {
+            eventPublisher.publishEvent(new ChatReadUpdatedEvent(roomId, userId));
             publishReadEventAfterCommit(roomId, userId, reflectedLastReadMessageId);
         }
 

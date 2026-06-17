@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.profile.service;
 
+import com.dduru.gildongmu.chat.event.ProfileUpdatedEvent;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.domain.BgColor;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -12,6 +13,7 @@ import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.survey.domain.AvatarProfile;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class ProfileManagementService {
     private final BgColorRepository bgColorRepository;
     private final AvatarProfileRepository avatarProfileRepository;
     private final OnboardingService onboardingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
@@ -34,6 +37,7 @@ public class ProfileManagementService {
         updateProfileBasedOnProfileImageType(profile, bgColor, request);
 
         onboardingService.completeProfile(userId);
+        eventPublisher.publishEvent(new ProfileUpdatedEvent(userId));
     }
 
     @Transactional
@@ -42,6 +46,7 @@ public class ProfileManagementService {
         AvatarProfile avatar = avatarProfileRepository.getByIdOrThrow(avatarId);
 
         profile.updateAvatar(avatar);
+        eventPublisher.publishEvent(new ProfileUpdatedEvent(userId));
     }
 
     private BgColor resolveBgColor(ProfileUpdateRequest request) {

@@ -10,6 +10,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageBroadcastPayload;
 import com.dduru.gildongmu.chat.dto.ws.ChatMessageSendRequest;
 import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
+import com.dduru.gildongmu.chat.event.ChatMessageCreatedEvent;
 import com.dduru.gildongmu.chat.exception.ChatAccessDeniedException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.ChatSystemMessageSendAccessDeniedException;
@@ -25,6 +26,7 @@ import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +47,7 @@ public class ChatMessageSendService {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatSystemMessageFactory chatSystemMessageFactory;
     private final S3ImageUrlValidator s3ImageUrlValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
     public void sendUserMessage(Long senderUserId, Long roomId, ChatMessageSendRequest request) {
         ChatRoom room = chatRoomRepository.getByIdOrThrow(roomId);
@@ -85,6 +88,7 @@ public class ChatMessageSendService {
     ) {
         ChatMessage chatMessage = saveAndFlushMessage(room, sender, messageType, content);
         senderMember.readUpTo(chatMessage);
+        eventPublisher.publishEvent(new ChatMessageCreatedEvent(room.getId(), chatMessage.getId()));
         broadcastAfterCommit(toPayload(chatMessage), room.getId());
     }
 

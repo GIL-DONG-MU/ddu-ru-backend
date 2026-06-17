@@ -2,6 +2,9 @@ package com.dduru.gildongmu.journey.service;
 
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangeType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangedEvent;
+import com.dduru.gildongmu.chat.event.JourneyBasicInfoUpdatedEvent;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.service.ChatMessageSendService;
@@ -28,6 +31,7 @@ import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,6 +57,7 @@ public class JourneyService {
     private final ChatMessageSendService chatMessageSendService;
     private final S3ImageUrlValidator s3ImageUrlValidator;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     public JourneyUpdateResponse updateBasicInfo(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = getUpdatableJourney(journeyId, userId);
@@ -69,6 +74,7 @@ public class JourneyService {
             deleteOutOfRangeSchedules(journeyId, userId, startDate, endDate);
             journey.getPost().updateTravelDates(startDate, endDate);
         }
+        eventPublisher.publishEvent(new JourneyBasicInfoUpdatedEvent(journeyId));
 
         log.info("나의 여정 기본 정보 수정됨 - journeyId={}, userId={}", journeyId, userId);
         return JourneyUpdateResponse.from(journey);
@@ -152,6 +158,11 @@ public class JourneyService {
         chatRoomMemberRepository.findByRoomIdAndUserId(chatRoom.getId(), memberUserId)
                 .ifPresent(chatRoomMember -> {
                     chatRoomMemberRepository.delete(chatRoomMember);
+                    eventPublisher.publishEvent(new ChatMemberChangedEvent(
+                            chatRoom.getId(),
+                            memberUserId,
+                            ChatMemberChangeType.MEMBER_REMOVED
+                    ));
                     chatMessageSendService.publishUserKicked(chatRoom, memberUserId, hostUserId);
                 });
     }
