@@ -40,6 +40,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -163,6 +165,31 @@ class ChatRoomListServiceTest {
         org.mockito.Mockito.verify(chatRoomRepository)
                 .findActiveListPageByUserId(eq(currentUserId), eq(null), eq(null), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("조회된 채팅방이 없으면 부가 데이터를 조회하지 않고 빈 목록을 응답한다")
+    void retrieveChatRoomsEmptyPage() {
+        Long currentUserId = 10L;
+
+        when(cursorCodec.decode(null)).thenReturn(null);
+        when(chatRoomRepository.findActiveListPageByUserId(eq(currentUserId), eq(ChatRoomType.PRIVATE), eq(null), any(Pageable.class)))
+                .thenReturn(List.of());
+
+        ChatRoomListResponse response = service.retrieveChatRooms(
+                currentUserId,
+                new ChatRoomListRequest(ChatRoomListType.PRIVATE, 20, null)
+        );
+
+        assertThat(response.selectedRoomType()).isEqualTo(ChatRoomListType.PRIVATE);
+        assertThat(response.chatRooms()).isEmpty();
+        assertThat(response.page().hasNext()).isFalse();
+        assertThat(response.page().nextCursor()).isNull();
+
+        verify(chatRoomMemberRepository, never()).findByRoomIdsWithUserProfileImage(any());
+        verify(chatRoomRepository, never()).findLastVisibleMessagesByRoomIds(any(), any());
+        verify(chatRoomRepository, never()).countUnreadMessagesByRoomIds(any(), any());
+        verify(chatRoomRepository, never()).countMembersByRoomIds(any());
     }
 
     private User createUser(Long id, String name, String nickname) {

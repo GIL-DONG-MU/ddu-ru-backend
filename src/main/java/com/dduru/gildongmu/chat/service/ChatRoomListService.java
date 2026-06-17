@@ -4,7 +4,6 @@ import com.dduru.gildongmu.chat.cursor.ChatRoomListCursorCodec;
 import com.dduru.gildongmu.chat.domain.ChatMessage;
 import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.ChatRoomMember;
-import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.query.ChatRoomListCursor;
 import com.dduru.gildongmu.chat.dto.query.ChatRoomListQueryResult;
 import com.dduru.gildongmu.chat.dto.request.ChatRoomListRequest;
@@ -82,6 +81,9 @@ public class ChatRoomListService {
         List<Long> roomIds = pageResults.stream()
                 .map(result -> result.currentMember().getRoom().getId())
                 .toList();
+        if (roomIds.isEmpty()) {
+            return RoomListData.empty();
+        }
 
         Map<Long, List<ChatRoomMember>> membersByRoomId = loadMembersByRoomId(roomIds);
         Map<Long, ChatMessage> lastMessagesByRoomId = loadLastMessagesByRoomId(userId, roomIds);
@@ -102,17 +104,7 @@ public class ChatRoomListService {
             RoomListData roomListData
     ) {
         return page.results().stream()
-                .map(result -> {
-                    Long roomId = roomIdOf(result);
-                    return toItemResponse(
-                            userId,
-                            result,
-                            roomListData.membersByRoomId().getOrDefault(roomId, List.of()),
-                            roomListData.lastMessagesByRoomId().get(roomId),
-                            roomListData.unreadCountsByRoomId().getOrDefault(roomId, 0L),
-                            roomListData.participantCountsByRoomId().getOrDefault(roomId, 0L)
-                    );
-                })
+                .map(result -> toItemResponse(userId, result, roomListData))
                 .toList();
     }
 
@@ -132,6 +124,25 @@ public class ChatRoomListService {
             Map<Long, Long> unreadCountsByRoomId,
             Map<Long, Long> participantCountsByRoomId
     ) {
+        private static RoomListData empty() {
+            return new RoomListData(Map.of(), Map.of(), Map.of(), Map.of());
+        }
+
+        private List<ChatRoomMember> membersOf(Long roomId) {
+            return membersByRoomId.getOrDefault(roomId, List.of());
+        }
+
+        private ChatMessage lastMessageOf(Long roomId) {
+            return lastMessagesByRoomId.get(roomId);
+        }
+
+        private long unreadCountOf(Long roomId) {
+            return unreadCountsByRoomId.getOrDefault(roomId, 0L);
+        }
+
+        private long participantCountOf(Long roomId) {
+            return participantCountsByRoomId.getOrDefault(roomId, 0L);
+        }
     }
 
     private static List<ChatRoomListQueryResult> truncateToSize(
@@ -163,13 +174,12 @@ public class ChatRoomListService {
     private ChatRoomListItemResponse toItemResponse(
             Long currentUserId,
             ChatRoomListQueryResult result,
-            List<ChatRoomMember> members,
-            ChatMessage lastMessage,
-            long unreadCount,
-            long participantCount
+            RoomListData roomListData
     ) {
         ChatRoomMember currentMember = result.currentMember();
         ChatRoom room = currentMember.getRoom();
+        Long roomId = room.getId();
+        List<ChatRoomMember> members = roomListData.membersOf(roomId);
 
         return new ChatRoomListItemResponse(
                 room.getId(),
@@ -180,18 +190,22 @@ public class ChatRoomListService {
                 resolveThumbnailUrl(room, currentUserId, members),
                 resolvePostId(room),
                 resolveJourneyId(room),
-                Math.toIntExact(participantCount),
-                toLastMessageResponse(lastMessage),
-                unreadCount,
+                Math.toIntExact(roomListData.participantCountOf(roomId)),
+                toLastMessageResponse(roomListData.lastMessageOf(roomId)),
+                roomListData.unreadCountOf(roomId),
                 currentMember.getLastReadMessage() == null ? null : currentMember.getLastReadMessage().getId(),
                 room.getCreatedAt()
         );
     }
 
     private String resolveDisplayName(ChatRoom room, Long currentUserId, List<ChatRoomMember> members) {
-        if (room.getRoomType() == ChatRoomType.GROUP) {
-            return room.getJourney().getTitle();
-        }
+        return switch (room.getRoomType()) {
+            case PRIVATE -> resolvePrivateDisplayName(currentUserId, members);
+            case GROUP -> room.getJourney().getTitle();
+        };
+    }
+
+    private static String resolvePrivateDisplayName(Long currentUserId, List<ChatRoomMember> members) {
         return findOpponent(members, currentUserId)
                 .map(ChatRoomMember::getUser)
                 .map(ChatMessageSenderResponse::displayNameOf)
@@ -199,25 +213,37 @@ public class ChatRoomListService {
     }
 
     private static String resolvePostTitle(ChatRoom room) {
-        if (room.getRoomType() != ChatRoomType.PRIVATE) {
-            return null;
-        }
+        return switch (room.getRoomType()) {
+            case PRIVATE -> resolvePrivatePostTitle(room);
+            case GROUP -> null;
+        };
+    }
+
+    private static String resolvePrivatePostTitle(ChatRoom room) {
         Post contextPost = room.getContextPost();
         return contextPost == null ? null : contextPost.getTitle();
     }
 
     private String resolveThumbnailUrl(ChatRoom room, Long currentUserId, List<ChatRoomMember> members) {
-        if (room.getRoomType() == ChatRoomType.GROUP) {
-            if (hasText(room.getJourney().getPhotoUrl())) {
-                return room.getJourney().getPhotoUrl();
-            }
-            return room.getJourney().getPost().getPhotoUrl();
-        }
+        return switch (room.getRoomType()) {
+            case PRIVATE -> resolvePrivateThumbnailUrl(currentUserId, members);
+            case GROUP -> resolveGroupThumbnailUrl(room);
+        };
+    }
+
+    private String resolvePrivateThumbnailUrl(Long currentUserId, List<ChatRoomMember> members) {
         return findOpponent(members, currentUserId)
                 .map(ChatRoomMember::getUser)
                 .map(User::getProfile)
                 .map(profileImageResolver::resolve)
                 .orElse(null);
+    }
+
+    private static String resolveGroupThumbnailUrl(ChatRoom room) {
+        if (hasText(room.getJourney().getPhotoUrl())) {
+            return room.getJourney().getPhotoUrl();
+        }
+        return room.getJourney().getPost().getPhotoUrl();
     }
 
     private static java.util.Optional<ChatRoomMember> findOpponent(List<ChatRoomMember> members, Long currentUserId) {
