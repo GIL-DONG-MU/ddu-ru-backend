@@ -10,6 +10,7 @@ import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.JourneyMemberRoleLabel;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
@@ -19,6 +20,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyMemberNotFoundException;
+import com.dduru.gildongmu.journey.exception.JourneyMemberRemovalException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
@@ -35,6 +37,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -80,22 +83,20 @@ public class JourneyService {
     ) {
         validateActiveHost(journeyId, hostUserId);
         JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.updateRole(request.roleType(), request.customRoleLabel());
-        log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleType={}",
-                journeyId, hostUserId, memberUserId, request.roleType());
+        List<JourneyMemberRoleLabel> newLabels = request.roles().stream()
+                .map(r -> JourneyMemberRoleLabel.of(member, r.roleType(), r.customRoleLabel()))
+                .toList();
+        member.replaceRoleLabels(newLabels);
+        log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleCount={}",
+                journeyId, hostUserId, memberUserId, newLabels.size());
         return JourneyMemberRoleResponse.from(member);
-    }
-
-    public void clearMemberRole(Long journeyId, Long hostUserId, Long memberUserId) {
-        validateActiveHost(journeyId, hostUserId);
-        JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.clearRole();
-        log.info("나의 여정 멤버 역할 해제됨 - journeyId={}, hostUserId={}, memberUserId={}",
-                journeyId, hostUserId, memberUserId);
     }
 
     public void removeMember(Long journeyId, Long hostUserId, Long memberUserId) {
         validateActiveHost(journeyId, hostUserId);
+        if (hostUserId.equals(memberUserId)) {
+            throw JourneyMemberRemovalException.cannotRemoveSelf();
+        }
 
         Post post = getPostForMemberRemoval(journeyId);
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);

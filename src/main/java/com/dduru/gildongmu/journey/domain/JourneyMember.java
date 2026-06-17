@@ -3,7 +3,6 @@ package com.dduru.gildongmu.journey.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
-import com.dduru.gildongmu.journey.domain.enums.JourneyRoleType;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyMemberRoleException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
@@ -11,9 +10,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -27,7 +30,7 @@ public class JourneyMember extends BaseTimeEntity {
      * 실제 여행멤버들을 나타낸다.
      * 참여 신청 이력(participations)과 분리해 host/member를 동일한 축에서 조회하기 위해 사용한다.
      */
-    private static final int CUSTOM_ROLE_LABEL_MAX_LENGTH = 20;
+    private static final int MAX_ROLE_COUNT = 5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,12 +58,9 @@ public class JourneyMember extends BaseTimeEntity {
     @Column(name = "removed_at")
     private LocalDateTime removedAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role_type", length = 20)
-    private JourneyRoleType roleType;
-
-    @Column(name = "custom_role_label", length = 20)
-    private String customRoleLabel;
+    @OneToMany(mappedBy = "journeyMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<JourneyMemberRoleLabel> roleLabels = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private JourneyMember(Journey journey, User user, JourneyMemberRole role, LocalDateTime joinedAt) {
@@ -89,11 +89,6 @@ public class JourneyMember extends BaseTimeEntity {
                 .build();
     }
 
-    public void activate() {
-        this.status = JourneyMemberStatus.ACTIVE;
-        this.removedAt = null;
-    }
-
     public void remove(LocalDateTime removedAt) {
         this.status = JourneyMemberStatus.REMOVED;
         this.removedAt = removedAt;
@@ -103,27 +98,25 @@ public class JourneyMember extends BaseTimeEntity {
         return role == JourneyMemberRole.HOST;
     }
 
-    public void updateRole(JourneyRoleType roleType, String customRoleLabel) {
-        if (roleType == JourneyRoleType.CUSTOM) {
-            validateCustomRoleLabel(customRoleLabel);
-            this.customRoleLabel = customRoleLabel;
-        } else {
-            this.customRoleLabel = null;
+    public void replaceRoleLabels(List<JourneyMemberRoleLabel> newLabels) {
+        if (newLabels.size() > MAX_ROLE_COUNT) {
+            throw InvalidJourneyMemberRoleException.roleLimitExceeded();
         }
-        this.roleType = roleType;
+        validateNoDuplicateCustomLabels(newLabels);
+        this.roleLabels.clear();
+        this.roleLabels.addAll(newLabels);
     }
 
-    public void clearRole() {
-        this.roleType = null;
-        this.customRoleLabel = null;
-    }
-
-    private static void validateCustomRoleLabel(String label) {
-        if (!StringUtils.hasText(label)) {
-            throw InvalidJourneyMemberRoleException.invalidCustomRoleLabel();
-        }
-        if (label.codePointCount(0, label.length()) > CUSTOM_ROLE_LABEL_MAX_LENGTH) {
-            throw InvalidJourneyMemberRoleException.invalidCustomRoleLabel();
+    private static void validateNoDuplicateCustomLabels(List<JourneyMemberRoleLabel> labels) {
+        List<String> customLabels = labels.stream()
+                .filter(JourneyMemberRoleLabel::isCustom)
+                .map(JourneyMemberRoleLabel::getCustomRoleLabel)
+                .toList();
+        Set<String> seen = new HashSet<>();
+        for (String label : customLabels) {
+            if (!seen.add(label)) {
+                throw InvalidJourneyMemberRoleException.duplicateCustomRoleLabel();
+            }
         }
     }
 }

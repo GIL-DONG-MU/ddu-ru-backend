@@ -53,6 +53,12 @@ public class JourneyQueryService {
         return JourneyMainListResponse.of(activeJourneys, completedJourneys);
     }
 
+    public List<JourneyMemberInfo> retrieveJourneyMembers(Long journeyId, Long userId) {
+        validateJourneyAccess(journeyId, userId);
+        Journey journey = journeyRepository.getByIdWithPostContextOrThrow(journeyId);
+        return buildMembers(journey.getPost().getId(), today());
+    }
+
     public JourneyDetailResponse retrieveMyJourneyDetail(Long journeyId, Long userId) {
         Journey journey = journeyRepository.getByIdWithPostContextOrThrow(journeyId);
         validateJourneyAccess(journeyId, userId);

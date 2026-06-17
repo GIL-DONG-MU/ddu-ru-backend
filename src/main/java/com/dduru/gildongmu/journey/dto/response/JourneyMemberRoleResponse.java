@@ -1,19 +1,19 @@
 package com.dduru.gildongmu.journey.dto.response;
 
 import com.dduru.gildongmu.journey.domain.JourneyMember;
-import com.dduru.gildongmu.journey.domain.enums.JourneyRoleType;
+
+import java.util.List;
 
 public record JourneyMemberRoleResponse(
         Long memberUserId,
-        JourneyRoleType roleType,
-        String customRoleLabel
+        List<RoleLabelInfo> roles
 ) {
     public static JourneyMemberRoleResponse from(JourneyMember member) {
-        JourneyRoleType roleType = member.getRoleType();
         return new JourneyMemberRoleResponse(
                 member.getUser().getId(),
-                roleType,
-                roleType == JourneyRoleType.CUSTOM ? member.getCustomRoleLabel() : null
+                member.getRoleLabels().stream()
+                        .map(RoleLabelInfo::from)
+                        .toList()
         );
     }
 }
