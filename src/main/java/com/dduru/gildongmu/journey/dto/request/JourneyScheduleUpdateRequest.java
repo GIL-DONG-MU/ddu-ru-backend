@@ -17,7 +17,11 @@ public record JourneyScheduleUpdateRequest(
 
         LocalTime startTime,
 
+        Boolean clearStartTime,
+
         LocalTime endTime,
+
+        Boolean clearEndTime,
 
         @Size(max = 30)
         String placeName,

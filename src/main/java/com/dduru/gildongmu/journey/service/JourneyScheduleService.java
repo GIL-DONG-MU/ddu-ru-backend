@@ -79,17 +79,21 @@ public class JourneyScheduleService {
         ScheduleCategory category = request.category();
         Integer dayOffset = request.dayOffset();
         LocalTime startTime = request.startTime();
+        boolean applyStartTimePatch = startTime != null || Boolean.TRUE.equals(request.clearStartTime());
+        LocalTime startValue = Boolean.TRUE.equals(request.clearStartTime()) ? null : startTime;
         LocalTime endTime = request.endTime();
+        boolean applyEndTimePatch = endTime != null || Boolean.TRUE.equals(request.clearEndTime());
+        LocalTime endValue = Boolean.TRUE.equals(request.clearEndTime()) ? null : endTime;
         String placeName = request.placeName();
         boolean applyMemoPatch = request.memo() != null;
         String memo = applyMemoPatch ? request.memo() : null;
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
 
-        validateHasAnyPatch(title, category, dayOffset, startTime, endTime, placeName, applyMemoPatch, applyImageUrlPatch);
+        validateHasAnyPatch(title, category, dayOffset, applyStartTimePatch, applyEndTimePatch, placeName, applyMemoPatch, applyImageUrlPatch);
         validateEffectiveDayOffset(schedule, dayOffset, post);
 
-        schedule.update(title, category, dayOffset, startTime, endTime, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
+        schedule.update(title, category, dayOffset, applyStartTimePatch, startValue, applyEndTimePatch, endValue, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
         journeyScheduleRepository.flush();
 
         log.info("나의 여정 일정 수정됨 - journeyId={}, scheduleId={}, userId={}",
@@ -150,14 +154,14 @@ public class JourneyScheduleService {
             String title,
             ScheduleCategory category,
             Integer dayOffset,
-            LocalTime startTime,
-            LocalTime endTime,
+            boolean applyStartTimePatch,
+            boolean applyEndTimePatch,
             String placeName,
             boolean applyMemoPatch,
             boolean applyImageUrlPatch
     ) {
         if (title == null && category == null && dayOffset == null
-                && startTime == null && endTime == null && placeName == null
+                && !applyStartTimePatch && !applyEndTimePatch && placeName == null
                 && !applyMemoPatch && !applyImageUrlPatch) {
             throw InvalidJourneyScheduleException.emptyPatch();
         }

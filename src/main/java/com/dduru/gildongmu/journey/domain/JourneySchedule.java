@@ -117,7 +117,9 @@ public class JourneySchedule extends BaseTimeEntity {
             String title,
             ScheduleCategory category,
             Integer dayOffset,
+            boolean applyStartTimePatch,
             LocalTime startTime,
+            boolean applyEndTimePatch,
             LocalTime endTime,
             String placeName,
             boolean applyMemoPatch,
@@ -125,8 +127,8 @@ public class JourneySchedule extends BaseTimeEntity {
             boolean applyImageUrlPatch,
             String imageUrl
     ) {
-        LocalTime effectiveStartTime = startTime != null ? startTime : this.startTime;
-        LocalTime effectiveEndTime = endTime != null ? endTime : this.endTime;
+        LocalTime effectiveStartTime = applyStartTimePatch ? startTime : this.startTime;
+        LocalTime effectiveEndTime = applyEndTimePatch ? endTime : this.endTime;
         validateTimeConstraint(effectiveStartTime, effectiveEndTime);
 
         if (title != null) {
@@ -138,10 +140,10 @@ public class JourneySchedule extends BaseTimeEntity {
         if (dayOffset != null) {
             this.dayOffset = dayOffset;
         }
-        if (startTime != null) {
+        if (applyStartTimePatch) {
             this.startTime = startTime;
         }
-        if (endTime != null) {
+        if (applyEndTimePatch) {
             this.endTime = endTime;
         }
         if (placeName != null) {
