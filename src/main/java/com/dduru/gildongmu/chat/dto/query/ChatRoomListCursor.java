@@ -1,5 +1,7 @@
 package com.dduru.gildongmu.chat.dto.query;
 
+import com.dduru.gildongmu.chat.exception.InvalidChatRoomListCursorException;
+
 import java.time.LocalDateTime;
 
 public record ChatRoomListCursor(
@@ -8,7 +10,7 @@ public record ChatRoomListCursor(
 ) {
     public ChatRoomListCursor {
         if (activityAt == null || chatRoomId == null) {
-            throw new IllegalArgumentException("cursor 형식이 올바르지 않습니다.");
+            throw new InvalidChatRoomListCursorException();
         }
     }
 }
