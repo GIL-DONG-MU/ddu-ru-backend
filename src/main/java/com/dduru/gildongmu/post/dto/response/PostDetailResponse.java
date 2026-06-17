@@ -3,10 +3,10 @@ package com.dduru.gildongmu.post.dto.response;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.journey.support.JourneyDisplayCalculator;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
-import com.dduru.gildongmu.user.dto.UserInfo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,14 +35,15 @@ public record PostDetailResponse(
         int viewCount,
         int likeCount,
         LocalDateTime createdAt,
-        UserInfo author,
+        PostAuthorInfo author,
         boolean isOwner,
         boolean canEditPost,
         boolean hasLiked,
         List<ParticipantInfo> participants,
         MyParticipationStatus myParticipationStatus,
         String tripDurationText,
-        String recruitDeadlineDDay
+        String recruitDeadlineDDay,
+        CompanionType companionType
 ) {
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter,
                                           LocalDate today,
@@ -51,10 +52,10 @@ public record PostDetailResponse(
                                           boolean hasLiked,
                                           List<ParticipantInfo> participants,
                                           MyParticipationStatus myParticipationStatus,
-                                          ProfileImageResolver profileImageResolver) {
-        String photoUrl = post.getPhotoUrl();
+                                          ProfileImageResolver profileImageResolver,
+                                          boolean isAuthorSuperHost) {
         List<String> tags = jsonConverter.convertJsonToList(post.getTags());
-        UserInfo authorInfo = UserInfo.from(post.getUser(), profileImageResolver);
+        PostAuthorInfo authorInfo = PostAuthorInfo.from(post.getUser(), isAuthorSuperHost, profileImageResolver, today);
 
         String tripDurationText = JourneyDisplayCalculator.tripDurationText(post);
         String recruitDeadlineDDay = JourneyDisplayCalculator.recruitDeadlineDDay(post, today);
@@ -77,7 +78,7 @@ public record PostDetailResponse(
                 post.isAgeAny(),
                 post.getMinAge(),
                 post.getMaxAge(),
-                photoUrl,
+                post.getPhotoUrl(),
                 tags,
                 post.getViewCount(),
                 post.getLikeCount(),
@@ -89,7 +90,8 @@ public record PostDetailResponse(
                 participants,
                 myParticipationStatus,
                 tripDurationText,
-                recruitDeadlineDDay
+                recruitDeadlineDDay,
+                post.getCompanionType()
         );
     }
 }

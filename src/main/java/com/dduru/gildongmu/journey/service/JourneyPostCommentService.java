@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -50,13 +51,14 @@ public class JourneyPostCommentService {
         List<JourneyPostComment> comments = journeyPostCommentRepository
                 .findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId);
 
-        return JourneyPostCommentListResponse.of(
-                journeyPostId,
-                comments,
-                userId,
-                hostUserId,
-                profileImageResolver
-        );
+        LocalDate today = timeProvider.today();
+        List<JourneyPostCommentResponse> commentResponses = comments.stream()
+                .map(comment -> JourneyPostCommentResponse.from(
+                        comment, journeyPostId, userId, hostUserId, profileImageResolver, today
+                ))
+                .toList();
+
+        return JourneyPostCommentListResponse.of(journeyPostId, commentResponses);
     }
 
     public JourneyPostCommentResponse createComment(
@@ -74,7 +76,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 생성됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, savedComment.getId(), userId);
-        return JourneyPostCommentResponse.from(savedComment, journeyPostId, userId, hostUserId, profileImageResolver);
+        return JourneyPostCommentResponse.from(savedComment, journeyPostId, userId, hostUserId, profileImageResolver, timeProvider.today());
     }
 
     public JourneyPostCommentResponse updateComment(
@@ -96,7 +98,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 수정됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, commentId, userId);
-        return JourneyPostCommentResponse.from(comment, journeyPostId, userId, hostUserId, profileImageResolver);
+        return JourneyPostCommentResponse.from(comment, journeyPostId, userId, hostUserId, profileImageResolver, timeProvider.today());
     }
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {

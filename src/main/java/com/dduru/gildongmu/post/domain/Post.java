@@ -6,6 +6,10 @@ import com.dduru.gildongmu.participation.domain.Participation;
 import com.dduru.gildongmu.participation.exception.RecruitmentClosedException;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.exception.InvalidPostContentException;
+import com.dduru.gildongmu.post.exception.InvalidPostDateException;
+import com.dduru.gildongmu.post.exception.InvalidPostTitleException;
+import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.InvalidRecruitCapacityException;
 import com.dduru.gildongmu.post.exception.RecruitDeadlinePassedException;
 import com.dduru.gildongmu.post.exception.RecruitCountBelowZeroException;
@@ -30,6 +34,13 @@ import java.time.temporal.ChronoUnit;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
+
+    private static final int TITLE_MIN = 5;
+    private static final int TITLE_MAX = 40;
+    private static final int CONTENT_MIN = 20;
+    private static final int CONTENT_MAX = 1000;
+    private static final int MIN_PREFERRED_AGE = 20;
+    private static final int MAX_PREFERRED_AGE = 100;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -143,12 +154,14 @@ public class Post extends BaseTimeEntity {
                                   LocalDate recruitDeadline, Gender preferredGender,
                                   boolean isAgeAny, Integer minAge, Integer maxAge,
                                   String photoUrl, String tags, CompanionType companionType) {
+        validateDateRange(startDate, endDate);
+        validatePreferredAge(isAgeAny, minAge, maxAge);
 
         return Post.builder()
                 .user(user)
                 .destination(destination)
-                .title(title)
-                .content(content)
+                .title(requireValidTitle(title))
+                .content(requireValidContent(content))
                 .startDate(startDate)
                 .endDate(endDate)
                 .recruitCapacity(recruitCapacity)
@@ -166,19 +179,26 @@ public class Post extends BaseTimeEntity {
     public void updatePost(Destination destination, String title, String content,
                            LocalDate startDate, LocalDate endDate, Integer recruitCapacity,
                            LocalDate recruitDeadline, Gender preferredGender,
-                           boolean applyPreferredAgePatch, boolean preferredAgeAny, Integer minAge, Integer maxAge,
-                           boolean applyPhotoUrlPatch, String photoUrl, String tags, CompanionType companionType,
+                           boolean isAgeAny, Integer minAge, Integer maxAge,
+                           String photoUrl, String tags, CompanionType companionType,
                            LocalDate today) {
         validateUpdatable(today);
-
+        validateDateRange(
+                startDate != null ? startDate : this.startDate,
+                endDate != null ? endDate : this.endDate
+        );
+        validatePreferredAge(isAgeAny, minAge, maxAge);
         applyBasicChanges(destination, title, content, startDate, endDate, recruitDeadline,
                 preferredGender, tags, companionType);
-        applyPreferredAge(applyPreferredAgePatch, preferredAgeAny, minAge, maxAge);
-        applyPhotoUrl(applyPhotoUrlPatch, photoUrl);
+        this.isAgeAny = isAgeAny;
+        this.minAge = minAge;
+        this.maxAge = maxAge;
+        this.photoUrl = photoUrl;
         applyRecruitCapacity(recruitCapacity);
     }
 
     public void updateTravelDates(LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
         this.startDate = startDate;
         this.endDate = endDate;
         this.recruitDeadline = endDate.minusDays(1);
@@ -243,6 +263,27 @@ public class Post extends BaseTimeEntity {
         return daysBetween(today, startDate);
     }
 
+    public static void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (endDate.isBefore(startDate)) {
+            throw new InvalidPostDateException();
+        }
+    }
+
+    public static void validatePreferredAge(boolean isAgeAny, Integer minAge, Integer maxAge) {
+        if (isAgeAny) {
+            if (minAge != null || maxAge != null) {
+                throw InvalidPreferredAgeException.conflictWithAgeAny();
+            }
+            return;
+        }
+        if (minAge == null || maxAge == null) {
+            throw InvalidPreferredAgeException.incompleteRange();
+        }
+        if (minAge < MIN_PREFERRED_AGE || maxAge > MAX_PREFERRED_AGE || minAge > maxAge) {
+            throw InvalidPreferredAgeException.outOfBounds(MIN_PREFERRED_AGE, MAX_PREFERRED_AGE);
+        }
+    }
+
     private void applyBasicChanges(Destination destination, String title, String content,
                                    LocalDate startDate, LocalDate endDate, LocalDate recruitDeadline,
                                    Gender preferredGender, String tags, CompanionType companionType) {
@@ -250,10 +291,10 @@ public class Post extends BaseTimeEntity {
             this.destination = destination;
         }
         if (title != null) {
-            this.title = title;
+            this.title = requireValidTitle(title);
         }
         if (content != null) {
-            this.content = content;
+            this.content = requireValidContent(content);
         }
         if (startDate != null) {
             this.startDate = startDate;
@@ -275,30 +316,6 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-    private void applyPreferredAge(boolean applyPreferredAgePatch, boolean preferredAgeAny,
-                                   Integer minAge, Integer maxAge) {
-        if (!applyPreferredAgePatch) {
-            return;
-        }
-
-        if (preferredAgeAny) {
-            this.isAgeAny = true;
-            this.minAge = null;
-            this.maxAge = null;
-            return;
-        }
-
-        this.isAgeAny = false;
-        this.minAge = minAge;
-        this.maxAge = maxAge;
-    }
-
-    private void applyPhotoUrl(boolean applyPhotoUrlPatch, String photoUrl) {
-        if (applyPhotoUrlPatch) {
-            this.photoUrl = photoUrl;
-        }
-    }
-
     private void applyRecruitCapacity(Integer recruitCapacity) {
         if (recruitCapacity != null) {
             updateRecruitCapacity(recruitCapacity);
@@ -307,6 +324,10 @@ public class Post extends BaseTimeEntity {
 
     private static int daysBetween(LocalDate from, LocalDate target) {
         return (int) ChronoUnit.DAYS.between(from, target);
+    }
+
+    public boolean isUpdatable(LocalDate today) {
+        return !hasRecruitDeadlinePassed(today) && !hasTravelEnded(today) && !hasTravelStarted(today);
     }
 
     public void validateUpdatable(LocalDate today) {
@@ -326,7 +347,7 @@ public class Post extends BaseTimeEntity {
     }
 
     public boolean hasTravelStarted(LocalDate today) {
-        return today.isAfter(startDate);
+        return !today.isBefore(startDate);
     }
 
     public boolean hasTravelEnded(LocalDate today) {
@@ -352,5 +373,19 @@ public class Post extends BaseTimeEntity {
             throw new RecruitCountBelowZeroException();
         }
         this.recruitCount--;
+    }
+
+    private static String requireValidTitle(String title) {
+        if (title.length() < TITLE_MIN || title.length() > TITLE_MAX) {
+            throw new InvalidPostTitleException();
+        }
+        return title;
+    }
+
+    private static String requireValidContent(String content) {
+        if (content.length() < CONTENT_MIN || content.length() > CONTENT_MAX) {
+            throw new InvalidPostContentException();
+        }
+        return content;
     }
 }

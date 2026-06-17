@@ -10,10 +10,8 @@ import java.util.List;
 public record PostUpdateRequest(
         Long destinationId,
 
-        @Size(min = 5, max = 40, message = "제목은 5자 이상 40자 이하여야 합니다")
         String title,
 
-        @Size(min = 20, max = 1000, message = "내용은 20자 이상 1000자 이하여야 합니다")
         String content,
 
         @FutureOrPresent(message = "여행 시작일은 오늘 이후여야 합니다")
@@ -34,9 +32,19 @@ public record PostUpdateRequest(
 
         String photoUrl,
 
-        @Size(max = 4, message = "태그는 최대 4개까지 가능합니다")
         List<String> tags,
 
         CompanionType companionType
 ) {
+    public PostUpdateRequest {
+        if (title != null) title = title.strip();
+        if (content != null) content = content.strip();
+        if (photoUrl != null) photoUrl = photoUrl.strip();
+        if (tags != null) {
+            tags = tags.stream()
+                    .filter(t -> t != null && !t.strip().isEmpty())
+                    .map(String::strip)
+                    .toList();
+        }
+    }
 }

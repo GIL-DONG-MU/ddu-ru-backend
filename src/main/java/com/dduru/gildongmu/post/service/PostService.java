@@ -4,6 +4,8 @@ import com.dduru.gildongmu.chat.service.GroupChatRoomService;
 import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
+import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.journey.domain.Journey;
@@ -21,8 +23,6 @@ import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.dto.response.PostCreateResponse;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
-import com.dduru.gildongmu.post.exception.InvalidPostDateException;
-import com.dduru.gildongmu.post.exception.InvalidPreferredAgeException;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
@@ -46,8 +46,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class PostService {
-    private static final int MIN_PREFERRED_AGE = 20;
-    private static final int MAX_PREFERRED_AGE = 100;
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -60,11 +58,14 @@ public class PostService {
     private final SuperHostService superHostService;
     private final JsonConverter jsonConverter;
     private final ProfileImageResolver profileImageResolver;
+    private final S3ImageUrlValidator s3ImageUrlValidator;
     private final TimeProvider timeProvider;
     private final ApplicationEventPublisher eventPublisher;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
-        validateCreateRequest(request);
+        TagValidator.validateOrThrow(request.tags());
+        Post.validateDateRange(request.startDate(), request.endDate());
+        Post.validatePreferredAge(request.isAgeAny(), request.minAge(), request.maxAge());
 
         User user = userRepository.getByIdOrThrow(userId);
         Destination destination = destinationRepository.getByIdOrThrow(request.destinationId());
@@ -82,7 +83,13 @@ public class PostService {
 
     public void update(Long postId, Long userId, PostUpdateRequest request) {
         Post post = getOwnedPost(postId, userId);
-        validateUpdateRequest(post, request);
+        Post.validateDateRange(getStartDateOrCurrent(post, request), getEndDateOrCurrent(post, request));
+        if (hasAgePatch(request)) {
+            Post.validatePreferredAge(Boolean.TRUE.equals(request.isAgeAny()), request.minAge(), request.maxAge());
+        }
+        if (request.tags() != null) {
+            TagValidator.validateOrThrow(request.tags());
+        }
 
         Destination destination = getDestinationOrNull(request);
         LocalDate recruitDeadline = calculateRecruitDeadline(getEndDateOrCurrent(post, request));
@@ -129,8 +136,9 @@ public class PostService {
         boolean isOwner = isOwner(post, currentUserId);
         boolean canEditPost = canEditPost(post, currentUserId, today);
         boolean hasLiked = hasLiked(post.getId(), currentUserId);
+        boolean isAuthorSuperHost = superHostService.isAuthorSuperHostForPost(post.getId());
 
-        List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post);
+        List<ParticipantInfo> participants = participationApplicantService.getParticipantsForPostDetail(post, today);
         MyParticipationStatus myParticipationStatus = participationApplicantService.getMyParticipationStatus(post.getId(), currentUserId, isOwner);
 
         return PostDetailResponse.from(
@@ -142,7 +150,8 @@ public class PostService {
                 hasLiked,
                 participants,
                 myParticipationStatus,
-                profileImageResolver
+                profileImageResolver,
+                isAuthorSuperHost
         );
     }
 
@@ -172,62 +181,11 @@ public class PostService {
     }
 
     private boolean canEditPost(Post post, Long currentUserId, LocalDate today) {
-        if (!isOwner(post, currentUserId)) {
-            return false;
-        }
-
-        return !post.hasRecruitDeadlinePassed(today)
-                && !post.hasTravelEnded(today)
-                && !post.hasTravelStarted(today);
+        return isOwner(post, currentUserId) && post.isUpdatable(today);
     }
 
     private boolean hasLiked(Long postId, Long currentUserId) {
         return currentUserId != null && postLikeRepository.existsByUserIdAndPostId(currentUserId, postId);
-    }
-
-    private void validateCreateRequest(PostCreateRequest request) {
-        validateDateRange(request.startDate(), request.endDate());
-        validatePreferredAge(request.isAgeAny(), request.minAge(), request.maxAge());
-        TagValidator.validateOrThrow(jsonConverter.normalizeTagList(request.tags()));
-    }
-
-    private void validateUpdateRequest(Post post, PostUpdateRequest request) {
-        validateDateRange(getStartDateOrCurrent(post, request), getEndDateOrCurrent(post, request));
-
-        if (hasAgePatch(request)) {
-            validatePreferredAge(Boolean.TRUE.equals(request.isAgeAny()), request.minAge(), request.maxAge());
-        }
-
-        if (request.tags() != null) {
-            TagValidator.validateOrThrow(jsonConverter.normalizeTagList(request.tags()));
-        }
-    }
-
-    private void validatePreferredAge(boolean isAgeAny, Integer minAge, Integer maxAge) {
-        if (isAgeAny) {
-            if (minAge != null || maxAge != null) {
-                throw InvalidPreferredAgeException.conflictWithAgeAny();
-            }
-            return;
-        }
-
-        validatePreferredAgeRange(minAge, maxAge);
-    }
-
-    private void validatePreferredAgeRange(Integer minAge, Integer maxAge) {
-        if (minAge == null || maxAge == null) {
-            throw InvalidPreferredAgeException.incompleteRange();
-        }
-
-        if (minAge < MIN_PREFERRED_AGE || maxAge > MAX_PREFERRED_AGE || minAge > maxAge) {
-            throw InvalidPreferredAgeException.outOfBounds(MIN_PREFERRED_AGE, MAX_PREFERRED_AGE);
-        }
-    }
-
-    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
-        if (endDate.isBefore(startDate)) {
-            throw new InvalidPostDateException();
-        }
     }
 
     private LocalDate getStartDateOrCurrent(Post post, PostUpdateRequest request) {
@@ -269,31 +227,30 @@ public class PostService {
     }
 
     private void updatePost(Post post, Destination destination, PostUpdateRequest request, LocalDate recruitDeadline, LocalDate today) {
+        // isAgeAny/minAge/maxAge 중 하나라도 있으면 나이 조건 전체를 교체, 모두 null이면 기존 값 유지
         boolean applyPreferredAgePatch = hasAgePatch(request);
         boolean preferredAgeAny = applyPreferredAgePatch && Boolean.TRUE.equals(request.isAgeAny());
 
-        Integer minAge = preferredAgeAny ? null : request.minAge();
-        Integer maxAge = preferredAgeAny ? null : request.maxAge();
+        boolean effectiveIsAgeAny = applyPreferredAgePatch ? preferredAgeAny : post.isAgeAny();
+        Integer effectiveMinAge = applyPreferredAgePatch ? (preferredAgeAny ? null : request.minAge()) : post.getMinAge();
+        Integer effectiveMaxAge = applyPreferredAgePatch ? (preferredAgeAny ? null : request.maxAge()) : post.getMaxAge();
 
-        boolean applyPhotoUrlPatch = request.photoUrl() != null;
         Destination destinationForPhoto = destination != null ? destination : post.getDestination();
-
-        String photoUrl = applyPhotoUrlPatch
+        String effectivePhotoUrl = request.photoUrl() != null
                 ? resolvePhotoUrl(request.photoUrl(), destinationForPhoto)
-                : null;
+                : post.getPhotoUrl();
 
         String tagsJson = request.tags() != null ? tagsToJson(request.tags()) : null;
 
         post.updatePost(destination, request.title(), request.content(),
                 request.startDate(), request.endDate(), request.recruitCapacity(),
-                recruitDeadline, request.preferredGender(), applyPreferredAgePatch,
-                preferredAgeAny, minAge, maxAge,
-                applyPhotoUrlPatch, photoUrl, tagsJson, request.companionType(), today);
+                recruitDeadline, request.preferredGender(), effectiveIsAgeAny,
+                effectiveMinAge, effectiveMaxAge, effectivePhotoUrl, tagsJson, request.companionType(), today);
     }
 
     private String resolvePhotoUrl(String photoUrl, Destination destination) {
         if (StringUtils.hasText(photoUrl)) {
-            return photoUrl.trim();
+            return s3ImageUrlValidator.validateAndNormalize(photoUrl, S3ImageDirectory.POSTS);
         }
 
         if (destination != null && StringUtils.hasText(destination.getImage())) {
@@ -304,7 +261,7 @@ public class PostService {
     }
 
     private String tagsToJson(List<String> tags) {
-        return jsonConverter.convertTagListToJson(tags);
+        return jsonConverter.convertListToJson(tags);
     }
 
     private LocalDate today() {

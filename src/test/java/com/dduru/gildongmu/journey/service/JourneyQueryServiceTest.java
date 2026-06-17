@@ -300,7 +300,8 @@ class JourneyQueryServiceTest {
                 List.of(),
                 MyParticipationStatus.NONE,
                 "2박 3일",
-                "D-3"
+                "D-3",
+                null
         );
     }
 }

@@ -31,7 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -94,7 +98,7 @@ public class SuperHostService {
                         profileImageResolver,
                         today,
                         true,
-                        exposure.getEndedAt()))
+                        false))
                 .toList();
 
         return SuperHostPostListResponse.of(responses);
@@ -122,6 +126,25 @@ public class SuperHostService {
                         exposure.getEndedAt()
                 ))
                 .orElseGet(() -> MySuperHostStatusResponse.of(unusedCount, false, null, null));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAuthorSuperHostForPost(Long postId) {
+        return superHostExposureRepository.existsByPost_IdAndStatusAndEndedAtAfter(
+                postId, SuperHostExposureStatus.ACTIVE, timeProvider.now()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, LocalDateTime> findActiveSuperHostExposures(Collection<Long> postIds) {
+        if (postIds.isEmpty()) return Map.of();
+        return superHostExposureRepository
+                .findActivePostIdsWithEndedAt(postIds, SuperHostExposureStatus.ACTIVE, timeProvider.now())
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (LocalDateTime) row[1]
+                ));
     }
 
     public void cancelActiveExposureByPostId(Long postId) {

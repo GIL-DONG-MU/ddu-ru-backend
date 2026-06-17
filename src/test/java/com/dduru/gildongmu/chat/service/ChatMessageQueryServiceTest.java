@@ -294,7 +294,7 @@ class ChatMessageQueryServiceTest {
             Long userId = 10L;
             LocalDateTime memberCreatedAt = LocalDateTime.of(2026, 5, 9, 9, 0);
             User host = createUser(userId, "host", "hostNick");
-            Journey journey = createJourney(30L, createPost(1L, host, "그룹 방"), "그룹 여정");
+            Journey journey = createJourney(30L, createPost(1L, host, "그룹 채팅 방"), "그룹 여정");
             ChatRoom room = createGroupRoom(roomId, journey, ChatRoomStatus.ACTIVE);
             ChatRoomMember currentMember = createMember(room, host, ChatMemberRole.HOST, memberCreatedAt);
 

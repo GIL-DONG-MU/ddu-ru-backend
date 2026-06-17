@@ -57,7 +57,7 @@ class AdminPostServiceTest {
             AdminPostDetailResponse response = adminPostService.getDetail(postId);
 
             assertThat(response.id()).isEqualTo(postId);
-            assertThat(response.title()).isEqualTo("제목");
+            assertThat(response.title()).isEqualTo("어드민 테스트 게시글");
             assertThat(response.destination()).isEqualTo("서울");
             assertThat(response.authorId()).isEqualTo(7L);
             assertThat(response.authorName()).isEqualTo("작성자");
@@ -135,8 +135,8 @@ class AdminPostServiceTest {
         Post post = Post.createPost(
                 user,
                 destination,
-                "제목",
-                "내용내용내용내용내용내용내용내용",
+                "어드민 테스트 게시글",
+                "어드민 게시글 삭제 테스트용 본문입니다.",
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(3),
                 5,
