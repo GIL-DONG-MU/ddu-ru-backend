@@ -9,4 +9,7 @@ public record JourneyMemberRoleUpdateRequest(
 
         String customRoleLabel
 ) {
+    public JourneyMemberRoleUpdateRequest {
+        if (customRoleLabel != null) customRoleLabel = customRoleLabel.strip();
+    }
 }

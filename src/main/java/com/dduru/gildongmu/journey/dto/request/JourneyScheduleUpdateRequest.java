@@ -27,4 +27,10 @@ public record JourneyScheduleUpdateRequest(
 
         String imageUrl
 ) {
+    public JourneyScheduleUpdateRequest {
+        if (title != null) title = title.strip();
+        if (placeName != null) placeName = placeName.strip();
+        if (memo != null) memo = memo.strip();
+        if (imageUrl != null) imageUrl = imageUrl.strip();
+    }
 }

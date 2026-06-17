@@ -32,4 +32,10 @@ public record JourneyScheduleCreateRequest(
 
         String imageUrl
 ) {
+    public JourneyScheduleCreateRequest {
+        if (title != null) title = title.strip();
+        if (placeName != null) placeName = placeName.strip();
+        if (memo != null) memo = memo.strip();
+        if (imageUrl != null) imageUrl = imageUrl.strip();
+    }
 }

@@ -6,4 +6,7 @@ public record JourneyPostCommentUpdateRequest(
         @Size(max = 300)
         String content
 ) {
+    public JourneyPostCommentUpdateRequest {
+        if (content != null) content = content.strip();
+    }
 }

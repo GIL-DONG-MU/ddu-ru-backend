@@ -59,7 +59,7 @@ public class JourneyPostService {
         validateJourneyAccess(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
         JourneyPost cursorPost = findCursorPost(journeyId, normalizedRequest.cursor());
-        int size = normalizedRequest.sizeOrDefault();
+        int size = normalizedRequest.size();
 
         List<JourneyPost> fetchedPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
                 journeyId,
@@ -73,7 +73,7 @@ public class JourneyPostService {
 
         List<Long> postIds = journeyPosts.stream().map(JourneyPost::getId).toList();
         Map<Long, Long> commentCountByPostId = journeyPostCommentRepository.getCommentCountsByJourneyPostIds(postIds);
-        LocalDate today = timeProvider.today();
+        LocalDate today = today();
 
         List<JourneyPostResponse> posts = journeyPosts.stream()
                 .map(post -> JourneyPostResponse.from(
@@ -93,7 +93,7 @@ public class JourneyPostService {
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, today());
     }
 
     public JourneyPostResponse createPost(Long journeyId, Long userId, JourneyPostCreateRequest request) {
@@ -106,7 +106,7 @@ public class JourneyPostService {
 
         log.info("나의 여정 게시글 생성됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, savedPost.getId(), userId);
-        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L, timeProvider.today());
+        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L, today());
     }
 
     public JourneyPostResponse updatePost(
@@ -118,7 +118,7 @@ public class JourneyPostService {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
-        String content = normalizeContent(request.content());
+        String content = request.content();
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
         validateHasAnyPatch(content, applyImageUrlPatch);
@@ -129,7 +129,7 @@ public class JourneyPostService {
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, today());
     }
 
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {
@@ -162,7 +162,7 @@ public class JourneyPostService {
         return JourneyPost.create(
                 journey,
                 author,
-                normalizeContent(request.content()),
+                request.content(),
                 normalizeImageUrl(request.imageUrl())
         );
     }
@@ -262,14 +262,14 @@ public class JourneyPostService {
         }
     }
 
-    private String normalizeContent(String content) {
-        return content == null ? null : content.trim();
-    }
-
     private String normalizeImageUrl(String imageUrl) {
         if (!StringUtils.hasText(imageUrl)) {
             return null;
         }
         return s3ImageUrlValidator.validateAndNormalize(imageUrl, S3ImageDirectory.JOURNEY_POSTS);
+    }
+
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }

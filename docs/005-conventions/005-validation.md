@@ -51,8 +51,8 @@ Client 요청
 
 | 필드 종류 | 처리 방식 |
 |----------|----------|
-| 필수 문자열 | `strip()` 후 `@NotBlank`로 빈 값 차단 |
-| 선택 문자열 | `strip()` (빈 문자열은 그대로 — null 변환 안 함) |
+| 필수 문자열 | `strip()` 후 `@NotBlank`로 빈 값 차단, 길이 제한 있으면 `@Size`도 추가 |
+| 선택 문자열 | `strip()`, 길이 제한 있으면 `@Size(max)` 추가 (빈 문자열은 그대로 — null 변환 안 함) |
 | 선택 필터 문자열 | `isBlank() ? null : strip()` (공백만 있으면 null로 정규화) |
 | 리스트 요소 | 각 요소 `strip()` + 비어있는 요소 제거 |
 | 숫자 / 날짜 / Enum | 정제 불필요, `@NotNull` / `@Min` / `@Max` 등 형식 검증만 |
@@ -111,9 +111,17 @@ public record PostCreateRequest(
 }
 ```
 
+### @Size를 Domain과 DTO 양쪽에 두는 이유
+
+`@Size`는 DTO와 Domain 둘 다에 넣는다. 중복이지 모순이 아니다.
+
+| 위치 | 역할 |
+|------|------|
+| DTO `@Size` | Spring `@Valid`가 여러 필드 오류를 한 번에 수집해 field-level 400 응답 제공, OpenAPI 문서에 제약 자동 반영 |
+| Domain 검증 | API·배치·테스트 등 어떤 경로로 Entity가 생성·변경되어도 비즈니스 규칙 최종 보장 |
+
 ### DTO에 두지 않는 것
 
-- `@Size(min, max)` — 길이 제한은 비즈니스 규칙이므로 Domain이 담당한다.
 - 날짜 범위 검증 (`startDate < endDate`) — 두 필드 간의 관계이므로 Domain이 담당한다.
 - 선호 연령 범위 검증 (`isAgeAny` ↔ `minAge/maxAge` 상관관계) — 동일한 이유.
 
@@ -257,7 +265,7 @@ private String title;
 | 기존 | 변경 후 |
 |------|---------|
 | 서비스에 `validateCreateRequest()` 등 private 메서드 | 삭제 — 도메인에 위임 |
-| DTO에 `@Size(min=5, max=40)` | 삭제 — Domain의 `requireValidTitle()`이 보장 |
+| DTO에 `@Size(min=5, max=40)` 없음 | 추가 — field-level 오류 수집 및 OpenAPI 문서화 목적. Domain 검증과 병행 |
 | `JsonConverter.normalizeTagList()` 서비스 호출 | 삭제 — DTO compact constructor가 처리 |
 | `Post.createPost()` — 검증 없이 그냥 빌더 호출 | `validateDateRange`, `validatePreferredAge`, `requireValidTitle/Content` 추가 |
 | `resolvePhotoUrl()` 내부 중복 `trim()` | 삭제 — DTO가 이미 처리 |
@@ -281,15 +289,17 @@ public class PostService {
 Post.validateDateRange(start, end);  // 도메인 정적 메서드에 위임
 ```
 
-### DTO에서 비즈니스 규칙 검증
+### @Size 없이 Domain에만 의존
 
 ```java
-// 잘못된 예 — DTO가 비즈니스 규칙(길이 제한)을 직접 보유
-@Size(min = 5, max = 40, message = "제목은 5자 이상 40자 이하여야 합니다")
+// 잘못된 예 — @Size 없이 Domain에만 위임
+// → Spring @Valid가 field-level 오류를 수집 못 함, OpenAPI 문서에 제약이 표시되지 않음
+@NotBlank(message = "제목은 필수입니다")
 String title;
 
-// 올바른 예 — DTO는 빈 값만 차단, 길이는 도메인이 처리
+// 올바른 예 — DTO와 Domain 양쪽에 길이 제약 유지
 @NotBlank(message = "제목은 필수입니다")
+@Size(min = 5, max = 40, message = "제목은 5자 이상 40자 이하여야 합니다")
 String title;
 ```
 

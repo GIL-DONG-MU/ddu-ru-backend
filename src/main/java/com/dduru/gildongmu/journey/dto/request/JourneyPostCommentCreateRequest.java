@@ -8,4 +8,7 @@ public record JourneyPostCommentCreateRequest(
         @Size(max = 300)
         String content
 ) {
+    public JourneyPostCommentCreateRequest {
+        if (content != null) content = content.strip();
+    }
 }

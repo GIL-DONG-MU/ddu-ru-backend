@@ -10,4 +10,8 @@ public record JourneyPostCreateRequest(
 
         String imageUrl
 ) {
+    public JourneyPostCreateRequest {
+        if (content != null) content = content.strip();
+        if (imageUrl != null) imageUrl = imageUrl.strip();
+    }
 }

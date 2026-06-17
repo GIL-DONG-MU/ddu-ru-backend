@@ -177,12 +177,12 @@ class JourneyServiceTest {
         }
 
         @Test
-        @DisplayName("수정 값이 모두 비어 있으면 예외가 발생한다")
+        @DisplayName("수정 값이 모두 null이면 예외가 발생한다")
         void throwsWhenNoPatchValueProvided() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId);
-            JourneyUpdateRequest request = new JourneyUpdateRequest("   ", null, null, null);
+            JourneyUpdateRequest request = new JourneyUpdateRequest(null, null, null, null);
 
             when(journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(Optional.of(journey));

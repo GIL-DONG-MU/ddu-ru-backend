@@ -40,9 +40,6 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyService {
-    private static final int TITLE_MIN_LENGTH = 5;
-    private static final int TITLE_MAX_LENGTH = 40;
-
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyScheduleRepository journeyScheduleRepository;
@@ -57,7 +54,7 @@ public class JourneyService {
     public JourneyUpdateResponse updateBasicInfo(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = getUpdatableJourney(journeyId, userId);
 
-        String title = normalizeTitle(request.title());
+        String title = request.title();
         String photoUrl = normalizePhotoUrl(request.photoUrl());
         LocalDate startDate = request.startDate();
         LocalDate endDate = request.endDate();
@@ -82,7 +79,7 @@ public class JourneyService {
     ) {
         validateActiveHost(journeyId, hostUserId);
         JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.updateRole(request.roleType(), normalizeCustomRoleLabel(request.customRoleLabel()));
+        member.updateRole(request.roleType(), request.customRoleLabel());
         log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleType={}",
                 journeyId, hostUserId, memberUserId, request.roleType());
         return JourneyMemberRoleResponse.from(member);
@@ -178,29 +175,6 @@ public class JourneyService {
         int newTotalDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
         journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, newTotalDays)
                 .forEach(schedule -> schedule.delete(userId, timeProvider.now()));
-    }
-
-    private String normalizeTitle(String title) {
-        if (!StringUtils.hasText(title)) {
-            return null;
-        }
-        String normalizedTitle = title.trim();
-        validateTitleLength(normalizedTitle);
-        return normalizedTitle;
-    }
-
-    private void validateTitleLength(String title) {
-        int length = title.codePointCount(0, title.length());
-        if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
-            throw InvalidJourneyBasicInfoException.invalidTitleLength();
-        }
-    }
-
-    private static String normalizeCustomRoleLabel(String label) {
-        if (!StringUtils.hasText(label)) {
-            return null;
-        }
-        return label.trim();
     }
 
     private JourneyMember findActiveMemberOrThrow(Long journeyId, Long memberUserId) {

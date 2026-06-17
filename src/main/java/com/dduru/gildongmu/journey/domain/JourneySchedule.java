@@ -193,9 +193,7 @@ public class JourneySchedule extends BaseTimeEntity {
     }
 
     private static String validateMemo(String memo) {
-        if (memo == null) {
-            return null;
-        }
+        if (!StringUtils.hasText(memo)) return null;
         int length = memo.codePointCount(0, memo.length());
         if (length > MEMO_MAX_LENGTH) {
             throw InvalidJourneyScheduleException.invalidMemo();

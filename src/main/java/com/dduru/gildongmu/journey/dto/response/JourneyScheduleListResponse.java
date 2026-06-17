@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.journey.dto.response;
 
 import com.dduru.gildongmu.journey.domain.JourneySchedule;
-import com.dduru.gildongmu.post.domain.Post;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -18,12 +17,10 @@ public record JourneyScheduleListResponse(
 ) {
     public static JourneyScheduleListResponse of(
             Long journeyId,
-            Post post,
+            LocalDate startDate,
+            LocalDate endDate,
             List<JourneySchedule> schedules
     ) {
-        LocalDate startDate = post.getStartDate();
-        LocalDate endDate = post.getEndDate();
-
         Map<Integer, List<JourneyScheduleItemResponse>> schedulesByOffset = schedules.stream()
                 .collect(Collectors.groupingBy(
                         JourneySchedule::getDayOffset,
@@ -33,8 +30,7 @@ public record JourneyScheduleListResponse(
         List<JourneyScheduleDayResponse> days = new ArrayList<>();
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         for (int i = 0; i < totalDays; i++) {
-            List<JourneyScheduleItemResponse> daySchedules = schedulesByOffset.getOrDefault(i, List.of());
-            days.add(new JourneyScheduleDayResponse(i + 1, startDate.plusDays(i), daySchedules));
+            days.add(new JourneyScheduleDayResponse(i + 1, startDate.plusDays(i), schedulesByOffset.getOrDefault(i, List.of())));
         }
 
         return new JourneyScheduleListResponse(journeyId, startDate, endDate, days);

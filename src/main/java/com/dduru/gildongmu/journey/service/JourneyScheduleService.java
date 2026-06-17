@@ -26,7 +26,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -43,8 +42,9 @@ public class JourneyScheduleService {
     @Transactional(readOnly = true)
     public JourneyScheduleListResponse retrieveSchedules(Long journeyId, Long userId) {
         Journey journey = getAccessibleJourneyWithPost(journeyId, userId);
+        Post post = journey.getPost();
         List<JourneySchedule> schedules = journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId);
-        return JourneyScheduleListResponse.of(journeyId, journey.getPost(), schedules);
+        return JourneyScheduleListResponse.of(journeyId, post.getStartDate(), post.getEndDate(), schedules);
     }
 
     public JourneyScheduleListResponse createSchedule(Long journeyId, Long userId, JourneyScheduleCreateRequest request) {
@@ -61,7 +61,7 @@ public class JourneyScheduleService {
                 journeyId, schedule.getId(), userId);
 
         List<JourneySchedule> schedules = journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId);
-        return JourneyScheduleListResponse.of(journeyId, post, schedules);
+        return JourneyScheduleListResponse.of(journeyId, post.getStartDate(), post.getEndDate(), schedules);
     }
 
     public JourneyScheduleListResponse updateSchedule(
@@ -75,14 +75,14 @@ public class JourneyScheduleService {
 
         JourneySchedule schedule = journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId);
 
-        String title = normalizePatchText(request.title(), InvalidJourneyScheduleException::invalidTitle);
+        String title = request.title();
         ScheduleCategory category = request.category();
         Integer dayOffset = request.dayOffset();
         LocalTime startTime = request.startTime();
         LocalTime endTime = request.endTime();
-        String placeName = normalizePatchText(request.placeName(), InvalidJourneyScheduleException::invalidPlaceName);
+        String placeName = request.placeName();
         boolean applyMemoPatch = request.memo() != null;
-        String memo = applyMemoPatch ? normalizeText(request.memo()) : null;
+        String memo = applyMemoPatch ? request.memo() : null;
         boolean applyImageUrlPatch = request.imageUrl() != null;
         String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
 
@@ -96,7 +96,7 @@ public class JourneyScheduleService {
                 journeyId, scheduleId, userId);
 
         List<JourneySchedule> schedules = journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId);
-        return JourneyScheduleListResponse.of(journeyId, post, schedules);
+        return JourneyScheduleListResponse.of(journeyId, post.getStartDate(), post.getEndDate(), schedules);
     }
 
     public void deleteSchedule(Long journeyId, Long scheduleId, Long userId) {
@@ -112,13 +112,13 @@ public class JourneyScheduleService {
     private JourneySchedule createJourneySchedule(Journey journey, int dayOffset, JourneyScheduleCreateRequest request) {
         return JourneySchedule.create(
                 journey,
-                normalizeText(request.title()),
+                request.title(),
                 request.category(),
                 dayOffset,
                 request.startTime(),
                 request.endTime(),
-                normalizeText(request.placeName()),
-                normalizeText(request.memo()),
+                request.placeName(),
+                request.memo(),
                 normalizeImageUrl(request.imageUrl())
         );
     }
@@ -170,21 +170,4 @@ public class JourneyScheduleService {
         return s3ImageUrlValidator.validateAndNormalize(imageUrl, S3ImageDirectory.JOURNEY_SCHEDULES);
     }
 
-    private static String normalizePatchText(String value, Supplier<? extends RuntimeException> blankException) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) {
-            throw blankException.get();
-        }
-        return trimmed;
-    }
-
-    private static String normalizeText(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
-    }
 }

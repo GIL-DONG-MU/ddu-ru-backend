@@ -34,7 +34,7 @@ public class JourneyQueryService {
     private final TimeProvider timeProvider;
 
     public JourneyMainListResponse retrieveMyJourneys(Long userId) {
-        LocalDate today = timeProvider.today();
+        LocalDate today = today();
 
         List<JourneyMember> activeJourneyMembers = journeyMemberRepository
                 .findActiveJourneyMembersByUserIdAndStatus(userId, JourneyMemberStatus.ACTIVE, today);
@@ -76,5 +76,9 @@ public class JourneyQueryService {
         if (!accessible) {
             throw new JourneyAccessDeniedException();
         }
+    }
+
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }
