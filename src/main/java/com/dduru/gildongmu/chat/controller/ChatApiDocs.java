@@ -2,8 +2,10 @@ package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.chat.dto.request.ChatMessageRetrieveRequest;
 import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
+import com.dduru.gildongmu.chat.dto.request.ChatRoomListRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatMessagesResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomListResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
@@ -72,5 +74,20 @@ public interface ChatApiDocs {
             @Parameter(hidden = true) Long userId,
             @Parameter(description = "채팅방 ID", required = true) Long chatRoomId,
             @Valid @RequestBody ChatReadRequest request
+    );
+
+    @Operation(
+            summary = "채팅방 목록 조회",
+            description = "현재 사용자가 참여 중인 ACTIVE 채팅방 목록을 마지막 활동 시각 기준으로 조회합니다. roomType 필터와 base64 cursor 페이지네이션을 지원합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.JSON_CONVERT_ERROR
+    })
+    ResponseEntity<ApiResult<ChatRoomListResponse>> retrieveChatRooms(
+            @Parameter(hidden = true) Long userId,
+            @Valid @ParameterObject ChatRoomListRequest request
     );
 }
