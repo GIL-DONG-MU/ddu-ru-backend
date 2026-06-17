@@ -8,9 +8,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "journey_posts")
@@ -18,6 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class JourneyPost extends BaseTimeEntity {
     private static final int CONTENT_MAX_LENGTH = 300;
+    public static final int MAX_IMAGE_COUNT = 4;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,8 +38,10 @@ public class JourneyPost extends BaseTimeEntity {
     @Column(nullable = false, length = 300)
     private String content;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
+    @OneToMany(mappedBy = "journeyPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    @OrderBy("sortOrder ASC")
+    private List<JourneyPostImage> images = new ArrayList<>();
 
     @Column(name = "is_notice", nullable = false)
     private boolean isNotice;
@@ -53,13 +59,11 @@ public class JourneyPost extends BaseTimeEntity {
     private JourneyPost(
             Journey journey,
             User author,
-            String content,
-            String imageUrl
+            String content
     ) {
         this.journey = journey;
         this.author = author;
         this.content = validateContent(content);
-        this.imageUrl = imageUrl;
         this.isNotice = false;
         this.isDeleted = false;
     }
@@ -67,23 +71,26 @@ public class JourneyPost extends BaseTimeEntity {
     public static JourneyPost create(
             Journey journey,
             User author,
-            String content,
-            String imageUrl
+            String content
     ) {
         return JourneyPost.builder()
                 .journey(journey)
                 .author(author)
                 .content(content)
-                .imageUrl(imageUrl)
                 .build();
     }
 
-    public void update(String content, boolean applyImageUrlPatch, String imageUrl) {
+    public void replaceImages(List<JourneyPostImage> newImages) {
+        this.images.clear();
+        this.images.addAll(newImages);
+    }
+
+    public void update(String content, boolean applyImagesPatch, List<JourneyPostImage> newImages) {
         if (content != null) {
             updateContent(content);
         }
-        if (applyImageUrlPatch) {
-            this.imageUrl = imageUrl;
+        if (applyImagesPatch) {
+            replaceImages(newImages);
         }
     }
 

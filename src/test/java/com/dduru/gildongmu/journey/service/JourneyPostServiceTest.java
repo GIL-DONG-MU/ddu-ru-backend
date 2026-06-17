@@ -113,7 +113,7 @@ class JourneyPostServiceTest {
             User author = createUser(userId, "author");
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
                     "  출발 30분 전에 만나요.  ",
-                    S3_HOST + "/journeys/posts/notice.png"
+                    List.of(S3_HOST + "/journeys/posts/notice.png")
             );
 
             givenAccessibleJourney(journeyId, userId, journey);
@@ -129,7 +129,7 @@ class JourneyPostServiceTest {
 
             assertThat(response.journeyPostId()).isEqualTo(101L);
             assertThat(response.content()).isEqualTo("출발 30분 전에 만나요.");
-            assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/notice.png");
+            assertThat(response.imageUrls()).containsExactly(S3_HOST + "/journeys/posts/notice.png");
             assertThat(response.isAuthor()).isTrue();
             assertThat(response.author().isHost()).isTrue();
 
@@ -171,12 +171,17 @@ class JourneyPostServiceTest {
             Journey journey = createJourney(journeyId, userId);
             JourneyPostCreateRequest request = new JourneyPostCreateRequest(
                     "출발 30분 전에 만나요.",
-                    "https://example.com/image.png"
+                    List.of("https://example.com/image.png")
             );
 
             givenAccessibleJourney(journeyId, userId, journey);
             givenActiveHost(journeyId, userId);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(createUser(userId, "author"));
+            when(journeyPostRepository.saveAndFlush(any(JourneyPost.class))).thenAnswer(invocation -> {
+                JourneyPost journeyPost = invocation.getArgument(0);
+                ReflectionTestUtils.setField(journeyPost, "id", 101L);
+                return journeyPost;
+            });
 
             assertThatThrownBy(() -> journeyPostService.createPost(journeyId, userId, request))
                     .isInstanceOf(InvalidImageUrlException.class);
@@ -268,7 +273,6 @@ class JourneyPostServiceTest {
         void inactiveMemberCannotRetrievePosts() {
             Long journeyId = 1L;
             Long userId = 10L;
-            Journey journey = createJourney(journeyId, 20L);
 
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
@@ -290,7 +294,6 @@ class JourneyPostServiceTest {
         void missingActiveHostThrowsException() {
             Long journeyId = 1L;
             Long userId = 10L;
-            Journey journey = createJourney(journeyId, userId);
 
             givenActiveMember(journeyId, userId);
             when(journeyMemberRepository.findActiveHostUserIdByJourneyId(journeyId))
@@ -468,7 +471,7 @@ class JourneyPostServiceTest {
             JourneyPostResponse response = journeyPostService.updatePost(journeyId, journeyPostId, userId, request);
 
             assertThat(response.content()).isEqualTo("수정된 내용입니다.");
-            assertThat(response.imageUrl()).isEqualTo(S3_HOST + "/journeys/posts/old.png");
+            assertThat(response.imageUrls()).isEmpty();
             assertThat(journeyPost.getContent()).isEqualTo("수정된 내용입니다.");
             verify(journeyPostRepository).flush();
         }
@@ -539,6 +542,49 @@ class JourneyPostServiceTest {
             assertThat(journeyPost.getDeletedBy()).isEqualTo(userId);
             assertThat(journeyPost.getDeletedAt()).isEqualTo(NOW);
         }
+
+        @Test
+        @DisplayName("방장은 다른 멤버의 게시글을 삭제할 수 있다")
+        void hostCanDeleteOtherMemberPost() {
+            Long journeyId = 1L;
+            Long hostUserId = 10L;
+            Long authorUserId = 20L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, hostUserId);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(authorUserId, "author"));
+
+            givenActiveMember(journeyId, hostUserId);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+            when(journeyMemberRepository.existsActiveHost(journeyId, hostUserId)).thenReturn(true);
+            when(timeProvider.now()).thenReturn(NOW);
+
+            journeyPostService.deletePost(journeyId, journeyPostId, hostUserId);
+
+            assertThat(journeyPost.isDeleted()).isTrue();
+            assertThat(journeyPost.getDeletedBy()).isEqualTo(hostUserId);
+            assertThat(journeyPost.getDeletedAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        @DisplayName("작성자도 방장도 아니면 게시글을 삭제할 수 없다")
+        void nonAuthorNonHostCannotDeletePost() {
+            Long journeyId = 1L;
+            Long userId = 30L;
+            Long journeyPostId = 101L;
+            Journey journey = createJourney(journeyId, 10L);
+            JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "author"));
+
+            givenActiveMember(journeyId, userId);
+            when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
+                    .thenReturn(journeyPost);
+            when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
+
+            assertThatThrownBy(() -> journeyPostService.deletePost(journeyId, journeyPostId, userId))
+                    .isInstanceOf(JourneyAccessDeniedException.class);
+
+            assertThat(journeyPost.isDeleted()).isFalse();
+        }
     }
 
     private void givenActiveMember(Long journeyId, Long userId) {
@@ -572,12 +618,7 @@ class JourneyPostServiceTest {
     }
 
     private JourneyPost createJourneyPost(Long journeyPostId, Journey journey, User author) {
-        JourneyPost journeyPost = JourneyPost.create(
-                journey,
-                author,
-                "기존 내용입니다.",
-                S3_HOST + "/journeys/posts/old.png"
-        );
+        JourneyPost journeyPost = JourneyPost.create(journey, author, "기존 내용입니다.");
         ReflectionTestUtils.setField(journeyPost, "id", journeyPostId);
         return journeyPost;
     }

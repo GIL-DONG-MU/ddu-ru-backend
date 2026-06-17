@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
+import com.dduru.gildongmu.journey.domain.JourneyPostImage;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
@@ -34,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -101,8 +103,9 @@ public class JourneyPostService {
         Long hostUserId = findActiveHostUserId(journeyId);
         User author = userRepository.getByIdOrThrow(userId);
 
-        JourneyPost journeyPost = createJourneyPost(journey, author, request);
+        JourneyPost journeyPost = JourneyPost.create(journey, author, request.content());
         JourneyPost savedPost = journeyPostRepository.saveAndFlush(journeyPost);
+        savedPost.replaceImages(createImages(savedPost, request.imageUrls()));
 
         log.info("나의 여정 게시글 생성됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, savedPost.getId(), userId);
@@ -119,11 +122,11 @@ public class JourneyPostService {
         Long hostUserId = findActiveHostUserId(journeyId);
 
         String content = request.content();
-        boolean applyImageUrlPatch = request.imageUrl() != null;
-        String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
-        validateHasAnyPatch(content, applyImageUrlPatch);
+        boolean applyImagesPatch = request.imageUrls() != null;
+        List<JourneyPostImage> newImages = applyImagesPatch ? createImages(journeyPost, request.imageUrls()) : Collections.emptyList();
+        validateHasAnyPatch(content, applyImagesPatch);
 
-        updateJourneyPost(journeyPost, content, applyImageUrlPatch, imageUrl);
+        journeyPost.update(content, applyImagesPatch, newImages);
         journeyPostRepository.flush();
 
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
@@ -133,7 +136,12 @@ public class JourneyPostService {
     }
 
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {
-        JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyAccess(journeyId, userId);
+        JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+
+        if (!journeyPost.isAuthor(userId)) {
+            validateActiveHost(journeyId, userId);
+        }
 
         journeyPost.delete(userId, timeProvider.now());
         log.info("나의 여정 게시글 삭제됨 - journeyId={}, journeyPostId={}, userId={}",
@@ -158,22 +166,18 @@ public class JourneyPostService {
         return JourneyPostNoticeUpdateResponse.from(journeyPost);
     }
 
-    private JourneyPost createJourneyPost(Journey journey, User author, JourneyPostCreateRequest request) {
-        return JourneyPost.create(
-                journey,
-                author,
-                request.content(),
-                normalizeImageUrl(request.imageUrl())
-        );
-    }
-
-    private void updateJourneyPost(
-            JourneyPost journeyPost,
-            String content,
-            boolean applyImageUrlPatch,
-            String imageUrl
-    ) {
-        journeyPost.update(content, applyImageUrlPatch, imageUrl);
+    private List<JourneyPostImage> createImages(JourneyPost post, List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<JourneyPostImage> images = new ArrayList<>();
+        for (int i = 0; i < imageUrls.size(); i++) {
+            String normalized = normalizeImageUrl(imageUrls.get(i));
+            if (normalized != null) {
+                images.add(JourneyPostImage.of(post, normalized, i));
+            }
+        }
+        return images;
     }
 
     private static JourneyPostListRequest normalizeRequest(JourneyPostListRequest request) {
@@ -251,8 +255,8 @@ public class JourneyPostService {
                 .orElseThrow(JourneyHostNotFoundException::new);
     }
 
-    private void validateHasAnyPatch(String content, boolean applyImageUrlPatch) {
-        if (content == null && !applyImageUrlPatch) {
+    private void validateHasAnyPatch(String content, boolean applyImagesPatch) {
+        if (content == null && !applyImagesPatch) {
             throw InvalidJourneyPostException.emptyPatch();
         }
     }

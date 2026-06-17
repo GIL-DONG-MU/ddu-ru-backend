@@ -417,8 +417,7 @@ class JourneyPostCommentServiceTest {
         JourneyPost journeyPost = JourneyPost.create(
                 journey,
                 author,
-                "기존 내용입니다.",
-                null
+                "기존 내용입니다."
         );
         ReflectionTestUtils.setField(journeyPost, "id", journeyPostId);
         return journeyPost;
