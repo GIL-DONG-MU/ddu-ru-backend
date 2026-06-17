@@ -21,6 +21,7 @@ public record ChatRoomListItemResponse(
         ChatRoomLastMessageResponse lastMessage,
         long unreadCount,
         Long lastReadMessageId,
+        LocalDateTime activityAt,
         LocalDateTime createdAt
 ) {
 }

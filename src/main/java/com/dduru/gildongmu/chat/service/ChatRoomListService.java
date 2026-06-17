@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,22 @@ public class ChatRoomListService {
                 new ChatRoomListPageResponse(
                         resolveNextCursor(page.results(), page.hasNext()), page.hasNext())
         );
+    }
+
+    /**
+     * 실시간 채팅방 목록 이벤트에 사용할 단건 목록 item을 조회한다.
+     * <p>
+     * REST 목록 조회와 동일한 조립 정책을 사용해 사용자별 unread count, 상대 프로필, 표시명을 계산한다.
+     */
+    public Optional<ChatRoomListItemResponse> retrieveChatRoomItem(Long userId, Long roomId) {
+        Optional<ChatRoomListQueryResult> result = chatRoomRepository.findActiveListItemByUserIdAndRoomId(userId, roomId);
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+
+        ChatRoomListQueryResult itemResult = result.get();
+        RoomListData roomListData = loadRoomListData(userId, List.of(itemResult));
+        return Optional.of(toItemResponse(userId, itemResult, roomListData));
     }
 
     private ChatRoomPage findChatRoomPage(
@@ -194,6 +211,7 @@ public class ChatRoomListService {
                 toLastMessageResponse(roomListData.lastMessageOf(roomId)),
                 roomListData.unreadCountOf(roomId),
                 currentMember.getLastReadMessage() == null ? null : currentMember.getLastReadMessage().getId(),
+                result.activityAt(),
                 room.getCreatedAt()
         );
     }

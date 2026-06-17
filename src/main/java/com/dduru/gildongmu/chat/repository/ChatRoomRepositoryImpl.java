@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.dduru.gildongmu.chat.domain.QChatMessage.chatMessage;
@@ -78,6 +79,34 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                         tuple.get(activityAt)
                 ))
                 .toList();
+    }
+
+    @Override
+    public Optional<ChatRoomListQueryResult> findActiveListItemByUserIdAndRoomId(Long userId, Long roomId) {
+        DateTimeExpression<LocalDateTime> activityAt = activityAtExpression();
+
+        Tuple tuple = queryFactory
+                .select(chatRoomMember, activityAt)
+                .from(chatRoomMember)
+                .join(chatRoomMember.room, chatRoom).fetchJoin()
+                .leftJoin(chatRoomMember.lastReadMessage).fetchJoin()
+                .leftJoin(chatRoom.post, post).fetchJoin()
+                .leftJoin(chatRoom.journey, journey).fetchJoin()
+                .leftJoin(journey.post).fetchJoin()
+                .where(
+                        chatRoomMember.user.id.eq(userId),
+                        chatRoom.id.eq(roomId),
+                        chatRoom.status.eq(ChatRoomStatus.ACTIVE)
+                )
+                .fetchOne();
+
+        if (tuple == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new ChatRoomListQueryResult(
+                tuple.get(chatRoomMember),
+                tuple.get(activityAt)
+        ));
     }
 
     @Override

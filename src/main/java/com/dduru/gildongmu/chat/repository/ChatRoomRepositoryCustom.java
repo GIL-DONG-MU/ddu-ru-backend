@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface ChatRoomRepositoryCustom {
 
@@ -18,6 +19,8 @@ public interface ChatRoomRepositoryCustom {
             ChatRoomListCursor cursor,
             Pageable pageable
     );
+
+    Optional<ChatRoomListQueryResult> findActiveListItemByUserIdAndRoomId(Long userId, Long roomId);
 
     List<ChatMessage> findLastVisibleMessagesByRoomIds(Long userId, Collection<Long> roomIds);
 
