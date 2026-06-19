@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS journey_member_role_labels (
 );
 
 ALTER TABLE journey_members
-    DROP COLUMN IF EXISTS role_type,
-    DROP COLUMN IF EXISTS custom_role_label;
+    DROP COLUMN role_type,
+    DROP COLUMN custom_role_label;
