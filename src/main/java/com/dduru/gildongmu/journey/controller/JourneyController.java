@@ -14,6 +14,7 @@ import java.util.List;
 import com.dduru.gildongmu.journey.service.JourneyQueryService;
 import com.dduru.gildongmu.journey.service.JourneyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -93,6 +94,6 @@ public class JourneyController implements JourneyApiDocs {
             @CurrentUser Long userId
     ) {
         journeyService.removeMember(journeyId, userId, memberUserId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }
