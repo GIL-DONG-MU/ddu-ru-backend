@@ -240,7 +240,7 @@ public class JourneyPostService {
             return;
         }
 
-        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 3개 정책을 보장한다.
+        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 5개 정책을 보장한다.
         journeyRepository.getByIdWithLockOrThrow(journeyId);
         validateActiveHost(journeyId, userId);
 

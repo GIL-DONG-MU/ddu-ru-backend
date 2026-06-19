@@ -109,7 +109,7 @@ public interface JourneyPostApiDocs {
 
     @Operation(
             summary = "나의 여정 게시글 공지 지정/해제",
-            description = "active host가 특정 게시글의 공지 여부를 변경합니다. 공지는 여정당 최대 3개까지 설정할 수 있습니다."
+            description = "active host가 특정 게시글의 공지 여부를 변경합니다. 공지는 여정당 최대 5개까지 설정할 수 있습니다."
     )
     @ApiResponse(responseCode = "200", description = "공지 상태 변경 성공")
     @ApiErrorResponses({
@@ -129,7 +129,7 @@ public interface JourneyPostApiDocs {
 
     @Operation(
             summary = "나의 여정 게시글 삭제",
-            description = "작성자 본인이 나의 여정 게시글을 soft delete 처리합니다."
+            description = "작성자 본인 또는 active host가 나의 여정 게시글을 soft delete 처리합니다."
     )
     @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
