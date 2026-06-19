@@ -13,7 +13,9 @@ import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import com.dduru.gildongmu.post.dto.response.PostDetailResponse;
 import com.dduru.gildongmu.post.domain.Post;
@@ -58,6 +60,9 @@ class JourneyQueryServiceTest {
     private JourneyMemberRepository journeyMemberRepository;
 
     @Mock
+    private JourneyPostRepository journeyPostRepository;
+
+    @Mock
     private JourneyRepository journeyRepository;
 
     @Mock
@@ -65,6 +70,9 @@ class JourneyQueryServiceTest {
 
     @Mock
     private PostService postService;
+
+    @Mock
+    private ProfileImageResolver profileImageResolver;
 
     @Mock
     private TimeProvider timeProvider;
@@ -109,19 +117,19 @@ class JourneyQueryServiceTest {
             assertThat(response.activeJourneys().get(0).journeyId()).isEqualTo(12L);
             assertThat(response.activeJourneys().get(0).isOwner()).isFalse();
             assertThat(response.activeJourneys().get(0).tripDurationText()).isEqualTo("당일치기");
-            assertThat(response.activeJourneys().get(0).recruitDeadlineDDay()).isEqualTo("D-1");
+            assertThat(response.activeJourneys().get(0).startDDay()).isEqualTo("D-2");
             assertThat(response.activeJourneys().get(1).journeyId()).isEqualTo(11L);
             assertThat(response.activeJourneys().get(1).isOwner()).isTrue();
             assertThat(response.activeJourneys().get(1).tripDurationText()).isEqualTo("2박 3일");
-            assertThat(response.activeJourneys().get(1).recruitDeadlineDDay()).isEqualTo("D-6");
+            assertThat(response.activeJourneys().get(1).startDDay()).isEqualTo("D-5");
 
             assertThat(response.completedJourneys()).hasSize(2);
             assertThat(response.completedJourneys().get(0).journeyId()).isEqualTo(14L);
             assertThat(response.completedJourneys().get(0).isOwner()).isFalse();
-            assertThat(response.completedJourneys().get(0).recruitDeadlineDDay()).isEqualTo("마감");
+            assertThat(response.completedJourneys().get(0).startDDay()).isEqualTo("완료");
             assertThat(response.completedJourneys().get(1).journeyId()).isEqualTo(13L);
             assertThat(response.completedJourneys().get(1).isOwner()).isTrue();
-            assertThat(response.completedJourneys().get(1).recruitDeadlineDDay()).isEqualTo("마감");
+            assertThat(response.completedJourneys().get(1).startDDay()).isEqualTo("완료");
         }
 
         @Test

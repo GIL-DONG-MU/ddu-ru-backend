@@ -27,7 +27,7 @@ public class PostController implements PostApiDocs {
     @Override
     @GetMapping
     public ResponseEntity<ApiResult<PostListResponse>> retrievePosts(
-            PostListRequest request,
+            @Valid PostListRequest request,
             @CurrentUser Long userId
     ) {
         PostListResponse response = postQueryService.retrieveAllWithFilter(request, userId);

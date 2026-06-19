@@ -18,7 +18,6 @@ import com.dduru.gildongmu.journey.exception.JourneyPostCommentAccessDeniedExcep
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
-import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -56,8 +55,6 @@ class JourneyPostCommentServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 13, 16, 20);
 
     @Mock
-    private JourneyRepository journeyRepository;
-    @Mock
     private JourneyMemberRepository journeyMemberRepository;
     @Mock
     private JourneyPostRepository journeyPostRepository;
@@ -75,7 +72,6 @@ class JourneyPostCommentServiceTest {
     @BeforeEach
     void setUp() {
         journeyPostCommentService = new JourneyPostCommentService(
-                journeyRepository,
                 journeyMemberRepository,
                 journeyPostRepository,
                 journeyPostCommentRepository,
@@ -100,7 +96,7 @@ class JourneyPostCommentServiceTest {
             User author = createUser(userId, "member");
             JourneyPostCommentCreateRequest request = new JourneyPostCommentCreateRequest("  네 맞춰서 도착할게요!  ");
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(author);
             when(journeyPostCommentRepository.saveAndFlush(any(JourneyPostComment.class))).thenAnswer(invocation -> {
@@ -139,7 +135,7 @@ class JourneyPostCommentServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "host"));
             JourneyPostCommentCreateRequest request = new JourneyPostCommentCreateRequest("   ");
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(userRepository.getByIdOrThrow(userId)).thenReturn(createUser(userId, "member"));
 
@@ -168,7 +164,7 @@ class JourneyPostCommentServiceTest {
             JourneyPostComment second = createComment(10L, journeyPost, createUser(userId, "me"));
             JourneyPostComment third = createComment(9L, journeyPost, createUser(40L, "third"));
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(journeyPostCommentRepository.findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId))
                     .thenReturn(List.of(first, second, third));
@@ -194,7 +190,6 @@ class JourneyPostCommentServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, 20L);
 
-            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
@@ -221,7 +216,7 @@ class JourneyPostCommentServiceTest {
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(userId, "author"));
             JourneyPostCommentUpdateRequest request = new JourneyPostCommentUpdateRequest("  10분 일찍 갈게요!  ");
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
@@ -251,7 +246,7 @@ class JourneyPostCommentServiceTest {
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(userId, "author"));
             JourneyPostCommentUpdateRequest request = new JourneyPostCommentUpdateRequest(null);
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
@@ -282,7 +277,7 @@ class JourneyPostCommentServiceTest {
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(userId, "author"));
             JourneyPostCommentUpdateRequest request = new JourneyPostCommentUpdateRequest("   ");
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
@@ -313,7 +308,7 @@ class JourneyPostCommentServiceTest {
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(30L, "author"));
             JourneyPostCommentUpdateRequest request = new JourneyPostCommentUpdateRequest("수정할게요.");
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             givenActiveHost(journeyId, 20L);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
@@ -341,7 +336,7 @@ class JourneyPostCommentServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "host"));
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(userId, "author"));
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
             when(timeProvider.now()).thenReturn(NOW);
@@ -365,7 +360,7 @@ class JourneyPostCommentServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(hostId, "host"));
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(memberId, "member"));
 
-            givenAccessiblePost(journeyId, journeyPostId, hostId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, hostId, journeyPost);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
             when(journeyMemberRepository.existsActiveHost(journeyId, hostId)).thenReturn(true);
@@ -389,7 +384,7 @@ class JourneyPostCommentServiceTest {
             JourneyPost journeyPost = createJourneyPost(journeyPostId, journey, createUser(20L, "host"));
             JourneyPostComment comment = createComment(commentId, journeyPost, createUser(30L, "author"));
 
-            givenAccessiblePost(journeyId, journeyPostId, userId, journey, journeyPost);
+            givenAccessiblePost(journeyId, journeyPostId, userId, journeyPost);
             when(journeyPostCommentRepository.getActiveCommentByIdAndJourneyPostIdOrThrow(commentId, journeyPostId))
                     .thenReturn(comment);
             when(journeyMemberRepository.existsActiveHost(journeyId, userId)).thenReturn(false);
@@ -399,8 +394,7 @@ class JourneyPostCommentServiceTest {
         }
     }
 
-    private void givenAccessiblePost(Long journeyId, Long journeyPostId, Long userId, Journey journey, JourneyPost journeyPost) {
-        when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
+    private void givenAccessiblePost(Long journeyId, Long journeyPostId, Long userId, JourneyPost journeyPost) {
         when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                 .thenReturn(true);
         when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
@@ -423,8 +417,7 @@ class JourneyPostCommentServiceTest {
         JourneyPost journeyPost = JourneyPost.create(
                 journey,
                 author,
-                "기존 내용입니다.",
-                null
+                "기존 내용입니다."
         );
         ReflectionTestUtils.setField(journeyPost, "id", journeyPostId);
         return journeyPost;

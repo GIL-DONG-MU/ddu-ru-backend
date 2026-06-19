@@ -10,6 +10,8 @@ import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
+import com.dduru.gildongmu.journey.domain.JourneyMemberRoleLabel;
+import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
@@ -18,6 +20,7 @@ import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyMemberNotFoundException;
+import com.dduru.gildongmu.journey.exception.JourneyMemberRemovalException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
@@ -34,15 +37,13 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class JourneyService {
-    private static final int TITLE_MIN_LENGTH = 5;
-    private static final int TITLE_MAX_LENGTH = 40;
-
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyScheduleRepository journeyScheduleRepository;
@@ -57,7 +58,7 @@ public class JourneyService {
     public JourneyUpdateResponse updateBasicInfo(Long journeyId, Long userId, JourneyUpdateRequest request) {
         Journey journey = getUpdatableJourney(journeyId, userId);
 
-        String title = normalizeTitle(request.title());
+        String title = request.title();
         String photoUrl = normalizePhotoUrl(request.photoUrl());
         LocalDate startDate = request.startDate();
         LocalDate endDate = request.endDate();
@@ -82,22 +83,20 @@ public class JourneyService {
     ) {
         validateActiveHost(journeyId, hostUserId);
         JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.updateRole(request.roleType(), normalizeCustomRoleLabel(request.customRoleLabel()));
-        log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleType={}",
-                journeyId, hostUserId, memberUserId, request.roleType());
+        List<JourneyMemberRoleLabel> newLabels = request.roles().stream()
+                .map(r -> JourneyMemberRoleLabel.of(member, r.roleType(), r.customRoleLabel()))
+                .toList();
+        member.replaceRoleLabels(newLabels);
+        log.info("나의 여정 멤버 역할 지정됨 - journeyId={}, hostUserId={}, memberUserId={}, roleCount={}",
+                journeyId, hostUserId, memberUserId, newLabels.size());
         return JourneyMemberRoleResponse.from(member);
-    }
-
-    public void clearMemberRole(Long journeyId, Long hostUserId, Long memberUserId) {
-        validateActiveHost(journeyId, hostUserId);
-        JourneyMember member = findActiveMemberOrThrow(journeyId, memberUserId);
-        member.clearRole();
-        log.info("나의 여정 멤버 역할 해제됨 - journeyId={}, hostUserId={}, memberUserId={}",
-                journeyId, hostUserId, memberUserId);
     }
 
     public void removeMember(Long journeyId, Long hostUserId, Long memberUserId) {
         validateActiveHost(journeyId, hostUserId);
+        if (hostUserId.equals(memberUserId)) {
+            throw JourneyMemberRemovalException.cannotRemoveSelf();
+        }
 
         Post post = getPostForMemberRemoval(journeyId);
         JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
@@ -115,7 +114,7 @@ public class JourneyService {
     }
 
     private Journey getUpdatableJourney(Long journeyId, Long userId) {
-        return journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE)
+        return journeyRepository.findUpdatableJourneyByIdAndUserId(journeyId, userId, JourneyMemberStatus.ACTIVE, JourneyMemberRole.HOST)
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
 
@@ -178,29 +177,6 @@ public class JourneyService {
         int newTotalDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
         journeyScheduleRepository.findActiveSchedulesWithDayOffsetGreaterThanOrEqual(journeyId, newTotalDays)
                 .forEach(schedule -> schedule.delete(userId, timeProvider.now()));
-    }
-
-    private String normalizeTitle(String title) {
-        if (!StringUtils.hasText(title)) {
-            return null;
-        }
-        String normalizedTitle = title.trim();
-        validateTitleLength(normalizedTitle);
-        return normalizedTitle;
-    }
-
-    private void validateTitleLength(String title) {
-        int length = title.codePointCount(0, title.length());
-        if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
-            throw InvalidJourneyBasicInfoException.invalidTitleLength();
-        }
-    }
-
-    private static String normalizeCustomRoleLabel(String label) {
-        if (!StringUtils.hasText(label)) {
-            return null;
-        }
-        return label.trim();
     }
 
     private JourneyMember findActiveMemberOrThrow(Long journeyId, Long memberUserId) {

@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneyPost;
+import com.dduru.gildongmu.journey.domain.JourneyPostImage;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyPostListRequest;
@@ -34,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +44,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostService {
-    private static final int NOTICE_LIMIT = 3;
+    private static final int NOTICE_LIMIT = 5;
 
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
@@ -59,7 +61,7 @@ public class JourneyPostService {
         validateJourneyAccess(journeyId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
         JourneyPost cursorPost = findCursorPost(journeyId, normalizedRequest.cursor());
-        int size = normalizedRequest.sizeOrDefault();
+        int size = normalizedRequest.size();
 
         List<JourneyPost> fetchedPosts = journeyPostRepository.findActivePostsByJourneyIdWithAuthorProfile(
                 journeyId,
@@ -73,7 +75,7 @@ public class JourneyPostService {
 
         List<Long> postIds = journeyPosts.stream().map(JourneyPost::getId).toList();
         Map<Long, Long> commentCountByPostId = journeyPostCommentRepository.getCommentCountsByJourneyPostIds(postIds);
-        LocalDate today = timeProvider.today();
+        LocalDate today = today();
 
         List<JourneyPostResponse> posts = journeyPosts.stream()
                 .map(post -> JourneyPostResponse.from(
@@ -93,7 +95,7 @@ public class JourneyPostService {
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, today());
     }
 
     public JourneyPostResponse createPost(Long journeyId, Long userId, JourneyPostCreateRequest request) {
@@ -101,12 +103,13 @@ public class JourneyPostService {
         Long hostUserId = findActiveHostUserId(journeyId);
         User author = userRepository.getByIdOrThrow(userId);
 
-        JourneyPost journeyPost = createJourneyPost(journey, author, request);
+        JourneyPost journeyPost = JourneyPost.create(journey, author, request.content());
         JourneyPost savedPost = journeyPostRepository.saveAndFlush(journeyPost);
+        savedPost.replaceImages(createImages(savedPost, request.imageUrls()));
 
         log.info("나의 여정 게시글 생성됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, savedPost.getId(), userId);
-        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L, timeProvider.today());
+        return JourneyPostResponse.from(savedPost, userId, hostUserId, profileImageResolver, 0L, today());
     }
 
     public JourneyPostResponse updatePost(
@@ -118,22 +121,27 @@ public class JourneyPostService {
         JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
         Long hostUserId = findActiveHostUserId(journeyId);
 
-        String content = normalizeContent(request.content());
-        boolean applyImageUrlPatch = request.imageUrl() != null;
-        String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
-        validateHasAnyPatch(content, applyImageUrlPatch);
+        String content = request.content();
+        boolean applyImagesPatch = request.imageUrls() != null;
+        List<JourneyPostImage> newImages = applyImagesPatch ? createImages(journeyPost, request.imageUrls()) : Collections.emptyList();
+        validateHasAnyPatch(content, applyImagesPatch);
 
-        updateJourneyPost(journeyPost, content, applyImageUrlPatch, imageUrl);
+        journeyPost.update(content, applyImagesPatch, newImages);
         journeyPostRepository.flush();
 
         log.info("나의 여정 게시글 수정됨 - journeyId={}, journeyPostId={}, userId={}",
                 journeyId, journeyPostId, userId);
         long commentCount = journeyPostCommentRepository.countByJourneyPost_IdAndIsDeletedFalse(journeyPostId);
-        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, timeProvider.today());
+        return JourneyPostResponse.from(journeyPost, userId, hostUserId, profileImageResolver, commentCount, today());
     }
 
     public void deletePost(Long journeyId, Long journeyPostId, Long userId) {
-        JourneyPost journeyPost = getOwnedJourneyPost(journeyId, journeyPostId, userId);
+        validateJourneyAccess(journeyId, userId);
+        JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
+
+        if (!journeyPost.isAuthor(userId)) {
+            validateActiveHost(journeyId, userId);
+        }
 
         journeyPost.delete(userId, timeProvider.now());
         log.info("나의 여정 게시글 삭제됨 - journeyId={}, journeyPostId={}, userId={}",
@@ -158,22 +166,18 @@ public class JourneyPostService {
         return JourneyPostNoticeUpdateResponse.from(journeyPost);
     }
 
-    private JourneyPost createJourneyPost(Journey journey, User author, JourneyPostCreateRequest request) {
-        return JourneyPost.create(
-                journey,
-                author,
-                normalizeContent(request.content()),
-                normalizeImageUrl(request.imageUrl())
-        );
-    }
-
-    private void updateJourneyPost(
-            JourneyPost journeyPost,
-            String content,
-            boolean applyImageUrlPatch,
-            String imageUrl
-    ) {
-        journeyPost.update(content, applyImageUrlPatch, imageUrl);
+    private List<JourneyPostImage> createImages(JourneyPost post, List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<JourneyPostImage> images = new ArrayList<>();
+        for (int i = 0; i < imageUrls.size(); i++) {
+            String normalized = normalizeImageUrl(imageUrls.get(i));
+            if (normalized != null) {
+                images.add(JourneyPostImage.of(post, normalized, i));
+            }
+        }
+        return images;
     }
 
     private static JourneyPostListRequest normalizeRequest(JourneyPostListRequest request) {
@@ -198,20 +202,15 @@ public class JourneyPostService {
     }
 
     private void validateJourneyAccess(Long journeyId, Long userId) {
-        getAccessibleJourney(journeyId, userId);
+        if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
+                journeyId, userId, JourneyMemberStatus.ACTIVE)) {
+            throw new JourneyAccessDeniedException();
+        }
     }
 
     private Journey getAccessibleJourney(Long journeyId, Long userId) {
-        Journey journey = journeyRepository.getByIdOrThrow(journeyId);
-        boolean isActiveMember = journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(
-                journeyId,
-                userId,
-                JourneyMemberStatus.ACTIVE
-        );
-        if (!isActiveMember) {
-            throw new JourneyAccessDeniedException();
-        }
-        return journey;
+        validateJourneyAccess(journeyId, userId);
+        return journeyRepository.getByIdOrThrow(journeyId);
     }
 
     private JourneyPost getOwnedJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
@@ -241,7 +240,7 @@ public class JourneyPostService {
             return;
         }
 
-        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 3개 정책을 보장한다.
+        // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 5개 정책을 보장한다.
         journeyRepository.getByIdWithLockOrThrow(journeyId);
         validateActiveHost(journeyId, userId);
 
@@ -256,14 +255,10 @@ public class JourneyPostService {
                 .orElseThrow(JourneyHostNotFoundException::new);
     }
 
-    private void validateHasAnyPatch(String content, boolean applyImageUrlPatch) {
-        if (content == null && !applyImageUrlPatch) {
+    private void validateHasAnyPatch(String content, boolean applyImagesPatch) {
+        if (content == null && !applyImagesPatch) {
             throw InvalidJourneyPostException.emptyPatch();
         }
-    }
-
-    private String normalizeContent(String content) {
-        return content == null ? null : content.trim();
     }
 
     private String normalizeImageUrl(String imageUrl) {
@@ -271,5 +266,9 @@ public class JourneyPostService {
             return null;
         }
         return s3ImageUrlValidator.validateAndNormalize(imageUrl, S3ImageDirectory.JOURNEY_POSTS);
+    }
+
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }

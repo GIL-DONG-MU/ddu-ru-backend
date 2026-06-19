@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.journey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.journey.exception.InvalidJourneyBasicInfoException;
 import com.dduru.gildongmu.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -17,6 +18,8 @@ public class Journey extends BaseTimeEntity {
      * 공개 모집글과 1:1로 연결되는 나의 여정 워크스페이스.
      * 현재는 제목/대표 사진만 독립적으로 관리하고, 나머지 여행 정보는 post를 참조한다.
      */
+    private static final int TITLE_MIN_LENGTH = 5;
+    private static final int TITLE_MAX_LENGTH = 40;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,10 +57,18 @@ public class Journey extends BaseTimeEntity {
 
     public void updateBasicInfo(String title, String photoUrl) {
         if (title != null) {
+            validateTitle(title);
             this.title = title;
         }
         if (photoUrl != null) {
             this.photoUrl = photoUrl;
+        }
+    }
+
+    private static void validateTitle(String title) {
+        int length = title.codePointCount(0, title.length());
+        if (length < TITLE_MIN_LENGTH || length > TITLE_MAX_LENGTH) {
+            throw InvalidJourneyBasicInfoException.invalidTitleLength();
         }
     }
 }

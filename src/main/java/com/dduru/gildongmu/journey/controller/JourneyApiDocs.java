@@ -7,8 +7,11 @@ import com.dduru.gildongmu.journey.dto.request.JourneyMemberRoleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyDetailResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyMainListResponse;
+import com.dduru.gildongmu.journey.dto.response.JourneyMemberInfo;
 import com.dduru.gildongmu.journey.dto.response.JourneyMemberRoleResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyUpdateResponse;
+
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +37,20 @@ public interface JourneyApiDocs {
     );
 
     @Operation(
+            summary = "나의 여정 멤버 목록 조회",
+            description = "active 멤버만 접근할 수 있습니다. 호스트 → 일반 멤버 순, 합류 시간 오름차순으로 반환합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.JOURNEY_ACCESS_DENIED
+    })
+    ResponseEntity<ApiResult<List<JourneyMemberInfo>>> retrieveJourneyMembers(
+            @Parameter(description = "여정 ID") Long journeyId,
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
             summary = "나의 여정 상세 조회",
             description = "로그인 사용자가 속한 나의 여정 워크스페이스 상세 정보를 조회합니다. active journey member만 접근할 수 있습니다."
     )
@@ -50,7 +67,7 @@ public interface JourneyApiDocs {
 
     @Operation(
             summary = "나의 여정 기본 정보 수정",
-            description = "active journey member가 나의 여정의 제목·대표 사진·여행 날짜를 수정합니다."
+            description = "active host가 나의 여정의 제목·대표 사진·여행 날짜를 수정합니다."
     )
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiErrorResponses({
@@ -69,38 +86,24 @@ public interface JourneyApiDocs {
     );
 
     @Operation(
-            summary = "나의 여정 멤버 역할 지정/수정",
-            description = "active host가 특정 멤버의 역할을 지정하거나 수정합니다. CUSTOM 타입 선택 시 customRoleLabel이 필수입니다."
+            summary = "나의 여정 멤버 역할 설정",
+            description = "active host가 특정 멤버의 역할 목록을 전체 교체합니다(PUT). 빈 배열 전달 시 역할이 모두 해제됩니다. CUSTOM 타입 선택 시 customRoleLabel 필수(최대 10자), 최대 5개까지 지정 가능합니다."
     )
-    @ApiResponse(responseCode = "200", description = "역할 지정 성공")
+    @ApiResponse(responseCode = "200", description = "역할 설정 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.JOURNEY_ACCESS_DENIED,
             ErrorCode.JOURNEY_MEMBER_NOT_FOUND,
-            ErrorCode.JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL
+            ErrorCode.JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL,
+            ErrorCode.JOURNEY_MEMBER_ROLE_LIMIT_EXCEEDED,
+            ErrorCode.JOURNEY_MEMBER_DUPLICATE_CUSTOM_ROLE_LABEL
     })
     ResponseEntity<ApiResult<JourneyMemberRoleResponse>> updateMemberRole(
             @Parameter(description = "여정 ID") Long journeyId,
-            @Parameter(description = "역할을 지정할 멤버의 사용자 ID") Long memberUserId,
+            @Parameter(description = "역할을 설정할 멤버의 사용자 ID") Long memberUserId,
             @Parameter(hidden = true) Long userId,
             JourneyMemberRoleUpdateRequest request
-    );
-
-    @Operation(
-            summary = "나의 여정 멤버 역할 해제",
-            description = "active host가 특정 멤버의 역할을 해제합니다."
-    )
-    @ApiResponse(responseCode = "204", description = "역할 해제 성공", content = @Content())
-    @ApiErrorResponses({
-            ErrorCode.UNAUTHORIZED,
-            ErrorCode.JOURNEY_ACCESS_DENIED,
-            ErrorCode.JOURNEY_MEMBER_NOT_FOUND
-    })
-    ResponseEntity<ApiResult<Void>> clearMemberRole(
-            @Parameter(description = "여정 ID") Long journeyId,
-            @Parameter(description = "역할을 해제할 멤버의 사용자 ID") Long memberUserId,
-            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -110,7 +113,8 @@ public interface JourneyApiDocs {
     @ApiResponse(responseCode = "204", description = "내보내기 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.JOURNEY_ACCESS_DENIED
+            ErrorCode.JOURNEY_ACCESS_DENIED,
+            ErrorCode.JOURNEY_MEMBER_CANNOT_REMOVE_SELF
     })
     ResponseEntity<ApiResult<Void>> removeJourneyMember(
             @Parameter(description = "여정 ID") Long journeyId,

@@ -33,7 +33,7 @@ public class PostQueryService {
     private final TimeProvider timeProvider;
 
     public PostListResponse retrieveAllWithFilter(PostListRequest request, Long userId) {
-        LocalDate today = timeProvider.today();
+        LocalDate today = today();
         Pageable pageable = PageRequest.of(0, request.size() + 1);
         List<Post> posts = postRepository.findPostsWithFilters(request, today, request.cursorValue(), pageable);
 
@@ -72,5 +72,9 @@ public class PostQueryService {
     private Set<Long> fetchLikedPostIds(Long userId, List<Long> postIds) {
         if (userId == null) return Set.of();
         return postLikeRepository.findLikedPostIdsByUserId(userId, postIds);
+    }
+
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }

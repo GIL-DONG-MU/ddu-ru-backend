@@ -15,7 +15,6 @@ import com.dduru.gildongmu.journey.exception.JourneyPostCommentAccessDeniedExcep
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostCommentRepository;
 import com.dduru.gildongmu.journey.repository.JourneyPostRepository;
-import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -31,7 +30,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class JourneyPostCommentService {
-    private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyPostRepository journeyPostRepository;
     private final JourneyPostCommentRepository journeyPostCommentRepository;
@@ -51,7 +49,7 @@ public class JourneyPostCommentService {
         List<JourneyPostComment> comments = journeyPostCommentRepository
                 .findActiveCommentsByJourneyPostIdWithAuthorProfile(journeyPostId);
 
-        LocalDate today = timeProvider.today();
+        LocalDate today = today();
         List<JourneyPostCommentResponse> commentResponses = comments.stream()
                 .map(comment -> JourneyPostCommentResponse.from(
                         comment, journeyPostId, userId, hostUserId, profileImageResolver, today
@@ -76,7 +74,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 생성됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, savedComment.getId(), userId);
-        return JourneyPostCommentResponse.from(savedComment, journeyPostId, userId, hostUserId, profileImageResolver, timeProvider.today());
+        return JourneyPostCommentResponse.from(savedComment, journeyPostId, userId, hostUserId, profileImageResolver, today());
     }
 
     public JourneyPostCommentResponse updateComment(
@@ -90,7 +88,7 @@ public class JourneyPostCommentService {
         Long hostUserId = findActiveHostUserId(journeyId);
         JourneyPostComment comment = getOwnedComment(journeyPostId, commentId, userId);
 
-        String content = normalizeContentPatch(request.content());
+        String content = request.content();
         validateHasAnyPatch(content);
 
         comment.updateContent(content);
@@ -98,7 +96,7 @@ public class JourneyPostCommentService {
 
         log.info("나의 여정 게시글 댓글 수정됨 - journeyId={}, journeyPostId={}, commentId={}, userId={}",
                 journeyId, journeyPostId, commentId, userId);
-        return JourneyPostCommentResponse.from(comment, journeyPostId, userId, hostUserId, profileImageResolver, timeProvider.today());
+        return JourneyPostCommentResponse.from(comment, journeyPostId, userId, hostUserId, profileImageResolver, today());
     }
 
     public void deleteComment(Long journeyId, Long journeyPostId, Long commentId, Long userId) {
@@ -123,12 +121,11 @@ public class JourneyPostCommentService {
         return JourneyPostComment.create(
                 journeyPost,
                 author,
-                normalizeContent(request.content())
+                request.content()
         );
     }
 
     private JourneyPost getAccessibleJourneyPost(Long journeyId, Long journeyPostId, Long userId) {
-        journeyRepository.getByIdOrThrow(journeyId);
         if (!journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE)) {
             throw new JourneyAccessDeniedException();
         }
@@ -159,14 +156,7 @@ public class JourneyPostCommentService {
         }
     }
 
-    private String normalizeContent(String content) {
-        return content.trim();
-    }
-
-    private String normalizeContentPatch(String content) {
-        if (content == null) {
-            return null;
-        }
-        return normalizeContent(content);
+    private LocalDate today() {
+        return timeProvider.today();
     }
 }

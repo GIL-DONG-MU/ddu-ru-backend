@@ -100,7 +100,7 @@ public enum ErrorCode {
     JOURNEY_POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 게시글에 대한 권한이 없습니다."),
     JOURNEY_POST_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 게시글 내용이 없습니다."),
     JOURNEY_POST_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "게시글 내용은 1자 이상 300자 이하여야 합니다."),
-    JOURNEY_POST_NOTICE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "공지 게시글은 최대 3개까지 설정할 수 있습니다."),
+    JOURNEY_POST_NOTICE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "공지 게시글은 최대 5개까지 설정할 수 있습니다."),
     JOURNEY_POST_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 게시글 댓글을 찾을 수 없습니다."),
     JOURNEY_POST_COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 댓글에 대한 권한이 없습니다."),
     JOURNEY_POST_COMMENT_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 댓글 내용이 없습니다."),
@@ -113,7 +113,10 @@ public enum ErrorCode {
     JOURNEY_SCHEDULE_INVALID_PLACE_NAME(HttpStatus.BAD_REQUEST, "장소명은 30자 이하여야 합니다."),
     JOURNEY_SCHEDULE_INVALID_TIME(HttpStatus.BAD_REQUEST, "종료 시간은 시작 시간이 설정된 경우에만 입력할 수 있습니다."),
     JOURNEY_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정 멤버를 찾을 수 없습니다."),
-    JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL(HttpStatus.BAD_REQUEST, "직접 입력 역할명은 1자 이상 20자 이하여야 합니다."),
+    JOURNEY_MEMBER_CANNOT_REMOVE_SELF(HttpStatus.BAD_REQUEST, "호스트 본인은 강퇴할 수 없습니다."),
+    JOURNEY_MEMBER_INVALID_CUSTOM_ROLE_LABEL(HttpStatus.BAD_REQUEST, "직접 입력 역할명은 1자 이상 10자 이하여야 합니다."),
+    JOURNEY_MEMBER_ROLE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "멤버당 역할은 최대 5개까지 지정할 수 있습니다."),
+    JOURNEY_MEMBER_DUPLICATE_CUSTOM_ROLE_LABEL(HttpStatus.BAD_REQUEST, "동일한 커스텀 역할 라벨은 중복 지정할 수 없습니다."),
 
     // 신고 (REPORT)
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "신고 내역을 찾을 수 없습니다."),

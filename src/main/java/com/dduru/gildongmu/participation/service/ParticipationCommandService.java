@@ -79,10 +79,11 @@ public class ParticipationCommandService {
 
         lockedPost.approveParticipation(participation);
         Journey journey = journeyRepository.getByPostIdOrThrow(lockedPost.getId());
-        // 승인 이후 실제 협업 멤버십을 만든다. 신청 이력은 participations에, 협업 멤버는 journey_members에 남긴다.
-        journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participantUserId)
+        // 신청 이력은 participations에, 협업 멤버는 journey_members에 남긴다.
+        // REMOVED 상태 멤버가 있으면 재활성화하고, 없을 때만 새로 저장한다 (unique 제약 보장).
+        journeyMemberRepository.findByJourneyIdAndUserId(journey.getId(), participation.getUser().getId())
                 .ifPresentOrElse(
-                        JourneyMember::activate,
+                        member -> member.activate(timeProvider.now()),
                         () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser(), timeProvider.now()))
                 );
         GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, journey.getId(), participantUserId);

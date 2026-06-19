@@ -6,12 +6,13 @@ import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record JourneyPostResponse(
         Long journeyPostId,
         ParticipantInfo author,
         String content,
-        String imageUrl,
+        List<String> imageUrls,
         boolean isNotice,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
@@ -35,7 +36,9 @@ public record JourneyPostResponse(
                         today
                 ),
                 journeyPost.getContent(),
-                journeyPost.getImageUrl(),
+                journeyPost.getImages().stream()
+                        .map(image -> image.getImageUrl())
+                        .toList(),
                 journeyPost.isNotice(),
                 journeyPost.getCreatedAt(),
                 journeyPost.getModifiedAt(),

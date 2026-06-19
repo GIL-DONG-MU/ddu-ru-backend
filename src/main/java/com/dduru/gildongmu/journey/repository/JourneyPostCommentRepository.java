@@ -45,8 +45,8 @@ public interface JourneyPostCommentRepository extends JpaRepository<JourneyPostC
             LEFT JOIN FETCH profile.bgColor
             WHERE c.journeyPost.id = :journeyPostId
               AND c.isDeleted = false
-            ORDER BY c.createdAt DESC,
-                     c.id DESC
+            ORDER BY c.createdAt ASC,
+                     c.id ASC
             """)
     List<JourneyPostComment> findActiveCommentsByJourneyPostIdWithAuthorProfile(
             @Param("journeyPostId") Long journeyPostId

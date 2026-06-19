@@ -13,8 +13,10 @@
 |--------|------|
 | `posts` | 여행/모집글 루트 |
 | `participations` | 신청 과정 관리 (`PENDING / CONTACTING / APPROVED / REJECTED`) |
-| `journey_members` | 실제 협업 멤버 관리 (`HOST / MEMBER`, `ACTIVE / REMOVED / LEFT`) + 역할 라벨 (`role_type`, `custom_role_label`) |
+| `journey_members` | 실제 협업 멤버 관리 (`HOST / MEMBER`, `ACTIVE / REMOVED / LEFT`) |
+| `journey_member_role_labels` | 멤버별 역할 라벨 (멤버당 최대 5개, 기본 역할 5종 + CUSTOM) |
 | `journey_posts` | 여행 게시판 게시글 |
+| `journey_post_images` | 게시글 이미지 (게시글당 최대 4장, `sort_order` 순서 유지) |
 | `journey_post_comments` | 게시글 댓글 |
 | `journey_schedules` | 여행 일정 아이템 |
 
@@ -71,10 +73,10 @@
 | 기능 | 메서드 | 엔드포인트 | 상태 |
 |------|--------|-----------|------|
 | 메인 목록 조회 | `GET` | `/api/v1/users/me/journeys` | ✅ 구현 |
+| 멤버 목록 조회 | `GET` | `/api/v1/journeys/{journeyId}/members` | ✅ 구현 |
 | 상세 조회 | `GET` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
 | 기본 정보 수정 (제목·대표 사진·여행 날짜) | `PATCH` | `/api/v1/journeys/{journeyId}` | ✅ 구현 |
-| 멤버 역할 지정/수정 (호스트 전용) | `PATCH` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
-| 멤버 역할 해제 (호스트 전용) | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/role` | ✅ 구현 |
+| 멤버 역할 설정 (PUT replace-all, 호스트 전용) | `PUT` | `/api/v1/journeys/{journeyId}/members/{memberUserId}/roles` | ✅ 구현 |
 | 참여자 내보내기 | `DELETE` | `/api/v1/journeys/{journeyId}/members/{memberUserId}` | ✅ 구현 |
 | 여행 종료 | - | - | 🔜 구현예정 |
 
@@ -84,10 +86,10 @@
 |------|--------|-----------|------|
 | 게시글 목록 조회 (커서 기반, 공지 우선) | `GET` | `/api/v1/journeys/{journeyId}/posts` | ✅ 구현 |
 | 게시글 단건 조회 | `GET` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}` | ✅ 구현 |
-| 게시글 작성 | `POST` | `/api/v1/journeys/{journeyId}/posts` | ✅ 구현 |
-| 게시글 수정 | `PATCH` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}` | ✅ 구현 |
-| 게시글 삭제 | `DELETE` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}` | ✅ 구현 |
-| 공지 지정/해제 (호스트 전용, 최대 3개) | `PATCH` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/notice` | ✅ 구현 |
+| 게시글 작성 (이미지 최대 4장) | `POST` | `/api/v1/journeys/{journeyId}/posts` | ✅ 구현 |
+| 게시글 수정 (이미지 최대 4장) | `PATCH` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}` | ✅ 구현 |
+| 게시글 삭제 (작성자 또는 호스트) | `DELETE` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}` | ✅ 구현 |
+| 공지 지정/해제 (호스트 전용, 최대 5개) | `PATCH` | `/api/v1/journeys/{journeyId}/posts/{journeyPostId}/notice` | ✅ 구현 |
 
 ### 댓글
 
@@ -146,8 +148,9 @@
 |--------|--------|----------------|--------|------|
 | 여행 워크스페이스 | `Journey` | V14 | `JourneyQueryService`, `JourneyService` | ✅ 구현 |
 | 여행 멤버십 | `JourneyMember` | V13, V14 | `JourneyService` | ✅ 구현 |
-| 멤버 역할 라벨 | `JourneyMember` (컬럼 추가) | V21 | `JourneyService` | ✅ 구현 |
+| 멤버 역할 라벨 | `JourneyMemberRoleLabel` | V22 | `JourneyService` | ✅ 구현 |
 | 여행 게시판 | `JourneyPost` | V18 | `JourneyPostService` | ✅ 구현 |
+| 게시글 이미지 | `JourneyPostImage` | V23 | `JourneyPostService` | ✅ 구현 |
 | 댓글 | `JourneyPostComment` | V19 | `JourneyPostCommentService` | ✅ 구현 |
 | 일정 | `JourneySchedule` | V20 | `JourneyScheduleService` | ✅ 구현 |
 | 할 일 | - | - | - | ⏸️ 보류 |
@@ -159,19 +162,24 @@
 ## 5. 주요 설계 포인트
 
 - **접근 제어**: 모든 나의 여정 API는 `journey_members.status = ACTIVE` 여부를 확인해 비멤버 접근을 차단한다.
-- **공지 최대 3개 제한**: 공지 지정 시 비관적 락(`SELECT FOR UPDATE`)으로 직렬화해 동시성을 제어한다.
+- **공지 최대 5개 제한**: 공지 지정 시 비관적 락(`SELECT FOR UPDATE`)으로 직렬화해 동시성을 제어한다.
 - **커서 기반 페이지네이션**: 게시글 목록은 공지 우선 → 최신순 정렬을 DB `ORDER BY`로 보장하며, look-ahead 방식으로 `hasNext`를 판단한다.
 - **댓글 전체 로드**: 댓글 목록은 게시글 상세 진입 시 전체를 한 번에 반환한다. 여정 멤버는 소규모 그룹으로 댓글 수가 구조적으로 제한되므로 페이지네이션 없이 전체 조회한다.
+- **댓글 정렬**: 오래된 댓글부터(ASC) 표시한다.
 - **댓글 수 N+1 방지**: 게시글 목록 조회 시 `GROUP BY` 벌크 쿼리로 댓글 수를 한 번에 집계한다.
 - **소프트 삭제**: 게시글(`JourneyPost`), 댓글(`JourneyPostComment`), 일정(`JourneySchedule`) 모두 `isDeleted / deletedAt / deletedBy` 패턴을 사용한다.
+- **게시글 삭제 권한**: 게시글은 작성자 본인 또는 호스트가 삭제할 수 있다. 수정은 작성자 본인만 가능하다.
 - **댓글 삭제 권한**: 댓글은 작성자 본인 또는 호스트가 삭제할 수 있다. 수정은 작성자 본인만 가능하다.
+- **게시글 이미지**: 게시글당 최대 4장. `journey_post_images` 테이블에 `sort_order`로 순서를 유지하며, 수정 시 PUT replace-all 방식으로 전체 교체한다(`imageUrls: null`이면 변경 없음, `imageUrls: []`이면 전체 삭제).
 - **content 검증 위치**: 댓글 content의 유효성(빈 값, 300자 초과)은 `JourneyPostComment` 도메인 내부에서 검증한다. 서비스는 trim만 수행한다.
 - **호스트 표시**: 게시글·댓글 응답에서 작성자가 호스트인지 여부를 `isHost` 필드로 함께 내려준다.
 - **그룹 채팅 연동**: 나의 여정 상세 응답에 `groupRoomId`를 포함해 프론트가 바로 채팅방으로 이동할 수 있게 한다.
 - **일정 상대 일차(dayOffset)**: 일정은 절대 날짜 대신 여행 시작일 기준 상대 일차(`dayOffset: 0, 1, 2...`)로 저장한다. 여행 날짜가 변경되어도 일정 데이터가 그대로 보존된다. 응답에서 실제 날짜는 `startDate.plusDays(dayOffset)`으로 계산해 내려준다.
 - **일정 Day 그룹핑**: 일정 목록은 `dayOffset` 기준으로 그룹핑해 Day 단위로 반환한다. 일정이 없는 날도 빈 Day 구조를 유지한다. `day` 번호는 `dayOffset + 1`이며 클라이언트는 보내지 않는다.
 - **일정 시간 제약**: 시작 시간(`startTime`)과 종료 시간(`endTime`) 모두 선택값이다. 종료 시간은 시작 시간이 있을 때만 허용하며, 시작 시간이 종료 시간보다 같거나 늦으면 검증 오류다. 이 제약은 엔티티 생성/수정 시 도메인 내부에서 검증한다.
+- **일정 시간 클리어**: 수정 요청에서 `clearStartTime: true` 또는 `clearEndTime: true`로 시간 필드를 명시적으로 null로 초기화할 수 있다. `clearStartTime`을 쓰면서 기존 `endTime`이 남아 있으면 시간 제약 위반으로 오류. `clear` 플래그와 값이 동시에 오면 `clear`가 우선한다.
 - **일정 카테고리**: `MEAL / SIGHTSEEING / CAFE / REST / SHOPPING / ACTIVITY` 6종이다.
 - **일정 수정·삭제 권한**: 일정은 작성자 여부와 관계없이 `ACTIVE` 멤버 전체가 수정·삭제할 수 있다. 협업 일정 관리 특성상 소유권 제한을 두지 않는다.
 - **여행 날짜 수정**: 기본 정보 수정 API에서 `startDate` / `endDate`를 함께 입력하면 `posts` 테이블의 여행 날짜가 업데이트된다. 날짜는 항상 쌍으로 입력해야 하며(`startDate`만 또는 `endDate`만 입력 불가), `startDate`는 `endDate`보다 늦으면 안 된다 (당일치기 허용). 기간이 줄어드는 경우 새 기간 밖(`dayOffset >= 새 총 일수`)의 일정은 자동으로 소프트 삭제된다. 프론트에서 삭제 예정 일정이 있을 때 사전 안내 모달을 노출한다.
-- **멤버 역할 라벨**: `journey_members`에 `role_type` / `custom_role_label` 컬럼으로 관리한다. 기본 역할(총무·일정 담당 등) 5종과 직접 입력(`CUSTOM`) 중 하나를 선택하며, `CUSTOM`일 때만 `custom_role_label`이 사용된다. 지정·수정·해제는 호스트만 가능하며, 본인 포함 전 멤버에게 지정할 수 있다. 역할 해제는 별도 `DELETE` 엔드포인트로 분리해 PATCH의 `null = 변경 없음` 의미를 유지한다.
+- **멤버 역할 라벨**: `journey_member_role_labels` 테이블로 분리 관리한다. 기본 역할(총무·일정 담당 등) 5종과 직접 입력(`CUSTOM`) 중 선택하며 멤버당 최대 5개까지 복수 지정 가능하다. 지정·수정·해제는 호스트만 가능하며, 본인 포함 전 멤버에게 지정할 수 있다. `PUT replace-all` 방식으로 전체 교체하며 빈 배열 전달 시 전체 해제된다.
+- **멤버 자기 강퇴 차단**: 호스트가 자기 자신을 내보내려 하면 전용 에러코드(`JOURNEY_MEMBER_CANNOT_REMOVE_SELF`)를 반환하며 DB 조회 없이 즉시 차단한다.
