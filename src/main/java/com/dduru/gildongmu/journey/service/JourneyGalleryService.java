@@ -29,6 +29,7 @@ public class JourneyGalleryService {
         int size = request.size();
         List<JourneyPostImage> fetched = journeyPostImageRepository.findGalleryImages(
                 journeyId,
+                request.cursorCreatedAt(),
                 request.cursorPostId(),
                 request.cursorSortOrder(),
                 PageRequest.of(0, size + 1)

@@ -13,7 +13,7 @@ public record JourneyGalleryResponse(
         GalleryCursor nextCursor = null;
         if (hasNext && !images.isEmpty()) {
             GalleryImageInfo last = images.get(images.size() - 1);
-            nextCursor = new GalleryCursor(last.journeyPostId(), last.sortOrder());
+            nextCursor = new GalleryCursor(last.postedAt(), last.journeyPostId(), last.sortOrder());
         }
         return new JourneyGalleryResponse(journeyId, images, nextCursor, hasNext, images.size());
     }

@@ -2,7 +2,10 @@ package com.dduru.gildongmu.journey.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
 
+import java.time.LocalDateTime;
+
 public record JourneyGalleryRequest(
+        LocalDateTime cursorCreatedAt,
         Long cursorPostId,
         Integer cursorSortOrder,
         Integer size
@@ -15,8 +18,10 @@ public record JourneyGalleryRequest(
         if (size > MAX_SIZE) size = MAX_SIZE;
     }
 
-    @AssertTrue(message = "cursorPostId와 cursorSortOrder는 함께 입력하거나 함께 생략해야 합니다.")
+    @AssertTrue(message = "cursorCreatedAt, cursorPostId, cursorSortOrder는 함께 입력하거나 함께 생략해야 합니다.")
     public boolean isCursorValid() {
-        return (cursorPostId == null) == (cursorSortOrder == null);
+        boolean allNull = cursorCreatedAt == null && cursorPostId == null && cursorSortOrder == null;
+        boolean allPresent = cursorCreatedAt != null && cursorPostId != null && cursorSortOrder != null;
+        return allNull || allPresent;
     }
 }

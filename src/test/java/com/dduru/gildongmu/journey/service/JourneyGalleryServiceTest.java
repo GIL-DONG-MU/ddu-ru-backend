@@ -63,7 +63,7 @@ class JourneyGalleryServiceTest {
             when(journeyMemberRepository.existsByJourneyIdAndUserIdAndStatus(journeyId, userId, JourneyMemberStatus.ACTIVE))
                     .thenReturn(false);
 
-            assertThatThrownBy(() -> journeyGalleryService.retrieveGallery(journeyId, userId, new JourneyGalleryRequest(null, null, null)))
+            assertThatThrownBy(() -> journeyGalleryService.retrieveGallery(journeyId, userId, new JourneyGalleryRequest(null, null, null, null)))
                     .isInstanceOf(JourneyAccessDeniedException.class);
         }
 
@@ -72,10 +72,10 @@ class JourneyGalleryServiceTest {
         void returnsEmptyListWhenNoImages() {
             Long journeyId = 1L;
             Long userId = 10L;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, null);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of());
 
             JourneyGalleryResponse response = journeyGalleryService.retrieveGallery(journeyId, userId, request);
@@ -91,15 +91,15 @@ class JourneyGalleryServiceTest {
         void firstPageRequestHasNoCursor() {
             Long journeyId = 1L;
             Long userId = 10L;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, 10);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, 10);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of());
 
             journeyGalleryService.retrieveGallery(journeyId, userId, request);
 
-            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, PageRequest.of(0, 11));
+            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, null, PageRequest.of(0, 11));
         }
 
         @Test
@@ -107,7 +107,7 @@ class JourneyGalleryServiceTest {
         void returnsImagesCorrectly() {
             Long journeyId = 1L;
             Long userId = 10L;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, 20);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, 20);
 
             JourneyPost post101 = createJourneyPost(101L, NOW.minusDays(1));
             JourneyPost post98 = createJourneyPost(98L, NOW.minusDays(2));
@@ -116,7 +116,7 @@ class JourneyGalleryServiceTest {
             JourneyPostImage img3 = JourneyPostImage.of(post98, IMAGE_URL + "?3", 0);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of(img1, img2, img3));
 
             JourneyGalleryResponse response = journeyGalleryService.retrieveGallery(journeyId, userId, request);
@@ -139,7 +139,7 @@ class JourneyGalleryServiceTest {
             Long journeyId = 1L;
             Long userId = 10L;
             int size = 2;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, size);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, size);
 
             JourneyPost post101 = createJourneyPost(101L, NOW);
             JourneyPost post98 = createJourneyPost(98L, NOW.minusDays(1));
@@ -148,7 +148,7 @@ class JourneyGalleryServiceTest {
             JourneyPostImage img3 = JourneyPostImage.of(post98, IMAGE_URL + "?3", 0); // look-ahead
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of(img1, img2, img3));
 
             JourneyGalleryResponse response = journeyGalleryService.retrieveGallery(journeyId, userId, request);
@@ -156,6 +156,7 @@ class JourneyGalleryServiceTest {
             assertThat(response.images()).hasSize(2);
             assertThat(response.hasNext()).isTrue();
             assertThat(response.nextCursor()).isNotNull();
+            assertThat(response.nextCursor().createdAt()).isEqualTo(NOW);
             assertThat(response.nextCursor().journeyPostId()).isEqualTo(101L);
             assertThat(response.nextCursor().sortOrder()).isEqualTo(1);
         }
@@ -165,17 +166,18 @@ class JourneyGalleryServiceTest {
         void retrievesNextPageWithCompositeCursor() {
             Long journeyId = 1L;
             Long userId = 10L;
+            LocalDateTime cursorCreatedAt = NOW.minusDays(1);
             Long cursorPostId = 101L;
             Integer cursorSortOrder = 1;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(cursorPostId, cursorSortOrder, 20);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(cursorCreatedAt, cursorPostId, cursorSortOrder, 20);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(cursorPostId), eq(cursorSortOrder), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(cursorCreatedAt), eq(cursorPostId), eq(cursorSortOrder), any()))
                     .thenReturn(List.of());
 
             journeyGalleryService.retrieveGallery(journeyId, userId, request);
 
-            verify(journeyPostImageRepository).findGalleryImages(journeyId, cursorPostId, cursorSortOrder, PageRequest.of(0, 21));
+            verify(journeyPostImageRepository).findGalleryImages(journeyId, cursorCreatedAt, cursorPostId, cursorSortOrder, PageRequest.of(0, 21));
         }
 
         @Test
@@ -183,15 +185,15 @@ class JourneyGalleryServiceTest {
         void sizeIsClamped() {
             Long journeyId = 1L;
             Long userId = 10L;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, 100);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, 100);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of());
 
             journeyGalleryService.retrieveGallery(journeyId, userId, request);
 
-            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, PageRequest.of(0, 51));
+            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, null, PageRequest.of(0, 51));
         }
 
         @Test
@@ -199,15 +201,15 @@ class JourneyGalleryServiceTest {
         void defaultSizeIsApplied() {
             Long journeyId = 1L;
             Long userId = 10L;
-            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null);
+            JourneyGalleryRequest request = new JourneyGalleryRequest(null, null, null, null);
 
             givenActiveMember(journeyId, userId);
-            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), any()))
+            when(journeyPostImageRepository.findGalleryImages(eq(journeyId), eq(null), eq(null), eq(null), any()))
                     .thenReturn(List.of());
 
             journeyGalleryService.retrieveGallery(journeyId, userId, request);
 
-            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, PageRequest.of(0, 21));
+            verify(journeyPostImageRepository).findGalleryImages(journeyId, null, null, null, PageRequest.of(0, 21));
         }
     }
 

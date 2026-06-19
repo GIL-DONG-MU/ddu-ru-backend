@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JourneyPostImageRepository extends JpaRepository<JourneyPostImage, Long> {
@@ -18,13 +19,15 @@ public interface JourneyPostImageRepository extends JpaRepository<JourneyPostIma
               AND post.isDeleted = false
               AND (
                     :cursorPostId IS NULL
-                    OR post.id < :cursorPostId
-                    OR (post.id = :cursorPostId AND img.sortOrder > :cursorSortOrder)
+                    OR post.createdAt < :cursorCreatedAt
+                    OR (post.createdAt = :cursorCreatedAt AND post.id < :cursorPostId)
+                    OR (post.createdAt = :cursorCreatedAt AND post.id = :cursorPostId AND img.sortOrder > :cursorSortOrder)
                   )
-            ORDER BY post.id DESC, img.sortOrder ASC
+            ORDER BY post.createdAt DESC, post.id DESC, img.sortOrder ASC
             """)
     List<JourneyPostImage> findGalleryImages(
             @Param("journeyId") Long journeyId,
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
             @Param("cursorPostId") Long cursorPostId,
             @Param("cursorSortOrder") Integer cursorSortOrder,
             Pageable pageable
