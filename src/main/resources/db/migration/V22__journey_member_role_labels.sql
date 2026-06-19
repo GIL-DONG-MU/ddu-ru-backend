@@ -4,7 +4,7 @@
 -- 2) journey_members의 단일 역할 컬럼(role_type, custom_role_label) 제거
 -- ============================================================
 
-CREATE TABLE journey_member_role_labels (
+CREATE TABLE IF NOT EXISTS journey_member_role_labels (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
     journey_member_id BIGINT       NOT NULL,
     role_type         VARCHAR(20)  NOT NULL COMMENT 'TREASURER, SCHEDULE, PHOTO, NAVIGATION, RESERVATION, CUSTOM',
