@@ -2,6 +2,7 @@ package com.dduru.gildongmu.chat.service;
 
 import com.dduru.gildongmu.chat.constants.ChatDestinationPaths;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.dto.query.ChatRoomUserTargetQueryResult;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventPayload;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventReason;
@@ -16,7 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 사용자별 채팅방 목록 item을 재계산해 개인 WebSocket queue로 발행한다.
@@ -64,6 +68,38 @@ public class ChatRoomListRealtimePublisher {
         sendToUser(userId, payload);
     }
 
+    public void publishRoomMetaUpsertByPostId(Long postId) {
+        affectedRoomIdsByPostId(postId)
+                .forEach(roomId -> publishRoomUpsertToCurrentMembers(
+                        roomId,
+                        ChatRoomListEventReason.ROOM_META_UPDATED
+                ));
+    }
+
+    public void publishGroupRoomMetaUpsertByJourneyId(Long journeyId) {
+        chatRoomRepository.findActiveGroupRoomIdsByJourneyId(journeyId)
+                .forEach(roomId -> publishRoomUpsertToCurrentMembers(
+                        roomId,
+                        ChatRoomListEventReason.ROOM_META_UPDATED
+                ));
+    }
+
+    public void publishPrivateRoomMetaUpsertByProfileUserId(Long profileUserId) {
+        Map<Long, List<Long>> targetUserIdsByRoomId = chatRoomRepository
+                .findPrivateRoomUpdateTargetsByProfileUserId(profileUserId)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ChatRoomUserTargetQueryResult::chatRoomId,
+                        Collectors.mapping(ChatRoomUserTargetQueryResult::userId, Collectors.toList())
+                ));
+
+        targetUserIdsByRoomId.forEach((roomId, userIds) -> publishRoomUpsertToUsers(
+                roomId,
+                userIds,
+                ChatRoomListEventReason.ROOM_META_UPDATED
+        ));
+    }
+
     public List<Long> findCurrentMemberUserIds(Long roomId) {
         return chatRoomMemberRepository.findUserIdsByRoomId(roomId);
     }
@@ -79,6 +115,13 @@ public class ChatRoomListRealtimePublisher {
             ChatRoomListItemResponse chatRoom
     ) {
         return ChatRoomListEventPayload.upsert(reason, chatRoom, timeProvider.now());
+    }
+
+    private Stream<Long> affectedRoomIdsByPostId(Long postId) {
+        return Stream.concat(
+                chatRoomRepository.findActivePrivateRoomIdsByPostId(postId).stream(),
+                chatRoomRepository.findActiveGroupRoomIdsByJourneyPostId(postId).stream()
+        );
     }
 
     private void sendToUser(Long userId, ChatRoomListEventPayload payload) {

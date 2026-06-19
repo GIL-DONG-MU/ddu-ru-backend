@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.constants.ChatDestinationPaths;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.dto.query.ChatRoomUserTargetQueryResult;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomLastMessageResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventPayload;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -140,6 +142,75 @@ class ChatRoomListRealtimePublisherTest {
                 eq(ChatDestinationPaths.USER_CHAT_ROOM_LIST_QUEUE),
                 org.mockito.ArgumentMatchers.any(ChatRoomListEventPayload.class)
         );
+    }
+
+    @Test
+    @DisplayName("게시글 변경 시 연결된 1:1 방과 그룹 방의 현재 멤버에게 메타 갱신을 발행한다")
+    void publishRoomMetaUpsertByPostId() {
+        Long postId = 100L;
+        Long privateRoomId = 1L;
+        Long groupRoomId = 2L;
+        Long userId = 10L;
+
+        when(chatRoomRepository.findActivePrivateRoomIdsByPostId(postId)).thenReturn(List.of(privateRoomId));
+        when(chatRoomRepository.findActiveGroupRoomIdsByJourneyPostId(postId)).thenReturn(List.of(groupRoomId));
+        when(chatRoomMemberRepository.findUserIdsByRoomId(privateRoomId)).thenReturn(List.of(userId));
+        when(chatRoomMemberRepository.findUserIdsByRoomId(groupRoomId)).thenReturn(List.of(userId));
+        when(chatRoomListService.retrieveChatRoomItem(userId, privateRoomId))
+                .thenReturn(Optional.of(chatRoomListItem(privateRoomId)));
+        when(chatRoomListService.retrieveChatRoomItem(userId, groupRoomId))
+                .thenReturn(Optional.of(chatRoomListItem(groupRoomId)));
+
+        publisher.publishRoomMetaUpsertByPostId(postId);
+
+        ArgumentCaptor<ChatRoomListEventPayload> payloadCaptor = ArgumentCaptor.forClass(ChatRoomListEventPayload.class);
+        verify(simpMessagingTemplate, times(2)).convertAndSendToUser(
+                eq(String.valueOf(userId)),
+                eq(ChatDestinationPaths.USER_CHAT_ROOM_LIST_QUEUE),
+                payloadCaptor.capture()
+        );
+        assertThat(payloadCaptor.getAllValues())
+                .extracting(payload -> payload.chatRoom().chatRoomId())
+                .containsExactlyInAnyOrder(privateRoomId, groupRoomId);
+        assertThat(payloadCaptor.getAllValues())
+                .extracting(ChatRoomListEventPayload::reason)
+                .containsOnly(ChatRoomListEventReason.ROOM_META_UPDATED);
+    }
+
+    @Test
+    @DisplayName("프로필 변경 시 1:1 방별 갱신 대상 사용자에게만 메타 갱신을 발행한다")
+    void publishPrivateRoomMetaUpsertByProfileUserId() {
+        Long profileUserId = 20L;
+        Long roomId = 1L;
+        Long targetUserId1 = 10L;
+        Long targetUserId2 = 30L;
+
+        when(chatRoomRepository.findPrivateRoomUpdateTargetsByProfileUserId(profileUserId))
+                .thenReturn(List.of(
+                        new ChatRoomUserTargetQueryResult(roomId, targetUserId1),
+                        new ChatRoomUserTargetQueryResult(roomId, targetUserId2)
+                ));
+        when(chatRoomListService.retrieveChatRoomItem(targetUserId1, roomId))
+                .thenReturn(Optional.of(chatRoomListItem(roomId)));
+        when(chatRoomListService.retrieveChatRoomItem(targetUserId2, roomId))
+                .thenReturn(Optional.of(chatRoomListItem(roomId)));
+
+        publisher.publishPrivateRoomMetaUpsertByProfileUserId(profileUserId);
+
+        ArgumentCaptor<ChatRoomListEventPayload> payloadCaptor = ArgumentCaptor.forClass(ChatRoomListEventPayload.class);
+        verify(simpMessagingTemplate).convertAndSendToUser(
+                eq(String.valueOf(targetUserId1)),
+                eq(ChatDestinationPaths.USER_CHAT_ROOM_LIST_QUEUE),
+                payloadCaptor.capture()
+        );
+        verify(simpMessagingTemplate).convertAndSendToUser(
+                eq(String.valueOf(targetUserId2)),
+                eq(ChatDestinationPaths.USER_CHAT_ROOM_LIST_QUEUE),
+                payloadCaptor.capture()
+        );
+        assertThat(payloadCaptor.getAllValues())
+                .extracting(ChatRoomListEventPayload::reason)
+                .containsOnly(ChatRoomListEventReason.ROOM_META_UPDATED);
     }
 
     private static ChatRoomListItemResponse chatRoomListItem(Long roomId) {

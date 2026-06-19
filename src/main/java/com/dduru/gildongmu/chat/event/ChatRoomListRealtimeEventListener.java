@@ -1,8 +1,6 @@
 package com.dduru.gildongmu.chat.event;
 
-import com.dduru.gildongmu.chat.dto.query.ChatRoomUserTargetQueryResult;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventReason;
-import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.service.ChatRoomListRealtimePublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -10,9 +8,6 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * 채팅, 게시글, 여정, 프로필 도메인 이벤트를 채팅방 목록 실시간(WebSocket) 이벤트로 변환한다.
@@ -23,7 +18,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ChatRoomListRealtimeEventListener {
 
-    private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomListRealtimePublisher publisher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -62,43 +56,16 @@ public class ChatRoomListRealtimeEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(PostUpdatedEvent event) {
-        affectedRoomIdsByPostId(event.postId())
-                .forEach(roomId -> publisher.publishRoomUpsertToCurrentMembers(
-                        roomId,
-                        ChatRoomListEventReason.ROOM_META_UPDATED
-                ));
+        publisher.publishRoomMetaUpsertByPostId(event.postId());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(JourneyBasicInfoUpdatedEvent event) {
-        chatRoomRepository.findActiveGroupRoomIdsByJourneyId(event.journeyId())
-                .forEach(roomId -> publisher.publishRoomUpsertToCurrentMembers(
-                        roomId,
-                        ChatRoomListEventReason.ROOM_META_UPDATED
-                ));
+        publisher.publishGroupRoomMetaUpsertByJourneyId(event.journeyId());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(ProfileUpdatedEvent event) {
-        Map<Long, List<Long>> targetUserIdsByRoomId = chatRoomRepository
-                .findPrivateRoomUpdateTargetsByProfileUserId(event.userId())
-                .stream()
-                .collect(Collectors.groupingBy(
-                        ChatRoomUserTargetQueryResult::chatRoomId,
-                        Collectors.mapping(ChatRoomUserTargetQueryResult::userId, Collectors.toList())
-                ));
-
-        targetUserIdsByRoomId.forEach((roomId, userIds) -> publisher.publishRoomUpsertToUsers(
-                roomId,
-                userIds,
-                ChatRoomListEventReason.ROOM_META_UPDATED
-        ));
-    }
-
-    private Stream<Long> affectedRoomIdsByPostId(Long postId) {
-        return Stream.concat(
-                chatRoomRepository.findActivePrivateRoomIdsByPostId(postId).stream(),
-                chatRoomRepository.findActiveGroupRoomIdsByJourneyPostId(postId).stream()
-        );
+        publisher.publishPrivateRoomMetaUpsertByProfileUserId(event.userId());
     }
 }
