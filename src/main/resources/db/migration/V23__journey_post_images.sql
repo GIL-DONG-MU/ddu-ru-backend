@@ -18,4 +18,4 @@ CREATE TABLE journey_post_images (
 );
 
 ALTER TABLE journey_posts
-    DROP COLUMN IF EXISTS image_url;
+    DROP COLUMN image_url;
