@@ -94,6 +94,12 @@ public class JourneyMember extends BaseTimeEntity {
         this.removedAt = removedAt;
     }
 
+    public void activate(LocalDateTime joinedAt) {
+        this.status = JourneyMemberStatus.ACTIVE;
+        this.joinedAt = joinedAt;
+        this.removedAt = null;
+    }
+
     public boolean isHost() {
         return role == JourneyMemberRole.HOST;
     }
