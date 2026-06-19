@@ -51,6 +51,7 @@
 
 - 이미 운영 데이터가 있는 테이블에 `NOT NULL` 컬럼을 추가할 때는 기본값, backfill, 단계적 배포를 검토합니다.
 - `ALTER TABLE ... DROP COLUMN`은 되돌리기 어렵기 때문에 백업/영향 범위를 확인합니다.
+- **MySQL은 `DROP COLUMN IF EXISTS` 문법을 지원하지 않습니다** (MariaDB 전용). MySQL에서는 `DROP COLUMN col_name`만 사용해야 합니다. 선행 마이그레이션(V21 등)이 success=1이면 컬럼 존재가 보장되므로 `IF EXISTS` 없이도 안전합니다.
 - seed DML은 중복 실행을 고려해 `INSERT IGNORE` 또는 중복 조건을 검토합니다.
 - 운영 `DDL_AUTO`는 가능하면 `validate` 또는 `none`을 사용합니다.
 - Flyway checksum이 바뀌므로 이미 적용된 migration 파일은 수정하지 않습니다. 새 버전으로 보정합니다.
