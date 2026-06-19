@@ -63,7 +63,8 @@ docs/
 │   ├── 002-central-error-code-with-individual-exceptions.md
 │   ├── 003-oauth-jwt-refresh-token-redis.md
 │   ├── 004-participation-journey-membership-separation.md
-│   └── 005-blue-green-deployment-with-nginx-ecr.md
+│   ├── 005-blue-green-deployment-with-nginx-ecr.md
+│   └── 006-home-api-section-based-loading.md
 └── 007-troubleshooting/
     └── 000-template.md
 ```
