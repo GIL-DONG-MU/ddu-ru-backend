@@ -4,6 +4,8 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
+import com.dduru.gildongmu.chat.event.ChatMemberChangeType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangedEvent;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -45,6 +48,12 @@ class GroupChatRoomServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ChatMessageSendService chatMessageSendService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private GroupChatRoomService groupChatRoomService;
@@ -74,6 +83,34 @@ class GroupChatRoomServiceTest {
             assertThat(response.roomId()).isEqualTo(roomId);
             assertThat(response.isNewInvitee()).isFalse();
             verify(chatRoomRepository).getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP);
+        }
+
+        @Test
+        @DisplayName("새 멤버를 초대하면 멤버 변경 이벤트를 발행한다")
+        void invitePublishesMemberChangedEvent() {
+            Long journeyId = 10L;
+            Long postId = 1L;
+            Long roomId = 100L;
+            Long ownerId = 10L;
+            Long inviteeId = 20L;
+            ChatRoom room = createGroupRoom(roomId, journeyId, postId, ownerId, ChatRoomStatus.ACTIVE, 3);
+            User invitee = createUser(inviteeId, "invitee");
+
+            when(chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP)).thenReturn(room);
+            when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(invitee);
+            when(chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, inviteeId)).thenReturn(false);
+            when(chatRoomMemberRepository.countByRoom(room)).thenReturn(1);
+
+            GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(ownerId, journeyId, inviteeId);
+
+            assertThat(response.roomId()).isEqualTo(roomId);
+            assertThat(response.isNewInvitee()).isTrue();
+            verify(eventPublisher).publishEvent(new ChatMemberChangedEvent(
+                    roomId,
+                    inviteeId,
+                    ChatMemberChangeType.MEMBER_ADDED
+            ));
+            verify(chatMessageSendService).publishUserInvited(room, inviteeId, ownerId);
         }
 
         @Test

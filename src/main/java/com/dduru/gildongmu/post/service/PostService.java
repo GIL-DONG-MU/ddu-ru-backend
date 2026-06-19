@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.chat.service.GroupChatRoomService;
+import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
@@ -31,6 +32,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -58,6 +60,7 @@ public class PostService {
     private final ProfileImageResolver profileImageResolver;
     private final S3ImageUrlValidator s3ImageUrlValidator;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PostCreateResponse create(Long userId, PostCreateRequest request) {
         TagValidator.validateOrThrow(request.tags());
@@ -92,6 +95,7 @@ public class PostService {
         LocalDate recruitDeadline = calculateRecruitDeadline(getEndDateOrCurrent(post, request));
 
         updatePost(post, destination, request, recruitDeadline, today());
+        eventPublisher.publishEvent(new PostUpdatedEvent(postId));
 
         log.info("게시글 수정됨 - postId={}, userId={}", postId, userId);
     }

@@ -2,11 +2,14 @@ package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.chat.dto.request.ChatMessageRetrieveRequest;
 import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
+import com.dduru.gildongmu.chat.dto.request.ChatRoomListRequest;
 import com.dduru.gildongmu.chat.dto.response.ChatMessagesResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomListResponse;
 import com.dduru.gildongmu.chat.dto.response.PrivateChatRoomCreateResponse;
 import com.dduru.gildongmu.chat.service.ChatMessageQueryService;
 import com.dduru.gildongmu.chat.service.ChatReadService;
+import com.dduru.gildongmu.chat.service.ChatRoomListService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
@@ -31,6 +34,7 @@ public class ChatController implements ChatApiDocs {
     private final PrivateChatRoomService privateChatRoomService;
     private final ChatMessageQueryService chatMessageQueryService;
     private final ChatReadService chatReadService;
+    private final ChatRoomListService chatRoomListService;
 
     @Override
     @PostMapping("/posts/{postId}/chats/private")
@@ -64,6 +68,16 @@ public class ChatController implements ChatApiDocs {
             @Valid @RequestBody ChatReadRequest request
     ) {
         ChatReadResponse response = chatReadService.read(userId, chatRoomId, request);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @GetMapping("/chat-rooms")
+    public ResponseEntity<ApiResult<ChatRoomListResponse>> retrieveChatRooms(
+            @CurrentUser Long userId,
+            @Valid @ModelAttribute ChatRoomListRequest request
+    ) {
+        ChatRoomListResponse response = chatRoomListService.retrieveChatRooms(userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 }

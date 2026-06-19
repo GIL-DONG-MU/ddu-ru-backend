@@ -6,6 +6,8 @@ import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.response.GroupChatInviteMemberResponse;
+import com.dduru.gildongmu.chat.event.ChatMemberChangeType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangedEvent;
 import com.dduru.gildongmu.chat.exception.ChatRoomCapacityExceededException;
 import com.dduru.gildongmu.chat.exception.ChatRoomClosedException;
 import com.dduru.gildongmu.chat.exception.GroupChatRoomInviteAccessDeniedException;
@@ -17,6 +19,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +41,7 @@ public class GroupChatRoomService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final ChatMessageSendService chatMessageSendService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public GroupChatInviteMemberResponse inviteMemberOrGetRoom(Long userId, Long journeyId, Long inviteeUserId) {
         ChatRoom chatRoom = chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP);
@@ -61,6 +65,11 @@ public class GroupChatRoomService {
         validateRoomCapacity(chatRoom);
         boolean invited = saveInvitee(chatRoom, invitee);
         if (invited) {
+            eventPublisher.publishEvent(new ChatMemberChangedEvent(
+                    chatRoom.getId(),
+                    invitee.getId(),
+                    ChatMemberChangeType.MEMBER_ADDED
+            ));
             chatMessageSendService.publishUserInvited(chatRoom, invitee.getId(), userId);
         }
 

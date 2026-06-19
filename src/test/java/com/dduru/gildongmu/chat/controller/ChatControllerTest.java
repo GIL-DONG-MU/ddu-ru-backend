@@ -2,17 +2,25 @@ package com.dduru.gildongmu.chat.controller;
 
 import com.dduru.gildongmu.auth.exception.UnauthorizedException;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
+import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.request.ChatMessageRetrieveRequest;
 import com.dduru.gildongmu.chat.dto.request.ChatReadRequest;
+import com.dduru.gildongmu.chat.dto.request.ChatRoomListRequest;
+import com.dduru.gildongmu.chat.dto.request.ChatRoomListType;
 import com.dduru.gildongmu.chat.dto.response.ChatMessageItemResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatMessagePageResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatMessageSenderResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatMessagesResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatReadResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomInfoResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomLastMessageResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomListPageResponse;
+import com.dduru.gildongmu.chat.dto.response.ChatRoomListResponse;
 import com.dduru.gildongmu.chat.service.ChatMessageQueryService;
 import com.dduru.gildongmu.chat.service.ChatReadService;
+import com.dduru.gildongmu.chat.service.ChatRoomListService;
 import com.dduru.gildongmu.chat.service.PrivateChatRoomService;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.exception.GlobalExceptionHandler;
@@ -57,11 +65,107 @@ class ChatControllerTest {
     @Mock
     private ChatReadService chatReadService;
 
+    @Mock
+    private ChatRoomListService chatRoomListService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         mockMvc = mockMvcWithUser(10L);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/chat-rooms 요청을 service에 위임하고 응답한다")
+    void retrieveChatRooms() throws Exception {
+        ChatRoomListResponse response = new ChatRoomListResponse(
+                ChatRoomListType.ALL,
+                List.of(new ChatRoomListItemResponse(
+                        10L,
+                        ChatRoomType.PRIVATE,
+                        ChatRoomStatus.ACTIVE,
+                        "guestNick",
+                        "제주 애월 2박 3일",
+                        "https://example.com/profile.png",
+                        100L,
+                        null,
+                        2,
+                        new ChatRoomLastMessageResponse(
+                                1234L,
+                                ChatMessageType.TEXT,
+                                "안녕하세요",
+                                20L,
+                                "guestNick",
+                                LocalDateTime.of(2026, 6, 13, 14, 30)
+                        ),
+                        3L,
+                        1200L,
+                        LocalDateTime.of(2026, 6, 13, 14, 30),
+                        LocalDateTime.of(2026, 6, 1, 10, 0)
+                )),
+                new ChatRoomListPageResponse("next-cursor", true)
+        );
+        when(chatRoomListService.retrieveChatRooms(eq(10L), any(ChatRoomListRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/chat-rooms")
+                        .param("roomType", "ALL")
+                        .param("size", "20")
+                        .param("cursor", "  next-cursor  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.selectedRoomType").value("ALL"))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatRoomId").value(10))
+                .andExpect(jsonPath("$.data.chatRooms[0].roomType").value("PRIVATE"))
+                .andExpect(jsonPath("$.data.chatRooms[0].displayName").value("guestNick"))
+                .andExpect(jsonPath("$.data.chatRooms[0].postTitle").value("제주 애월 2박 3일"))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatRoomName").doesNotExist())
+                .andExpect(jsonPath("$.data.chatRooms[0].title").doesNotExist())
+                .andExpect(jsonPath("$.data.chatRooms[0].subtitle").doesNotExist())
+                .andExpect(jsonPath("$.data.chatRooms[0].lastMessage.content").value("안녕하세요"))
+                .andExpect(jsonPath("$.data.chatRooms[0].unreadCount").value(3))
+                .andExpect(jsonPath("$.data.page.nextCursor").value("next-cursor"))
+                .andExpect(jsonPath("$.data.page.hasNext").value(true));
+
+        ArgumentCaptor<ChatRoomListRequest> requestCaptor = ArgumentCaptor.forClass(ChatRoomListRequest.class);
+        org.mockito.Mockito.verify(chatRoomListService).retrieveChatRooms(eq(10L), requestCaptor.capture());
+        assertThat(requestCaptor.getValue().roomType()).isEqualTo(ChatRoomListType.ALL);
+        assertThat(requestCaptor.getValue().size()).isEqualTo(20);
+        assertThat(requestCaptor.getValue().cursor()).isEqualTo("next-cursor");
+    }
+
+    @Test
+    @DisplayName("채팅방 목록의 잘못된 query 값은 INVALID_INPUT_VALUE 응답을 받는다")
+    void retrieveChatRoomsInvalidQueryReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/chat-rooms")
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.data.errorCode").value("INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.data.field").value("size"));
+
+        org.mockito.Mockito.verifyNoInteractions(chatRoomListService);
+    }
+
+    @Test
+    @DisplayName("채팅방 목록의 잘못된 roomType은 INVALID_INPUT_VALUE 응답을 받는다")
+    void retrieveChatRoomsInvalidRoomTypeReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/chat-rooms")
+                        .param("roomType", "DIRECT"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.data.errorCode").value("INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.data.field").value("roomType"));
+
+        org.mockito.Mockito.verifyNoInteractions(chatRoomListService);
+    }
+
+    @Test
+    @DisplayName("채팅방 목록 인증되지 않은 사용자는 UNAUTHORIZED 응답을 받는다")
+    void retrieveChatRoomsUnauthenticatedUserReturnsUnauthorized() throws Exception {
+        mockMvc = mockMvcWithUser(null);
+
+        mockMvc.perform(get("/api/v1/chat-rooms"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.data.errorCode").value("UNAUTHORIZED"));
     }
 
     @Test
@@ -225,7 +329,12 @@ class ChatControllerTest {
     }
 
     private MockMvc mockMvcWithUser(Long userId) {
-        return standaloneSetup(new ChatController(privateChatRoomService, chatMessageQueryService, chatReadService))
+        return standaloneSetup(new ChatController(
+                privateChatRoomService,
+                chatMessageQueryService,
+                chatReadService,
+                chatRoomListService
+        ))
                 .setCustomArgumentResolvers(new FixedCurrentUserArgumentResolver(userId))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

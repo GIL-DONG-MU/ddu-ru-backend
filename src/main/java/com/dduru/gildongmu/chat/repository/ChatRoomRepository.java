@@ -4,6 +4,7 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomStatus;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.query.ChatRoomIdByPostIdQueryResult;
+import com.dduru.gildongmu.chat.dto.query.ChatRoomUserTargetQueryResult;
 import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.LockModeType;
@@ -16,7 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long>, ChatRoomRepositoryCustom {
     @Query("""
             SELECT DISTINCT r
             FROM ChatRoom r
@@ -58,6 +59,53 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     Optional<ChatRoom> findByJourneyIdAndRoomType(Long journeyId, ChatRoomType roomType);
+
+    @Query("""
+            SELECT r.id
+            FROM ChatRoom r
+            WHERE r.post.id = :postId
+              AND r.roomType = 'PRIVATE'
+              AND r.status = 'ACTIVE'
+            """)
+    List<Long> findActivePrivateRoomIdsByPostId(@Param("postId") Long postId);
+
+    @Query("""
+            SELECT r.id
+            FROM ChatRoom r
+            WHERE r.journey.post.id = :postId
+              AND r.roomType = 'GROUP'
+              AND r.status = 'ACTIVE'
+            """)
+    List<Long> findActiveGroupRoomIdsByJourneyPostId(@Param("postId") Long postId);
+
+    @Query("""
+            SELECT r.id
+            FROM ChatRoom r
+            WHERE r.journey.id = :journeyId
+              AND r.roomType = 'GROUP'
+              AND r.status = 'ACTIVE'
+            """)
+    List<Long> findActiveGroupRoomIdsByJourneyId(@Param("journeyId") Long journeyId);
+
+    @Query("""
+            SELECT r.roomType
+            FROM ChatRoom r
+            WHERE r.id = :roomId
+            """)
+    Optional<ChatRoomType> findRoomTypeById(@Param("roomId") Long roomId);
+
+    @Query("""
+            SELECT new com.dduru.gildongmu.chat.dto.query.ChatRoomUserTargetQueryResult(otherMember.room.id, otherMember.user.id)
+            FROM ChatRoomMember changedMember
+            JOIN ChatRoomMember otherMember ON otherMember.room = changedMember.room
+            WHERE changedMember.user.id = :profileUserId
+              AND otherMember.user.id <> :profileUserId
+              AND changedMember.room.roomType = 'PRIVATE'
+              AND changedMember.room.status = 'ACTIVE'
+            """)
+    List<ChatRoomUserTargetQueryResult> findPrivateRoomUpdateTargetsByProfileUserId(
+            @Param("profileUserId") Long profileUserId
+    );
 
     @Query("""
             SELECT r

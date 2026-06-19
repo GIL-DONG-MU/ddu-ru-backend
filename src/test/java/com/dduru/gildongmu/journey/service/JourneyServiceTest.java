@@ -4,6 +4,9 @@ import com.dduru.gildongmu.chat.domain.ChatRoom;
 import com.dduru.gildongmu.chat.domain.ChatRoomMember;
 import com.dduru.gildongmu.chat.domain.enums.ChatMemberRole;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangeType;
+import com.dduru.gildongmu.chat.event.ChatMemberChangedEvent;
+import com.dduru.gildongmu.chat.event.JourneyBasicInfoUpdatedEvent;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.chat.service.ChatMessageSendService;
@@ -50,6 +53,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -88,6 +92,8 @@ class JourneyServiceTest {
     private ChatMessageSendService chatMessageSendService;
     @Mock
     private TimeProvider timeProvider;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private JourneyService journeyService;
 
@@ -106,7 +112,8 @@ class JourneyServiceTest {
                 postRepository,
                 chatMessageSendService,
                 new S3ImageUrlValidator(s3Properties),
-                timeProvider
+                timeProvider,
+                eventPublisher
         );
     }
 
@@ -137,6 +144,7 @@ class JourneyServiceTest {
             assertThat(response.photoUrl()).isEqualTo(S3_HOST + "/journeys/journey-updated.png");
             assertThat(journey.getTitle()).isEqualTo("제주 우리 여행");
             assertThat(journey.getPhotoUrl()).isEqualTo(S3_HOST + "/journeys/journey-updated.png");
+            verify(eventPublisher).publishEvent(new JourneyBasicInfoUpdatedEvent(journeyId));
         }
 
         @Test
@@ -456,6 +464,11 @@ class JourneyServiceTest {
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.APPROVED);
             assertThat(post.getRecruitCount()).isEqualTo(1);
             verify(chatRoomMemberRepository).delete(chatRoomMember);
+            verify(eventPublisher).publishEvent(new ChatMemberChangedEvent(
+                    roomId,
+                    memberUserId,
+                    ChatMemberChangeType.MEMBER_REMOVED
+            ));
             verify(chatMessageSendService).publishUserKicked(room, memberUserId, hostUserId);
 
             InOrder inOrder = inOrder(journeyMemberRepository, postRepository);
