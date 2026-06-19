@@ -4,7 +4,7 @@
 -- 2) journey_posts의 단일 image_url 컬럼 제거
 -- ============================================================
 
-CREATE TABLE journey_post_images (
+CREATE TABLE IF NOT EXISTS  journey_post_images (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     journey_post_id BIGINT       NOT NULL,
     image_url       TEXT         NOT NULL,
