@@ -1,7 +1,6 @@
 package com.dduru.gildongmu.journey.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneySchedule;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
@@ -15,12 +14,10 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.post.domain.Post;
-import com.dduru.gildongmu.s3.enums.S3ImageDirectory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -36,7 +33,6 @@ public class JourneyScheduleService {
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyScheduleRepository journeyScheduleRepository;
-    private final S3ImageUrlValidator s3ImageUrlValidator;
     private final TimeProvider timeProvider;
 
     @Transactional(readOnly = true)
@@ -87,13 +83,11 @@ public class JourneyScheduleService {
         String placeName = request.placeName();
         boolean applyMemoPatch = request.memo() != null;
         String memo = applyMemoPatch ? request.memo() : null;
-        boolean applyImageUrlPatch = request.imageUrl() != null;
-        String imageUrl = applyImageUrlPatch ? normalizeImageUrl(request.imageUrl()) : null;
 
-        validateHasAnyPatch(title, category, dayOffset, applyStartTimePatch, applyEndTimePatch, placeName, applyMemoPatch, applyImageUrlPatch);
+        validateHasAnyPatch(title, category, dayOffset, applyStartTimePatch, applyEndTimePatch, placeName, applyMemoPatch);
         validateEffectiveDayOffset(schedule, dayOffset, post);
 
-        schedule.update(title, category, dayOffset, applyStartTimePatch, startValue, applyEndTimePatch, endValue, placeName, applyMemoPatch, memo, applyImageUrlPatch, imageUrl);
+        schedule.update(title, category, dayOffset, applyStartTimePatch, startValue, applyEndTimePatch, endValue, placeName, applyMemoPatch, memo);
         journeyScheduleRepository.flush();
 
         log.info("나의 여정 일정 수정됨 - journeyId={}, scheduleId={}, userId={}",
@@ -122,8 +116,7 @@ public class JourneyScheduleService {
                 request.startTime(),
                 request.endTime(),
                 request.placeName(),
-                request.memo(),
-                normalizeImageUrl(request.imageUrl())
+                request.memo()
         );
     }
 
@@ -157,21 +150,13 @@ public class JourneyScheduleService {
             boolean applyStartTimePatch,
             boolean applyEndTimePatch,
             String placeName,
-            boolean applyMemoPatch,
-            boolean applyImageUrlPatch
+            boolean applyMemoPatch
     ) {
         if (title == null && category == null && dayOffset == null
                 && !applyStartTimePatch && !applyEndTimePatch && placeName == null
-                && !applyMemoPatch && !applyImageUrlPatch) {
+                && !applyMemoPatch) {
             throw InvalidJourneyScheduleException.emptyPatch();
         }
-    }
-
-    private String normalizeImageUrl(String imageUrl) {
-        if (!StringUtils.hasText(imageUrl)) {
-            return null;
-        }
-        return s3ImageUrlValidator.validateAndNormalize(imageUrl, S3ImageDirectory.JOURNEY_SCHEDULES);
     }
 
 }

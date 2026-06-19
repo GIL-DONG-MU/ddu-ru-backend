@@ -14,8 +14,7 @@ public record JourneyScheduleItemResponse(
         LocalTime startTime,
         LocalTime endTime,
         String placeName,
-        String memo,
-        String imageUrl
+        String memo
 ) {
     public static JourneyScheduleItemResponse from(JourneySchedule schedule, LocalDate startDate) {
         return new JourneyScheduleItemResponse(
@@ -26,8 +25,7 @@ public record JourneyScheduleItemResponse(
                 schedule.getStartTime(),
                 schedule.getEndTime(),
                 schedule.getPlaceName(),
-                schedule.getMemo(),
-                schedule.getImageUrl()
+                schedule.getMemo()
         );
     }
 }

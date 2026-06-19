@@ -46,8 +46,7 @@ public interface JourneyScheduleApiDocs {
             ErrorCode.JOURNEY_SCHEDULE_INVALID_TITLE,
             ErrorCode.JOURNEY_SCHEDULE_INVALID_MEMO,
             ErrorCode.JOURNEY_SCHEDULE_INVALID_PLACE_NAME,
-            ErrorCode.JOURNEY_SCHEDULE_INVALID_TIME,
-            ErrorCode.IMAGE_URL_NOT_ALLOWED
+            ErrorCode.JOURNEY_SCHEDULE_INVALID_TIME
     })
     ResponseEntity<ApiResult<JourneyScheduleListResponse>> createSchedule(
             @Parameter(description = "여정 ID") Long journeyId,
@@ -71,8 +70,7 @@ public interface JourneyScheduleApiDocs {
             ErrorCode.JOURNEY_SCHEDULE_INVALID_TITLE,
             ErrorCode.JOURNEY_SCHEDULE_INVALID_MEMO,
             ErrorCode.JOURNEY_SCHEDULE_INVALID_PLACE_NAME,
-            ErrorCode.JOURNEY_SCHEDULE_INVALID_TIME,
-            ErrorCode.IMAGE_URL_NOT_ALLOWED
+            ErrorCode.JOURNEY_SCHEDULE_INVALID_TIME
     })
     ResponseEntity<ApiResult<JourneyScheduleListResponse>> updateSchedule(
             @Parameter(description = "여정 ID") Long journeyId,
