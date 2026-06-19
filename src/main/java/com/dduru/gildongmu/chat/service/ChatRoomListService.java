@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -258,7 +259,7 @@ public class ChatRoomListService {
     }
 
     private static String resolveGroupThumbnailUrl(ChatRoom room) {
-        if (hasText(room.getJourney().getPhotoUrl())) {
+        if (StringUtils.hasText(room.getJourney().getPhotoUrl())) {
             return room.getJourney().getPhotoUrl();
         }
         return room.getJourney().getPost().getPhotoUrl();
@@ -268,10 +269,6 @@ public class ChatRoomListService {
         return members.stream()
                 .filter(member -> !member.getUser().getId().equals(currentUserId))
                 .findFirst();
-    }
-
-    private static boolean hasText(String value) {
-        return value != null && !value.isBlank();
     }
 
     private static Long resolvePostId(ChatRoom room) {
