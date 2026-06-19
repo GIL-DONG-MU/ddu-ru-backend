@@ -5,6 +5,8 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomLastMessageResponse;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AccessLevel;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
  * {@code roomType}만 담는다.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder(access = AccessLevel.PRIVATE)
 public record ChatRoomListEventRoomPayload(
         Long chatRoomId,
         ChatRoomType roomType,
@@ -51,21 +54,9 @@ public record ChatRoomListEventRoomPayload(
     }
 
     public static ChatRoomListEventRoomPayload removed(Long chatRoomId, ChatRoomType roomType) {
-        return new ChatRoomListEventRoomPayload(
-                chatRoomId,
-                roomType,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        return ChatRoomListEventRoomPayload.builder()
+                .chatRoomId(chatRoomId)
+                .roomType(roomType)
+                .build();
     }
 }
