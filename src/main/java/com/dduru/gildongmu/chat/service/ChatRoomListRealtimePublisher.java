@@ -5,6 +5,7 @@ import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventPayload;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventReason;
+import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.common.time.TimeProvider;
@@ -52,7 +53,8 @@ public class ChatRoomListRealtimePublisher {
     public void publishRoomRemoveToUser(Long roomId, Long userId, ChatRoomListEventReason reason) {
         Objects.requireNonNull(userId, "userId must not be null");
 
-        ChatRoomType roomType = chatRoomRepository.findRoomTypeById(roomId).orElse(null);
+        ChatRoomType roomType = chatRoomRepository.findRoomTypeById(roomId)
+                .orElseThrow(ChatRoomNotFoundException::new);
         ChatRoomListEventPayload payload = ChatRoomListEventPayload.remove(
                 reason,
                 roomId,

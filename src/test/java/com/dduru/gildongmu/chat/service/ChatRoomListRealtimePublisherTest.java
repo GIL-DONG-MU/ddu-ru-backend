@@ -9,6 +9,7 @@ import com.dduru.gildongmu.chat.dto.response.ChatRoomListItemResponse;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventPayload;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventReason;
 import com.dduru.gildongmu.chat.dto.ws.roomlist.ChatRoomListEventType;
+import com.dduru.gildongmu.chat.exception.ChatRoomNotFoundException;
 import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.repository.ChatRoomRepository;
 import com.dduru.gildongmu.common.time.TimeProvider;
@@ -26,7 +27,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +66,7 @@ class ChatRoomListRealtimePublisherTest {
                 simpMessagingTemplate,
                 timeProvider
         );
-        when(timeProvider.now()).thenReturn(NOW);
+        lenient().when(timeProvider.now()).thenReturn(NOW);
     }
 
     @Test
@@ -115,6 +119,27 @@ class ChatRoomListRealtimePublisherTest {
         assertThat(payload.chatRoom().roomType()).isEqualTo(ChatRoomType.GROUP);
         assertThat(payload.chatRoom().displayName()).isNull();
         assertThat(payload.occurredAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    @DisplayName("REMOVE 발행 시 채팅방 타입을 찾을 수 없으면 예외를 던지고 발행하지 않는다")
+    void publishRoomRemoveToUserWithoutRoomType() {
+        Long roomId = 1L;
+        Long userId = 10L;
+
+        when(chatRoomRepository.findRoomTypeById(roomId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> publisher.publishRoomRemoveToUser(
+                roomId,
+                userId,
+                ChatRoomListEventReason.MEMBER_CHANGED
+        )).isInstanceOf(ChatRoomNotFoundException.class);
+
+        verify(simpMessagingTemplate, never()).convertAndSendToUser(
+                eq(String.valueOf(userId)),
+                eq(ChatDestinationPaths.USER_CHAT_ROOM_LIST_QUEUE),
+                org.mockito.ArgumentMatchers.any(ChatRoomListEventPayload.class)
+        );
     }
 
     private static ChatRoomListItemResponse chatRoomListItem(Long roomId) {
