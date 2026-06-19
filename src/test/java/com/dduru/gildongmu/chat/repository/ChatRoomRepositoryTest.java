@@ -71,6 +71,7 @@ class ChatRoomRepositoryTest {
 
         ChatMessage room1Message = persistMessage(room1, opponent, "room1");
         ChatMessage room1SystemMessage = persistMessage(room1, null, ChatMessageType.SYSTEM, "system");
+        ChatMessage room1SameTimeMessage = persistMessage(room1, opponent, "room1-same-time");
         ChatMessage room2Message = persistMessage(room2, opponent, "room2");
         ChatMessage room3OldMessage = persistMessage(room3, opponent, "old");
         persistMessage(otherUserRoom, opponent, "other");
@@ -87,6 +88,7 @@ class ChatRoomRepositoryTest {
         updateCreatedAt("chat_room_members", room3CurrentMember.getId(), LocalDateTime.of(2026, 6, 13, 13, 0));
         updateCreatedAt("chat_messages", room1Message.getId(), LocalDateTime.of(2026, 6, 13, 15, 0));
         updateCreatedAt("chat_messages", room1SystemMessage.getId(), LocalDateTime.of(2026, 6, 13, 15, 30));
+        updateCreatedAt("chat_messages", room1SameTimeMessage.getId(), LocalDateTime.of(2026, 6, 13, 15, 0));
         updateCreatedAt("chat_messages", room2Message.getId(), LocalDateTime.of(2026, 6, 13, 14, 0));
         updateCreatedAt("chat_messages", room3OldMessage.getId(), LocalDateTime.of(2026, 6, 13, 8, 0));
         updateLastReadMessage(room2CurrentMember.getId(), room2Message.getId());
@@ -125,14 +127,14 @@ class ChatRoomRepositoryTest {
                 ).stream()
                 .collect(Collectors.toMap(message -> message.getRoom().getId(), Function.identity()));
         assertThat(lastMessages).containsOnlyKeys(room1.getId(), room2.getId());
-        assertThat(lastMessages.get(room1.getId()).getId()).isEqualTo(room1Message.getId());
+        assertThat(lastMessages.get(room1.getId()).getId()).isEqualTo(room1SameTimeMessage.getId());
         assertThat(lastMessages.get(room2.getId()).getId()).isEqualTo(room2Message.getId());
 
         Map<Long, Long> unreadCounts = chatRoomRepository.countUnreadMessagesByRoomIds(
                 currentUser.getId(),
                 List.of(room1.getId(), room2.getId(), room3.getId())
         );
-        assertThat(unreadCounts).containsEntry(room1.getId(), 1L);
+        assertThat(unreadCounts).containsEntry(room1.getId(), 2L);
         assertThat(unreadCounts).doesNotContainKey(room2.getId());
         assertThat(unreadCounts).doesNotContainKey(room3.getId());
 

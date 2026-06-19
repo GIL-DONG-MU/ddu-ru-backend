@@ -13,8 +13,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.DateTimeExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -45,6 +45,7 @@ import static com.dduru.gildongmu.user.domain.QUser.user;
 public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
+    private final EntityManager entityManager;
 
     @Override
     public List<ChatRoomListQueryResult> findActiveListPageByUserId(
@@ -115,18 +116,49 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
             return List.of();
         }
 
-        QChatMessage lastMessage = new QChatMessage("lastMessage");
+        List<Long> lastMessageIds = findLastVisibleMessageIdsByRoomIds(userId, roomIds);
+        if (lastMessageIds.isEmpty()) {
+            return List.of();
+        }
 
         return queryFactory
-                .selectFrom(lastMessage)
-                .leftJoin(lastMessage.sender, user).fetchJoin()
+                .selectFrom(chatMessage)
+                .leftJoin(chatMessage.sender, user).fetchJoin()
                 .leftJoin(user.profile, profile).fetchJoin()
-                .where(
-                        lastMessage.room.id.in(roomIds),
-                        nonSystemMessage(lastMessage),
-                        latestVisibleNonSystemMessage(lastMessage, userId)
-                )
+                .where(chatMessage.id.in(lastMessageIds))
                 .fetch();
+    }
+
+    private List<Long> findLastVisibleMessageIdsByRoomIds(Long userId, Collection<Long> roomIds) {
+        String sql = """
+                SELECT ranked.id
+                FROM (
+                    SELECT m.id,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY m.room_id
+                               ORDER BY m.created_at DESC, m.id DESC
+                           ) AS rn
+                    FROM chat_messages m
+                    JOIN chat_room_members member
+                      ON member.room_id = m.room_id
+                     AND member.user_id = :userId
+                    WHERE m.room_id IN (:roomIds)
+                      AND m.message_type <> :systemMessageType
+                      AND m.created_at >= member.created_at
+                ) ranked
+                WHERE ranked.rn = 1
+                """;
+
+        @SuppressWarnings("unchecked")
+        List<Number> ids = entityManager.createNativeQuery(sql)
+                .setParameter("userId", userId)
+                .setParameter("roomIds", roomIds)
+                .setParameter("systemMessageType", ChatMessageType.SYSTEM.name())
+                .getResultList();
+
+        return ids.stream()
+                .map(Number::longValue)
+                .toList();
     }
 
     @Override
@@ -202,46 +234,6 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 
     private BooleanExpression nonSystemMessage(QChatMessage message) {
         return message.messageType.ne(ChatMessageType.SYSTEM);
-    }
-
-    private BooleanExpression latestVisibleNonSystemMessage(QChatMessage lastMessage, Long userId) {
-        QChatMessage sameTimeMessage = new QChatMessage("sameTimeMessage");
-
-        return lastMessage.id.eq(
-                JPAExpressions
-                        .select(sameTimeMessage.id.max())
-                        .from(sameTimeMessage)
-                        .where(
-                                sameTimeMessage.room.id.eq(lastMessage.room.id),
-                                nonSystemMessage(sameTimeMessage),
-                                sameTimeMessage.createdAt.eq(latestVisibleMessageCreatedAt(lastMessage, userId))
-                        )
-        );
-    }
-
-    private JPQLQuery<LocalDateTime> latestVisibleMessageCreatedAt(QChatMessage roomScopedMessage, Long userId) {
-        QChatMessage maxTimeMessage = new QChatMessage("maxTimeMessage");
-
-        return JPAExpressions
-                .select(maxTimeMessage.createdAt.max())
-                .from(maxTimeMessage)
-                .where(
-                        maxTimeMessage.room.id.eq(roomScopedMessage.room.id),
-                        nonSystemMessage(maxTimeMessage),
-                        maxTimeMessage.createdAt.goe(memberJoinedAt(roomScopedMessage, userId))
-                );
-    }
-
-    private JPQLQuery<LocalDateTime> memberJoinedAt(QChatMessage roomScopedMessage, Long userId) {
-        QChatRoomMember visibleMember = new QChatRoomMember("visibleMember");
-
-        return JPAExpressions
-                .select(visibleMember.createdAt)
-                .from(visibleMember)
-                .where(
-                        visibleMember.room.id.eq(roomScopedMessage.room.id),
-                        visibleMember.user.id.eq(userId)
-                );
     }
 
     private BooleanExpression roomTypeCondition(ChatRoomType roomType) {
