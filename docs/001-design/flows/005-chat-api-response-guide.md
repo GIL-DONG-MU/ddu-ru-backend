@@ -107,6 +107,19 @@
 - 메시지 생성 이후 입장한 멤버는 과거 메시지의 `unreadCount` 계산 대상이 아니다.
 - `SYSTEM` 메시지는 `unreadCount=null`이다.
 
+### 3.5 이전 메시지와 실시간 메시지 누적
+
+채팅방에 들어가면 REST로 이전 메시지 기록을 먼저 조회하고, 이후 같은 방 topic의 WebSocket 이벤트를 받아 화면에 이어 붙인다.
+
+1. `GET /api/v1/chat-rooms/{chatRoomId}/messages`로 `roomInfo`, `messages`, `page.nextCursor`를 가져온다.
+2. 응답의 `messages`는 오래된 순서로 화면에 렌더링한다.
+3. `/topic/chat/rooms/{roomId}`를 구독한다.
+4. `TEXT`, `IMAGE`, `SYSTEM` 이벤트가 오면 현재 메시지 목록의 마지막에 추가한다.
+5. 위로 스크롤해 과거 메시지가 더 필요하면 `beforeMessageId=page.nextCursor`로 다음 페이지를 조회해 목록 앞쪽에 붙인다.
+6. 화면에 노출된 마지막 메시지까지 확인한 시점에 읽음 처리 API를 호출한다.
+
+즉, 채팅방 진입 시점의 기록은 REST 응답으로 확인하고, 진입 이후 새로 쌓이는 메시지는 WebSocket payload로 바로 확인하는 구조다. WebSocket 연결이 끊겼거나 이벤트 누락이 의심되면 REST 메시지 조회를 다시 호출해 서버 snapshot과 맞춘다.
+
 ## 4. 읽음 처리 기준
 
 ### 4.1 언제 호출할지
