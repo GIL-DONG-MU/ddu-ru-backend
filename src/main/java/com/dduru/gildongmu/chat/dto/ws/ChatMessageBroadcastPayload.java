@@ -7,6 +7,7 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -16,16 +17,36 @@ import java.time.LocalDateTime;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
+@Schema(description = "WebSocket 채팅방 토픽 메시지 payload")
 public record ChatMessageBroadcastPayload(
+        @Schema(description = "생성된 메시지 ID", example = "120")
         Long messageId,
+
+        @Schema(description = "채팅방 ID", example = "10")
         Long roomId,
+
+        @Schema(description = "연결 게시글 제목", example = "제주 애월 2박 3일")
         String postTitle,
+
+        @Schema(description = "현재 승인 인원 수", example = "2")
         int recruitCount,
+
+        @Schema(description = "모집 정원", example = "4")
         int recruitCapacity,
+
+        @Schema(description = "메시지 타입", example = "TEXT", allowableValues = {"TEXT", "IMAGE", "SYSTEM"})
         ChatMessageType messageType,
+
+        @Schema(description = "발신자 정보. SYSTEM 메시지는 null", nullable = true)
         ChatMessageSenderPayload sender,
+
+        @Schema(description = "사용자 메시지 payload. TEXT와 IMAGE에서 사용", nullable = true)
         ChatUserMessagePayload userMessage,
+
+        @Schema(description = "시스템 메시지 payload. SYSTEM에서 사용", nullable = true)
         ChatSystemMessagePayload systemMessage,
+
+        @Schema(description = "메시지 생성 시각")
         LocalDateTime createdAt
 ) {
     public static ChatMessageBroadcastPayload ofUserMessage(ChatMessage message, Post post, User sender, ProfileImageResolver profileImageResolver) {

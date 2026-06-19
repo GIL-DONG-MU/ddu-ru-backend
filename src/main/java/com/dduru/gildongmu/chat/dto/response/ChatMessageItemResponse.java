@@ -4,20 +4,39 @@ import com.dduru.gildongmu.chat.domain.ChatMessage;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.dto.ws.ChatSystemMessagePayload;
 import com.dduru.gildongmu.user.domain.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@Schema(description = "채팅 메시지 항목. messageType에 따라 content, images, systemMessage 중 하나를 사용합니다.")
 public record ChatMessageItemResponse(
+        @Schema(description = "메시지 ID", example = "120")
         Long messageId,
+
+        @Schema(description = "메시지 타입", example = "TEXT", allowableValues = {"TEXT", "IMAGE", "SYSTEM"})
         ChatMessageType messageType,
+
+        @Schema(description = "발신자 정보. SYSTEM 메시지는 null", nullable = true)
         ChatMessageSenderResponse sender,
+
+        @Schema(description = "현재 사용자가 보낸 메시지인지 여부. SYSTEM 메시지는 false", example = "true")
         boolean isMine,
+
+        @Schema(description = "TEXT 메시지 본문. IMAGE와 SYSTEM 메시지는 null", example = "안녕하세요!", nullable = true)
         String content,
+
+        @Schema(description = "IMAGE 메시지 이미지 목록. TEXT와 SYSTEM 메시지는 빈 배열")
         List<ChatMessageImageResponse> images,
+
+        @Schema(description = "SYSTEM 메시지 표시 정보. TEXT와 IMAGE 메시지는 null", nullable = true)
         ChatSystemMessageResponse systemMessage,
+
+        @Schema(description = "이 메시지를 아직 읽지 않은 멤버 수. TEXT와 IMAGE에서 사용하며 SYSTEM 메시지는 null", example = "2", nullable = true)
         Integer unreadCount,
+
+        @Schema(description = "메시지 생성 시각")
         LocalDateTime createdAt
 ) {
     public static ChatMessageItemResponse forText(
