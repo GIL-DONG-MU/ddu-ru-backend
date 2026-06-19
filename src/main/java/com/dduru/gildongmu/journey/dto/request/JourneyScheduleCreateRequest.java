@@ -28,14 +28,11 @@ public record JourneyScheduleCreateRequest(
         String placeName,
 
         @Size(max = 100)
-        String memo,
-
-        String imageUrl
+        String memo
 ) {
     public JourneyScheduleCreateRequest {
         if (title != null) title = title.strip();
         if (placeName != null) placeName = placeName.strip();
         if (memo != null) memo = memo.strip();
-        if (imageUrl != null) imageUrl = imageUrl.strip();
     }
 }

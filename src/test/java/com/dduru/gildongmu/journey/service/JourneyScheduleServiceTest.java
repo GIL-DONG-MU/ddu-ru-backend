@@ -1,11 +1,8 @@
 package com.dduru.gildongmu.journey.service;
 
-import com.dduru.gildongmu.common.config.S3Properties;
 import com.dduru.gildongmu.common.exception.BusinessException;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.common.validation.InvalidImageUrlException;
-import com.dduru.gildongmu.common.validation.S3ImageUrlValidator;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.domain.JourneySchedule;
@@ -70,15 +67,10 @@ class JourneyScheduleServiceTest {
 
     @BeforeEach
     void setUp() {
-        S3Properties s3Properties = new S3Properties();
-        s3Properties.setBucket("dummy-bucket");
-        s3Properties.setRegion("ap-northeast-2");
-
         journeyScheduleService = new JourneyScheduleService(
                 journeyRepository,
                 journeyMemberRepository,
                 journeyScheduleRepository,
-                new S3ImageUrlValidator(s3Properties),
                 timeProvider
         );
     }
@@ -195,8 +187,7 @@ class JourneyScheduleServiceTest {
                     START_TIME,
                     END_TIME,
                     "오사카 성",
-                    "입장권 미리 구매",
-                    null
+                    "입장권 미리 구매"
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -230,7 +221,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "자유 일정", null, 0, START_TIME, END_TIME, "도톤보리", null, null
+                    "자유 일정", null, 0, START_TIME, END_TIME, "도톤보리", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -263,12 +254,12 @@ class JourneyScheduleServiceTest {
             when(journeyScheduleRepository.findActiveSchedulesByJourneyId(journeyId)).thenReturn(List.of());
 
             JourneyScheduleCreateRequest startRequest = new JourneyScheduleCreateRequest(
-                    "시작일 일정", null, 0, START_TIME, END_TIME, "장소A", null, null
+                    "시작일 일정", null, 0, START_TIME, END_TIME, "장소A", null
             );
             assertThat(journeyScheduleService.createSchedule(journeyId, userId, startRequest)).isNotNull();
 
             JourneyScheduleCreateRequest endRequest = new JourneyScheduleCreateRequest(
-                    "종료일 일정", null, 2, START_TIME, END_TIME, "장소B", null, null
+                    "종료일 일정", null, 2, START_TIME, END_TIME, "장소B", null
             );
             assertThat(journeyScheduleService.createSchedule(journeyId, userId, endRequest)).isNotNull();
         }
@@ -280,7 +271,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "전날 일정", null, -1, START_TIME, END_TIME, "장소", null, null
+                    "전날 일정", null, -1, START_TIME, END_TIME, "장소", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -300,7 +291,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "다음날 일정", null, 3, START_TIME, END_TIME, "장소", null, null
+                    "다음날 일정", null, 3, START_TIME, END_TIME, "장소", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -320,7 +311,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "시작만 있는 일정", null, 0, START_TIME, null, "장소", null, null
+                    "시작만 있는 일정", null, 0, START_TIME, null, "장소", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -340,7 +331,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "시간 미정 일정", null, 0, null, null, "장소", null, null
+                    "시간 미정 일정", null, 0, null, null, "장소", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -360,7 +351,7 @@ class JourneyScheduleServiceTest {
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "잘못된 일정", null, 0, null, END_TIME, "장소", null, null
+                    "잘못된 일정", null, 0, null, END_TIME, "장소", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -374,32 +365,13 @@ class JourneyScheduleServiceTest {
         }
 
         @Test
-        @DisplayName("허용되지 않는 이미지 URL이면 예외가 발생한다")
-        void invalidImageUrlThrowsException() {
-            Long journeyId = 1L;
-            Long userId = 10L;
-            Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
-            JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "관광 일정", null, 0, START_TIME, END_TIME, "장소",
-                    null, "https://external.com/image.png"
-            );
-
-            givenActiveMember(journeyId, userId, journey);
-
-            assertThatThrownBy(() -> journeyScheduleService.createSchedule(journeyId, userId, request))
-                    .isInstanceOf(InvalidImageUrlException.class);
-
-            verify(journeyScheduleRepository, never()).saveAndFlush(any());
-        }
-
-        @Test
         @DisplayName("active member가 아니면 일정을 생성할 수 없다")
         void inactiveMemberCannotCreateSchedule() {
             Long journeyId = 1L;
             Long userId = 10L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleCreateRequest request = new JourneyScheduleCreateRequest(
-                    "관광 일정", null, 0, START_TIME, END_TIME, "장소", null, null
+                    "관광 일정", null, 0, START_TIME, END_TIME, "장소", null
             );
 
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);
@@ -430,7 +402,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    "   ", null, null, null, null, null, null, null, null, null
+                    "   ", null, null, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -452,7 +424,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, null, null, null, "  ", null, null
+                    null, null, null, null, null, null, null, "  ", null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -480,7 +452,6 @@ class JourneyScheduleServiceTest {
                     LocalTime.of(10, 0),
                     null,
                     LocalTime.of(12, 0),
-                    null,
                     null,
                     null,
                     null
@@ -513,7 +484,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, creatorId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(101L, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    "다른 멤버가 수정", null, null, null, null, null, null, null, null, null
+                    "다른 멤버가 수정", null, null, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, otherMemberId, journey);
@@ -535,7 +506,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, 3, null, null, null, null, null, null, null
+                    null, null, 3, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -559,7 +530,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    "수정된 제목", null, null, null, null, null, null, null, null, null
+                    "수정된 제목", null, null, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -580,7 +551,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, null, null, null, null, "", null
+                    null, null, null, null, null, null, null, null, ""
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -602,7 +573,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, null, null, null, null, null, null
+                    null, null, null, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -625,7 +596,7 @@ class JourneyScheduleServiceTest {
             Long scheduleId = 999L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    "제목", null, null, null, null, null, null, null, null, null
+                    "제목", null, null, null, null, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -647,7 +618,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createScheduleWithNoTime(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, null, END_TIME, null, null, null, null
+                    null, null, null, null, null, END_TIME, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -671,7 +642,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, null, null, true, null, null, null
+                    null, null, null, null, null, null, true, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -694,7 +665,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, true, null, true, null, null, null
+                    null, null, null, null, true, null, true, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -717,7 +688,7 @@ class JourneyScheduleServiceTest {
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneySchedule schedule = createSchedule(scheduleId, journey, 0);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    null, null, null, null, true, null, null, null, null, null
+                    null, null, null, null, true, null, null, null, null
             );
 
             givenActiveMember(journeyId, userId, journey);
@@ -740,7 +711,7 @@ class JourneyScheduleServiceTest {
             Long scheduleId = 101L;
             Journey journey = createJourney(journeyId, userId, START_DATE, END_DATE);
             JourneyScheduleUpdateRequest request = new JourneyScheduleUpdateRequest(
-                    "제목", null, null, null, null, null, null, null, null, null
+                    "제목", null, null, null, null, null, null, null, null
             );
 
             when(journeyRepository.getByIdWithPostContextOrThrow(journeyId)).thenReturn(journey);
@@ -866,8 +837,7 @@ class JourneyScheduleServiceTest {
                 START_TIME,
                 END_TIME,
                 "기존 장소",
-                "기존 메모",
-                null
+                "기존 메모"
         );
         ReflectionTestUtils.setField(schedule, "id", scheduleId);
         return schedule;
@@ -882,7 +852,6 @@ class JourneyScheduleServiceTest {
                 null,
                 null,
                 "기존 장소",
-                null,
                 null
         );
         ReflectionTestUtils.setField(schedule, "id", scheduleId);

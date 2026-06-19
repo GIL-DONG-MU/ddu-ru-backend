@@ -279,7 +279,7 @@ flowchart LR
 
 - 여정 내 모든 게시글의 이미지를 3열 격자로 모아보는 화면
 - 최신 게시글 순, 같은 게시글 내에서는 업로드 순(`sort_order`)으로 정렬
-- 이미지 단위 커서 페이지네이션 (`cursorPostId` + `cursorSortOrder` 복합 커서)
+- 이미지 단위 커서 페이지네이션 (`cursorCreatedAt` + `cursorPostId` + `cursorSortOrder` 복합 커서)
 - 썸네일 탭하면 해당 게시글로 이동 (응답에 `journeyPostId` 포함)
 - 삭제된 게시글 이미지, 이미지 없는 게시글은 결과에서 제외
 

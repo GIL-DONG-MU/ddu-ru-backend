@@ -792,6 +792,6 @@ class JourneyServiceTest {
     }
 
     private JourneySchedule createSchedule(Journey journey, int dayOffset) {
-        return JourneySchedule.create(journey, "테스트 일정", ScheduleCategory.MEAL, dayOffset, null, null, "테스트 장소", null, null);
+        return JourneySchedule.create(journey, "테스트 일정", ScheduleCategory.MEAL, dayOffset, null, null, "테스트 장소", null);
     }
 }

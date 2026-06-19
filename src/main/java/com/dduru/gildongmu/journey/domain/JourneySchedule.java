@@ -52,9 +52,6 @@ public class JourneySchedule extends BaseTimeEntity {
     @Column(length = 100)
     private String memo;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
-
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
@@ -73,8 +70,7 @@ public class JourneySchedule extends BaseTimeEntity {
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
-            String memo,
-            String imageUrl
+            String memo
     ) {
         this.journey = journey;
         this.title = validateTitle(title);
@@ -85,7 +81,6 @@ public class JourneySchedule extends BaseTimeEntity {
         this.endTime = endTime;
         this.placeName = validatePlaceName(placeName);
         this.memo = validateMemo(memo);
-        this.imageUrl = imageUrl;
         this.isDeleted = false;
     }
 
@@ -97,8 +92,7 @@ public class JourneySchedule extends BaseTimeEntity {
             LocalTime startTime,
             LocalTime endTime,
             String placeName,
-            String memo,
-            String imageUrl
+            String memo
     ) {
         return JourneySchedule.builder()
                 .journey(journey)
@@ -109,7 +103,6 @@ public class JourneySchedule extends BaseTimeEntity {
                 .endTime(endTime)
                 .placeName(placeName)
                 .memo(memo)
-                .imageUrl(imageUrl)
                 .build();
     }
 
@@ -123,9 +116,7 @@ public class JourneySchedule extends BaseTimeEntity {
             LocalTime endTime,
             String placeName,
             boolean applyMemoPatch,
-            String memo,
-            boolean applyImageUrlPatch,
-            String imageUrl
+            String memo
     ) {
         LocalTime effectiveStartTime = applyStartTimePatch ? startTime : this.startTime;
         LocalTime effectiveEndTime = applyEndTimePatch ? endTime : this.endTime;
@@ -151,9 +142,6 @@ public class JourneySchedule extends BaseTimeEntity {
         }
         if (applyMemoPatch) {
             this.memo = memo != null ? validateMemo(memo) : null;
-        }
-        if (applyImageUrlPatch) {
-            this.imageUrl = imageUrl;
         }
     }
 
