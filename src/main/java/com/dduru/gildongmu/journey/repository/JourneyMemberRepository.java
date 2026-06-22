@@ -135,4 +135,16 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             @Param("postId") Long postId,
             @Param("status") JourneyMemberStatus status
     );
+
+    @Query("""
+            SELECT jm.user.id
+            FROM JourneyMember jm
+            WHERE jm.journey.id = :journeyId
+              AND jm.status = 'ACTIVE'
+              AND jm.user.id <> :excludeUserId
+            """)
+    List<Long> findActiveUserIdsByJourneyIdExcludingUser(
+            @Param("journeyId") Long journeyId,
+            @Param("excludeUserId") Long excludeUserId
+    );
 }

@@ -8,6 +8,9 @@ import com.dduru.gildongmu.journey.domain.enums.ScheduleCategory;
 import com.dduru.gildongmu.journey.dto.request.JourneyScheduleCreateRequest;
 import com.dduru.gildongmu.journey.dto.request.JourneyScheduleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyScheduleListResponse;
+import com.dduru.gildongmu.journey.event.ScheduleCanceledEvent;
+import com.dduru.gildongmu.journey.event.ScheduleCreatedEvent;
+import com.dduru.gildongmu.journey.event.ScheduleUpdatedEvent;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyScheduleException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
@@ -16,6 +19,7 @@ import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,7 @@ public class JourneyScheduleService {
     private final JourneyMemberRepository journeyMemberRepository;
     private final JourneyScheduleRepository journeyScheduleRepository;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public JourneyScheduleListResponse retrieveSchedules(Long journeyId, Long userId) {
@@ -53,6 +58,9 @@ public class JourneyScheduleService {
         JourneySchedule schedule = createJourneySchedule(journey, dayOffset, request);
         journeyScheduleRepository.saveAndFlush(schedule);
 
+        eventPublisher.publishEvent(new ScheduleCreatedEvent(
+                schedule.getId(), journeyId, schedule.getTitle(), userId
+        ));
         log.info("나의 여정 일정 생성됨 - journeyId={}, scheduleId={}, userId={}",
                 journeyId, schedule.getId(), userId);
 
@@ -90,6 +98,9 @@ public class JourneyScheduleService {
         schedule.update(title, category, dayOffset, applyStartTimePatch, startValue, applyEndTimePatch, endValue, placeName, applyMemoPatch, memo);
         journeyScheduleRepository.flush();
 
+        eventPublisher.publishEvent(new ScheduleUpdatedEvent(
+                scheduleId, journeyId, schedule.getTitle(), userId
+        ));
         log.info("나의 여정 일정 수정됨 - journeyId={}, scheduleId={}, userId={}",
                 journeyId, scheduleId, userId);
 
@@ -101,8 +112,12 @@ public class JourneyScheduleService {
         getAccessibleJourneyWithPost(journeyId, userId);
 
         JourneySchedule schedule = journeyScheduleRepository.getActiveByIdAndJourneyIdOrThrow(scheduleId, journeyId);
+        String scheduleTitle = schedule.getTitle();
         schedule.delete(userId, timeProvider.now());
 
+        eventPublisher.publishEvent(new ScheduleCanceledEvent(
+                scheduleId, journeyId, scheduleTitle, userId
+        ));
         log.info("나의 여정 일정 삭제됨 - journeyId={}, scheduleId={}, userId={}",
                 journeyId, scheduleId, userId);
     }

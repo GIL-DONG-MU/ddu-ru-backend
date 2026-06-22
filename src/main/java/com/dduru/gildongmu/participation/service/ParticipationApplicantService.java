@@ -12,6 +12,7 @@ import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ChatRoomIds;
 import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
+import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
 import com.dduru.gildongmu.participation.exception.ParticipationApplicantAccessDeniedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
@@ -25,6 +26,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +50,7 @@ public class ParticipationApplicantService {
     private final ChatRoomRepository chatRoomRepository;
     private final ProfileImageResolver profileImageResolver;
     private final JourneyMemberRepository journeyMemberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
@@ -57,6 +60,10 @@ public class ParticipationApplicantService {
 
         Participation participation = Participation.createParticipation(post, applicant, request.message());
         Participation saved = saveParticipationOrThrowDuplicate(participation, postId, userId);
+
+        eventPublisher.publishEvent(new MatchAppliedEvent(
+                saved.getId(), userId, post.getUser().getId(), post.getTitle()
+        ));
 
         log.info("참여신청 완료 - participationId: {}, postId: {}, userId: {}", saved.getId(), postId, userId);
         return new ParticipationCreateResponse(saved.getId(), saved.getStatus());
