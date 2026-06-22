@@ -1,8 +1,6 @@
 package com.dduru.gildongmu.notification.repository;
 
 import com.dduru.gildongmu.notification.domain.Notification;
-import com.dduru.gildongmu.notification.domain.enums.NotificationType;
-import com.dduru.gildongmu.notification.domain.enums.ResourceType;
 import com.dduru.gildongmu.notification.exception.NotificationNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,12 +37,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             WHERE n.recipient.id = :userId AND n.read = false
             """)
     int markAllAsReadByRecipientId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
-
-    boolean existsByTypeAndResourceTypeAndResourceId(
-            NotificationType type,
-            ResourceType resourceType,
-            Long resourceId
-    );
 
     default Notification getByIdAndRecipientIdOrThrow(Long id, Long recipientId) {
         return findByIdAndRecipient_Id(id, recipientId)

@@ -166,29 +166,11 @@ class NotificationEventListenerTest {
     class HandleJourneyNoticeCreated {
 
         @Test
-        @DisplayName("같은 게시글에 이미 공지 알림이 존재하면 저장하지 않는다 (dedup)")
-        void skipsWhenNotificationAlreadyExists() {
-            Long journeyPostId = 5L;
-            when(notificationRepository.existsByTypeAndResourceTypeAndResourceId(
-                    NotificationType.JOURNEY_NOTICE, ResourceType.JOURNEY_POST, journeyPostId
-            )).thenReturn(true);
-
-            listener.handleJourneyNoticeCreated(
-                    new JourneyNoticeCreatedEvent(journeyPostId, 1L, "시부야 여정", 10L)
-            );
-
-            verify(notificationRepository, never()).saveAll(any());
-            verify(journeyMemberRepository, never()).findActiveUserIdsByJourneyIdExcludingUser(any(), any());
-        }
-
-        @Test
         @DisplayName("행위자 제외 후 수신자가 없으면 저장하지 않는다")
         void skipsWhenNoRecipients() {
             Long journeyId = 1L;
             Long actorUserId = 10L;
 
-            when(notificationRepository.existsByTypeAndResourceTypeAndResourceId(any(), any(), any()))
-                    .thenReturn(false);
             when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
                     .thenReturn(List.of());
 
@@ -208,8 +190,6 @@ class NotificationEventListenerTest {
             String journeyTitle = "시부야 여정";
             List<Long> recipientIds = List.of(20L, 30L);
 
-            when(notificationRepository.existsByTypeAndResourceTypeAndResourceId(any(), any(), any()))
-                    .thenReturn(false);
             when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
                     .thenReturn(recipientIds);
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
@@ -237,7 +217,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
         void exceptionIsSwallowed() {
-            when(notificationRepository.existsByTypeAndResourceTypeAndResourceId(any(), any(), any()))
+            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
                     .thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->

@@ -109,21 +109,15 @@ NotificationEventListener (REQUIRES_NEW transaction)
 
 ## 4. JOURNEY_NOTICE 중복 발송 방지
 
-공지 지정 → 공지 해제 → 공지 재지정 사이클에서 알림을 중복 발송하지 않는다.
-
-**서비스 레벨**: `updatePostNotice()`에서 `nextNotice && !journeyPost.isNotice()`인 경우에만 이벤트를 발행한다 (비공지 → 공지 전환 시점만).
-
-**리스너 레벨**: `JourneyNoticeCreatedEvent` 수신 시, 동일한 `journeyPostId`에 대해
-`JOURNEY_NOTICE` 타입 알림이 이미 존재하면 저장을 건너뛴다.
+**서비스 레벨**에서만 처리한다. `updatePostNotice()`에서 `nextNotice && !journeyPost.isNotice()`인 경우에만 이벤트를 발행한다 (비공지 → 공지 전환 시점에만).
 
 ```
-journeyPost.isNotice() == false → true 전환 시 → 이벤트 발행
+journeyPost.isNotice() == false → true 전환 시에만 이벤트 발행
     ↓
-NotificationEventListener
-    existsByTypeAndResourceTypeAndResourceId(JOURNEY_NOTICE, JOURNEY_POST, journeyPostId)
-    → true: 건너뜀 (이미 발송된 게시글)
-    → false: 알림 저장
+NotificationEventListener → 수신자 조회 → 알림 저장
 ```
+
+공지 해제 후 재지정 시에는 이벤트가 다시 발행되어 알림이 재발송된다. 이는 의도된 동작이다.
 
 ---
 

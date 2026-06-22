@@ -91,12 +91,6 @@ public class NotificationEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleJourneyNoticeCreated(JourneyNoticeCreatedEvent event) {
         try {
-            // 동일 게시글에 이미 공지 알림이 발송된 경우 재발송하지 않음
-            if (notificationRepository.existsByTypeAndResourceTypeAndResourceId(
-                    NotificationType.JOURNEY_NOTICE, ResourceType.JOURNEY_POST, event.journeyPostId())) {
-                return;
-            }
-
             List<Long> recipientIds = journeyMemberRepository
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
             if (recipientIds.isEmpty()) {
