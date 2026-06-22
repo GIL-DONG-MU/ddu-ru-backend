@@ -17,6 +17,7 @@ import com.dduru.gildongmu.journey.exception.JourneyScheduleNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -62,6 +63,8 @@ class JourneyScheduleServiceTest {
     private JourneyScheduleRepository journeyScheduleRepository;
     @Mock
     private TimeProvider timeProvider;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private JourneyScheduleService journeyScheduleService;
 
@@ -71,7 +74,8 @@ class JourneyScheduleServiceTest {
                 journeyRepository,
                 journeyMemberRepository,
                 journeyScheduleRepository,
-                timeProvider
+                timeProvider,
+                eventPublisher
         );
     }
 
