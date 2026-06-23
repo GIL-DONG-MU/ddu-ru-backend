@@ -143,7 +143,7 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 예정 여행 섹션을 조회할 수 있다")
     void retrieveUpcomingTrip_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, mock(UserOnboardingRepository.class));
+        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(false));
 
         mockMvc.perform(get(HomeEndpoints.UPCOMING_TRIP))
                 .andExpect(status().isOk())
@@ -169,7 +169,7 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 메이트 추천 섹션을 조회할 수 있다")
     void retrieveMateRecommendations_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, mock(UserOnboardingRepository.class));
+        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(true));
 
         mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
                 .andExpect(status().isOk())
@@ -178,6 +178,17 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.remainingFreeCount").value(3))
                 .andExpect(jsonPath("$.data.recommendations[0].recommendationId").value(5001))
                 .andExpect(jsonPath("$.data.recommendations[0].host.gender").value("F"));
+    }
+
+    @Test
+    @DisplayName("설문 미완료 회원은 메이트 추천 섹션을 직접 조회할 수 없다")
+    void retrieveMateRecommendations_memberSurveyRequired() throws Exception {
+        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(false));
+
+        mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.data.errorCode").value(ErrorCode.SURVEY_REQUIRED.name()));
     }
 
     @Test
@@ -197,7 +208,7 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 같은 여행지 여행 섹션을 조회할 수 있다")
     void retrieveSameDestinationTrips_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, mock(UserOnboardingRepository.class));
+        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(false));
 
         mockMvc.perform(get(HomeEndpoints.SAME_DESTINATION_TRIPS))
                 .andExpect(status().isOk())
@@ -221,7 +232,7 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 또래 여행 섹션을 조회할 수 있다")
     void retrieveSameAgeTrips_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, mock(UserOnboardingRepository.class));
+        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(false));
 
         mockMvc.perform(get(HomeEndpoints.SAME_AGE_TRIPS))
                 .andExpect(status().isOk())
@@ -262,6 +273,16 @@ class HomeControllerTest {
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+    }
+
+    private UserOnboardingRepository onboardingRepository(boolean surveyCompleted) {
+        UserOnboarding onboarding = new UserOnboarding(user());
+        if (surveyCompleted) {
+            onboarding.completeSurvey();
+        }
+        UserOnboardingRepository userOnboardingRepository = mock(UserOnboardingRepository.class);
+        when(userOnboardingRepository.getByUserIdOrThrow(10L)).thenReturn(onboarding);
+        return userOnboardingRepository;
     }
 
     private User user() {

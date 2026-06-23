@@ -13,6 +13,7 @@ import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
 import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
 import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
 import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
+import com.dduru.gildongmu.home.exception.HomeSurveyRequiredException;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
@@ -47,6 +48,8 @@ public class HomeService {
 
     @Transactional(readOnly = true)
     public UpcomingTripResponse retrieveUpcomingTrip(Long userId) {
+        requireOnboarding(userId);
+
         LocalDate today = timeProvider.today();
         LocalDate upcomingStartDate = today.plusDays(12);
         LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
@@ -56,6 +59,8 @@ public class HomeService {
 
     @Transactional(readOnly = true)
     public MateRecommendationResponse retrieveMateRecommendations(Long userId) {
+        requireSurveyCompleted(userId);
+
         LocalDate upcomingStartDate = timeProvider.today().plusDays(12);
         LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
 
@@ -77,12 +82,28 @@ public class HomeService {
 
     @Transactional(readOnly = true)
     public List<SameDestinationTripResponse> retrieveSameDestinationTrips(Long userId) {
+        // TODO: 선호 여행지 설정 기능이 추가되면 온보딩 존재 확인 대신 선호 여행지 설정 여부를 검증하고 해당 여행지 기준으로 조회한다.
+        requireOnboarding(userId);
+
         return sameDestinationTrips(timeProvider.today().plusDays(12));
     }
 
     @Transactional(readOnly = true)
     public List<SameAgeTripResponse> retrieveSameAgeTrips(Long userId) {
+        requireOnboarding(userId);
+
         return sameAgeTrips(timeProvider.today().plusDays(12));
+    }
+
+    private UserOnboarding requireOnboarding(Long userId) {
+        return userOnboardingRepository.getByUserIdOrThrow(userId);
+    }
+
+    private void requireSurveyCompleted(Long userId) {
+        UserOnboarding onboarding = requireOnboarding(userId);
+        if (onboarding.getSurveyStatus() != SurveyStatus.COMPLETED) {
+            throw new HomeSurveyRequiredException();
+        }
     }
 
     private UserAccessStatus resolveUserAccessStatus(Long userId) {

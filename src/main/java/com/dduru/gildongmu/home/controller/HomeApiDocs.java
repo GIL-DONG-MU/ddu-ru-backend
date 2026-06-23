@@ -38,7 +38,10 @@ public interface HomeApiDocs {
 
     @Operation(summary = "홈 예정 여행 섹션 조회", description = "홈 예정 여행 섹션 데이터를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
+    })
     ResponseEntity<ApiResult<UpcomingTripResponse>> retrieveUpcomingTrip(
             @Parameter(hidden = true) Long userId
     );
@@ -52,7 +55,11 @@ public interface HomeApiDocs {
 
     @Operation(summary = "홈 메이트 추천 섹션 조회", description = "홈 메이트 추천 섹션 데이터를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND,
+            ErrorCode.SURVEY_REQUIRED
+    })
     ResponseEntity<ApiResult<MateRecommendationResponse>> retrieveMateRecommendations(
             @Parameter(hidden = true) Long userId
     );
@@ -68,14 +75,20 @@ public interface HomeApiDocs {
 
     @Operation(summary = "홈 같은 여행지 여행 섹션 조회", description = "회원의 선호 여행지와 같은 동행 섹션 데이터를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
+    })
     ResponseEntity<ApiResult<List<SameDestinationTripResponse>>> retrieveSameDestinationTrips(
             @Parameter(hidden = true) Long userId
     );
 
     @Operation(summary = "홈 또래 여행 섹션 조회", description = "홈 또래 여행 섹션 데이터를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_ONBOARDING_NOT_FOUND
+    })
     ResponseEntity<ApiResult<List<SameAgeTripResponse>>> retrieveSameAgeTrips(
             @Parameter(hidden = true) Long userId
     );
