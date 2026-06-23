@@ -40,6 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/ws/chat").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/home").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/home/popular-destinations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/home/super-hosts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/destinations/popular").permitAll()
                         // 게시글 목록 / 상세 조회만 비로그인 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/*").permitAll()
                         .requestMatchers("/api/v1/verifications/**").authenticated()
