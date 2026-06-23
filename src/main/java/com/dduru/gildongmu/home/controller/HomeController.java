@@ -3,6 +3,7 @@ package com.dduru.gildongmu.home.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.annotation.OptionalCurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import com.dduru.gildongmu.home.HomeEndpoints;
 import com.dduru.gildongmu.home.dto.response.HomePopularDestinationResponse;
 import com.dduru.gildongmu.home.dto.response.HomeResponse;
 import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
@@ -25,14 +26,14 @@ public class HomeController implements HomeApiDocs {
     private final HomeService homeService;
 
     @Override
-    @GetMapping("/api/v1/home")
+    @GetMapping(HomeEndpoints.HOME)
     public ResponseEntity<ApiResult<HomeResponse>> retrieveHome(@OptionalCurrentUser Long userId) {
         HomeResponse response = homeService.retrieveHome(userId);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
-    @GetMapping("/api/v1/home/upcoming-trip")
+    @GetMapping(HomeEndpoints.UPCOMING_TRIP)
     public ResponseEntity<ApiResult<UpcomingTripResponse>> retrieveUpcomingTrip(
             @CurrentUser Long userId
     ) {
@@ -41,14 +42,14 @@ public class HomeController implements HomeApiDocs {
     }
 
     @Override
-    @GetMapping("/api/v1/home/popular-destinations")
+    @GetMapping(HomeEndpoints.POPULAR_DESTINATIONS)
     public ResponseEntity<ApiResult<HomePopularDestinationResponse>> retrievePopularDestinations() {
         HomePopularDestinationResponse response = homeService.retrievePopularDestinations();
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 
     @Override
-    @GetMapping("/api/v1/home/mate-recommendations")
+    @GetMapping(HomeEndpoints.MATE_RECOMMENDATIONS)
     public ResponseEntity<ApiResult<MateRecommendationResponse>> retrieveMateRecommendations(
             @CurrentUser Long userId
     ) {
@@ -57,7 +58,7 @@ public class HomeController implements HomeApiDocs {
     }
 
     @Override
-    @GetMapping("/api/v1/home/super-hosts")
+    @GetMapping(HomeEndpoints.SUPER_HOSTS)
     public ResponseEntity<ApiResult<List<HomeSuperHostResponse>>> retrieveSuperHosts(
             @OptionalCurrentUser Long userId
     ) {
@@ -66,7 +67,7 @@ public class HomeController implements HomeApiDocs {
     }
 
     @Override
-    @GetMapping("/api/v1/home/same-destination-trips")
+    @GetMapping(HomeEndpoints.SAME_DESTINATION_TRIPS)
     public ResponseEntity<ApiResult<List<SameDestinationTripResponse>>> retrieveSameDestinationTrips(
             @CurrentUser Long userId
     ) {
@@ -75,7 +76,7 @@ public class HomeController implements HomeApiDocs {
     }
 
     @Override
-    @GetMapping("/api/v1/home/same-age-trips")
+    @GetMapping(HomeEndpoints.SAME_AGE_TRIPS)
     public ResponseEntity<ApiResult<List<SameAgeTripResponse>>> retrieveSameAgeTrips(
             @CurrentUser Long userId
     ) {
