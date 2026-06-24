@@ -65,7 +65,7 @@ public class NotificationEventListener {
             );
             notificationRepository.save(notification);
         } catch (Exception e) {
-            log.error("MATCH_APPROVED 알림 저장 실패 - participationId={}", event.participationId(), e);
+            log.error("MATCH_APPROVED 알림 저장 실패 - journeyId={}", event.journeyId(), e);
         }
     }
 
