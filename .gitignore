@@ -44,3 +44,6 @@ out/
 
 ### Blue-Green runtime state ###
 deployment/nginx/conf.d/upstreams/active-upstream.inc
+
+### Firebase ###
+src/main/resources/firebase/
