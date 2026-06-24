@@ -70,6 +70,9 @@ springdoc:
   default-consumes-media-type: application/json;charset=UTF-8
   default-produces-media-type: application/json;charset=UTF-8
 
+fcm:
+  service-account-path: firebase/service-account.json
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [reqId=%X{requestId:-} ip=%X{clientIp:-} method=%X{method:-} uri=%X{uri:-} userId=%X{userId:-} ua=%X{userAgent:-}] %msg%n"
