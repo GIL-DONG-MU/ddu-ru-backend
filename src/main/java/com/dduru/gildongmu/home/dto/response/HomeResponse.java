@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.home.dto.response;
 
-import com.dduru.gildongmu.common.enums.UserAccessStatus;
+import com.dduru.gildongmu.home.enums.UserAccessStatus;
 
 import java.util.List;
 

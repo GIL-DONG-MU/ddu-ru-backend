@@ -1,6 +1,6 @@
 package com.dduru.gildongmu.home.service;
 
-import com.dduru.gildongmu.common.enums.UserAccessStatus;
+import com.dduru.gildongmu.home.enums.UserAccessStatus;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.HomeEndpoints;
 import com.dduru.gildongmu.home.dto.response.HostResponse;

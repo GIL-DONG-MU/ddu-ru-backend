@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.common.enums;
+package com.dduru.gildongmu.home.enums;
 
 public enum UserAccessStatus {
     GUEST,
