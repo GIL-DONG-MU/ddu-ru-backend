@@ -32,6 +32,8 @@
 | `verification` | 휴대폰 인증번호 발송/검증 | Redis 또는 인증 데이터 |
 | `admin` | 관리자 사용자/게시글/신고 조회 및 처리 | admin controller/service |
 | `home` | 홈 화면 데이터 조합 | `HomeResponse` |
+| `notification` | 도메인 이벤트 기반 인앱 알림 생성·저장, 알림함 조회/읽음 처리 | `Notification`, `NotificationType`, `ResourceType` |
+| `fcm` | FCM 디바이스 토큰 등록/삭제, 이벤트 기반 FCM 푸시 발송 | `UserFcmToken`, `DeviceType` |
 | `common` | 공통 응답, 예외, 설정, JWT, WebSocket, validation | `ApiResult`, `ErrorCode`, `BaseTimeEntity` |
 
 ---

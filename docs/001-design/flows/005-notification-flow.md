@@ -1,11 +1,12 @@
 # 005. Notification Flow
 
 > 알림 서비스는 도메인 이벤트를 수신해 수신자에게 인앱 알림을 생성·저장하고,
-> 사용자가 알림함에서 조회·읽음 처리하는 흐름이다.
+> FCM 푸시 알림을 비동기로 발송하며, 사용자가 알림함에서 조회·읽음 처리하는 흐름이다.
 
 이 문서는 `알림` 기능을 처음 보는 사람이 아래를 한 번에 이해할 수 있도록 정리한 제품 흐름 문서다.
 
 - 알림이 어떤 경로로 생성되는지 (도메인 이벤트 → 리스너)
+- FCM 푸시 발송 흐름 및 토큰 관리
 - 알림 타입별 수신자 결정 규칙
 - 조회 API의 커서 페이지네이션 방식
 - 예외 처리 및 격리 정책
@@ -52,8 +53,24 @@ NotificationEventListener (REQUIRES_NEW transaction)
   ├── 수신자 결정
   ├── 알림 문구(body) 조립
   ├── notificationRepository.save() / saveAll()
+  ├── fcmPushService.sendToUser() / sendToUsers()  ← 비동기 FCM 발송
   └── 예외 발생 시 log.error()만 남기고 무시
 ```
+
+### FCM 푸시 발송 흐름
+
+```
+fcmPushService.sendToUser(userId, title, body)  [fcmExecutor 스레드풀, @Async]
+  │
+  ├── Firebase 미초기화 → return (graceful skip)
+  ├── user_fcm_tokens 에서 토큰 조회 → 없으면 return
+  ├── 500개 단위 청크 분할
+  └── FirebaseMessaging.sendEachForMulticast()
+        ├── 성공 → 완료
+        └── UNREGISTERED / INVALID_ARGUMENT → 해당 토큰 즉시 삭제
+```
+
+FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기로 실행되므로 FCM 실패가 알림 저장에 영향을 주지 않는다.
 
 ### 이벤트 발행 지점 목록
 
@@ -168,9 +185,8 @@ PATCH /read-all
 
 ---
 
-## 7. 현재 범위 제외 항목 (2차)
+## 7. 현재 범위 제외 항목 (3차)
 
-- FCM 푸시 발송
 - 알림 on/off 설정
 - `SCHEDULE_UPCOMING` — 시간 기반 스케줄러 + 푸시 연동 필요
 - 채팅 새 메시지 알림 — 디바운스/그룹핑 + 푸시 연동 필요

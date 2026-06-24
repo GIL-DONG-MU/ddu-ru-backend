@@ -62,6 +62,8 @@
 | `reports` | report | 게시글 신고 |
 | `super_host_tickets` | superhost | 슈퍼호스트 티켓 |
 | `super_host_exposures` | superhost | 슈퍼호스트 노출 |
+| `notifications` | notification | 인앱 알림 (이벤트 기반 생성, 커서 페이지네이션 조회) |
+| `user_fcm_tokens` | fcm | FCM 푸시 토큰 (사용자·디바이스별 upsert, 만료 시 자동 삭제) |
 
 ---
 
@@ -99,3 +101,5 @@
 - `chat_rooms`: 그룹 채팅방은 `journey_id` unique.
 - `chat_messages`: `(room_id, id)` 조회 인덱스가 메시지 커서 조회에 사용됩니다.
 - `journey_posts`: `(journey_id, is_deleted, is_notice, created_at, id)` 인덱스가 여정 게시판 조회에 사용됩니다.
+- `notifications`: `(recipient_user_id, id)` 인덱스가 커서 페이지네이션 조회에 사용됩니다.
+- `user_fcm_tokens`: `uk_token (token)` — 동일 토큰 중복 등록 방지. `uk_user_device (user_id, device_type)` — 사용자+디바이스 타입 기준 upsert 키.

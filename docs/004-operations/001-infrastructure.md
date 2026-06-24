@@ -60,6 +60,7 @@
 - `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_S3_ACCESS_KEY`, `AWS_S3_SECRET_KEY`
 - `COOLSMS_API_KEY`, `COOLSMS_API_SECRET`, `COOLSMS_FROM_NUMBER`
 - `KAKAO_*`, `GOOGLE_*`
+- `FCM_SERVICE_ACCOUNT_PATH` — Firebase 서비스 계정 JSON 경로 (`fcm.service-account-path`, 기본값 `firebase/service-account.json`)
 - `ECR_REGISTRY`, `ECR_REPOSITORY`, `IMAGE_TAG`
 
 ---
