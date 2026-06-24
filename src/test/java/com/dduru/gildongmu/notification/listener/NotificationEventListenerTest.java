@@ -14,6 +14,7 @@ import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
 import com.dduru.gildongmu.participation.event.MatchRejectedEvent;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import com.dduru.gildongmu.fcm.service.FcmPushService;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,11 +48,14 @@ class NotificationEventListenerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private FcmPushService fcmPushService;
+
     private NotificationEventListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationRepository, journeyMemberRepository, userRepository);
+        listener = new NotificationEventListener(notificationRepository, journeyMemberRepository, userRepository, fcmPushService);
     }
 
     // ── MATCH ─────────────────────────────────────────────────────────────────
