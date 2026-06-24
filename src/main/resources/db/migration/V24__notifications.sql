@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS notifications
     resource_type     VARCHAR(50)  NOT NULL,
     resource_id       BIGINT       NOT NULL,
     is_read           TINYINT(1)   NOT NULL DEFAULT 0,
-    created_at        DATETIME(6)  NOT NULL,
+    created_at        DATETIME(6)  NULL,
     modified_at       DATETIME(6)  NULL,
     read_at           DATETIME(6)  NULL,
     CONSTRAINT fk_notifications_user FOREIGN KEY (recipient_user_id) REFERENCES users (id),
