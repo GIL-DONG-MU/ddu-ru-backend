@@ -14,48 +14,44 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/notifications")
 public class NotificationController implements NotificationApiDocs {
 
     private final NotificationQueryService notificationQueryService;
     private final NotificationService notificationService;
 
+    @Override
     @GetMapping
     public ResponseEntity<ApiResult<NotificationListResponse>> getNotifications(
             @CurrentUser Long userId,
             @Valid @ModelAttribute NotificationListRequest request
     ) {
-        return ResponseEntity.ok(ApiResult.ok(
-                notificationQueryService.getNotifications(userId, request.cursor(), request.sizeOrDefault())
-        ));
+        return ResponseEntity.ok(ApiResult.ok(notificationQueryService.getNotifications(userId, request.cursor(), request.sizeOrDefault())));
     }
 
+    @Override
     @GetMapping("/unread-count")
     public ResponseEntity<ApiResult<UnreadCountResponse>> getUnreadCount(
             @CurrentUser Long userId
     ) {
-        return ResponseEntity.ok(ApiResult.ok(
-                notificationQueryService.getUnreadCount(userId)
-        ));
+        return ResponseEntity.ok(ApiResult.ok(notificationQueryService.getUnreadCount(userId)));
     }
 
+    @Override
     @PatchMapping("/{notificationId}/read")
     public ResponseEntity<ApiResult<NotificationReadResponse>> markAsRead(
             @CurrentUser Long userId,
             @PathVariable Long notificationId
     ) {
-        return ResponseEntity.ok(ApiResult.ok(
-                notificationService.markAsRead(userId, notificationId)
-        ));
+        return ResponseEntity.ok(ApiResult.ok(notificationService.markAsRead(userId, notificationId)));
     }
 
+    @Override
     @PatchMapping("/read-all")
     public ResponseEntity<ApiResult<NotificationReadResponse>> markAllAsRead(
             @CurrentUser Long userId
     ) {
-        return ResponseEntity.ok(ApiResult.ok(
-                notificationService.markAllAsRead(userId)
-        ));
+        return ResponseEntity.ok(ApiResult.ok(notificationService.markAllAsRead(userId)));
     }
 }
