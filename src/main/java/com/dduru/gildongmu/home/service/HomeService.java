@@ -177,13 +177,11 @@ public class HomeService {
     }
 
     private static HomeResponse.DisabledReason mateRecommendationDisabledReason(UserAccessStatus userAccessStatus) {
-        if (userAccessStatus == UserAccessStatus.GUEST) {
-            return HomeResponse.DisabledReason.LOGIN_REQUIRED;
-        }
-        if (userAccessStatus == UserAccessStatus.MEMBER_SURVEY_REQUIRED) {
-            return HomeResponse.DisabledReason.SURVEY_REQUIRED;
-        }
-        return null;
+        return switch (userAccessStatus) {
+            case GUEST -> HomeResponse.DisabledReason.LOGIN_REQUIRED;
+            case MEMBER_SURVEY_REQUIRED -> HomeResponse.DisabledReason.SURVEY_REQUIRED;
+            case MEMBER_SURVEY_COMPLETED -> null;
+        };
     }
 
     private static boolean isMember(UserAccessStatus userAccessStatus) {
