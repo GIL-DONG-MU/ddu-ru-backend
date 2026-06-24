@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.jwt.JwtAuthenticationEntryPoint;
 import com.dduru.gildongmu.common.jwt.JwtAuthenticationFilter;
 import com.dduru.gildongmu.common.jwt.JwtAccessDeniedHandler;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
+import com.dduru.gildongmu.home.HomeEndpoints;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,9 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/ws/chat").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/home").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/home/popular-destinations").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/home/super-hosts").permitAll()
+                        .requestMatchers(HttpMethod.GET, HomeEndpoints.HOME).permitAll()
+                        .requestMatchers(HttpMethod.GET, HomeEndpoints.POPULAR_DESTINATIONS).permitAll()
+                        .requestMatchers(HttpMethod.GET, HomeEndpoints.SUPER_HOSTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/destinations/popular").permitAll()
                         // 게시글 목록 / 상세 조회만 비로그인 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/*").permitAll()

@@ -239,7 +239,7 @@ public class HomeService {
                                 3,
                                 4,
                                 "제주 서쪽 해안을 따라 사진 찍고 카페를 둘러볼 동행을 찾아요.",
-                                List.of("#카페투어", "#사진", "#힐링")
+                                List.of("카페투어", "사진", "힐링")
                         ),
                         new MateRecommendationItemResponse(
                                 5002L,
@@ -253,7 +253,7 @@ public class HomeService {
                                 2,
                                 4,
                                 "무리하지 않고 천천히 한라산을 오를 동행을 모집합니다.",
-                                List.of("#등산", "#자연", "#느긋한")
+                                List.of("등산", "자연", "느긋한")
                         )
                 )
         );
