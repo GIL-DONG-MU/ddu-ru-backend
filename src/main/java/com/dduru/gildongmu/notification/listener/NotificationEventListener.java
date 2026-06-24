@@ -11,7 +11,6 @@ import com.dduru.gildongmu.notification.domain.enums.ResourceType;
 import com.dduru.gildongmu.notification.repository.NotificationRepository;
 import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
-import com.dduru.gildongmu.participation.event.MatchRejectedEvent;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,14 +37,13 @@ public class NotificationEventListener {
     public void handleMatchApplied(MatchAppliedEvent event) {
         try {
             User recipient = userRepository.getReferenceById(event.recipientUserId());
-            Notification notification = Notification.create(
+            notificationRepository.save(Notification.create(
                     recipient,
                     NotificationType.MATCH_APPLIED,
-                    "[" + event.postTitle() + "]에 새로운 참여 신청이 도착했습니다.",
+                    event.actorNickname() + " 님이 매칭을 신청했습니다.",
                     ResourceType.MATCH,
                     event.participationId()
-            );
-            notificationRepository.save(notification);
+            ));
         } catch (Exception e) {
             log.error("MATCH_APPLIED 알림 저장 실패 - participationId={}", event.participationId(), e);
         }
@@ -56,34 +54,15 @@ public class NotificationEventListener {
     public void handleMatchApproved(MatchApprovedEvent event) {
         try {
             User recipient = userRepository.getReferenceById(event.applicantUserId());
-            Notification notification = Notification.create(
+            notificationRepository.save(Notification.create(
                     recipient,
                     NotificationType.MATCH_APPROVED,
-                    "[" + event.journeyTitle() + "] 여행 참여가 승인되었습니다.",
+                    event.approverNickname() + " 님과 매칭이 성사되었습니다.",
                     ResourceType.JOURNEY,
                     event.journeyId()
-            );
-            notificationRepository.save(notification);
+            ));
         } catch (Exception e) {
             log.error("MATCH_APPROVED 알림 저장 실패 - journeyId={}", event.journeyId(), e);
-        }
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleMatchRejected(MatchRejectedEvent event) {
-        try {
-            User recipient = userRepository.getReferenceById(event.applicantUserId());
-            Notification notification = Notification.create(
-                    recipient,
-                    NotificationType.MATCH_REJECTED,
-                    "참여 신청이 검토되었으나 함께하기 어렵게 되었습니다.",
-                    ResourceType.MATCH,
-                    event.participationId()
-            );
-            notificationRepository.save(notification);
-        } catch (Exception e) {
-            log.error("MATCH_REJECTED 알림 저장 실패 - participationId={}", event.participationId(), e);
         }
     }
 
@@ -97,7 +76,7 @@ public class NotificationEventListener {
                 return;
             }
 
-            String body = "[" + event.journeyTitle() + "] 새 공지가 등록되었습니다.";
+            String body = "[" + event.journeyTitle() + "] 에 공지가 등록되었습니다.";
             List<Notification> notifications = recipientIds.stream()
                     .map(id -> Notification.create(
                             userRepository.getReferenceById(id),
@@ -117,12 +96,8 @@ public class NotificationEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCreated(ScheduleCreatedEvent event) {
         try {
-            saveScheduleNotifications(
-                    event.journeyId(), event.actorUserId(),
-                    NotificationType.SCHEDULE_CREATED,
-                    "[" + event.scheduleTitle() + "] 일정이 추가되었습니다.",
-                    event.scheduleId()
-            );
+            saveScheduleNotifications(event.journeyId(), event.actorUserId(),
+                    NotificationType.SCHEDULE_CREATED, "여행 일정이 생성되었습니다.", event.scheduleId());
         } catch (Exception e) {
             log.error("SCHEDULE_CREATED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
         }
@@ -132,12 +107,8 @@ public class NotificationEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleUpdated(ScheduleUpdatedEvent event) {
         try {
-            saveScheduleNotifications(
-                    event.journeyId(), event.actorUserId(),
-                    NotificationType.SCHEDULE_UPDATED,
-                    "[" + event.scheduleTitle() + "] 일정이 변경되었습니다.",
-                    event.scheduleId()
-            );
+            saveScheduleNotifications(event.journeyId(), event.actorUserId(),
+                    NotificationType.SCHEDULE_UPDATED, "여행 일정이 변경되었습니다. 확인해주세요.", event.scheduleId());
         } catch (Exception e) {
             log.error("SCHEDULE_UPDATED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
         }
@@ -147,24 +118,15 @@ public class NotificationEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCanceled(ScheduleCanceledEvent event) {
         try {
-            saveScheduleNotifications(
-                    event.journeyId(), event.actorUserId(),
-                    NotificationType.SCHEDULE_CANCELED,
-                    "[" + event.scheduleTitle() + "] 일정이 취소되었습니다.",
-                    event.scheduleId()
-            );
+            saveScheduleNotifications(event.journeyId(), event.actorUserId(),
+                    NotificationType.SCHEDULE_CANCELED, "여행 일정이 취소되었습니다.", event.scheduleId());
         } catch (Exception e) {
             log.error("SCHEDULE_CANCELED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
         }
     }
 
-    private void saveScheduleNotifications(
-            Long journeyId,
-            Long actorUserId,
-            NotificationType type,
-            String body,
-            Long scheduleId
-    ) {
+    private void saveScheduleNotifications(Long journeyId, Long actorUserId,
+                                           NotificationType type, String body, Long scheduleId) {
         List<Long> recipientIds = journeyMemberRepository
                 .findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId);
         if (recipientIds.isEmpty()) {
@@ -174,10 +136,7 @@ public class NotificationEventListener {
         List<Notification> notifications = recipientIds.stream()
                 .map(id -> Notification.create(
                         userRepository.getReferenceById(id),
-                        type,
-                        body,
-                        ResourceType.SCHEDULE,
-                        scheduleId
+                        type, body, ResourceType.SCHEDULE, scheduleId
                 ))
                 .toList();
         notificationRepository.saveAll(notifications);
