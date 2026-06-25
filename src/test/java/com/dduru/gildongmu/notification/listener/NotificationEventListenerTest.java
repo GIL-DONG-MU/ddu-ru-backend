@@ -8,7 +8,7 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
-import com.dduru.gildongmu.notification.repository.NotificationRepository;
+import com.dduru.gildongmu.notification.service.NotificationPersistService;
 import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
 import com.dduru.gildongmu.user.domain.User;
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 class NotificationEventListenerTest {
 
     @Mock
-    private NotificationRepository notificationRepository;
+    private NotificationPersistService notificationPersistService;
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
@@ -50,7 +50,7 @@ class NotificationEventListenerTest {
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationRepository, journeyMemberRepository, userRepository);
+        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository);
     }
 
     // ── MATCH ─────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ class NotificationEventListenerTest {
             listener.handleMatchApplied(new MatchAppliedEvent(participationId, actorUserId, recipientUserId, postTitle, actorNickname));
 
             ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(captor.capture());
+            verify(notificationPersistService).save(captor.capture());
 
             Notification saved = captor.getValue();
             assertThat(saved.getType()).isEqualTo(NotificationType.MATCH_APPLIED);
@@ -114,7 +114,7 @@ class NotificationEventListenerTest {
             listener.handleMatchApproved(new MatchApprovedEvent(participationId, applicantUserId, journeyId, journeyTitle, approverNickname));
 
             ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(captor.capture());
+            verify(notificationPersistService).save(captor.capture());
 
             Notification saved = captor.getValue();
             assertThat(saved.getType()).isEqualTo(NotificationType.MATCH_APPROVED);
@@ -153,7 +153,7 @@ class NotificationEventListenerTest {
                     new JourneyNoticeCreatedEvent(5L, journeyId, "시부야 여정", actorUserId)
             );
 
-            verify(notificationRepository, never()).saveAll(any());
+            verify(notificationPersistService, never()).saveAll(any());
         }
 
         @Test
@@ -176,7 +176,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(2);
@@ -226,7 +226,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(1);
@@ -244,7 +244,7 @@ class NotificationEventListenerTest {
 
             listener.handleScheduleCreated(new ScheduleCreatedEvent(7L, 1L, "일정", 10L));
 
-            verify(notificationRepository, never()).saveAll(any());
+            verify(notificationPersistService, never()).saveAll(any());
         }
 
         @Test
@@ -274,7 +274,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_UPDATED);
             assertThat(captor.getValue().get(0).getBody()).isEqualTo("여행 일정이 변경되었습니다. 확인해주세요.");
@@ -296,7 +296,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CANCELED);
             assertThat(captor.getValue().get(0).getBody()).isEqualTo("여행 일정이 취소되었습니다.");

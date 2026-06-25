@@ -8,16 +8,13 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
-import com.dduru.gildongmu.notification.repository.NotificationRepository;
+import com.dduru.gildongmu.notification.service.NotificationPersistService;
 import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
-import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -28,17 +25,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationEventListener {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationPersistService notificationPersistService;
     private final JourneyMemberRepository journeyMemberRepository;
     private final UserRepository userRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleMatchApplied(MatchAppliedEvent event) {
         try {
-            User recipient = userRepository.getReferenceById(event.recipientUserId());
-            notificationRepository.save(Notification.create(
-                    recipient,
+            notificationPersistService.save(Notification.create(
+                    userRepository.getReferenceById(event.recipientUserId()),
                     NotificationType.MATCH_APPLIED,
                     event.actorNickname() + " 님이 매칭을 신청했습니다.",
                     ResourceType.MATCH,
@@ -50,12 +45,10 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleMatchApproved(MatchApprovedEvent event) {
         try {
-            User recipient = userRepository.getReferenceById(event.applicantUserId());
-            notificationRepository.save(Notification.create(
-                    recipient,
+            notificationPersistService.save(Notification.create(
+                    userRepository.getReferenceById(event.applicantUserId()),
                     NotificationType.MATCH_APPROVED,
                     event.approverNickname() + " 님과 매칭이 성사되었습니다.",
                     ResourceType.JOURNEY,
@@ -67,14 +60,11 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleJourneyNoticeCreated(JourneyNoticeCreatedEvent event) {
         try {
             List<Long> recipientIds = journeyMemberRepository
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
-            if (recipientIds.isEmpty()) {
-                return;
-            }
+            if (recipientIds.isEmpty()) return;
 
             String body = "[" + event.journeyTitle() + "] 에 공지가 등록되었습니다.";
             List<Notification> notifications = recipientIds.stream()
@@ -86,14 +76,13 @@ public class NotificationEventListener {
                             event.journeyPostId()
                     ))
                     .toList();
-            notificationRepository.saveAll(notifications);
+            notificationPersistService.saveAll(notifications);
         } catch (Exception e) {
             log.error("JOURNEY_NOTICE 알림 저장 실패 - journeyPostId={}", event.journeyPostId(), e);
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCreated(ScheduleCreatedEvent event) {
         try {
             saveScheduleNotifications(event.journeyId(), event.actorUserId(),
@@ -104,7 +93,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleUpdated(ScheduleUpdatedEvent event) {
         try {
             saveScheduleNotifications(event.journeyId(), event.actorUserId(),
@@ -115,7 +103,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCanceled(ScheduleCanceledEvent event) {
         try {
             saveScheduleNotifications(event.journeyId(), event.actorUserId(),
@@ -129,9 +116,7 @@ public class NotificationEventListener {
                                            NotificationType type, String body, Long scheduleId) {
         List<Long> recipientIds = journeyMemberRepository
                 .findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId);
-        if (recipientIds.isEmpty()) {
-            return;
-        }
+        if (recipientIds.isEmpty()) return;
 
         List<Notification> notifications = recipientIds.stream()
                 .map(id -> Notification.create(
@@ -139,6 +124,6 @@ public class NotificationEventListener {
                         type, body, ResourceType.SCHEDULE, scheduleId
                 ))
                 .toList();
-        notificationRepository.saveAll(notifications);
+        notificationPersistService.saveAll(notifications);
     }
 }
