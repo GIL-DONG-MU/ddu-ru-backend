@@ -191,7 +191,7 @@ class NotificationEventListenerTest {
             assertThat(saved).hasSize(2);
             assertThat(saved).allSatisfy(n -> {
                 assertThat(n.getType()).isEqualTo(NotificationType.JOURNEY_NOTICE);
-                assertThat(n.getBody()).isEqualTo("시부야 여정 새 공지가 등록되었습니다.");
+                assertThat(n.getBody()).isEqualTo("시부야 여정 에 공지가 등록되었습니다.");
                 assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
                 assertThat(n.getResourceId()).isEqualTo(journeyPostId);
                 assertThat(n.isRead()).isFalse();
@@ -241,7 +241,7 @@ class NotificationEventListenerTest {
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(1);
             assertThat(saved.get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CREATED);
-            assertThat(saved.get(0).getBody()).isEqualTo("[시부야 스크램블 집합] 일정이 추가되었습니다.");
+            assertThat(saved.get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 추가되었습니다.");
             assertThat(saved.get(0).getResourceType()).isEqualTo(ResourceType.SCHEDULE);
             assertThat(saved.get(0).getResourceId()).isEqualTo(scheduleId);
         }
@@ -287,7 +287,7 @@ class NotificationEventListenerTest {
             verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_UPDATED);
-            assertThat(captor.getValue().get(0).getBody()).isEqualTo("[시부야 스크램블 집합] 일정이 변경되었습니다.");
+            assertThat(captor.getValue().get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 변경되었습니다.");
         }
     }
 
@@ -309,7 +309,7 @@ class NotificationEventListenerTest {
             verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CANCELED);
-            assertThat(captor.getValue().get(0).getBody()).isEqualTo("[시부야 스크램블 집합] 일정이 취소되었습니다.");
+            assertThat(captor.getValue().get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 취소되었습니다.");
         }
     }
 

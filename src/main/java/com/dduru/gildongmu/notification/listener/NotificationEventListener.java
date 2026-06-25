@@ -69,7 +69,7 @@ public class NotificationEventListener {
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
             if (recipientIds.isEmpty()) return;
 
-            String body = event.journeyTitle() + " 새 공지가 등록되었습니다.";
+            String body = event.journeyTitle() + " 에 공지가 등록되었습니다.";
             List<Notification> notifications = recipientIds.stream()
                     .map(id -> Notification.create(
                             userRepository.getReferenceById(id),
@@ -90,7 +90,7 @@ public class NotificationEventListener {
             saveScheduleNotificationsAndPush(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_CREATED,
-                    "[" + event.scheduleTitle() + "] 일정이 추가되었습니다.",
+                    event.scheduleTitle() + " 일정이 추가되었습니다.",
                     "새 일정", event.scheduleId()
             );
         } catch (Exception e) {
@@ -104,7 +104,7 @@ public class NotificationEventListener {
             saveScheduleNotificationsAndPush(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_UPDATED,
-                    "[" + event.scheduleTitle() + "] 일정이 변경되었습니다.",
+                    event.scheduleTitle() + " 일정이 변경되었습니다.",
                     "일정 변경", event.scheduleId()
             );
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class NotificationEventListener {
             saveScheduleNotificationsAndPush(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_CANCELED,
-                    "[" + event.scheduleTitle() + "] 일정이 취소되었습니다.",
+                    event.scheduleTitle() + " 일정이 취소되었습니다.",
                     "일정 취소", event.scheduleId()
             );
         } catch (Exception e) {
