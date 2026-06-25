@@ -82,6 +82,7 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 | `JourneyScheduleService` | `createSchedule()` | `ScheduleCreatedEvent` |
 | `JourneyScheduleService` | `updateSchedule()` | `ScheduleUpdatedEvent` |
 | `JourneyScheduleService` | `deleteSchedule()` | `ScheduleCanceledEvent` |
+| `PostService` | `update()` | `PostUpdatedEvent` |
 
 ---
 
@@ -95,6 +96,7 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 | `MATCH_APPROVED` | 신청자 1명 | 이벤트에 `applicantUserId` 포함 |
 | `JOURNEY_NOTICE` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
 | `SCHEDULE_CREATED / UPDATED / CANCELED` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
+| `POST_UPDATED` | 해당 모집글을 찜한 유저 전원 | `PostLikeRepository`로 조회 |
 
 > 행위자 본인은 항상 수신자에서 제외된다.
 
@@ -108,6 +110,7 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 | `SCHEDULE_CREATED` | `[{일정 이름}] 일정이 추가되었습니다.` |
 | `SCHEDULE_UPDATED` | `[{일정 이름}] 일정이 변경되었습니다.` |
 | `SCHEDULE_CANCELED` | `[{일정 이름}] 일정이 취소되었습니다.` |
+| `POST_UPDATED` | `관심 있는 모집글에 변경이 있습니다.` |
 
 > `MATCH_APPLIED`의 닉네임은 신청자, `MATCH_APPROVED`의 닉네임은 승인자(모집글 작성자)이다.
 > 닉네임은 이벤트 발행 시점에 `ProfileRepository`로 조회해 이벤트에 포함한다.
@@ -120,6 +123,7 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 | `MATCH_APPROVED` | `JOURNEY` | `journeyId` (승인된 여정으로 이동) |
 | `JOURNEY_NOTICE` | `JOURNEY_POST` | `journeyPostId` |
 | `SCHEDULE_*` | `SCHEDULE` | `scheduleId` |
+| `POST_UPDATED` | `JOURNEY_POST` | `postId` (모집글 상세로 이동) |
 
 ---
 
