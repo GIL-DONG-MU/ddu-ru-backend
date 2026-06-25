@@ -1,10 +1,12 @@
 package com.dduru.gildongmu.notification.listener;
 
+import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
 import com.dduru.gildongmu.journey.event.JourneyNoticeCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCanceledEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleUpdatedEvent;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
@@ -46,11 +48,14 @@ class NotificationEventListenerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PostLikeRepository postLikeRepository;
+
     private NotificationEventListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository);
+        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository, postLikeRepository);
     }
 
     // ── MATCH ─────────────────────────────────────────────────────────────────
@@ -300,6 +305,60 @@ class NotificationEventListenerTest {
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CANCELED);
             assertThat(captor.getValue().get(0).getBody()).isEqualTo("여행 일정이 취소되었습니다.");
+        }
+    }
+
+    // ── POST_UPDATED ──────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("POST_UPDATED 이벤트")
+    class HandlePostUpdated {
+
+        @Test
+        @DisplayName("찜한 유저 전원에게 알림을 저장한다")
+        void savesNotificationsForAllLikedUsers() {
+            Long postId = 1L;
+            List<Long> recipientIds = List.of(20L, 30L);
+
+            when(postLikeRepository.findUserIdsByPostId(postId)).thenReturn(recipientIds);
+            when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
+            when(userRepository.getReferenceById(30L)).thenReturn(createUser(30L));
+
+            listener.handlePostUpdated(new PostUpdatedEvent(postId));
+
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
+            verify(notificationPersistService).saveAll(captor.capture());
+
+            List<Notification> saved = captor.getValue();
+            assertThat(saved).hasSize(2);
+            assertThat(saved).allSatisfy(n -> {
+                assertThat(n.getType()).isEqualTo(NotificationType.POST_UPDATED);
+                assertThat(n.getBody()).isEqualTo("관심 있는 모집글에 변경이 있습니다.");
+                assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
+                assertThat(n.getResourceId()).isEqualTo(postId);
+                assertThat(n.isRead()).isFalse();
+            });
+        }
+
+        @Test
+        @DisplayName("찜한 유저가 없으면 저장하지 않는다")
+        void skipsWhenNoLikedUsers() {
+            when(postLikeRepository.findUserIdsByPostId(any())).thenReturn(List.of());
+
+            listener.handlePostUpdated(new PostUpdatedEvent(1L));
+
+            verify(notificationPersistService, never()).saveAll(any());
+        }
+
+        @Test
+        @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
+        void exceptionIsSwallowed() {
+            when(postLikeRepository.findUserIdsByPostId(any())).thenThrow(new RuntimeException("DB 오류"));
+
+            assertThatCode(() ->
+                    listener.handlePostUpdated(new PostUpdatedEvent(1L))
+            ).doesNotThrowAnyException();
         }
     }
 

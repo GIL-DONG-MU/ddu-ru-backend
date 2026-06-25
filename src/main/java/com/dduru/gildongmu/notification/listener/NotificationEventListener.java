@@ -1,10 +1,12 @@
 package com.dduru.gildongmu.notification.listener;
 
+import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
 import com.dduru.gildongmu.journey.event.JourneyNoticeCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCanceledEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleUpdatedEvent;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
@@ -28,6 +30,7 @@ public class NotificationEventListener {
     private final NotificationPersistService notificationPersistService;
     private final JourneyMemberRepository journeyMemberRepository;
     private final UserRepository userRepository;
+    private final PostLikeRepository postLikeRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleMatchApplied(MatchAppliedEvent event) {
@@ -109,6 +112,28 @@ public class NotificationEventListener {
                     NotificationType.SCHEDULE_CANCELED, "여행 일정이 취소되었습니다.", event.scheduleId());
         } catch (Exception e) {
             log.error("SCHEDULE_CANCELED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handlePostUpdated(PostUpdatedEvent event) {
+        try {
+            List<Long> recipientIds = postLikeRepository.findUserIdsByPostId(event.postId());
+            if (recipientIds.isEmpty()) return;
+
+            String body = "관심 있는 모집글에 변경이 있습니다.";
+            List<Notification> notifications = recipientIds.stream()
+                    .map(id -> Notification.create(
+                            userRepository.getReferenceById(id),
+                            NotificationType.POST_UPDATED,
+                            body,
+                            ResourceType.JOURNEY_POST,
+                            event.postId()
+                    ))
+                    .toList();
+            notificationPersistService.saveAll(notifications);
+        } catch (Exception e) {
+            log.error("POST_UPDATED 알림 저장 실패 - postId={}", event.postId(), e);
         }
     }
 
