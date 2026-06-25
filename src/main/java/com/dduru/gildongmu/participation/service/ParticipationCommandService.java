@@ -14,13 +14,16 @@ import com.dduru.gildongmu.participation.dto.request.ParticipationRetrieveReques
 import com.dduru.gildongmu.participation.dto.response.ParticipationApproveResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationContactResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationRetrieveResponse;
+import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.exception.PostAccessDeniedException;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,9 +47,11 @@ public class ParticipationCommandService {
     private final ParticipationRepository participationRepository;
     private final PostRepository postRepository;
     private final ProfileImageResolver profileImageResolver;
+    private final ProfileRepository profileRepository;
     private final JourneyRepository journeyRepository;
     private final JourneyMemberRepository journeyMemberRepository;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ParticipationContactResponse contactParticipation(Long userId, Long participationId) {
         Participation participation = participationRepository.getByIdWithLockOrThrow(participationId);
@@ -87,6 +92,12 @@ public class ParticipationCommandService {
                         () -> journeyMemberRepository.save(JourneyMember.createMember(journey, participation.getUser(), timeProvider.now()))
                 );
         GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(userId, journey.getId(), participantUserId);
+        String approverNickname = profileRepository.findByUser_Id(userId)
+                .map(p -> p.getNickname())
+                .orElse("알 수 없음");
+        eventPublisher.publishEvent(new MatchApprovedEvent(
+                participation.getId(), participantUserId, journey.getId(), journey.getTitle(), approverNickname
+        ));
         loggingStatusChange(participation);
 
         return new ParticipationApproveResponse(

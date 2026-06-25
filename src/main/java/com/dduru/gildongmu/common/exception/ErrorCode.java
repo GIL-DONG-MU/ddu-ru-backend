@@ -163,7 +163,11 @@ public enum ErrorCode {
     CHAT_TEXT_REQUIRED(HttpStatus.BAD_REQUEST, "메시지 내용은 필수입니다."),
     CHAT_TEXT_BLANK(HttpStatus.BAD_REQUEST, "공백만 있는 메시지는 전송할 수 없습니다."),
     CHAT_TEXT_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지가 너무 깁니다."),
-    CHAT_SYSTEM_MESSAGE_SEND_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "SYSTEM 은 사용자 메시지로 처리되지 않습니다.");
+    CHAT_SYSTEM_MESSAGE_SEND_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "SYSTEM 은 사용자 메시지로 처리되지 않습니다."),
+
+    // 알림 (NOTIFICATION)
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 알림에 접근할 수 없습니다.");
 
     private final int status;
     private final String message;

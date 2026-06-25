@@ -13,6 +13,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyPostUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostListResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostNoticeUpdateResponse;
 import com.dduru.gildongmu.journey.dto.response.JourneyPostResponse;
+import com.dduru.gildongmu.journey.event.JourneyNoticeCreatedEvent;
 import com.dduru.gildongmu.journey.exception.InvalidJourneyPostException;
 import com.dduru.gildongmu.journey.exception.JourneyAccessDeniedException;
 import com.dduru.gildongmu.journey.exception.JourneyHostNotFoundException;
@@ -28,6 +29,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +56,7 @@ public class JourneyPostService {
     private final S3ImageUrlValidator s3ImageUrlValidator;
     private final ProfileImageResolver profileImageResolver;
     private final TimeProvider timeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public JourneyPostListResponse retrievePosts(Long journeyId, Long userId, JourneyPostListRequest request) {
@@ -158,9 +161,18 @@ public class JourneyPostService {
 
         JourneyPost journeyPost = journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId);
         boolean nextNotice = Boolean.TRUE.equals(request.isNotice());
+        boolean isNewNoticeDesignation = nextNotice && !journeyPost.isNotice();
         validateNoticeLimitBeforeMarking(journeyId, userId, journeyPost, nextNotice);
 
         journeyPost.updateNoticeStatus(nextNotice);
+
+        if (isNewNoticeDesignation) {
+            Journey journey = journeyRepository.getByIdOrThrow(journeyId);
+            eventPublisher.publishEvent(new JourneyNoticeCreatedEvent(
+                    journeyPostId, journeyId, journey.getTitle(), userId
+            ));
+        }
+
         log.info("나의 여정 게시글 공지 상태 변경됨 - journeyId={}, journeyPostId={}, isNotice={}, userId={}",
                 journeyId, journeyPostId, nextNotice, userId);
         return JourneyPostNoticeUpdateResponse.from(journeyPost);
@@ -242,7 +254,6 @@ public class JourneyPostService {
 
         // 새 공지를 추가하는 경로만 직렬화해 여정당 공지 최대 5개 정책을 보장한다.
         journeyRepository.getByIdWithLockOrThrow(journeyId);
-        validateActiveHost(journeyId, userId);
 
         long noticeCount = journeyPostRepository.countActiveNoticesByJourneyId(journeyId);
         if (noticeCount >= NOTICE_LIMIT) {

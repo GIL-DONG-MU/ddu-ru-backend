@@ -12,6 +12,7 @@ import com.dduru.gildongmu.participation.dto.request.ParticipationRequest;
 import com.dduru.gildongmu.participation.dto.response.ChatRoomIds;
 import com.dduru.gildongmu.participation.dto.response.MyParticipationResponse;
 import com.dduru.gildongmu.participation.dto.response.ParticipationCreateResponse;
+import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.exception.DuplicateParticipationException;
 import com.dduru.gildongmu.participation.exception.ParticipationApplicantAccessDeniedException;
 import com.dduru.gildongmu.participation.exception.SelfParticipationNotAllowedException;
@@ -20,11 +21,13 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.dto.response.MyParticipationStatus;
 import com.dduru.gildongmu.post.dto.response.ParticipantInfo;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +50,9 @@ public class ParticipationApplicantService {
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ProfileImageResolver profileImageResolver;
+    private final ProfileRepository profileRepository;
     private final JourneyMemberRepository journeyMemberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ParticipationCreateResponse participate(Long userId, Long postId, ParticipationRequest request) {
         Post post = postRepository.getActiveByIdWithLockOrThrow(postId);
@@ -57,6 +62,13 @@ public class ParticipationApplicantService {
 
         Participation participation = Participation.createParticipation(post, applicant, request.message());
         Participation saved = saveParticipationOrThrowDuplicate(participation, postId, userId);
+
+        String actorNickname = profileRepository.findByUser_Id(userId)
+                .map(p -> p.getNickname())
+                .orElse("알 수 없음");
+        eventPublisher.publishEvent(new MatchAppliedEvent(
+                saved.getId(), userId, post.getUser().getId(), post.getTitle(), actorNickname
+        ));
 
         log.info("참여신청 완료 - participationId: {}, postId: {}, userId: {}", saved.getId(), postId, userId);
         return new ParticipationCreateResponse(saved.getId(), saved.getStatus());

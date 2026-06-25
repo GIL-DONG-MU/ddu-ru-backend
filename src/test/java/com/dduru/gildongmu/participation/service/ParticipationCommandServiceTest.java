@@ -15,6 +15,8 @@ import com.dduru.gildongmu.participation.dto.response.ParticipationContactRespon
 import com.dduru.gildongmu.participation.repository.ParticipationRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.repository.PostRepository;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -25,12 +27,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,6 +60,9 @@ class ParticipationCommandServiceTest {
     private ProfileImageResolver profileImageResolver;
 
     @Mock
+    private ProfileRepository profileRepository;
+
+    @Mock
     private JourneyRepository journeyRepository;
 
     @Mock
@@ -61,6 +70,9 @@ class ParticipationCommandServiceTest {
 
     @Mock
     private TimeProvider timeProvider;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ParticipationCommandService participationCommandService;
@@ -113,9 +125,13 @@ class ParticipationCommandServiceTest {
             Participation participation = createParticipation(participationId, post, participantId);
             participation.contact();
 
+            Profile ownerProfile = mock(Profile.class);
+            when(ownerProfile.getNickname()).thenReturn("호스트닉네임");
+
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
             when(journeyRepository.getByPostIdOrThrow(post.getId())).thenReturn(journey);
+            when(profileRepository.findByUser_Id(ownerId)).thenReturn(Optional.of(ownerProfile));
             when(groupChatRoomService.inviteMemberOrGetRoom(ownerId, journey.getId(), participantId))
                     .thenReturn(new GroupChatInviteMemberResponse(roomId, true));
 

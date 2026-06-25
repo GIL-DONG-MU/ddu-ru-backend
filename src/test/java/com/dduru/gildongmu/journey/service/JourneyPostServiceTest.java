@@ -35,6 +35,7 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -79,6 +80,8 @@ class JourneyPostServiceTest {
     private ProfileImageResolver profileImageResolver;
     @Mock
     private TimeProvider timeProvider;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private JourneyPostService journeyPostService;
 
@@ -96,7 +99,8 @@ class JourneyPostServiceTest {
                 userRepository,
                 new S3ImageUrlValidator(s3Properties),
                 profileImageResolver,
-                timeProvider
+                timeProvider,
+                eventPublisher
         );
     }
 
@@ -333,6 +337,7 @@ class JourneyPostServiceTest {
             when(journeyPostRepository.getActivePostByIdAndJourneyIdOrThrow(journeyPostId, journeyId))
                     .thenReturn(journeyPost);
             when(journeyPostRepository.countActiveNoticesByJourneyId(journeyId)).thenReturn(2L);
+            when(journeyRepository.getByIdOrThrow(journeyId)).thenReturn(journey);
 
             JourneyPostNoticeUpdateResponse response = journeyPostService.updatePostNotice(
                     journeyId,
