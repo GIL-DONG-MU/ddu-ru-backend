@@ -1,5 +1,8 @@
 package com.dduru.gildongmu.chat.system;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "시스템 메시지 타입")
 public enum ChatSystemMessageType {
     USER_INVITED("%s 님이 그룹 채팅방에 참여했습니다."),
     USER_LEFT("%s 님이 채팅방을 나갔습니다."),

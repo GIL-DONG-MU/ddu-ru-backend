@@ -25,7 +25,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @SecurityRequirement(name = "JWT")
 public interface ChatApiDocs {
 
-    @Operation(summary = "1:1 채팅방 생성/조회", description = "게시글 단위로 1:1 채팅방을 생성(201)하거나 이미 있을 시 기존 방을 조회(200)해서 리턴합니다.")
+    @Operation(
+            summary = "1:1 채팅방 생성/조회",
+            description = "게시글 단위로 현재 사용자와 게시글 작성자 사이의 1:1 채팅방을 생성합니다. " +
+                    "이미 존재하면 기존 방을 재사용하며 isCreated=false와 함께 HTTP 200을 반환하고, 새로 생성되면 isCreated=true와 함께 HTTP 201을 반환합니다."
+    )
     @ApiResponse(responseCode = "200", description = "기존 채팅방 조회")
     @ApiResponse(responseCode = "201", description = "신규 채팅방 생성")
     @ApiErrorResponses({
@@ -41,7 +45,9 @@ public interface ChatApiDocs {
 
     @Operation(
             summary = "채팅방 메시지 목록 조회",
-            description = "채팅방의 메시지를 beforeMessageId 커서 기준으로 조회합니다. 응답 메시지는 오래된 순서로 반환합니다."
+            description = "채팅방의 메시지를 beforeMessageId 커서 기준으로 조회합니다. " +
+                    "첫 페이지는 beforeMessageId 없이 호출하고, 다음 과거 페이지는 page.nextCursor를 beforeMessageId로 전달합니다. " +
+                    "응답 메시지는 오래된 순서로 반환되며 messageType에 따라 content(TEXT), images(IMAGE), systemMessage(SYSTEM) 중 하나를 사용합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
@@ -60,7 +66,8 @@ public interface ChatApiDocs {
 
     @Operation(
             summary = "채팅방 메시지 읽음 처리",
-            description = "현재 사용자의 채팅방 읽음 위치를 lastReadMessageId까지 갱신합니다. 기존 읽음 위치보다 같거나 과거인 경우 updated=false로 응답합니다."
+            description = "현재 사용자의 채팅방 읽음 위치를 lastReadMessageId까지 갱신합니다. " +
+                    "읽음 위치가 실제로 전진한 경우 updated=true이며, 기존 읽음 위치와 같거나 과거 메시지를 요청한 경우 updated=false로 응답합니다."
     )
     @ApiResponse(responseCode = "200", description = "읽음 처리 성공")
     @ApiErrorResponses({
@@ -78,7 +85,10 @@ public interface ChatApiDocs {
 
     @Operation(
             summary = "채팅방 목록 조회",
-            description = "현재 사용자가 참여 중인 ACTIVE 채팅방 목록을 마지막 활동 시각 기준으로 조회합니다. roomType 필터와 base64 cursor 페이지네이션을 지원합니다."
+            description = "현재 사용자가 참여 중인 ACTIVE 채팅방 목록을 마지막 활동 시각 기준으로 조회합니다. " +
+                    "roomType은 ALL, PRIVATE, GROUP을 지원하며 생략 시 ALL입니다. " +
+                    "다음 페이지 조회 시에는 이전 응답의 page.nextCursor를 cursor로 그대로 전달합니다. " +
+                    "목록 표시는 displayName, thumbnailUrl, lastMessage, unreadCount, activityAt 값을 우선 사용합니다."
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({

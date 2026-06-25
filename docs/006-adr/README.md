@@ -16,6 +16,7 @@
 | 003 | [OAuth JWT + Redis Refresh Token](./003-oauth-jwt-refresh-token-redis.md) | Proposed | TODO |
 | 004 | [참여 신청과 나의 여정 멤버십 분리](./004-participation-journey-membership-separation.md) | Proposed | TODO |
 | 005 | [ECR + Nginx Blue-Green 배포](./005-blue-green-deployment-with-nginx-ecr.md) | Proposed | TODO |
+| 006 | [홈 API 섹션 단위 로딩 구조](./006-home-api-section-based-loading.md) | Proposed | 2026-06-20 |
 
 ---
 
