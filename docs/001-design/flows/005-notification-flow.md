@@ -48,12 +48,12 @@
 
                           ↓ AFTER_COMMIT
 
-NotificationEventListener (REQUIRES_NEW transaction)
+NotificationEventListener
   │
   ├── 수신자 결정
   ├── 알림 문구(body) 조립
-  ├── notificationRepository.save() / saveAll()
-  ├── fcmPushService.sendToUser() / sendToUsers()  ← 비동기 FCM 발송
+  ├── notificationPersistService.save() / saveAll()  ← REQUIRES_NEW 별도 트랜잭션
+  ├── fcmPushService.sendToUser() / sendToUsers()    ← 비동기 FCM 발송
   └── 예외 발생 시 log.error()만 남기고 무시
 ```
 
@@ -104,10 +104,10 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 |---|---|
 | `MATCH_APPLIED` | `{닉네임} 님이 매칭을 신청했습니다.` |
 | `MATCH_APPROVED` | `{닉네임} 님과 매칭이 성사되었습니다.` |
-| `JOURNEY_NOTICE` | `[{여행지/방 이름}] 에 공지가 등록되었습니다.` |
-| `SCHEDULE_CREATED` | `여행 일정이 생성되었습니다.` |
-| `SCHEDULE_UPDATED` | `여행 일정이 변경되었습니다. 확인해주세요.` |
-| `SCHEDULE_CANCELED` | `여행 일정이 취소되었습니다.` |
+| `JOURNEY_NOTICE` | `[{여행지/방 이름}] 새 공지가 등록되었습니다.` |
+| `SCHEDULE_CREATED` | `[{일정 이름}] 일정이 추가되었습니다.` |
+| `SCHEDULE_UPDATED` | `[{일정 이름}] 일정이 변경되었습니다.` |
+| `SCHEDULE_CANCELED` | `[{일정 이름}] 일정이 취소되었습니다.` |
 
 > `MATCH_APPLIED`의 닉네임은 신청자, `MATCH_APPROVED`의 닉네임은 승인자(모집글 작성자)이다.
 > 닉네임은 이벤트 발행 시점에 `ProfileRepository`로 조회해 이벤트에 포함한다.
