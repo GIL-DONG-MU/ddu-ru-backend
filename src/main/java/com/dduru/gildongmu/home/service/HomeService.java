@@ -1,19 +1,31 @@
 package com.dduru.gildongmu.home.service;
 
+import com.dduru.gildongmu.home.enums.UserAccessStatus;
 import com.dduru.gildongmu.common.time.TimeProvider;
+import com.dduru.gildongmu.home.HomeEndpoints;
+import com.dduru.gildongmu.home.dto.response.HostResponse;
+import com.dduru.gildongmu.home.dto.response.HomePopularDestinationItemResponse;
+import com.dduru.gildongmu.home.dto.response.HomePopularDestinationResponse;
 import com.dduru.gildongmu.home.dto.response.HomeResponse;
+import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
+import com.dduru.gildongmu.home.dto.response.MateRecommendationItemResponse;
+import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
+import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
+import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
+import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
+import com.dduru.gildongmu.home.exception.HomeSurveyRequiredException;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -21,61 +33,181 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HomeService {
 
-    private static final String DEFAULT_PROFILE_IMAGE_URL = "https://img1.newsis.com/2022/07/05/NISI20220705_0001034620_web.jpg?rnd=20220705105652";
-    private static final String DEFAULT_THUMBNAIL_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Karina_at_Love_Your_W_event_2025.jpg/500px-Karina_at_Love_Your_W_event_2025.jpg";
+    // TODO: 이후 실제 데이터로 내보낼 예정
+    private static final String DEFAULT_PROFILE_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Karina_at_Love_Your_W_event_2025.jpg/500px-Karina_at_Love_Your_W_event_2025.jpg";
+    private static final String DEFAULT_THUMBNAIL_URL = "https://img1.newsis.com/2022/07/05/NISI20220705_0001034620_web.jpg?rnd=20220705105652";
 
     private final TimeProvider timeProvider;
     private final UserOnboardingRepository userOnboardingRepository;
 
     @Transactional(readOnly = true)
     public HomeResponse retrieveHome(Long userId) {
-        HomeResponse.ViewerStatus viewerStatus = resolveViewerStatus(userId);
-        LocalDate today = timeProvider.today();
-        LocalDateTime updateDateTime = timeProvider.now().withSecond(0).withNano(0);
+        UserAccessStatus userAccessStatus = resolveUserAccessStatus(userId);
+        return new HomeResponse(userAccessStatus, sections(userAccessStatus));
+    }
 
+    @Transactional(readOnly = true)
+    public UpcomingTripResponse retrieveUpcomingTrip(Long userId) {
+        requireOnboarding(userId);
+
+        LocalDate today = timeProvider.today();
         LocalDate upcomingStartDate = today.plusDays(12);
         LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
 
-        return new HomeResponse(
-                viewerStatus,
-                isMember(viewerStatus) ? upcomingTrip(upcomingStartDate, upcomingEndDate, today) : null,
-                popularDestinations(updateDateTime),
-                isSurveyCompleted(viewerStatus) ? mateRecommendation(upcomingStartDate, upcomingEndDate) : null,
-                superHosts(upcomingStartDate),
-                sameDestinationTrips(upcomingStartDate),
-                isMember(viewerStatus) ? sameAgeTrips(upcomingStartDate) : null
+        return upcomingTrip(upcomingStartDate, upcomingEndDate, today);
+    }
+
+    @Transactional(readOnly = true)
+    public MateRecommendationResponse retrieveMateRecommendations(Long userId) {
+        requireSurveyCompleted(userId);
+
+        LocalDate upcomingStartDate = timeProvider.today().plusDays(12);
+        LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
+
+        return mateRecommendation(upcomingStartDate, upcomingEndDate);
+    }
+
+    @Transactional(readOnly = true)
+    public HomePopularDestinationResponse retrievePopularDestinations() {
+        return new HomePopularDestinationResponse(
+                timeProvider.now().withSecond(0).withNano(0),
+                popularDestinationItems()
         );
     }
 
-    private HomeResponse.ViewerStatus resolveViewerStatus(Long userId) {
+    @Transactional(readOnly = true)
+    public List<HomeSuperHostResponse> retrieveSuperHosts(Long userId) {
+        return superHosts(timeProvider.today().plusDays(12));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SameDestinationTripResponse> retrieveSameDestinationTrips(Long userId) {
+        // TODO: 선호 여행지 설정 기능이 추가되면 온보딩 존재 확인 대신 선호 여행지 설정 여부를 검증하고 해당 여행지 기준으로 조회한다.
+        requireOnboarding(userId);
+
+        return sameDestinationTrips(timeProvider.today().plusDays(12));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SameAgeTripResponse> retrieveSameAgeTrips(Long userId) {
+        requireOnboarding(userId);
+
+        return sameAgeTrips(timeProvider.today().plusDays(12));
+    }
+
+    private UserOnboarding requireOnboarding(Long userId) {
+        return userOnboardingRepository.getByUserIdOrThrow(userId);
+    }
+
+    private void requireSurveyCompleted(Long userId) {
+        UserOnboarding onboarding = requireOnboarding(userId);
+        if (onboarding.getSurveyStatus() != SurveyStatus.COMPLETED) {
+            throw new HomeSurveyRequiredException();
+        }
+    }
+
+    private UserAccessStatus resolveUserAccessStatus(Long userId) {
         if (userId == null) {
-            return HomeResponse.ViewerStatus.GUEST;
+            return UserAccessStatus.GUEST;
         }
 
-        return toViewerStatus(userOnboardingRepository.getByUserIdOrThrow(userId));
+        return toUserAccessStatus(userOnboardingRepository.getByUserIdOrThrow(userId));
     }
 
-    private static HomeResponse.ViewerStatus toViewerStatus(UserOnboarding onboarding) {
+    private static UserAccessStatus toUserAccessStatus(UserOnboarding onboarding) {
         if (onboarding.getSurveyStatus() == SurveyStatus.COMPLETED) {
-            return HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
+            return UserAccessStatus.MEMBER_SURVEY_COMPLETED;
         }
-        return HomeResponse.ViewerStatus.MEMBER_SURVEY_REQUIRED;
+        return UserAccessStatus.MEMBER_SURVEY_REQUIRED;
     }
 
-    private static boolean isMember(HomeResponse.ViewerStatus viewerStatus) {
-        return viewerStatus != HomeResponse.ViewerStatus.GUEST;
+    private static List<HomeResponse.HomeSectionResponse> sections(UserAccessStatus userAccessStatus) {
+        return List.of(
+                section(
+                        HomeResponse.SectionKey.UPCOMING_TRIP,
+                        HomeEndpoints.UPCOMING_TRIP,
+                        isMember(userAccessStatus),
+                        HomeResponse.DisabledReason.LOGIN_REQUIRED
+                ),
+                section(
+                        HomeResponse.SectionKey.POPULAR_DESTINATIONS,
+                        HomeEndpoints.POPULAR_DESTINATIONS,
+                        true,
+                        null
+                ),
+                section(
+                        HomeResponse.SectionKey.MATE_RECOMMENDATIONS,
+                        HomeEndpoints.MATE_RECOMMENDATIONS,
+                        isSurveyCompleted(userAccessStatus),
+                        mateRecommendationDisabledReason(userAccessStatus)
+                ),
+                section(
+                        HomeResponse.SectionKey.SUPER_HOSTS,
+                        HomeEndpoints.SUPER_HOSTS,
+                        true,
+                        null
+                ),
+                section(
+                        HomeResponse.SectionKey.SAME_DESTINATION_TRIPS,
+                        HomeEndpoints.SAME_DESTINATION_TRIPS,
+                        isMember(userAccessStatus),
+                        HomeResponse.DisabledReason.LOGIN_REQUIRED
+                ),
+                section(
+                        HomeResponse.SectionKey.SAME_AGE_TRIPS,
+                        HomeEndpoints.SAME_AGE_TRIPS,
+                        isMember(userAccessStatus),
+                        HomeResponse.DisabledReason.LOGIN_REQUIRED
+                )
+        );
     }
 
-    private static boolean isSurveyCompleted(HomeResponse.ViewerStatus viewerStatus) {
-        return viewerStatus == HomeResponse.ViewerStatus.MEMBER_SURVEY_COMPLETED;
+    private static HomeResponse.HomeSectionResponse section(
+            HomeResponse.SectionKey key,
+            String endpoint,
+            boolean enabled,
+            HomeResponse.DisabledReason disabledReason
+    ) {
+        return new HomeResponse.HomeSectionResponse(
+                key,
+                enabled,
+                endpoint,
+                enabled ? null : disabledReason
+        );
     }
 
-    private static HomeResponse.UpcomingTripResponse upcomingTrip(
+    private static HomeResponse.DisabledReason mateRecommendationDisabledReason(UserAccessStatus userAccessStatus) {
+        return switch (userAccessStatus) {
+            case GUEST -> HomeResponse.DisabledReason.LOGIN_REQUIRED;
+            case MEMBER_SURVEY_REQUIRED -> HomeResponse.DisabledReason.SURVEY_REQUIRED;
+            case MEMBER_SURVEY_COMPLETED -> null;
+        };
+    }
+
+    private static boolean isMember(UserAccessStatus userAccessStatus) {
+        return userAccessStatus != UserAccessStatus.GUEST;
+    }
+
+    private static boolean isSurveyCompleted(UserAccessStatus userAccessStatus) {
+        return userAccessStatus == UserAccessStatus.MEMBER_SURVEY_COMPLETED;
+    }
+
+    private static List<HomePopularDestinationItemResponse> popularDestinationItems() {
+        return List.of(
+                new HomePopularDestinationItemResponse(1, 1L, "제주도", DEFAULT_THUMBNAIL_URL, 14231, List.of("힐링", "드라이브", "바다")),
+                new HomePopularDestinationItemResponse(2, 2L, "도쿄", DEFAULT_THUMBNAIL_URL, 14131, List.of("맛집", "쇼핑")),
+                new HomePopularDestinationItemResponse(3, 3L, "부산", DEFAULT_THUMBNAIL_URL, 11842, List.of("바다")),
+                new HomePopularDestinationItemResponse(4, 4L, "강릉", DEFAULT_THUMBNAIL_URL, 9864, List.of()),
+                new HomePopularDestinationItemResponse(5, 5L, "여수", DEFAULT_THUMBNAIL_URL, 8421, List.of("야경", "먹방", "감성"))
+        );
+    }
+
+    private static UpcomingTripResponse upcomingTrip(
             LocalDate startDate,
             LocalDate endDate,
             LocalDate today
     ) {
-        return new HomeResponse.UpcomingTripResponse(
+        return new UpcomingTripResponse(
                 102L,
                 "제주도 힐링 여행",
                 (int) ChronoUnit.DAYS.between(today, startDate),
@@ -87,30 +219,15 @@ public class HomeService {
         );
     }
 
-    private static HomeResponse.PopularDestinationsResponse popularDestinations(LocalDateTime updateDateTime) {
-        return new HomeResponse.PopularDestinationsResponse(
-                updateDateTime,
-                List.of(
-                        new HomeResponse.PopularDestinationResponse(1, "제주도", 14231),
-                        new HomeResponse.PopularDestinationResponse(2, "부산", 11842),
-                        new HomeResponse.PopularDestinationResponse(3, "강릉", 9864),
-                        new HomeResponse.PopularDestinationResponse(4, "여수", 8421),
-                        new HomeResponse.PopularDestinationResponse(5, "전주", 7732),
-                        new HomeResponse.PopularDestinationResponse(6, "속초", 6950),
-                        new HomeResponse.PopularDestinationResponse(7, "경주", 6427)
-                )
-        );
-    }
-
-    private static HomeResponse.MateRecommendationResponse mateRecommendation(
+    private static MateRecommendationResponse mateRecommendation(
             LocalDate startDate,
             LocalDate endDate
     ) {
-        return new HomeResponse.MateRecommendationResponse(
+        return new MateRecommendationResponse(
                 true,
                 3,
                 List.of(
-                        new HomeResponse.MateRecommendationItemResponse(
+                        new MateRecommendationItemResponse(
                                 5001L,
                                 801L,
                                 92,
@@ -122,9 +239,9 @@ public class HomeService {
                                 3,
                                 4,
                                 "제주 서쪽 해안을 따라 사진 찍고 카페를 둘러볼 동행을 찾아요.",
-                                List.of("#카페투어", "#사진", "#힐링")
+                                List.of("카페투어", "사진", "힐링")
                         ),
-                        new HomeResponse.MateRecommendationItemResponse(
+                        new MateRecommendationItemResponse(
                                 5002L,
                                 802L,
                                 87,
@@ -136,62 +253,15 @@ public class HomeService {
                                 2,
                                 4,
                                 "무리하지 않고 천천히 한라산을 오를 동행을 모집합니다.",
-                                List.of("#등산", "#자연", "#느긋한")
+                                List.of("등산", "자연", "느긋한")
                         )
                 )
         );
     }
 
-    private static List<HomeResponse.SuperHostResponse> superHosts(LocalDate baseStartDate) {
+    private static List<SameDestinationTripResponse> sameDestinationTrips(LocalDate baseStartDate) {
         return List.of(
-                new HomeResponse.SuperHostResponse(
-                        501L,
-                        PostStatus.OPEN,
-                        "제주 동쪽 일출 투어",
-                        "제주도 성산일출봉",
-                        baseStartDate,
-                        baseStartDate.plusDays(3),
-                        3,
-                        4,
-                        List.of("힐링", "자연", "느긋한"),
-                        uploadedHost("해돋이호스트", 28, Gender.F),
-                        723,
-                        DEFAULT_THUMBNAIL_URL
-                ),
-                new HomeResponse.SuperHostResponse(
-                        502L,
-                        PostStatus.OPEN,
-                        "부산 야경 맛집 산책",
-                        "부산 광안리",
-                        baseStartDate.plusDays(5),
-                        baseStartDate.plusDays(7),
-                        2,
-                        5,
-                        List.of("맛집", "야경", "산책"),
-                        avatarHost("부산가이드", 34, Gender.M, 3L),
-                        681,
-                        DEFAULT_THUMBNAIL_URL
-                ),
-                new HomeResponse.SuperHostResponse(
-                        503L,
-                        PostStatus.OPEN,
-                        "강릉 바다 감성 여행",
-                        "강원도 강릉",
-                        baseStartDate.plusDays(8),
-                        baseStartDate.plusDays(10),
-                        4,
-                        6,
-                        List.of("바다", "사진", "카페"),
-                        uploadedHost("바다수집가", 29, Gender.F),
-                        598,
-                        DEFAULT_THUMBNAIL_URL
-                )
-        );
-    }
-
-    private static List<HomeResponse.SameDestinationTripResponse> sameDestinationTrips(LocalDate baseStartDate) {
-        return List.of(
-                new HomeResponse.SameDestinationTripResponse(
+                new SameDestinationTripResponse(
                         601L,
                         "제주 한라산 숲길 산책",
                         "제주도 한라산",
@@ -201,7 +271,7 @@ public class HomeService {
                         4,
                         DEFAULT_THUMBNAIL_URL
                 ),
-                new HomeResponse.SameDestinationTripResponse(
+                new SameDestinationTripResponse(
                         602L,
                         "우도 전기차 당일치기",
                         "제주 우도",
@@ -211,7 +281,7 @@ public class HomeService {
                         4,
                         DEFAULT_THUMBNAIL_URL
                 ),
-                new HomeResponse.SameDestinationTripResponse(
+                new SameDestinationTripResponse(
                         603L,
                         "서귀포 올레길 걷기",
                         "제주 서귀포",
@@ -224,9 +294,90 @@ public class HomeService {
         );
     }
 
-    private static List<HomeResponse.SameAgeTripResponse> sameAgeTrips(LocalDate baseStartDate) {
+    private static List<HomeSuperHostResponse> superHosts(LocalDate baseStartDate) {
+        // TODO: userId로 hasLiked 여부 조회 (실제 데이터 연동 시)
         return List.of(
-                new HomeResponse.SameAgeTripResponse(
+                new HomeSuperHostResponse(
+                        501L,
+                        PostStatus.OPEN,
+                        "제주 동쪽 일출 투어",
+                        "제주도 한라산",
+                        baseStartDate,
+                        baseStartDate.plusDays(3),
+                        3,
+                        4,
+                        List.of("일출", "등산"),
+                        uploadedHost("여행자민지", 28, Gender.F),
+                        723,
+                        DEFAULT_THUMBNAIL_URL,
+                        false
+                ),
+                new HomeSuperHostResponse(
+                        502L,
+                        PostStatus.OPEN,
+                        "부산 야경 맛집 산책",
+                        "부산 광안리",
+                        baseStartDate.plusDays(5),
+                        baseStartDate.plusDays(7),
+                        2,
+                        5,
+                        List.of("맛집", "야경"),
+                        avatarHost("부산가이드", 34, Gender.M, 3L),
+                        681,
+                        DEFAULT_THUMBNAIL_URL,
+                        false
+                ),
+                new HomeSuperHostResponse(
+                        503L,
+                        PostStatus.OPEN,
+                        "강릉 바다 감성 여행",
+                        "강원도 강릉",
+                        baseStartDate.plusDays(8),
+                        baseStartDate.plusDays(10),
+                        4,
+                        6,
+                        List.of("바다", "사진"),
+                        uploadedHost("바다수집가", 29, Gender.F),
+                        598,
+                        DEFAULT_THUMBNAIL_URL,
+                        false
+                ),
+                new HomeSuperHostResponse(
+                        504L,
+                        PostStatus.OPEN,
+                        "여수 밤바다 산책",
+                        "전남 여수",
+                        baseStartDate.plusDays(11),
+                        baseStartDate.plusDays(13),
+                        2,
+                        4,
+                        List.of("산책", "야경"),
+                        avatarHost("여수러버", 32, Gender.U, 4L),
+                        512,
+                        DEFAULT_THUMBNAIL_URL,
+                        false
+                ),
+                new HomeSuperHostResponse(
+                        505L,
+                        PostStatus.OPEN,
+                        "전주 한옥마을 먹방",
+                        "전주 한옥마을",
+                        baseStartDate.plusDays(14),
+                        baseStartDate.plusDays(15),
+                        3,
+                        5,
+                        List.of("맛집", "한옥"),
+                        uploadedHost("먹방메이트", 27, Gender.F),
+                        476,
+                        DEFAULT_THUMBNAIL_URL,
+                        false
+                )
+        );
+    }
+
+    private static List<SameAgeTripResponse> sameAgeTrips(LocalDate baseStartDate) {
+        return List.of(
+                new SameAgeTripResponse(
                         701L,
                         "제주 로컬 맛집 탐방",
                         "제주도 한라산",
@@ -235,7 +386,7 @@ public class HomeService {
                         4,
                         DEFAULT_THUMBNAIL_URL
                 ),
-                new HomeResponse.SameAgeTripResponse(
+                new SameAgeTripResponse(
                         702L,
                         "부산 감천문화마을 산책",
                         "부산 감천문화마을",
@@ -244,7 +395,7 @@ public class HomeService {
                         5,
                         DEFAULT_THUMBNAIL_URL
                 ),
-                new HomeResponse.SameAgeTripResponse(
+                new SameAgeTripResponse(
                         703L,
                         "전주 한옥마을 먹방",
                         "전주 한옥마을",
@@ -256,10 +407,10 @@ public class HomeService {
         );
     }
 
-    private static HomeResponse.HostResponse uploadedHost(String nickname, int age, Gender gender) {
-        return new HomeResponse.HostResponse(
+    private static HostResponse uploadedHost(String nickname, int age, Gender gender) {
+        return new HostResponse(
                 nickname,
-                new HomeResponse.ProfileImageInfoResponse(
+                new ProfileImageInfo(
                         ProfileImageType.UPLOADED,
                         DEFAULT_PROFILE_IMAGE_URL,
                         null
@@ -269,10 +420,10 @@ public class HomeService {
         );
     }
 
-    private static HomeResponse.HostResponse avatarHost(String nickname, int age, Gender gender, Long bgColorId) {
-        return new HomeResponse.HostResponse(
+    private static HostResponse avatarHost(String nickname, int age, Gender gender, Long bgColorId) {
+        return new HostResponse(
                 nickname,
-                new HomeResponse.ProfileImageInfoResponse(
+                new ProfileImageInfo(
                         ProfileImageType.AVATAR,
                         DEFAULT_PROFILE_IMAGE_URL,
                         bgColorId

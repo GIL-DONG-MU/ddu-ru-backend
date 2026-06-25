@@ -35,18 +35,22 @@
 ```http
 GET /api/v1/home
 GET /api/v1/home/upcoming-trip
+GET /api/v1/home/popular-destinations
 GET /api/v1/home/mate-recommendations
+GET /api/v1/home/super-hosts
 GET /api/v1/home/same-destination-trips
 GET /api/v1/home/same-age-trips
-GET /api/v1/destinations/popular
-GET /api/v1/posts/super-hosts
 ```
+
+인기 여행지와 슈퍼호스트도 기존 범용 API를 재사용하지 않고 홈 전용 API로 제공합니다.
+두 섹션은 홈 화면의 카드 노출 목적, 고정 노출 개수, 필요한 필드가 기존 검색/목록 API와 다르기 때문입니다.
+내부 조회 로직은 기존 도메인 repository/service를 재사용할 수 있지만 외부 응답 계약은 홈 전용 DTO로 분리합니다.
 
 초기 응답 예시는 다음과 같습니다. 실제 필드명과 endpoint는 구현 PR에서 확정합니다.
 
 ```json
 {
-  "viewerStatus": "MEMBER_SURVEY_COMPLETED",
+  "userAccessStatus": "MEMBER_SURVEY_COMPLETED",
   "sections": [
     {
       "key": "UPCOMING_TRIP",
@@ -56,7 +60,7 @@ GET /api/v1/posts/super-hosts
     {
       "key": "POPULAR_DESTINATIONS",
       "enabled": true,
-      "endpoint": "/api/v1/destinations/popular"
+      "endpoint": "/api/v1/home/popular-destinations"
     },
     {
       "key": "MATE_RECOMMENDATIONS",
@@ -66,7 +70,7 @@ GET /api/v1/posts/super-hosts
     {
       "key": "SUPER_HOSTS",
       "enabled": true,
-      "endpoint": "/api/v1/posts/super-hosts"
+      "endpoint": "/api/v1/home/super-hosts"
     },
     {
       "key": "SAME_DESTINATION_TRIPS",
@@ -87,9 +91,9 @@ GET /api/v1/posts/super-hosts
 ```text
 Home Screen
   -> GET /api/v1/home
-      -> viewerStatus 확인
+      -> userAccessStatus 확인
       -> 노출 가능한 section 확인
-  -> section API 병렬 호출
+      -> section API 병렬 호출
       -> upcomingTrip
       -> popularDestinations
       -> mateRecommendations
@@ -97,6 +101,76 @@ Home Screen
       -> sameDestinationTrips
       -> sameAgeTrips
 ```
+
+인기 여행지와 슈퍼호스트 홈 preview 섹션은 화면 고정 노출 정책에 맞춰 항상 5개를 반환하고 별도의 `size` 요청 파라미터를 받지 않습니다.
+인기 여행지는 현재 mock 응답으로 제공합니다.
+실제 데이터 전환 시에는 `destination_id`별 `OPEN` 상태 여행동행방(`posts`) 개수를 기준으로 정렬합니다.
+인기 여행지 응답의 `availableTripCount`는 해당 destination의 `OPEN` 상태 여행동행방 개수입니다.
+인기 여행지의 `tags`는 destination별 여행방 생성 시 많이 사용된 태그 상위 3개를 의미하지만, 태그 집계가 아직 구현되지 않았으므로 현재 mock 응답에서는 빈 배열과 일부 태그가 있는 케이스를 함께 제공합니다.
+슈퍼호스트도 현재 mock 응답으로 제공합니다.
+실제 데이터 전환 시 `tags`는 인기 여행지 태그와 다르게 해당 게시글의 `posts.tags` 값을 반환합니다.
+실제 데이터 전환 시 `hasLiked`는 회원 전용 개인화 값으로 계산하고, 비회원이면 `false`를 반환합니다.
+
+### 인기 여행지 구현 메모
+
+현재 인기 여행지 API는 화면 연동과 섹션 분리 계약을 먼저 검증하기 위해 mock 데이터로 구현합니다.
+이 단계에서는 repository 집계 쿼리나 Redis cache를 붙이지 않습니다.
+아직 태그 집계 기준과 검색 기반 인기 산정 방식이 확정되지 않았고, 실제 집계 쿼리를 먼저 붙이면 임시 기준이 API 운영 정책처럼 굳어질 수 있기 때문입니다.
+
+실제 데이터 기반 구현 시 우선안은 다음과 같습니다.
+
+- `posts.status = OPEN`이고 삭제되지 않은 여행동행방만 집계합니다.
+- `destination_id`별 게시글 수를 `availableTripCount`로 계산합니다.
+- `availableTripCount DESC`, 동률이면 `destination_id ASC`로 정렬해 5개를 반환합니다.
+- `Destination.city`를 `destinationName`, `Destination.image`를 `imageUrl`로 매핑합니다.
+- destination별 게시글 tags를 파싱해 등장 빈도 상위 3개를 `tags`로 반환합니다.
+- 집계 비용이 커지는 시점에는 Redis cache 또는 배치성 집계 테이블을 도입합니다.
+
+검토했던 대안은 다음과 같습니다.
+
+| 대안 | 판단 |
+|---|---|
+| 기존 `/api/v1/destinations/popular` 재사용 | 여행지 검색/선택용 응답과 홈 랭킹 카드 응답의 목적과 필드가 달라 제외 |
+| 바로 repository 집계 쿼리 구현 | 태그 집계와 향후 검색 기반 인기 기준이 미정이라 임시 정책이 굳어질 수 있어 보류 |
+| Redis cache 먼저 적용 | mock 단계에서는 캐시할 실제 데이터가 없고 캐시 무효화 기준도 아직 없어 보류 |
+| 별도 집계 테이블 선도입 | 현재 데이터 규모와 요구사항 대비 과하고, 검색 기반 인기 산정 도입 시 설계가 바뀔 수 있어 보류 |
+
+추가 개발 방향은 다음과 같습니다.
+
+- 인기 기준을 여행방 개수에서 검색량/클릭/참여 가능 수/최근 생성 가중치 조합으로 확장할 수 있습니다.
+- 태그 집계는 JSON tags 직접 파싱보다 태그 정규화 테이블 또는 집계 테이블을 두는 방향을 우선 검토합니다.
+- 집계 응답에는 `updatedAt`을 유지해 프론트가 "방금 전" 같은 갱신 시각 UI를 표현할 수 있게 합니다.
+- 인기 여행지 전체보기 화면이 필요해지면 홈 프리뷰 API와 별도 목록 API를 분리합니다.
+
+### 슈퍼호스트 구현 메모
+
+현재 슈퍼호스트 API도 화면 연동과 섹션 분리 계약을 먼저 검증하기 위해 mock 데이터로 구현합니다.
+이 단계에서는 슈퍼호스트 노출 repository 조회나 사용자별 좋아요 조회를 붙이지 않습니다.
+슈퍼호스트 홈 카드의 최종 필드, 정렬 기준, 개인화 범위가 확정되기 전에는 실제 노출 로직을 홈 API에 결합하지 않는 편이 낫기 때문입니다.
+
+실제 데이터 기반 구현 시 우선안은 다음과 같습니다.
+
+- `SuperHostExposure` 중 `ACTIVE`이고 `endedAt > now`인 노출만 조회합니다.
+- 연결된 게시글은 삭제되지 않았고 `PostStatus.OPEN`인 것만 노출합니다.
+- 홈 프리뷰는 5개 고정으로 반환합니다.
+- 정렬은 `startedAt DESC`, 동률이면 게시글 인기 지표를 보조 기준으로 둡니다.
+- `tags`는 해당 게시글의 `posts.tags` JSON 값을 파싱해 반환합니다.
+- 로그인 회원이면 노출 게시글 id 목록으로 좋아요 여부를 한 번에 조회해 `hasLiked`를 계산하고, 비회원이면 항상 `false`를 반환합니다.
+
+검토했던 대안은 다음과 같습니다.
+
+| 대안 | 판단 |
+|---|---|
+| 기존 `/api/v1/posts/super-hosts` 재사용 | 기존 API는 슈퍼호스트 목록용이고 홈 카드의 고정 개수, 필드, 개인화 정책과 다를 수 있어 제외 |
+| 바로 `SuperHostExposureRepository` 조회 구현 | 홈 카드 최종 정책 확정 전 실데이터 정렬/필드가 굳어질 수 있어 보류 |
+| `hasLiked`를 mock에서도 계산 | mock 데이터는 실제 게시글 id와 좋아요 데이터가 보장되지 않으므로 의미가 없어 제외 |
+| 슈퍼호스트 응답 cache 적용 | `hasLiked`가 사용자별 값이고 노출 상태가 동적이라 v1 실제 구현에서도 기본적으로 cache하지 않는 방향 |
+
+추가 개발 방향은 다음과 같습니다.
+
+- 홈용 슈퍼호스트 카드와 전체보기 목록 API를 분리합니다.
+- 노출 우선순위는 슈퍼호스트 시작 시각, 마감 임박도, 조회수/좋아요 수 등을 조합할 수 있습니다.
+- `hasLiked` 외에도 로그인 회원에게만 필요한 상태가 늘면 공개 응답과 개인화 overlay를 분리하는 방식을 검토합니다.
 
 ## 프론트 영향
 
@@ -135,7 +209,7 @@ section loading
 
 사용자 상태별 섹션 노출도 명확해집니다.
 
-| viewerStatus | 홈 초기 응답 | 섹션 호출 |
+| userAccessStatus | 홈 초기 응답 | 섹션 호출 |
 |---|---|---|
 | `GUEST` | 비회원에게 노출 가능한 섹션만 반환 | 회원 전용 섹션 호출하지 않음 |
 | `MEMBER_SURVEY_REQUIRED` | 설문 전 회원용 섹션 반환 | 추천 섹션은 비활성 또는 호출하지 않음 |
@@ -152,7 +226,9 @@ section loading
 
 2. 섹션별 실제 조회 로직 고도화
    - 예정 여행, 추천, 같은 여행지/또래 여행을 실제 데이터 기반으로 조회합니다.
-   - 인기 여행지처럼 집계성 데이터는 캐시와 갱신 시각을 검토합니다.
+   - 같은 여행지 여행은 회원의 선호 여행지를 기준으로 하는 개인화 섹션이므로 회원 전용 API로 유지합니다.
+   - 인기 여행지는 현재 mock API로 제공하고, 실제 데이터 전환 시 destination별 `OPEN` 여행동행방 개수 기준 조회와 캐시 적용을 검토합니다.
+   - 슈퍼호스트도 현재 mock API로 제공하고, 실제 데이터 전환 시 홈 카드용 조회와 로그인 회원의 `hasLiked` 개인화 계산을 적용합니다.
    - 섹션별 성능과 인덱스 필요 여부를 확인합니다.
 
 ## 대안
