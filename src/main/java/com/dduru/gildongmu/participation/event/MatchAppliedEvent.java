@@ -4,6 +4,7 @@ public record MatchAppliedEvent(
         Long participationId,
         Long actorUserId,
         Long recipientUserId,
-        String postTitle
+        String postTitle,
+        String actorNickname
 ) {
 }

@@ -26,8 +26,8 @@
 리스너에서 DB를 재조회하지 않도록, 이벤트 객체에 알림 문구 생성·수신자 결정에
 필요한 정보를 함께 실어 보낸다.
 
-예) `ScheduleUpdatedEvent` → `scheduleId`, `journeyId`, `scheduleTitle`, `actorUserId` 포함
-→ 리스너는 재조회 없이 body를 조립하고 여정 멤버 ID만 조회해 저장한다.
+예) `MatchAppliedEvent` → 이벤트 발행 시점에 신청자 닉네임을 조회해 포함
+→ 리스너는 재조회 없이 body를 조립한다.
 
 ### 알림 저장 실패는 본문 트랜잭션에 영향을 주지 않는다
 
@@ -78,7 +78,6 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 |---|---|---|
 | `ParticipationApplicantService` | `participate()` | `MatchAppliedEvent` |
 | `ParticipationCommandService` | `approveParticipation()` | `MatchApprovedEvent` |
-| `ParticipationCommandService` | `rejectParticipation()` | `MatchRejectedEvent` |
 | `JourneyPostService` | `updatePostNotice()` | `JourneyNoticeCreatedEvent` |
 | `JourneyScheduleService` | `createSchedule()` | `ScheduleCreatedEvent` |
 | `JourneyScheduleService` | `updateSchedule()` | `ScheduleUpdatedEvent` |
@@ -94,7 +93,6 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 |---|---|---|
 | `MATCH_APPLIED` | 모집글 작성자 1명 | 이벤트에 `recipientUserId` 포함 |
 | `MATCH_APPROVED` | 신청자 1명 | 이벤트에 `applicantUserId` 포함 |
-| `MATCH_REJECTED` | 신청자 1명 | 이벤트에 `applicantUserId` 포함 |
 | `JOURNEY_NOTICE` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
 | `SCHEDULE_CREATED / UPDATED / CANCELED` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
 
@@ -102,15 +100,17 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 
 ### 알림 문구(body)
 
-| 타입 | body 예시 |
+| 타입 | body |
 |---|---|
-| `MATCH_APPLIED` | `[시부야 자유여행] 에 새로운 참여 신청이 도착했습니다.` |
-| `MATCH_APPROVED` | `[시부야 자유여행] 여행 참여가 승인되었습니다.` |
-| `MATCH_REJECTED` | `참여 신청이 검토되었으나 함께하기 어렵게 되었습니다.` |
-| `JOURNEY_NOTICE` | `[시부야 자유여행] 새 공지가 등록되었습니다.` |
-| `SCHEDULE_CREATED` | `[시부야 스크램블 집합] 일정이 추가되었습니다.` |
-| `SCHEDULE_UPDATED` | `[시부야 스크램블 집합] 일정이 변경되었습니다.` |
-| `SCHEDULE_CANCELED` | `[시부야 스크램블 집합] 일정이 취소되었습니다.` |
+| `MATCH_APPLIED` | `{닉네임} 님이 매칭을 신청했습니다.` |
+| `MATCH_APPROVED` | `{닉네임} 님과 매칭이 성사되었습니다.` |
+| `JOURNEY_NOTICE` | `[{여행지/방 이름}] 에 공지가 등록되었습니다.` |
+| `SCHEDULE_CREATED` | `여행 일정이 생성되었습니다.` |
+| `SCHEDULE_UPDATED` | `여행 일정이 변경되었습니다. 확인해주세요.` |
+| `SCHEDULE_CANCELED` | `여행 일정이 취소되었습니다.` |
+
+> `MATCH_APPLIED`의 닉네임은 신청자, `MATCH_APPROVED`의 닉네임은 승인자(모집글 작성자)이다.
+> 닉네임은 이벤트 발행 시점에 `ProfileRepository`로 조회해 이벤트에 포함한다.
 
 ### resourceType / resourceId (탭 시 이동 대상)
 
@@ -118,7 +118,6 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 |---|---|---|
 | `MATCH_APPLIED` | `MATCH` | `participationId` |
 | `MATCH_APPROVED` | `JOURNEY` | `journeyId` (승인된 여정으로 이동) |
-| `MATCH_REJECTED` | `MATCH` | `participationId` |
 | `JOURNEY_NOTICE` | `JOURNEY_POST` | `journeyPostId` |
 | `SCHEDULE_*` | `SCHEDULE` | `scheduleId` |
 

@@ -4,6 +4,7 @@ public record MatchApprovedEvent(
         Long participationId,
         Long applicantUserId,
         Long journeyId,
-        String journeyTitle
+        String journeyTitle,
+        String approverNickname
 ) {
 }

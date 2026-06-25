@@ -9,17 +9,13 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
-import com.dduru.gildongmu.notification.repository.NotificationRepository;
+import com.dduru.gildongmu.notification.service.NotificationPersistService;
 import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
-import com.dduru.gildongmu.participation.event.MatchRejectedEvent;
-import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -30,19 +26,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationEventListener {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationPersistService notificationPersistService;
     private final JourneyMemberRepository journeyMemberRepository;
     private final UserRepository userRepository;
     private final FcmPushService fcmPushService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleMatchApplied(MatchAppliedEvent event) {
         try {
-            String body = "[" + event.postTitle() + "]에 새로운 참여 신청이 도착했습니다.";
-            User recipient = userRepository.getReferenceById(event.recipientUserId());
-            notificationRepository.save(Notification.create(
-                    recipient, NotificationType.MATCH_APPLIED, body, ResourceType.MATCH, event.participationId()
+            String body = event.actorNickname() + " 님이 매칭을 신청했습니다.";
+            notificationPersistService.save(Notification.create(
+                    userRepository.getReferenceById(event.recipientUserId()),
+                    NotificationType.MATCH_APPLIED, body, ResourceType.MATCH, event.participationId()
             ));
             fcmPushService.sendToUser(event.recipientUserId(), "새로운 참여 신청", body);
         } catch (Exception e) {
@@ -51,13 +46,12 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleMatchApproved(MatchApprovedEvent event) {
         try {
-            String body = "[" + event.journeyTitle() + "] 여행 참여가 승인되었습니다.";
-            User recipient = userRepository.getReferenceById(event.applicantUserId());
-            notificationRepository.save(Notification.create(
-                    recipient, NotificationType.MATCH_APPROVED, body, ResourceType.JOURNEY, event.journeyId()
+            String body = event.approverNickname() + " 님과 매칭이 성사되었습니다.";
+            notificationPersistService.save(Notification.create(
+                    userRepository.getReferenceById(event.applicantUserId()),
+                    NotificationType.MATCH_APPROVED, body, ResourceType.JOURNEY, event.journeyId()
             ));
             fcmPushService.sendToUser(event.applicantUserId(), "참여 승인", body);
         } catch (Exception e) {
@@ -66,22 +60,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void handleMatchRejected(MatchRejectedEvent event) {
-        try {
-            String body = "참여 신청이 검토되었으나 함께하기 어렵게 되었습니다.";
-            User recipient = userRepository.getReferenceById(event.applicantUserId());
-            notificationRepository.save(Notification.create(
-                    recipient, NotificationType.MATCH_REJECTED, body, ResourceType.MATCH, event.participationId()
-            ));
-            fcmPushService.sendToUser(event.applicantUserId(), "참여 신청 결과", body);
-        } catch (Exception e) {
-            log.error("MATCH_REJECTED 알림 저장 실패 - participationId={}", event.participationId(), e);
-        }
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleJourneyNoticeCreated(JourneyNoticeCreatedEvent event) {
         try {
             List<Long> recipientIds = journeyMemberRepository
@@ -96,7 +74,7 @@ public class NotificationEventListener {
                             ResourceType.JOURNEY_POST, event.journeyPostId()
                     ))
                     .toList();
-            notificationRepository.saveAll(notifications);
+            notificationPersistService.saveAll(notifications);
             fcmPushService.sendToUsers(recipientIds, "새 공지", body);
         } catch (Exception e) {
             log.error("JOURNEY_NOTICE 알림 저장 실패 - journeyPostId={}", event.journeyPostId(), e);
@@ -104,7 +82,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCreated(ScheduleCreatedEvent event) {
         try {
             saveScheduleNotificationsAndPush(
@@ -119,7 +96,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleUpdated(ScheduleUpdatedEvent event) {
         try {
             saveScheduleNotificationsAndPush(
@@ -134,7 +110,6 @@ public class NotificationEventListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleScheduleCanceled(ScheduleCanceledEvent event) {
         try {
             saveScheduleNotificationsAndPush(
@@ -162,7 +137,7 @@ public class NotificationEventListener {
                         type, body, ResourceType.SCHEDULE, scheduleId
                 ))
                 .toList();
-        notificationRepository.saveAll(notifications);
+        notificationPersistService.saveAll(notifications);
         fcmPushService.sendToUsers(recipientIds, pushTitle, body);
     }
 }

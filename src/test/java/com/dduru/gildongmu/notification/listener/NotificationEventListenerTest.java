@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.notification.listener;
 
+import com.dduru.gildongmu.fcm.service.FcmPushService;
 import com.dduru.gildongmu.journey.event.JourneyNoticeCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCanceledEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCreatedEvent;
@@ -8,13 +9,11 @@ import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
-import com.dduru.gildongmu.notification.repository.NotificationRepository;
+import com.dduru.gildongmu.notification.service.NotificationPersistService;
 import com.dduru.gildongmu.participation.event.MatchAppliedEvent;
 import com.dduru.gildongmu.participation.event.MatchApprovedEvent;
-import com.dduru.gildongmu.participation.event.MatchRejectedEvent;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
-import com.dduru.gildongmu.fcm.service.FcmPushService;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +39,7 @@ import static org.mockito.Mockito.when;
 class NotificationEventListenerTest {
 
     @Mock
-    private NotificationRepository notificationRepository;
+    private NotificationPersistService notificationPersistService;
 
     @Mock
     private JourneyMemberRepository journeyMemberRepository;
@@ -55,7 +54,7 @@ class NotificationEventListenerTest {
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationRepository, journeyMemberRepository, userRepository, fcmPushService);
+        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository, fcmPushService);
     }
 
     // ── MATCH ─────────────────────────────────────────────────────────────────
@@ -65,24 +64,25 @@ class NotificationEventListenerTest {
     class HandleMatchApplied {
 
         @Test
-        @DisplayName("이벤트를 수신하면 모집글 작성자에게 알림 1건을 저장한다")
+        @DisplayName("이벤트를 수신하면 모집글 작성자에게 닉네임이 포함된 알림 1건을 저장한다")
         void savesNotificationForPostOwner() {
             Long participationId = 1L;
             Long actorUserId = 10L;
             Long recipientUserId = 20L;
             String postTitle = "일본 여행 모집";
+            String actorNickname = "여행자닉네임";
             User recipient = createUser(recipientUserId);
 
             when(userRepository.getReferenceById(recipientUserId)).thenReturn(recipient);
 
-            listener.handleMatchApplied(new MatchAppliedEvent(participationId, actorUserId, recipientUserId, postTitle));
+            listener.handleMatchApplied(new MatchAppliedEvent(participationId, actorUserId, recipientUserId, postTitle, actorNickname));
 
             ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(captor.capture());
+            verify(notificationPersistService).save(captor.capture());
 
             Notification saved = captor.getValue();
             assertThat(saved.getType()).isEqualTo(NotificationType.MATCH_APPLIED);
-            assertThat(saved.getBody()).isEqualTo("[일본 여행 모집]에 새로운 참여 신청이 도착했습니다.");
+            assertThat(saved.getBody()).isEqualTo("여행자닉네임 님이 매칭을 신청했습니다.");
             assertThat(saved.getResourceType()).isEqualTo(ResourceType.MATCH);
             assertThat(saved.getResourceId()).isEqualTo(participationId);
             assertThat(saved.isRead()).isFalse();
@@ -94,7 +94,7 @@ class NotificationEventListenerTest {
             when(userRepository.getReferenceById(any())).thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
-                    listener.handleMatchApplied(new MatchAppliedEvent(1L, 10L, 20L, "test"))
+                    listener.handleMatchApplied(new MatchAppliedEvent(1L, 10L, 20L, "test", "닉네임"))
             ).doesNotThrowAnyException();
         }
     }
@@ -104,24 +104,25 @@ class NotificationEventListenerTest {
     class HandleMatchApproved {
 
         @Test
-        @DisplayName("이벤트를 수신하면 신청자에게 JOURNEY 타입 알림을 저장한다")
+        @DisplayName("이벤트를 수신하면 신청자에게 승인자 닉네임이 포함된 JOURNEY 타입 알림을 저장한다")
         void savesNotificationForApplicantWithJourneyResource() {
             Long participationId = 1L;
             Long applicantUserId = 10L;
             Long journeyId = 30L;
             String journeyTitle = "도쿄 여정";
+            String approverNickname = "호스트닉네임";
             User applicant = createUser(applicantUserId);
 
             when(userRepository.getReferenceById(applicantUserId)).thenReturn(applicant);
 
-            listener.handleMatchApproved(new MatchApprovedEvent(participationId, applicantUserId, journeyId, journeyTitle));
+            listener.handleMatchApproved(new MatchApprovedEvent(participationId, applicantUserId, journeyId, journeyTitle, approverNickname));
 
             ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(captor.capture());
+            verify(notificationPersistService).save(captor.capture());
 
             Notification saved = captor.getValue();
             assertThat(saved.getType()).isEqualTo(NotificationType.MATCH_APPROVED);
-            assertThat(saved.getBody()).isEqualTo("[도쿄 여정] 여행 참여가 승인되었습니다.");
+            assertThat(saved.getBody()).isEqualTo("호스트닉네임 님과 매칭이 성사되었습니다.");
             assertThat(saved.getResourceType()).isEqualTo(ResourceType.JOURNEY);
             assertThat(saved.getResourceId()).isEqualTo(journeyId);
         }
@@ -132,34 +133,8 @@ class NotificationEventListenerTest {
             when(userRepository.getReferenceById(any())).thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
-                    listener.handleMatchApproved(new MatchApprovedEvent(1L, 10L, 30L, "여정"))
+                    listener.handleMatchApproved(new MatchApprovedEvent(1L, 10L, 30L, "여정", "닉네임"))
             ).doesNotThrowAnyException();
-        }
-    }
-
-    @Nested
-    @DisplayName("MATCH_REJECTED 이벤트")
-    class HandleMatchRejected {
-
-        @Test
-        @DisplayName("이벤트를 수신하면 신청자에게 완곡한 문구의 알림을 저장한다")
-        void savesNotificationWithPoliteBody() {
-            Long participationId = 1L;
-            Long applicantUserId = 10L;
-            User applicant = createUser(applicantUserId);
-
-            when(userRepository.getReferenceById(applicantUserId)).thenReturn(applicant);
-
-            listener.handleMatchRejected(new MatchRejectedEvent(participationId, applicantUserId));
-
-            ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(captor.capture());
-
-            Notification saved = captor.getValue();
-            assertThat(saved.getType()).isEqualTo(NotificationType.MATCH_REJECTED);
-            assertThat(saved.getBody()).isEqualTo("참여 신청이 검토되었으나 함께하기 어렵게 되었습니다.");
-            assertThat(saved.getResourceType()).isEqualTo(ResourceType.MATCH);
-            assertThat(saved.getResourceId()).isEqualTo(participationId);
         }
     }
 
@@ -182,7 +157,7 @@ class NotificationEventListenerTest {
                     new JourneyNoticeCreatedEvent(5L, journeyId, "시부야 여정", actorUserId)
             );
 
-            verify(notificationRepository, never()).saveAll(any());
+            verify(notificationPersistService, never()).saveAll(any());
         }
 
         @Test
@@ -205,7 +180,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(2);
@@ -256,7 +231,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(1);
@@ -274,7 +249,7 @@ class NotificationEventListenerTest {
 
             listener.handleScheduleCreated(new ScheduleCreatedEvent(7L, 1L, "일정", 10L));
 
-            verify(notificationRepository, never()).saveAll(any());
+            verify(notificationPersistService, never()).saveAll(any());
         }
 
         @Test
@@ -304,7 +279,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_UPDATED);
             assertThat(captor.getValue().get(0).getBody()).isEqualTo("[시부야 스크램블 집합] 일정이 변경되었습니다.");
@@ -326,7 +301,7 @@ class NotificationEventListenerTest {
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-            verify(notificationRepository).saveAll(captor.capture());
+            verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CANCELED);
             assertThat(captor.getValue().get(0).getBody()).isEqualTo("[시부야 스크램블 집합] 일정이 취소되었습니다.");
