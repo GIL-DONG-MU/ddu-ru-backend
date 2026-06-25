@@ -295,6 +295,7 @@ public class HomeService {
     }
 
     private static List<HomeSuperHostResponse> superHosts(LocalDate baseStartDate) {
+        // TODO: userId로 hasLiked 여부 조회 (실제 데이터 연동 시)
         return List.of(
                 new HomeSuperHostResponse(
                         501L,
