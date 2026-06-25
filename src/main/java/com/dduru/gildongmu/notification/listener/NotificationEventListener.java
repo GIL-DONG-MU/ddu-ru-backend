@@ -69,7 +69,7 @@ public class NotificationEventListener {
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
             if (recipientIds.isEmpty()) return;
 
-            String body = "[" + event.journeyTitle() + "] 새 공지가 등록되었습니다.";
+            String body = event.journeyTitle() + " 새 공지가 등록되었습니다.";
             List<Notification> notifications = recipientIds.stream()
                     .map(id -> Notification.create(
                             userRepository.getReferenceById(id),

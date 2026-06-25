@@ -191,7 +191,7 @@ class NotificationEventListenerTest {
             assertThat(saved).hasSize(2);
             assertThat(saved).allSatisfy(n -> {
                 assertThat(n.getType()).isEqualTo(NotificationType.JOURNEY_NOTICE);
-                assertThat(n.getBody()).isEqualTo("[시부야 여정] 새 공지가 등록되었습니다.");
+                assertThat(n.getBody()).isEqualTo("시부야 여정 새 공지가 등록되었습니다.");
                 assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
                 assertThat(n.getResourceId()).isEqualTo(journeyPostId);
                 assertThat(n.isRead()).isFalse();
