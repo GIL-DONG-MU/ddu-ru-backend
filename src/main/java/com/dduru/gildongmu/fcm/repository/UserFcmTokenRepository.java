@@ -22,9 +22,9 @@ public interface UserFcmTokenRepository extends JpaRepository<UserFcmToken, Long
 
     void deleteByToken(String token);
 
-    List<UserFcmToken> findAllByUser_Id(Long userId);
+    List<UserFcmToken> findAllByUserId(Long userId);
 
-    List<UserFcmToken> findAllByUser_IdIn(List<Long> userIds);
+    List<UserFcmToken> findAllByUserIdIn(List<Long> userIds);
 
     void deleteByUser_IdAndToken(Long userId, String token);
 }

@@ -47,7 +47,7 @@ class FcmPushServiceTest {
 
                 fcmPushService.sendToUser(1L, "제목", "내용");
 
-                verify(userFcmTokenRepository, never()).findAllByUser_Id(any());
+                verify(userFcmTokenRepository, never()).findAllByUserId(any());
             }
         }
 
@@ -56,11 +56,11 @@ class FcmPushServiceTest {
         void skipsWhenNoTokensRegistered() {
             try (MockedStatic<FirebaseApp> firebaseAppMock = mockStatic(FirebaseApp.class)) {
                 firebaseAppMock.when(FirebaseApp::getApps).thenReturn(List.of(mock(FirebaseApp.class)));
-                when(userFcmTokenRepository.findAllByUser_Id(1L)).thenReturn(List.of());
+                when(userFcmTokenRepository.findAllByUserId(1L)).thenReturn(List.of());
 
                 fcmPushService.sendToUser(1L, "제목", "내용");
 
-                verify(userFcmTokenRepository).findAllByUser_Id(1L);
+                verify(userFcmTokenRepository).findAllByUserId(1L);
             }
         }
     }
@@ -77,7 +77,7 @@ class FcmPushServiceTest {
 
                 fcmPushService.sendToUsers(List.of(1L, 2L), "제목", "내용");
 
-                verify(userFcmTokenRepository, never()).findAllByUser_IdIn(any());
+                verify(userFcmTokenRepository, never()).findAllByUserIdIn(any());
             }
         }
 
@@ -86,7 +86,7 @@ class FcmPushServiceTest {
         void skipsWhenUserIdsIsEmpty() {
             fcmPushService.sendToUsers(List.of(), "제목", "내용");
 
-            verify(userFcmTokenRepository, never()).findAllByUser_IdIn(any());
+            verify(userFcmTokenRepository, never()).findAllByUserIdIn(any());
         }
 
         @Test
@@ -94,11 +94,11 @@ class FcmPushServiceTest {
         void skipsWhenNoTokensForAnyUser() {
             try (MockedStatic<FirebaseApp> firebaseAppMock = mockStatic(FirebaseApp.class)) {
                 firebaseAppMock.when(FirebaseApp::getApps).thenReturn(List.of(mock(FirebaseApp.class)));
-                when(userFcmTokenRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of());
+                when(userFcmTokenRepository.findAllByUserIdIn(List.of(1L, 2L))).thenReturn(List.of());
 
                 fcmPushService.sendToUsers(List.of(1L, 2L), "제목", "내용");
 
-                verify(userFcmTokenRepository).findAllByUser_IdIn(List.of(1L, 2L));
+                verify(userFcmTokenRepository).findAllByUserIdIn(List.of(1L, 2L));
             }
         }
 
@@ -110,7 +110,7 @@ class FcmPushServiceTest {
 
                 UserFcmToken token1 = createFcmToken(1L, "token-user1");
                 UserFcmToken token2 = createFcmToken(2L, "token-user2");
-                when(userFcmTokenRepository.findAllByUser_IdIn(List.of(1L, 2L)))
+                when(userFcmTokenRepository.findAllByUserIdIn(List.of(1L, 2L)))
                         .thenReturn(List.of(token1, token2));
 
                 try {
@@ -119,7 +119,7 @@ class FcmPushServiceTest {
                     // Firebase 미초기화 환경에서 sendEachForMulticast 호출 시 발생하는 예외 무시
                 }
 
-                verify(userFcmTokenRepository).findAllByUser_IdIn(List.of(1L, 2L));
+                verify(userFcmTokenRepository).findAllByUserIdIn(List.of(1L, 2L));
             }
         }
     }

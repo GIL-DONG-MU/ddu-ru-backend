@@ -24,9 +24,9 @@ public class FcmPushService {
     @Async("fcmExecutor")
     @Transactional
     public void sendToUser(Long userId, String title, String body) {
-        if (!isFirebaseInitialized()) return;
+        if (isFirebaseNotInitialized()) return;
 
-        List<String> tokens = userFcmTokenRepository.findAllByUser_Id(userId)
+        List<String> tokens = userFcmTokenRepository.findAllByUserId(userId)
                 .stream()
                 .map(UserFcmToken::getToken)
                 .toList();
@@ -39,10 +39,10 @@ public class FcmPushService {
     @Async("fcmExecutor")
     @Transactional
     public void sendToUsers(List<Long> userIds, String title, String body) {
-        if (!isFirebaseInitialized()) return;
+        if (isFirebaseNotInitialized()) return;
         if (userIds.isEmpty()) return;
 
-        List<String> tokens = userFcmTokenRepository.findAllByUser_IdIn(userIds)
+        List<String> tokens = userFcmTokenRepository.findAllByUserIdIn(userIds)
                 .stream()
                 .map(UserFcmToken::getToken)
                 .toList();
@@ -92,7 +92,7 @@ public class FcmPushService {
         }
     }
 
-    private boolean isFirebaseInitialized() {
-        return !FirebaseApp.getApps().isEmpty();
+    private boolean isFirebaseNotInitialized() {
+        return FirebaseApp.getApps().isEmpty();
     }
 }
