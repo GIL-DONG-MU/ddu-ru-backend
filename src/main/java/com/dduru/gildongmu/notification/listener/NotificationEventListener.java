@@ -67,18 +67,9 @@ public class NotificationEventListener {
         try {
             List<Long> recipientIds = journeyMemberRepository
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
-            if (recipientIds.isEmpty()) return;
-
             String body = event.journeyTitle() + " 에 공지가 등록되었습니다.";
-            List<Notification> notifications = recipientIds.stream()
-                    .map(id -> Notification.create(
-                            userRepository.getReferenceById(id),
-                            NotificationType.JOURNEY_NOTICE, body,
-                            ResourceType.JOURNEY_POST, event.journeyPostId()
-                    ))
-                    .toList();
-            notificationPersistService.saveAll(notifications);
-            fcmPushService.sendToUsers(recipientIds, "새 공지", body);
+            saveNotificationsAndPush(recipientIds, NotificationType.JOURNEY_NOTICE, body,
+                    ResourceType.JOURNEY_POST, event.journeyPostId(), "새 공지");
         } catch (Exception e) {
             log.error("JOURNEY_NOTICE 알림 저장 실패 - journeyPostId={}", event.journeyPostId(), e);
         }
@@ -130,20 +121,9 @@ public class NotificationEventListener {
     public void handlePostUpdated(PostUpdatedEvent event) {
         try {
             List<Long> recipientIds = postLikeRepository.findUserIdsByPostId(event.postId());
-            if (recipientIds.isEmpty()) return;
-
             String body = "관심 있는 모집글에 변경이 있습니다.";
-            List<Notification> notifications = recipientIds.stream()
-                    .map(id -> Notification.create(
-                            userRepository.getReferenceById(id),
-                            NotificationType.POST_UPDATED,
-                            body,
-                            ResourceType.JOURNEY_POST,
-                            event.postId()
-                    ))
-                    .toList();
-            notificationPersistService.saveAll(notifications);
-            fcmPushService.sendToUsers(recipientIds, "관심 모집글 업데이트", body);
+            saveNotificationsAndPush(recipientIds, NotificationType.POST_UPDATED, body,
+                    ResourceType.JOURNEY_POST, event.postId(), "관심 모집글 업데이트");
         } catch (Exception e) {
             log.error("POST_UPDATED 알림 저장 실패 - postId={}", event.postId(), e);
         }
@@ -155,12 +135,18 @@ public class NotificationEventListener {
     ) {
         List<Long> recipientIds = journeyMemberRepository
                 .findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId);
-        if (recipientIds.isEmpty()) return;
+        saveNotificationsAndPush(recipientIds, type, body, ResourceType.SCHEDULE, scheduleId, pushTitle);
+    }
 
+    private void saveNotificationsAndPush(
+            List<Long> recipientIds, NotificationType type,
+            String body, ResourceType resourceType, Long resourceId, String pushTitle
+    ) {
+        if (recipientIds.isEmpty()) return;
         List<Notification> notifications = recipientIds.stream()
                 .map(id -> Notification.create(
                         userRepository.getReferenceById(id),
-                        type, body, ResourceType.SCHEDULE, scheduleId
+                        type, body, resourceType, resourceId
                 ))
                 .toList();
         notificationPersistService.saveAll(notifications);
