@@ -27,7 +27,7 @@ public class NotificationQueryService {
     }
 
     public UnreadCountResponse getUnreadCount(Long userId) {
-        long count = notificationRepository.countByRecipient_IdAndReadFalse(userId);
+        long count = notificationRepository.countUnreadByRecipientId(userId);
         return new UnreadCountResponse(count);
     }
 }
