@@ -5,6 +5,7 @@ import com.dduru.gildongmu.fcm.domain.enums.DeviceType;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,11 +30,18 @@ public class UserFcmToken extends BaseTimeEntity {
     @Column(name = "device_type", nullable = false, length = 10)
     private DeviceType deviceType;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private UserFcmToken(User user, String token, DeviceType deviceType) {
+        this.user = user;
+        this.token = token;
+        this.deviceType = deviceType;
+    }
+
     public static UserFcmToken create(User user, String token, DeviceType deviceType) {
-        UserFcmToken fcmToken = new UserFcmToken();
-        fcmToken.user = user;
-        fcmToken.token = token;
-        fcmToken.deviceType = deviceType;
-        return fcmToken;
+        return UserFcmToken.builder()
+                .user(user)
+                .token(token)
+                .deviceType(deviceType)
+                .build();
     }
 }
