@@ -21,7 +21,7 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() {
-        if (!FirebaseApp.getApps().isEmpty()) {
+        if (isAlreadyInitialized()) {
             return;
         }
         try {
@@ -33,5 +33,9 @@ public class FirebaseConfig {
         } catch (IOException e) {
             log.warn("Firebase 초기화 실패 — FCM 푸시 비활성화됩니다. ({})", e.getMessage());
         }
+    }
+
+    private boolean isAlreadyInitialized() {
+        return !FirebaseApp.getApps().isEmpty();
     }
 }
