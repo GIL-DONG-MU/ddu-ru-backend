@@ -80,7 +80,7 @@ public class FcmPushService {
         List<SendResponse> responses = response.getResponses();
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
-            if (!sendResponse.isSuccessful()) {
+            if (isFailed(sendResponse)) {
                 MessagingErrorCode errorCode = sendResponse.getException().getMessagingErrorCode();
                 // 네트워크 오류 등 일시적 실패는 토큰을 보존하고, 영구적으로 무효한 토큰만 삭제
                 if (errorCode == MessagingErrorCode.UNREGISTERED
@@ -91,6 +91,10 @@ public class FcmPushService {
                 }
             }
         }
+    }
+
+    private boolean isFailed(SendResponse sendResponse) {
+        return !sendResponse.isSuccessful();
     }
 
     private boolean isFirebaseNotInitialized() {
