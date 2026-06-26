@@ -19,6 +19,6 @@ public class FcmTokenService {
     }
 
     public void delete(Long userId, FcmTokenDeleteRequest request) {
-        userFcmTokenRepository.deleteByUser_IdAndToken(userId, request.token());
+        userFcmTokenRepository.deleteByUserIdAndToken(userId, request.token());
     }
 }

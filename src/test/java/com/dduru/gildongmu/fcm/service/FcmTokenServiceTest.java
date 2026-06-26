@@ -56,7 +56,7 @@ class FcmTokenServiceTest {
 
             fcmTokenService.delete(userId, request);
 
-            verify(userFcmTokenRepository).deleteByUser_IdAndToken(userId, "fcm-token-abc");
+            verify(userFcmTokenRepository).deleteByUserIdAndToken(userId, "fcm-token-abc");
         }
     }
 }
