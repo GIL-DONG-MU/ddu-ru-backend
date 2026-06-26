@@ -143,7 +143,7 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
               AND jm.status = 'ACTIVE'
               AND jm.user.id <> :excludeUserId
             """)
-    List<Long> findActiveUserIdsByJourneyIdExcludingUser(
+    List<Long> findMemberIdsExcludingActor(
             @Param("journeyId") Long journeyId,
             @Param("excludeUserId") Long excludeUserId
     );

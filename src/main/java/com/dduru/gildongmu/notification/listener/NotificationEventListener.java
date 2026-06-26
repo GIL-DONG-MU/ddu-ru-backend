@@ -136,7 +136,7 @@ public class NotificationEventListener {
             NotificationType type, String body, String pushTitle, ResourceType resourceType, Long resourceId
     ) {
         List<Long> recipientIds = journeyMemberRepository
-                .findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId);
+                .findMemberIdsExcludingActor(journeyId, actorUserId);
         notifyUsers(recipientIds, type, body, resourceType, resourceId, pushTitle);
     }
 

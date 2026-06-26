@@ -155,7 +155,7 @@ class NotificationEventListenerTest {
             Long journeyId = 1L;
             Long actorUserId = 10L;
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(List.of());
 
             listener.handleJourneyNoticeCreated(
@@ -174,7 +174,7 @@ class NotificationEventListenerTest {
             String journeyTitle = "시부야 여정";
             List<Long> recipientIds = List.of(20L, 30L);
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(recipientIds);
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.getReferenceById(30L)).thenReturn(createUser(30L));
@@ -201,7 +201,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
         void exceptionIsSwallowed() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
@@ -226,7 +226,7 @@ class NotificationEventListenerTest {
             Long actorUserId = 10L;
             String scheduleTitle = "시부야 스크램블 집합";
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
@@ -249,7 +249,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("수신자가 없으면 저장하지 않는다")
         void skipsWhenNoRecipients() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenReturn(List.of());
 
             listener.handleScheduleCreated(new ScheduleCreatedEvent(7L, 1L, "일정", 10L));
@@ -260,7 +260,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
         void exceptionIsSwallowed() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
@@ -276,7 +276,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 변경 알림을 저장한다")
         void savesNotificationsWithUpdatedBody() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(1L, 10L))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(1L, 10L))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
@@ -298,7 +298,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 취소 알림을 저장한다")
         void savesNotificationsWithCanceledBody() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(1L, 10L))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(1L, 10L))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
