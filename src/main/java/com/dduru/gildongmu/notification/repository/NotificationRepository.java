@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.notification.repository;
 
 import com.dduru.gildongmu.notification.domain.Notification;
+import com.dduru.gildongmu.notification.exception.NotificationNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,6 +24,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("cursor") Long cursor,
             Pageable pageable
     );
+
+    default Notification getByIdOrThrow(Long id) {
+        return findById(id).orElseThrow(NotificationNotFoundException::new);
+    }
 
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.recipient.id = :userId AND n.read = false")
     long countUnreadByRecipientId(@Param("userId") Long userId);
