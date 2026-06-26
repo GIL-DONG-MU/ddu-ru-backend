@@ -18,7 +18,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
               AND (:cursor IS NULL OR n.id < :cursor)
             ORDER BY n.id DESC
             """)
-    List<Notification> findByRecipientIdWithCursor(
+    List<Notification> findPageByRecipientId(
             @Param("userId") Long userId,
             @Param("cursor") Long cursor,
             Pageable pageable
