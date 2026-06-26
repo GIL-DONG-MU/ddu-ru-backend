@@ -43,7 +43,7 @@ public class NotificationEventListener {
                     userRepository.getReferenceById(event.recipientUserId()),
                     NotificationType.MATCH_APPLIED, body, ResourceType.MATCH, event.participationId()
             ));
-            fcmPushService.sendToUser(event.recipientUserId(), "새로운 참여 신청", body);
+            fcmPushService.sendToUser(event.recipientUserId(), "매칭 신청 도착", body);
         } catch (Exception e) {
             log.error("MATCH_APPLIED 알림 저장 실패 - participationId={}", event.participationId(), e);
         }
@@ -57,7 +57,7 @@ public class NotificationEventListener {
                     userRepository.getReferenceById(event.applicantUserId()),
                     NotificationType.MATCH_APPROVED, body, ResourceType.JOURNEY, event.journeyId()
             ));
-            fcmPushService.sendToUser(event.applicantUserId(), "참여 승인", body);
+            fcmPushService.sendToUser(event.applicantUserId(), "매칭 승인", body);
         } catch (Exception e) {
             log.error("MATCH_APPROVED 알림 저장 실패 - journeyId={}", event.journeyId(), e);
         }
@@ -70,7 +70,7 @@ public class NotificationEventListener {
                     .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
             String body = event.journeyTitle() + " 에 공지가 등록되었습니다.";
             notifyUsers(recipientIds, NotificationType.JOURNEY_NOTICE, body,
-                    ResourceType.JOURNEY_POST, event.journeyPostId(), "새 공지");
+                    ResourceType.JOURNEY_POST, event.journeyPostId(), "공지 등록");
         } catch (Exception e) {
             log.error("JOURNEY_NOTICE 알림 저장 실패 - journeyPostId={}", event.journeyPostId(), e);
         }
@@ -83,7 +83,7 @@ public class NotificationEventListener {
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_CREATED,
                     event.scheduleTitle() + " 일정이 추가되었습니다.",
-                    "새 일정", event.scheduleId()
+                    "일정 생성", event.scheduleId()
             );
         } catch (Exception e) {
             log.error("SCHEDULE_CREATED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
@@ -124,7 +124,7 @@ public class NotificationEventListener {
             List<Long> recipientIds = postLikeRepository.findUserIdsByPostId(event.postId());
             String body = "관심 있는 모집글에 변경이 있습니다.";
             notifyUsers(recipientIds, NotificationType.POST_UPDATED, body,
-                    ResourceType.JOURNEY_POST, event.postId(), "관심 모집글 업데이트");
+                    ResourceType.JOURNEY_POST, event.postId(), "찜한 글 업데이트");
         } catch (Exception e) {
             log.error("POST_UPDATED 알림 저장 실패 - postId={}", event.postId(), e);
         }
