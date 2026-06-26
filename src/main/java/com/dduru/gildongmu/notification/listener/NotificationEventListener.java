@@ -66,11 +66,12 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleJourneyNoticeCreated(JourneyNoticeCreatedEvent event) {
         try {
-            List<Long> recipientIds = journeyMemberRepository
-                    .findActiveUserIdsByJourneyIdExcludingUser(event.journeyId(), event.actorUserId());
-            String body = event.journeyTitle() + " 에 공지가 등록되었습니다.";
-            notifyUsers(recipientIds, NotificationType.JOURNEY_NOTICE, body,
-                    ResourceType.JOURNEY_POST, event.journeyPostId(), "공지 등록");
+            notifyJourneyMembers(
+                    event.journeyId(), event.actorUserId(),
+                    NotificationType.JOURNEY_NOTICE,
+                    event.journeyTitle() + " 에 공지가 등록되었습니다.",
+                    "공지 등록", ResourceType.JOURNEY_POST, event.journeyPostId()
+            );
         } catch (Exception e) {
             log.error("JOURNEY_NOTICE 알림 저장 실패 - journeyPostId={}", event.journeyPostId(), e);
         }
@@ -79,11 +80,11 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleScheduleCreated(ScheduleCreatedEvent event) {
         try {
-            notifyScheduleMembers(
+            notifyJourneyMembers(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_CREATED,
                     event.scheduleTitle() + " 일정이 추가되었습니다.",
-                    "일정 생성", event.scheduleId()
+                    "일정 생성", ResourceType.SCHEDULE, event.scheduleId()
             );
         } catch (Exception e) {
             log.error("SCHEDULE_CREATED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
@@ -93,11 +94,11 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleScheduleUpdated(ScheduleUpdatedEvent event) {
         try {
-            notifyScheduleMembers(
+            notifyJourneyMembers(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_UPDATED,
                     event.scheduleTitle() + " 일정이 변경되었습니다.",
-                    "일정 변경", event.scheduleId()
+                    "일정 변경", ResourceType.SCHEDULE, event.scheduleId()
             );
         } catch (Exception e) {
             log.error("SCHEDULE_UPDATED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
@@ -107,11 +108,11 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleScheduleCanceled(ScheduleCanceledEvent event) {
         try {
-            notifyScheduleMembers(
+            notifyJourneyMembers(
                     event.journeyId(), event.actorUserId(),
                     NotificationType.SCHEDULE_CANCELED,
                     event.scheduleTitle() + " 일정이 취소되었습니다.",
-                    "일정 취소", event.scheduleId()
+                    "일정 취소", ResourceType.SCHEDULE, event.scheduleId()
             );
         } catch (Exception e) {
             log.error("SCHEDULE_CANCELED 알림 저장 실패 - scheduleId={}", event.scheduleId(), e);
@@ -130,13 +131,13 @@ public class NotificationEventListener {
         }
     }
 
-    private void notifyScheduleMembers(
+    private void notifyJourneyMembers(
             Long journeyId, Long actorUserId,
-            NotificationType type, String body, String pushTitle, Long scheduleId
+            NotificationType type, String body, String pushTitle, ResourceType resourceType, Long resourceId
     ) {
         List<Long> recipientIds = journeyMemberRepository
                 .findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId);
-        notifyUsers(recipientIds, type, body, ResourceType.SCHEDULE, scheduleId, pushTitle);
+        notifyUsers(recipientIds, type, body, resourceType, resourceId, pushTitle);
     }
 
     private void notifyUsers(
