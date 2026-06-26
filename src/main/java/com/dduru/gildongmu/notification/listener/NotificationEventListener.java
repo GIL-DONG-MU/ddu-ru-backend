@@ -23,6 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
+// 모든 핸들러는 AFTER_COMMIT — 원래 트랜잭션 롤백 시 알림이 발송되는 것을 방지
 @Slf4j
 @Component
 @RequiredArgsConstructor

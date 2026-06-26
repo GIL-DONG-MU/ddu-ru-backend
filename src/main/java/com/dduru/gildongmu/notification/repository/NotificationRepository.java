@@ -32,6 +32,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.recipient.id = :userId AND n.read = false")
     long countUnreadByRecipientId(@Param("userId") Long userId);
 
+    // 벌크 UPDATE는 1차 캐시를 거치지 않으므로, 이후 조회 시 stale 상태를 반환하지 않도록 캐시를 비움
     @Modifying(clearAutomatically = true)
     @Query("""
             UPDATE Notification n

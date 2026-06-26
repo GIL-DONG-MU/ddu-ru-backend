@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FcmPushService {
 
-    private static final int FCM_MAX_TOKENS = 500;
+    private static final int FCM_MAX_TOKENS = 500; // FCM API 단일 요청 토큰 수 제한
 
     private final UserFcmTokenRepository userFcmTokenRepository;
 
@@ -82,6 +82,7 @@ public class FcmPushService {
             SendResponse sendResponse = responses.get(i);
             if (!sendResponse.isSuccessful()) {
                 MessagingErrorCode errorCode = sendResponse.getException().getMessagingErrorCode();
+                // 네트워크 오류 등 일시적 실패는 토큰을 보존하고, 영구적으로 무효한 토큰만 삭제
                 if (errorCode == MessagingErrorCode.UNREGISTERED
                         || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
                     String expiredToken = tokens.get(i);
