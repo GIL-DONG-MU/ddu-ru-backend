@@ -73,6 +73,14 @@ public class Notification extends BaseTimeEntity {
                 .build();
     }
 
+    public boolean isNotOwnedBy(Long userId) {
+        return !recipient.getId().equals(userId);
+    }
+
+    public boolean isUnread() {
+        return !read;
+    }
+
     public void markAsRead(LocalDateTime now) {
         this.read = true;
         this.readAt = now;

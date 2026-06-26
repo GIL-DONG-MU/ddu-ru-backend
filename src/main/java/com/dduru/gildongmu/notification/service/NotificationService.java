@@ -20,11 +20,11 @@ public class NotificationService {
     public NotificationReadResponse markAsRead(Long userId, Long notificationId) {
         Notification notification = notificationRepository.getByIdOrThrow(notificationId);
 
-        if (!notification.getRecipient().getId().equals(userId)) {
+        if (notification.isNotOwnedBy(userId)) {
             throw new NotificationAccessDeniedException();
         }
 
-        if (!notification.isRead()) {
+        if (notification.isUnread()) {
             notification.markAsRead(timeProvider.now());
         }
 
