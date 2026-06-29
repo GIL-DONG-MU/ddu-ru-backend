@@ -69,7 +69,9 @@ public class FcmPushService {
             BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
             handleFailedTokens(tokens, response);
         } catch (FirebaseMessagingException e) {
-            log.error("FCM 멀티캐스트 발송 실패 - tokens={}", tokens.size(), e);
+            log.error("FCM 멀티캐스트 발송 실패 - tokenCount={}", tokens.size(), e);
+        } catch (Exception e) {
+            log.error("FCM 멀티캐스트 발송 중 예상치 못한 오류 - tokenCount={}", tokens.size(), e);
         }
     }
 
