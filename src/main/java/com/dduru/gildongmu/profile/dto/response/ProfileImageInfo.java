@@ -7,8 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "프로필 이미지 표시 정보")
 public record ProfileImageInfo(
+        @Schema(description = "프로필 이미지 타입. AVATAR이면 bgColorId를 함께 사용하고, UPLOADED이면 url을 그대로 표시합니다.", example = "AVATAR", allowableValues = {"AVATAR", "UPLOADED", "DEFAULT"})
         ProfileImageType type,
+        @Schema(description = "표시할 프로필 이미지 URL", example = "https://cdn.example.com/profiles/avatar.png", nullable = true)
         String url,
+        @Schema(description = "아바타 배경색 ID. type=AVATAR일 때만 내려갑니다.", example = "3", nullable = true)
         Long bgColorId
 ) {
 
