@@ -39,6 +39,9 @@ public class User extends BaseTimeEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Profile profile;
 
+    @Column(name = "notification_enabled", nullable = false)
+    private boolean notificationEnabled = true;
+
     @Builder
     public User(String email, String name, String oauthId, OauthType oauthType, Role role) {
         this.email = email;
@@ -46,5 +49,10 @@ public class User extends BaseTimeEntity {
         this.oauthId = oauthId;
         this.oauthType = oauthType;
         this.role = role != null ? role : Role.USER;
+        this.notificationEnabled = true;
+    }
+
+    public void updateNotificationEnabled(boolean enabled) {
+        this.notificationEnabled = enabled;
     }
 }

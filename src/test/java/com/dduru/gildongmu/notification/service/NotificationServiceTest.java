@@ -10,6 +10,7 @@ import com.dduru.gildongmu.notification.exception.NotificationNotFoundException;
 import com.dduru.gildongmu.notification.repository.NotificationRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import com.dduru.gildongmu.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +40,9 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private TimeProvider timeProvider;
 
     private NotificationService notificationService;
@@ -46,7 +50,7 @@ class NotificationServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(timeProvider.now()).thenReturn(NOW);
-        notificationService = new NotificationService(notificationRepository, timeProvider);
+        notificationService = new NotificationService(notificationRepository, userRepository, timeProvider);
     }
 
     @Nested
