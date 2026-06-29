@@ -8,6 +8,7 @@ import com.dduru.gildongmu.journey.dto.request.JourneyScheduleUpdateRequest;
 import com.dduru.gildongmu.journey.dto.response.JourneyScheduleListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,7 +84,7 @@ public interface JourneyScheduleApiDocs {
             summary = "나의 여정 일정 삭제",
             description = "active journey member가 일정을 soft delete 처리합니다."
     )
-    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
             ErrorCode.JOURNEY_NOT_FOUND,
