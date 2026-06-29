@@ -71,7 +71,7 @@ springdoc:
   default-produces-media-type: application/json;charset=UTF-8
 
 fcm:
-  service-account-path: firebase/service-account.json
+  service-account-path: classpath:firebase/service-account.json
 
 logging:
   pattern:
