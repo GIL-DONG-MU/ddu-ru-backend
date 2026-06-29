@@ -7,7 +7,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,15 +17,14 @@ import java.io.InputStream;
 public class FirebaseConfig {
 
     @Value("${fcm.service-account-path}")
-    private String serviceAccountPath;
+    private Resource serviceAccountResource;
 
     @PostConstruct
     public void initialize() {
         if (isAlreadyInitialized()) {
             return;
         }
-        try {
-            InputStream serviceAccount = new ClassPathResource(serviceAccountPath).getInputStream();
+        try (InputStream serviceAccount = serviceAccountResource.getInputStream()) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
