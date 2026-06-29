@@ -15,6 +15,8 @@ public class FcmTokenService {
     private final UserFcmTokenRepository userFcmTokenRepository;
 
     public void register(Long userId, FcmTokenRegisterRequest request) {
+        // 같은 토큰이 다른 유저에게 등록돼 있으면 먼저 삭제해 소유권을 이전
+        userFcmTokenRepository.deleteByTokenAndUserIdNot(request.token(), userId);
         userFcmTokenRepository.upsert(userId, request.token(), request.deviceType().name());
     }
 
