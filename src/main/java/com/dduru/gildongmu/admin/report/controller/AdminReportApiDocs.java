@@ -10,6 +10,7 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Admin Reports", description = "관리자 신고 API")
+@SecurityRequirement(name = "JWT")
 public interface AdminReportApiDocs {
 
     @Operation(summary = "신고 목록 조회", description = "신고 내역을 상태·페이지로 조회합니다. 상태를 생략하면 전체입니다.")

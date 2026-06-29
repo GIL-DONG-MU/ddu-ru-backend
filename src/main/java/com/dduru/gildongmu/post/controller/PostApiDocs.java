@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import org.springdoc.core.annotations.ParameterObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public interface PostApiDocs {
             @Parameter(hidden = true) Long userId
     );
 
-    @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
+    @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "201", description = "작성 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
@@ -57,7 +58,7 @@ public interface PostApiDocs {
             @Valid PostCreateRequest request
     );
 
-    @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
+    @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "204", description = "수정 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
@@ -80,7 +81,7 @@ public interface PostApiDocs {
             @Valid PostUpdateRequest request
     );
 
-    @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
+    @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.POST_NOT_FOUND,
@@ -92,7 +93,7 @@ public interface PostApiDocs {
             @Parameter(hidden = true) Long userId
     );
 
-    @Operation(summary = "게시글 모집 상태 변경", description = "게시글 모집 상태를 변경합니다. (true: 모집중, false: 모집마감)")
+    @Operation(summary = "게시글 모집 상태 변경", description = "게시글 모집 상태를 변경합니다. (true: 모집중, false: 모집마감)", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "204", description = "상태 변경 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,

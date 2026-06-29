@@ -16,10 +16,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Survey", description = "설문조사 API")
-@SecurityRequirement(name = "JWT")
 public interface SurveyApiDocs {
 
-    @Operation(summary = "설문조사 제출", description = "주요 4축(각 3문항)·활동 취향·기록 스타일을 제출하고 성향 점수 및 아바타를 매칭합니다.")
+    @Operation(
+            summary = "설문조사 제출",
+            description = "주요 4축(각 3문항)·활동 취향·기록 스타일을 제출하고 성향 점수 및 아바타를 매칭합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
     @ApiResponse(responseCode = "201", description = "설문 제출 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
@@ -31,7 +34,11 @@ public interface SurveyApiDocs {
     })
     ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 
-    @Operation(summary = "내 설문 결과 조회", description = "현재 사용자의 설문 결과 및 매칭된 아바타를 조회합니다.")
+    @Operation(
+            summary = "내 설문 결과 조회",
+            description = "현재 사용자의 설문 결과 및 매칭된 아바타를 조회합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.SURVEY_RESULT_NOT_FOUND,
@@ -46,7 +53,11 @@ public interface SurveyApiDocs {
     })
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
 
-    @Operation(summary = "설문조사 스킵", description = "설문조사를 건너뛰고 온보딩 상태를 SKIPPED로 업데이트합니다.")
+    @Operation(
+            summary = "설문조사 스킵",
+            description = "설문조사를 건너뛰고 온보딩 상태를 SKIPPED로 업데이트합니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
     @ApiResponse(responseCode = "204", description = "스킵 성공", content = @Content())
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,

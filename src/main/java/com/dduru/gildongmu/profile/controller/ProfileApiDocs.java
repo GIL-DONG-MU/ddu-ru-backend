@@ -12,11 +12,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Profiles", description = "사용자 프로필 관리 API")
+@SecurityRequirement(name = "JWT")
 public interface ProfileApiDocs {
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
@@ -40,6 +42,7 @@ public interface ProfileApiDocs {
             ErrorCode.NICKNAME_INVALID_LENGTH,
             ErrorCode.NICKNAME_INVALID_CHARACTERS,
             ErrorCode.NICKNAME_CONTAINS_BAD_WORD,
+            ErrorCode.UNAUTHORIZED,
             ErrorCode.NICKNAME_ALREADY_TAKEN
     })
     ResponseEntity<ApiResult<NicknameValidateResponse>> checkNickname(

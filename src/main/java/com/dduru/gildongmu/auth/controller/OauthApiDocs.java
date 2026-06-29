@@ -42,6 +42,9 @@ public interface OauthApiDocs {
 
     @Operation(summary = "로그아웃", description = "사용자 로그아웃을 처리합니다.", security = @SecurityRequirement(name = "JWT"))
     @ApiResponse(responseCode = "204", description = "로그아웃 성공", content = @Content())
-    @ApiErrorResponses({ErrorCode.UNAUTHORIZED, ErrorCode.INVALID_TOKEN})
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.INVALID_TOKEN
+    })
     ResponseEntity<ApiResult<Void>> logout(@Parameter(hidden = true) Long userId);
 }
