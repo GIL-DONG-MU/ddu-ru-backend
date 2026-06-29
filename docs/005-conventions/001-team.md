@@ -29,15 +29,15 @@
 PR 템플릿 기준:
 
 ```text
-feat/개발내용
+feat/#이슈번호-개발내용
 ```
 
 예:
 
-- `feat/post-search`
-- `feat/chat-read-receipt`
-- `fix/oauth-refresh-token`
-- `docs/reorganize-docs`
+- `feat/#123-post-search`
+- `feat/#124-chat-read-receipt`
+- `fix/#125-oauth-refresh-token`
+- `docs/#126-reorganize-docs`
 
 ---
 
@@ -96,7 +96,7 @@ PR 본문 작성 방식:
 
 | 항목 | 규칙 |
 |---|---|
-| 작업 내용 | `했습니다`, `없습니다` 같은 문장형 종결 대신 명사형·종결 생략 bullet로 작성 |
+| 작업 내용 | 문장형 종결 대신 구현 단위가 드러나는 명사형 상세 bullet로 작성 |
 | 이슈 링크 | 이슈 번호만 작성 |
 | 스크린샷 | 없으면 `없음`으로 작성 |
 | 리뷰 요구사항 | 리뷰어에게 필요한 확인 지점을 자유롭게 작성 |
@@ -105,9 +105,13 @@ PR 본문 작성 방식:
 예:
 
 ```text
-* 응답 코드 문서화
-* DTO Schema 설명 보강
-* 인증 오류 응답 검증
+* FCM 디바이스 토큰 관리 및 푸시 알림 발송 구현
+* 토큰 등록(POST /api/v1/fcm/token) / 삭제(DELETE /api/v1/fcm/token) API 구현
+* ON DUPLICATE KEY UPDATE upsert로 사용자+디바이스 기준 토큰 단일 유지
+* 알림 저장 후 @Async("fcmExecutor")로 FCM 푸시 비동기 발송
+* Firebase 500개 토큰 제한 대응: 청크 단위 분할 발송
+* UNREGISTERED / INVALID_ARGUMENT 응답 수신 시 만료 토큰 즉시 삭제
+* Firebase 미초기화 환경(local 등)에서 graceful skip
 ```
 
 PR 체크리스트 핵심:
@@ -116,7 +120,6 @@ PR 체크리스트 핵심:
 - 브랜치 이름 확인.
 - 커밋 메시지 형식 확인.
 - PR 제목 형식 확인.
-- PR 본문 명사형·종결 생략 작성 확인.
 - `dev` 브랜치로 병합 요청.
 - 불필요한 주석/공백 제거.
 - 테스트 진행 및 테스트 코드 작성 여부 확인.
