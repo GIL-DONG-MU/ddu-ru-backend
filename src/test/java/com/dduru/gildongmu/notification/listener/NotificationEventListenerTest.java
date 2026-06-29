@@ -1,10 +1,13 @@
 package com.dduru.gildongmu.notification.listener;
 
+import com.dduru.gildongmu.chat.event.PostUpdatedEvent;
+import com.dduru.gildongmu.fcm.service.FcmPushService;
 import com.dduru.gildongmu.journey.event.JourneyNoticeCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCanceledEvent;
 import com.dduru.gildongmu.journey.event.ScheduleCreatedEvent;
 import com.dduru.gildongmu.journey.event.ScheduleUpdatedEvent;
 import com.dduru.gildongmu.journey.repository.JourneyMemberRepository;
+import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.domain.enums.ResourceType;
@@ -46,11 +49,17 @@ class NotificationEventListenerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private FcmPushService fcmPushService;
+
+    @Mock
+    private PostLikeRepository postLikeRepository;
+
     private NotificationEventListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository);
+        listener = new NotificationEventListener(notificationPersistService, journeyMemberRepository, userRepository, fcmPushService, postLikeRepository);
     }
 
     // ── MATCH ─────────────────────────────────────────────────────────────────
@@ -146,7 +155,7 @@ class NotificationEventListenerTest {
             Long journeyId = 1L;
             Long actorUserId = 10L;
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(List.of());
 
             listener.handleJourneyNoticeCreated(
@@ -165,7 +174,7 @@ class NotificationEventListenerTest {
             String journeyTitle = "시부야 여정";
             List<Long> recipientIds = List.of(20L, 30L);
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(recipientIds);
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.getReferenceById(30L)).thenReturn(createUser(30L));
@@ -182,7 +191,7 @@ class NotificationEventListenerTest {
             assertThat(saved).hasSize(2);
             assertThat(saved).allSatisfy(n -> {
                 assertThat(n.getType()).isEqualTo(NotificationType.JOURNEY_NOTICE);
-                assertThat(n.getBody()).isEqualTo("[시부야 여정] 에 공지가 등록되었습니다.");
+                assertThat(n.getBody()).isEqualTo("시부야 여정 에 공지가 등록되었습니다.");
                 assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
                 assertThat(n.getResourceId()).isEqualTo(journeyPostId);
                 assertThat(n.isRead()).isFalse();
@@ -192,7 +201,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
         void exceptionIsSwallowed() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
@@ -210,18 +219,19 @@ class NotificationEventListenerTest {
     class HandleScheduleCreated {
 
         @Test
-        @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 생성 알림을 저장한다")
+        @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 추가 알림을 저장한다")
         void savesNotificationsForAllActiveMembers() {
             Long scheduleId = 7L;
             Long journeyId = 1L;
             Long actorUserId = 10L;
+            String scheduleTitle = "시부야 스크램블 집합";
 
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(journeyId, actorUserId))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(journeyId, actorUserId))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
             listener.handleScheduleCreated(
-                    new ScheduleCreatedEvent(scheduleId, journeyId, "시부야 스크램블 집합", actorUserId)
+                    new ScheduleCreatedEvent(scheduleId, journeyId, scheduleTitle, actorUserId)
             );
 
             @SuppressWarnings("unchecked")
@@ -231,7 +241,7 @@ class NotificationEventListenerTest {
             List<Notification> saved = captor.getValue();
             assertThat(saved).hasSize(1);
             assertThat(saved.get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CREATED);
-            assertThat(saved.get(0).getBody()).isEqualTo("여행 일정이 생성되었습니다.");
+            assertThat(saved.get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 추가되었습니다.");
             assertThat(saved.get(0).getResourceType()).isEqualTo(ResourceType.SCHEDULE);
             assertThat(saved.get(0).getResourceId()).isEqualTo(scheduleId);
         }
@@ -239,7 +249,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("수신자가 없으면 저장하지 않는다")
         void skipsWhenNoRecipients() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenReturn(List.of());
 
             listener.handleScheduleCreated(new ScheduleCreatedEvent(7L, 1L, "일정", 10L));
@@ -250,7 +260,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
         void exceptionIsSwallowed() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(any(), any()))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(any(), any()))
                     .thenThrow(new RuntimeException("DB 오류"));
 
             assertThatCode(() ->
@@ -266,7 +276,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 변경 알림을 저장한다")
         void savesNotificationsWithUpdatedBody() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(1L, 10L))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(1L, 10L))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
@@ -277,7 +287,7 @@ class NotificationEventListenerTest {
             verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_UPDATED);
-            assertThat(captor.getValue().get(0).getBody()).isEqualTo("여행 일정이 변경되었습니다. 확인해주세요.");
+            assertThat(captor.getValue().get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 변경되었습니다.");
         }
     }
 
@@ -288,7 +298,7 @@ class NotificationEventListenerTest {
         @Test
         @DisplayName("ACTIVE 멤버 전원(행위자 제외)에게 일정 취소 알림을 저장한다")
         void savesNotificationsWithCanceledBody() {
-            when(journeyMemberRepository.findActiveUserIdsByJourneyIdExcludingUser(1L, 10L))
+            when(journeyMemberRepository.findMemberIdsExcludingActor(1L, 10L))
                     .thenReturn(List.of(20L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
 
@@ -299,7 +309,61 @@ class NotificationEventListenerTest {
             verify(notificationPersistService).saveAll(captor.capture());
 
             assertThat(captor.getValue().get(0).getType()).isEqualTo(NotificationType.SCHEDULE_CANCELED);
-            assertThat(captor.getValue().get(0).getBody()).isEqualTo("여행 일정이 취소되었습니다.");
+            assertThat(captor.getValue().get(0).getBody()).isEqualTo("시부야 스크램블 집합 일정이 취소되었습니다.");
+        }
+    }
+
+    // ── POST_UPDATED ──────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("POST_UPDATED 이벤트")
+    class HandlePostUpdated {
+
+        @Test
+        @DisplayName("찜한 유저 전원에게 알림을 저장한다")
+        void savesNotificationsForAllLikedUsers() {
+            Long postId = 1L;
+            List<Long> recipientIds = List.of(20L, 30L);
+
+            when(postLikeRepository.findUserIdsByPostId(postId)).thenReturn(recipientIds);
+            when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
+            when(userRepository.getReferenceById(30L)).thenReturn(createUser(30L));
+
+            listener.handlePostUpdated(new PostUpdatedEvent(postId));
+
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
+            verify(notificationPersistService).saveAll(captor.capture());
+
+            List<Notification> saved = captor.getValue();
+            assertThat(saved).hasSize(2);
+            assertThat(saved).allSatisfy(n -> {
+                assertThat(n.getType()).isEqualTo(NotificationType.POST_UPDATED);
+                assertThat(n.getBody()).isEqualTo("관심 있는 모집글에 변경이 있습니다.");
+                assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
+                assertThat(n.getResourceId()).isEqualTo(postId);
+                assertThat(n.isRead()).isFalse();
+            });
+        }
+
+        @Test
+        @DisplayName("찜한 유저가 없으면 저장하지 않는다")
+        void skipsWhenNoLikedUsers() {
+            when(postLikeRepository.findUserIdsByPostId(any())).thenReturn(List.of());
+
+            listener.handlePostUpdated(new PostUpdatedEvent(1L));
+
+            verify(notificationPersistService, never()).saveAll(any());
+        }
+
+        @Test
+        @DisplayName("알림 저장 중 예외가 발생해도 예외가 전파되지 않는다")
+        void exceptionIsSwallowed() {
+            when(postLikeRepository.findUserIdsByPostId(any())).thenThrow(new RuntimeException("DB 오류"));
+
+            assertThatCode(() ->
+                    listener.handlePostUpdated(new PostUpdatedEvent(1L))
+            ).doesNotThrowAnyException();
         }
     }
 

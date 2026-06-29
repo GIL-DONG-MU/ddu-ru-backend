@@ -4,7 +4,6 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.notification.domain.Notification;
 import com.dduru.gildongmu.notification.dto.response.NotificationReadResponse;
 import com.dduru.gildongmu.notification.exception.NotificationAccessDeniedException;
-import com.dduru.gildongmu.notification.exception.NotificationNotFoundException;
 import com.dduru.gildongmu.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,13 @@ public class NotificationService {
     private final TimeProvider timeProvider;
 
     public NotificationReadResponse markAsRead(Long userId, Long notificationId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(NotificationNotFoundException::new);
+        Notification notification = notificationRepository.getByIdOrThrow(notificationId);
 
-        if (!notification.getRecipient().getId().equals(userId)) {
+        if (notification.isNotOwnedBy(userId)) {
             throw new NotificationAccessDeniedException();
         }
 
-        if (!notification.isRead()) {
+        if (notification.isUnread()) {
             notification.markAsRead(timeProvider.now());
         }
 

@@ -20,14 +20,14 @@ public class NotificationQueryService {
     private final NotificationRepository notificationRepository;
 
     public NotificationListResponse getNotifications(Long userId, Long cursor, int size) {
-        List<Notification> fetched = notificationRepository.findByRecipientIdWithCursor(
+        List<Notification> fetched = notificationRepository.findPageByRecipientId(
                 userId, cursor, PageRequest.of(0, size + 1)
         );
         return NotificationListResponse.of(fetched, size);
     }
 
     public UnreadCountResponse getUnreadCount(Long userId) {
-        long count = notificationRepository.countByRecipient_IdAndReadFalse(userId);
+        long count = notificationRepository.countUnreadByRecipientId(userId);
         return new UnreadCountResponse(count);
     }
 }

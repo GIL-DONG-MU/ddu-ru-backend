@@ -1,11 +1,12 @@
 # 005. Notification Flow
 
 > 알림 서비스는 도메인 이벤트를 수신해 수신자에게 인앱 알림을 생성·저장하고,
-> 사용자가 알림함에서 조회·읽음 처리하는 흐름이다.
+> FCM 푸시 알림을 비동기로 발송하며, 사용자가 알림함에서 조회·읽음 처리하는 흐름이다.
 
 이 문서는 `알림` 기능을 처음 보는 사람이 아래를 한 번에 이해할 수 있도록 정리한 제품 흐름 문서다.
 
 - 알림이 어떤 경로로 생성되는지 (도메인 이벤트 → 리스너)
+- FCM 푸시 발송 흐름 및 토큰 관리
 - 알림 타입별 수신자 결정 규칙
 - 조회 API의 커서 페이지네이션 방식
 - 예외 처리 및 격리 정책
@@ -47,13 +48,48 @@
 
                           ↓ AFTER_COMMIT
 
-NotificationEventListener (REQUIRES_NEW transaction)
+NotificationEventListener
   │
   ├── 수신자 결정
   ├── 알림 문구(body) 조립
-  ├── notificationRepository.save() / saveAll()
+  ├── notificationPersistService.save() / saveAll()  ← REQUIRES_NEW 별도 트랜잭션
+  ├── fcmPushService.sendToUser() / sendToUsers()    ← 비동기 FCM 발송
   └── 예외 발생 시 log.error()만 남기고 무시
 ```
+
+### FCM 토큰 라이프사이클 (클라이언트 계약)
+
+서버는 FCM 토큰을 직접 발급하거나 갱신할 수 없다. 토큰은 앱의 Firebase SDK가 관리하며, 클라이언트가 아래 시점에 서버 API를 호출해야 한다.
+
+| 시점 | 호출 API | 비고 |
+|---|---|---|
+| 로그인 성공 후 | `POST /api/v1/fcm/token` | 앱 실행 시 SDK에서 현재 토큰 조회 후 등록 |
+| Firebase token refresh 콜백 발생 시 | `POST /api/v1/fcm/token` | 토큰 갱신 누락 시 이전 토큰으로 푸시 유실 |
+| 로그아웃 시 | `DELETE /api/v1/fcm/token` | 로그아웃 상태에서 푸시 수신 방지 |
+
+> token refresh 이후 등록을 누락하면 서버에 이전 토큰만 남아 FCM 발송이 실패한다.
+> Firebase는 주기적으로 또는 앱 재설치 시 토큰을 갱신하므로 refresh 콜백 처리가 필수다.
+
+**토큰 등록 시 소유권 이전**
+
+같은 토큰이 이미 다른 유저에게 등록된 경우(기기 공유, 로그아웃 누락 등), 등록 요청 시 기존 토큰을 먼저 삭제한 뒤 현재 유저로 재등록한다. 이를 통해 이전 유저에게 푸시가 잘못 발송되는 문제를 방지한다.
+
+---
+
+### FCM 푸시 발송 흐름
+
+```
+fcmPushService.sendToUser(userId, title, body)  [fcmExecutor 스레드풀, @Async]
+  │
+  ├── Firebase 미초기화 → return (graceful skip)
+  ├── user_fcm_tokens 에서 토큰 조회 → 없으면 return
+  ├── 500개 단위 청크 분할
+  └── FirebaseMessaging.sendEachForMulticast()
+        ├── 성공 → 완료
+        └── UNREGISTERED / INVALID_ARGUMENT → 해당 토큰 즉시 삭제
+```
+
+FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기로 실행되므로 FCM 실패가 알림 저장에 영향을 주지 않는다.
 
 ### 이벤트 발행 지점 목록
 
@@ -65,6 +101,7 @@ NotificationEventListener (REQUIRES_NEW transaction)
 | `JourneyScheduleService` | `createSchedule()` | `ScheduleCreatedEvent` |
 | `JourneyScheduleService` | `updateSchedule()` | `ScheduleUpdatedEvent` |
 | `JourneyScheduleService` | `deleteSchedule()` | `ScheduleCanceledEvent` |
+| `PostService` | `update()` | `PostUpdatedEvent` |
 
 ---
 
@@ -78,6 +115,7 @@ NotificationEventListener (REQUIRES_NEW transaction)
 | `MATCH_APPROVED` | 신청자 1명 | 이벤트에 `applicantUserId` 포함 |
 | `JOURNEY_NOTICE` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
 | `SCHEDULE_CREATED / UPDATED / CANCELED` | 여정 ACTIVE 멤버 전원 (행위자 제외) | `JourneyMemberRepository`로 조회 |
+| `POST_UPDATED` | 해당 모집글을 찜한 유저 전원 | `PostLikeRepository`로 조회 |
 
 > 행위자 본인은 항상 수신자에서 제외된다.
 
@@ -87,10 +125,11 @@ NotificationEventListener (REQUIRES_NEW transaction)
 |---|---|
 | `MATCH_APPLIED` | `{닉네임} 님이 매칭을 신청했습니다.` |
 | `MATCH_APPROVED` | `{닉네임} 님과 매칭이 성사되었습니다.` |
-| `JOURNEY_NOTICE` | `[{여행지/방 이름}] 에 공지가 등록되었습니다.` |
-| `SCHEDULE_CREATED` | `여행 일정이 생성되었습니다.` |
-| `SCHEDULE_UPDATED` | `여행 일정이 변경되었습니다. 확인해주세요.` |
-| `SCHEDULE_CANCELED` | `여행 일정이 취소되었습니다.` |
+| `JOURNEY_NOTICE` | `{여행지/방 이름} 에 공지가 등록되었습니다.` |
+| `SCHEDULE_CREATED` | `{일정 이름} 일정이 추가되었습니다.` |
+| `SCHEDULE_UPDATED` | `{일정 이름} 일정이 변경되었습니다.` |
+| `SCHEDULE_CANCELED` | `{일정 이름} 일정이 취소되었습니다.` |
+| `POST_UPDATED` | `관심 있는 모집글에 변경이 있습니다.` |
 
 > `MATCH_APPLIED`의 닉네임은 신청자, `MATCH_APPROVED`의 닉네임은 승인자(모집글 작성자)이다.
 > 닉네임은 이벤트 발행 시점에 `ProfileRepository`로 조회해 이벤트에 포함한다.
@@ -103,6 +142,7 @@ NotificationEventListener (REQUIRES_NEW transaction)
 | `MATCH_APPROVED` | `JOURNEY` | `journeyId` (승인된 여정으로 이동) |
 | `JOURNEY_NOTICE` | `JOURNEY_POST` | `journeyPostId` |
 | `SCHEDULE_*` | `SCHEDULE` | `scheduleId` |
+| `POST_UPDATED` | `JOURNEY_POST` | `postId` (모집글 상세로 이동) |
 
 ---
 
@@ -167,9 +207,8 @@ PATCH /read-all
 
 ---
 
-## 7. 현재 범위 제외 항목 (2차)
+## 7. 현재 범위 제외 항목 (3차)
 
-- FCM 푸시 발송
 - 알림 on/off 설정
 - `SCHEDULE_UPCOMING` — 시간 기반 스케줄러 + 푸시 연동 필요
 - 채팅 새 메시지 알림 — 디바운스/그룹핑 + 푸시 연동 필요

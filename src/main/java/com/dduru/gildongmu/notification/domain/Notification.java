@@ -6,6 +6,7 @@ import com.dduru.gildongmu.notification.domain.enums.ResourceType;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -45,6 +46,17 @@ public class Notification extends BaseTimeEntity {
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private Notification(User recipient, NotificationType type, String body,
+                         ResourceType resourceType, Long resourceId) {
+        this.recipient = recipient;
+        this.type = type;
+        this.body = body;
+        this.resourceType = resourceType;
+        this.resourceId = resourceId;
+        this.read = false;
+    }
+
     public static Notification create(
             User recipient,
             NotificationType type,
@@ -52,14 +64,21 @@ public class Notification extends BaseTimeEntity {
             ResourceType resourceType,
             Long resourceId
     ) {
-        Notification n = new Notification();
-        n.recipient = recipient;
-        n.type = type;
-        n.body = body;
-        n.resourceType = resourceType;
-        n.resourceId = resourceId;
-        n.read = false;
-        return n;
+        return Notification.builder()
+                .recipient(recipient)
+                .type(type)
+                .body(body)
+                .resourceType(resourceType)
+                .resourceId(resourceId)
+                .build();
+    }
+
+    public boolean isNotOwnedBy(Long userId) {
+        return !recipient.getId().equals(userId);
+    }
+
+    public boolean isUnread() {
+        return !read;
     }
 
     public void markAsRead(LocalDateTime now) {

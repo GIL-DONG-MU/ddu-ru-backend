@@ -11,6 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+// AFTER_COMMIT 리스너와 같은 빈에 두면 프록시를 타지 않아 REQUIRES_NEW가 적용되지 않으므로 별도 빈으로 분리
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class NotificationPersistService {
 

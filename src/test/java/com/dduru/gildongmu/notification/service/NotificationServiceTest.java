@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -60,7 +60,7 @@ class NotificationServiceTest {
             Long notificationId = 10L;
             Notification notification = createUnreadNotification(notificationId, createUser(userId));
 
-            when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+            when(notificationRepository.getByIdOrThrow(notificationId)).thenReturn(notification);
 
             NotificationReadResponse response = notificationService.markAsRead(userId, notificationId);
 
@@ -77,7 +77,7 @@ class NotificationServiceTest {
             Notification notification = createReadNotification(notificationId, createUser(userId));
             LocalDateTime originalReadAt = notification.getReadAt();
 
-            when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+            when(notificationRepository.getByIdOrThrow(notificationId)).thenReturn(notification);
 
             NotificationReadResponse response = notificationService.markAsRead(userId, notificationId);
 
@@ -88,7 +88,7 @@ class NotificationServiceTest {
         @Test
         @DisplayName("존재하지 않는 알림 ID로 요청하면 NotificationNotFoundException이 발생한다")
         void notFoundNotificationThrowsException() {
-            when(notificationRepository.findById(99L)).thenReturn(Optional.empty());
+            when(notificationRepository.getByIdOrThrow(99L)).thenThrow(NotificationNotFoundException.class);
 
             assertThatThrownBy(() -> notificationService.markAsRead(1L, 99L))
                     .isInstanceOf(NotificationNotFoundException.class);
@@ -102,7 +102,7 @@ class NotificationServiceTest {
             Long notificationId = 10L;
             Notification notification = createUnreadNotification(notificationId, createUser(ownerId));
 
-            when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+            when(notificationRepository.getByIdOrThrow(notificationId)).thenReturn(notification);
 
             assertThatThrownBy(() -> notificationService.markAsRead(attackerId, notificationId))
                     .isInstanceOf(NotificationAccessDeniedException.class);
@@ -117,7 +117,7 @@ class NotificationServiceTest {
             Long notificationId = 10L;
             Notification notification = createUnreadNotification(notificationId, createUser(ownerId));
 
-            when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+            when(notificationRepository.getByIdOrThrow(notificationId)).thenReturn(notification);
 
             try {
                 notificationService.markAsRead(99L, notificationId);

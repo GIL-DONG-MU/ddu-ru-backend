@@ -69,6 +69,8 @@ dependencies {
 	implementation 'software.amazon.awssdk:auth:2.20.26'
 	//CoolSMS
 	implementation 'net.nurigo:sdk:4.3.0'
+	//Firebase Admin SDK
+	implementation 'com.google.firebase:firebase-admin:9.4.2'
 }
 
 tasks.named('test') {
