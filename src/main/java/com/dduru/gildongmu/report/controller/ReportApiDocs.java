@@ -8,11 +8,13 @@ import com.dduru.gildongmu.report.dto.response.ReportCreateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Reports", description = "게시글 신고 API")
+@SecurityRequirement(name = "JWT")
 public interface ReportApiDocs {
 
     @Operation(summary = "게시글 신고", description = "게시글을 신고합니다.")

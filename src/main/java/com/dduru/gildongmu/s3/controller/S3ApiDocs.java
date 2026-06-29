@@ -7,6 +7,7 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 @Tag(name = "Images", description = "이미지 관리 API")
+@SecurityRequirement(name = "JWT")
 public interface S3ApiDocs {
 
     @Operation(
@@ -28,7 +30,8 @@ public interface S3ApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION,
-            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> preparePostImageUpload(
             @RequestBody ImageUploadRequest request
@@ -45,7 +48,8 @@ public interface S3ApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION,
-            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareProfileImageUpload(
             @Valid @RequestBody ImageUploadRequest request
@@ -62,7 +66,8 @@ public interface S3ApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION,
-            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareJourneyImageUpload(
             @Valid @RequestBody ImageUploadRequest request
@@ -93,7 +98,8 @@ public interface S3ApiDocs {
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.INVALID_FILE_EXTENSION,
-            ErrorCode.UNSUPPORTED_MEDIA_TYPE
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            ErrorCode.UNAUTHORIZED
     })
     ResponseEntity<ApiResult<List<ImageUploadResponse>>> prepareChatImageUpload(
             @Valid @RequestBody ImageUploadRequest request

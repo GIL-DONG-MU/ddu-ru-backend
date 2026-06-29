@@ -8,6 +8,7 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Admin Users", description = "관리자 사용자 API")
+@SecurityRequirement(name = "JWT")
 public interface AdminUserApiDocs {
 
     @Operation(summary = "사용자 목록 조회", description = "전체 사용자를 페이지 단위로 조회합니다.")

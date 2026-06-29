@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Admin Posts", description = "관리자 게시글 API")
+@SecurityRequirement(name = "JWT")
 public interface AdminPostApiDocs {
 
     @Operation(summary = "관리자 게시글 단건 조회", description = "삭제된 게시글을 포함하여 게시글 상세를 조회합니다.")
