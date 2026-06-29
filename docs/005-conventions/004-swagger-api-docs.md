@@ -40,7 +40,40 @@ public interface PostApiDocs {
 
 ---
 
-## 2. 성공 응답
+## 2. 문구 작성 방식
+
+Swagger UI에 노출되는 `summary`, `description`, `@Schema.description`, `@Parameter.description`, 응답 `description`은 짧은 단답형 문구로 작성합니다.
+
+작성 기준:
+
+| 항목 | 규칙 |
+|---|---|
+| 길이 | 한 줄 문구를 기본으로 작성 |
+| 표현 | 완성형 긴 문장보다 명사형·단답형 문구 사용 |
+| 예외 | 조건부 동작, nullable 조건, 보안 주의사항처럼 연동에 필요한 경우만 짧게 보충 |
+| 금지 | 정책 배경, 구현 상세, 과도한 사용법 설명을 Swagger 문구에 길게 작성 |
+
+예:
+
+```java
+@Operation(summary = "게시글 목록 조회", description = "필터 조건별 게시글 목록")
+@ApiResponse(responseCode = "200", description = "조회 성공")
+```
+
+```java
+@Schema(description = "게시글 대표 이미지 URL", example = "https://cdn.example.com/posts/cover.jpg", nullable = true)
+@Schema(description = "현재 사용자 좋아요 여부", example = "true")
+```
+
+조건부 필드는 필요한 조건만 짧게 적습니다.
+
+```java
+@Schema(description = "선호 최소 나이. 연령 무관이면 null", example = "20", nullable = true)
+```
+
+---
+
+## 3. 성공 응답
 
 성공 응답은 실제 Controller가 반환하는 `ApiResult<T>`와 HTTP status에 맞춰 문서화합니다.
 
@@ -68,7 +101,7 @@ ResponseEntity<ApiResult<Void>> deletePost(
 
 ---
 
-## 3. 실패 응답
+## 4. 실패 응답
 
 비즈니스 실패 응답은 `@ApiErrorResponses`에 `ErrorCode`를 나열합니다. `ApiErrorResponseDocsCustomizer`가 HTTP status별 응답과 예시를 Swagger UI에 자동 추가합니다.
 
@@ -95,7 +128,7 @@ ResponseEntity<ApiResult<Void>> deletePost(
 
 ---
 
-## 4. 파라미터와 인증 사용자
+## 5. 파라미터와 인증 사용자
 
 API 경로에 드러나는 값은 `@Parameter(description = "...")`로 설명합니다.
 
@@ -118,7 +151,7 @@ ResponseEntity<ApiResult<PostListResponse>> retrievePosts(
 
 ---
 
-## 5. 보안과 그룹
+## 6. 보안과 그룹
 
 Swagger UI는 `/swagger-ui.html`에서 확인합니다. 문서 그룹은 `public`, `admin`으로 나뉩니다.
 
@@ -131,11 +164,12 @@ Swagger UI는 `/swagger-ui.html`에서 확인합니다. 문서 그룹은 `public
 
 ---
 
-## 6. 체크리스트
+## 7. 체크리스트
 
 - [ ] Controller가 `*ApiDocs` 인터페이스를 구현하는가?
 - [ ] 모든 API 메서드에 `@Operation`이 있는가?
 - [ ] 모든 API 메서드에 성공 `@ApiResponse`가 있는가?
+- [ ] Swagger 문구가 짧은 단답형 문구로 작성되었는가?
 - [ ] 204 응답에 `content = @Content()`가 있는가?
 - [ ] request validation이 있으면 `INVALID_INPUT_VALUE`가 문서화되어 있는가?
 - [ ] 실제 서비스/도메인에서 발생하는 비즈니스 `ErrorCode`가 모두 문서화되어 있는가?
