@@ -160,7 +160,7 @@ matchPercentage =
 
 ## 5. 저장 모델
 
-`V26__mate_recommendations.sql`에서 아래 테이블을 추가합니다.
+`V27__mate_recommendations.sql`에서 아래 테이블을 추가합니다.
 
 | 테이블 | 책임 |
 |---|---|
