@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.notification.repository;
 
 import com.dduru.gildongmu.notification.domain.Notification;
+import com.dduru.gildongmu.notification.domain.enums.NotificationType;
 import com.dduru.gildongmu.notification.exception.NotificationNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             WHERE n.recipient.id = :userId AND n.read = false
             """)
     int markAllAsReadByRecipientId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+
+    // cutoff(오늘 자정) 조건: 출발일 변경 시 재발송을 허용하기 위해 과거 기록을 중복으로 보지 않음
+    @Query("""
+            SELECT n.recipient.id FROM Notification n
+            WHERE n.type = :type
+              AND n.resourceId = :resourceId
+              AND n.createdAt >= :cutoff
+            """)
+    List<Long> findNotifiedRecipientIds(
+            @Param("type") NotificationType type,
+            @Param("resourceId") Long resourceId,
+            @Param("cutoff") LocalDateTime cutoff);
 }
