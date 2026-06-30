@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.notification.dto.request.NotificationListRequest;
+import com.dduru.gildongmu.notification.dto.request.NotificationSettingsRequest;
 import com.dduru.gildongmu.notification.dto.response.NotificationListResponse;
 import com.dduru.gildongmu.notification.dto.response.NotificationReadResponse;
 import com.dduru.gildongmu.notification.dto.response.UnreadCountResponse;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Notifications", description = "알림 API")
 @SecurityRequirement(name = "JWT")
@@ -56,5 +58,13 @@ public interface NotificationApiDocs {
     @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
     ResponseEntity<ApiResult<NotificationReadResponse>> markAllAsRead(
             @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(summary = "알림 설정 변경", description = "알림 수신 전체 on/off를 설정합니다.")
+    @ApiResponse(responseCode = "204", description = "설정 변경 성공")
+    @ApiErrorResponses({ErrorCode.UNAUTHORIZED, ErrorCode.INVALID_INPUT_VALUE})
+    ResponseEntity<ApiResult<Void>> updateNotificationSettings(
+            @Parameter(hidden = true) Long userId,
+            @Valid @RequestBody NotificationSettingsRequest request
     );
 }

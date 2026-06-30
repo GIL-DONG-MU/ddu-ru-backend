@@ -52,8 +52,9 @@ NotificationEventListener
   │
   ├── 수신자 결정
   ├── 알림 문구(body) 조립
-  ├── notificationPersistService.save() / saveAll()  ← REQUIRES_NEW 별도 트랜잭션
-  ├── fcmPushService.sendToUser() / sendToUsers()    ← 비동기 FCM 발송
+  ├── notificationPersistService.save() / saveAll()  ← REQUIRES_NEW 별도 트랜잭션 (전체 수신자)
+  ├── notificationEnabled = true 유저만 필터링       ← FCM 발송 대상 결정
+  ├── fcmPushService.sendToUser() / sendToUsers()    ← 비동기 FCM 발송 (필터링된 수신자)
   └── 예외 발생 시 log.error()만 남기고 무시
 ```
 
@@ -90,6 +91,11 @@ fcmPushService.sendToUser(userId, title, body)  [fcmExecutor 스레드풀, @Asyn
 ```
 
 FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기로 실행되므로 FCM 실패가 알림 저장에 영향을 주지 않는다.
+
+> **알림 설정과 FCM 발송의 관계**
+> 인앱 알림(`notifications` 테이블)은 `notificationEnabled` 여부와 무관하게 항상 저장된다.
+> FCM 푸시만 `notificationEnabled = false` 유저를 발송 대상에서 제외한다.
+> 카카오톡 알림 끄기와 동일한 동작 — 앱 알림함에서는 확인 가능하고, 핸드폰 푸시만 차단.
 
 ### 이벤트 발행 지점 목록
 
@@ -207,9 +213,23 @@ PATCH /read-all
 
 ---
 
-## 7. 현재 범위 제외 항목 (3차)
+## 7. 알림 수신 설정 (on/off)
 
-- 알림 on/off 설정
+`PATCH /api/v1/notifications/settings` — 알림 수신 전체 on/off 설정
+
+```json
+{ "enabled": false }
+```
+
+- `users.notification_enabled` 컬럼으로 관리 (기본값 `true`)
+- off 시 FCM 푸시만 차단, 인앱 알림은 계속 저장됨
+- 1:1 알림(`MATCH_APPLIED`, `MATCH_APPROVED`): `existsByIdAndNotificationEnabled`로 발송 전 확인
+- 그룹 알림: `findEnabledUserIds(recipientIds)`로 발송 대상 필터링 후 FCM 호출
+
+---
+
+## 8. 현재 범위 제외 항목
+
 - `SCHEDULE_UPCOMING` — 시간 기반 스케줄러 + 푸시 연동 필요
 - 채팅 새 메시지 알림 — 디바운스/그룹핑 + 푸시 연동 필요
 - 시스템 공지/이벤트 (어드민 발송)

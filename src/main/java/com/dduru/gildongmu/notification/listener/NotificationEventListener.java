@@ -43,7 +43,9 @@ public class NotificationEventListener {
                     userRepository.getReferenceById(event.recipientUserId()),
                     NotificationType.MATCH_APPLIED, body, ResourceType.MATCH, event.participationId()
             ));
-            fcmPushService.sendToUser(event.recipientUserId(), "매칭 신청 도착", body);
+            if (userRepository.existsByIdAndNotificationEnabled(event.recipientUserId(), true)) {
+                fcmPushService.sendToUser(event.recipientUserId(), "매칭 신청 도착", body);
+            }
         } catch (Exception e) {
             log.error("MATCH_APPLIED 알림 저장 실패 - participationId={}", event.participationId(), e);
         }
@@ -57,7 +59,9 @@ public class NotificationEventListener {
                     userRepository.getReferenceById(event.applicantUserId()),
                     NotificationType.MATCH_APPROVED, body, ResourceType.JOURNEY, event.journeyId()
             ));
-            fcmPushService.sendToUser(event.applicantUserId(), "매칭 승인", body);
+            if (userRepository.existsByIdAndNotificationEnabled(event.applicantUserId(), true)) {
+                fcmPushService.sendToUser(event.applicantUserId(), "매칭 승인", body);
+            }
         } catch (Exception e) {
             log.error("MATCH_APPROVED 알림 저장 실패 - journeyId={}", event.journeyId(), e);
         }
@@ -152,6 +156,8 @@ public class NotificationEventListener {
                 ))
                 .toList();
         notificationPersistService.saveAll(notifications);
-        fcmPushService.sendToUsers(recipientIds, pushTitle, body);
+        List<Long> fcmTargetIds = userRepository.findEnabledUserIds(recipientIds);
+        if (fcmTargetIds.isEmpty()) return;
+        fcmPushService.sendToUsers(fcmTargetIds, pushTitle, body);
     }
 }
