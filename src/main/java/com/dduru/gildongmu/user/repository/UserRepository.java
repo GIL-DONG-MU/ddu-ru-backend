@@ -41,4 +41,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
         return findById(id)
                 .orElseThrow(UserNotFoundException::new);
     }
+
+    @Query("SELECT u.id FROM User u WHERE u.id IN :ids AND u.notificationEnabled = true")
+    List<Long> findEnabledUserIds(@Param("ids") List<Long> ids);
+
+    boolean existsByIdAndNotificationEnabled(Long id, boolean notificationEnabled);
 }

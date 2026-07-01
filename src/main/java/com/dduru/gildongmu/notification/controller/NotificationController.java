@@ -3,6 +3,7 @@ package com.dduru.gildongmu.notification.controller;
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.notification.dto.request.NotificationListRequest;
+import com.dduru.gildongmu.notification.dto.request.NotificationSettingsRequest;
 import com.dduru.gildongmu.notification.dto.response.NotificationListResponse;
 import com.dduru.gildongmu.notification.dto.response.NotificationReadResponse;
 import com.dduru.gildongmu.notification.dto.response.UnreadCountResponse;
@@ -10,6 +11,7 @@ import com.dduru.gildongmu.notification.service.NotificationQueryService;
 import com.dduru.gildongmu.notification.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,5 +55,15 @@ public class NotificationController implements NotificationApiDocs {
             @CurrentUser Long userId
     ) {
         return ResponseEntity.ok(ApiResult.ok(notificationService.markAllAsRead(userId)));
+    }
+
+    @Override
+    @PatchMapping("/settings")
+    public ResponseEntity<ApiResult<Void>> updateNotificationSettings(
+            @CurrentUser Long userId,
+            @Valid @RequestBody NotificationSettingsRequest request
+    ) {
+        notificationService.updateNotificationSettings(userId, request.enabled());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 }
