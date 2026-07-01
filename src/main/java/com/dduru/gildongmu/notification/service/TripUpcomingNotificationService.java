@@ -86,7 +86,7 @@ public class TripUpcomingNotificationService {
         // contains() 조회를 O(1)로 처리하기 위해 Set으로 변환
         Set<Long> alreadyNotified = new HashSet<>(
                 notificationRepository.findNotifiedRecipientIds(
-                        NotificationType.TRIP_UPCOMING, journeyId, startOfToday));
+                        NotificationType.TRIP_UPCOMING, ResourceType.JOURNEY, journeyId, startOfToday));
         return allUserIds.stream()
                 .filter(id -> !alreadyNotified.contains(id))
                 .toList();
