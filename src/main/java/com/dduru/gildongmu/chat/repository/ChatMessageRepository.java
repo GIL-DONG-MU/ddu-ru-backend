@@ -40,4 +40,15 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     );
 
     boolean existsByIdAndRoom_IdAndCreatedAtGreaterThanEqual(Long messageId, Long roomId, LocalDateTime visibleFrom);
+
+    @Query("""
+            SELECT m
+            FROM ChatMessage m
+            JOIN FETCH m.sender s
+            JOIN FETCH s.profile p
+            JOIN FETCH m.room r
+            LEFT JOIN FETCH r.journey j
+            WHERE m.id = :messageId
+            """)
+    Optional<ChatMessage> findByIdWithSenderAndRoom(@Param("messageId") Long messageId);
 }

@@ -31,11 +31,20 @@ public class FcmPushService {
 
         if (tokens.isEmpty()) return;
 
-        sendMulticast(tokens, title, body);
+        sendMulticast(tokens, title, body, null);
     }
 
     @Async("fcmExecutor")
     public void sendToUsers(List<Long> userIds, String title, String body) {
+        doSendToUsers(userIds, title, body, null);
+    }
+
+    @Async("fcmExecutor")
+    public void sendToUsers(List<Long> userIds, String title, String body, String collapseKey) {
+        doSendToUsers(userIds, title, body, collapseKey);
+    }
+
+    private void doSendToUsers(List<Long> userIds, String title, String body, String collapseKey) {
         if (isFirebaseNotInitialized()) return;
         if (userIds.isEmpty()) return;
 
@@ -46,24 +55,31 @@ public class FcmPushService {
 
         if (tokens.isEmpty()) return;
 
-        sendMulticast(tokens, title, body);
+        sendMulticast(tokens, title, body, collapseKey);
     }
 
-    private void sendMulticast(List<String> tokens, String title, String body) {
+    // FCM 단일 요청 토큰 수 제한(500개)으로 인해 청크 단위로 분할 발송
+    private void sendMulticast(List<String> tokens, String title, String body, String collapseKey) {
         for (int i = 0; i < tokens.size(); i += FCM_MAX_TOKENS) {
             List<String> chunk = tokens.subList(i, Math.min(i + FCM_MAX_TOKENS, tokens.size()));
-            sendBatch(chunk, title, body);
+            sendBatch(chunk, title, body, collapseKey);
         }
     }
 
-    private void sendBatch(List<String> tokens, String title, String body) {
-        MulticastMessage message = MulticastMessage.builder()
+    private void sendBatch(List<String> tokens, String title, String body, String collapseKey) {
+        MulticastMessage.Builder builder = MulticastMessage.builder()
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
                         .build())
-                .addAllTokens(tokens)
-                .build();
+                .addAllTokens(tokens);
+
+        if (collapseKey != null) {
+            builder.setAndroidConfig(AndroidConfig.builder().setCollapseKey(collapseKey).build());
+            builder.setApnsConfig(ApnsConfig.builder().putHeader("apns-collapse-id", collapseKey).build());
+        }
+
+        MulticastMessage message = builder.build();
 
         try {
             BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
@@ -96,6 +112,7 @@ public class FcmPushService {
         return !sendResponse.isSuccessful();
     }
 
+    // Firebase 설정 없는 로컬 환경에서 예외 방지
     private boolean isFirebaseNotInitialized() {
         return FirebaseApp.getApps().isEmpty();
     }
