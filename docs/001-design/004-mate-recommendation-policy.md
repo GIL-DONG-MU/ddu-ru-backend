@@ -160,14 +160,14 @@ matchPercentage =
 
 ### 4.2 캐싱과 idempotent 처리
 
-같은 사용자와 같은 추천 일자에 `mate_recommendation_batches`가 있으면 새 후보를 계산하지 않고 기존 추천 묶음을 반환합니다.
+같은 사용자와 같은 추천 일자에 `COMPLETED` 또는 `EMPTY` 상태의 `mate_recommendation_batches`가 있으면 새 후보를 계산하지 않고 기존 추천 묶음을 반환합니다.
 
 - 홈 재진입, 앱 재실행, 추천 카드 상세 조회는 제공량을 차감하지 않습니다.
 - 추천 신청, 추천 패스도 당일 묶음을 새로 채우지 않습니다.
 - 후보가 0~2개만 생성되어도 그날의 묶음은 확정된 것으로 봅니다.
 - 같은 날 추가 생성은 하지 않으며 `remainingFreeCount=0`으로 응답합니다.
 
-동시 실행은 `(user_id, recommendation_date)` unique key로 방어합니다. #297 구현에서는 unique 충돌 시 이미 생성된 묶음을 다시 조회해 반환합니다.
+동시 실행은 `(user_id, recommendation_date)` unique key로 방어합니다. #297 구현에서는 unique 충돌 시 이미 생성된 묶음을 다시 조회하고, `CREATED` 상태면 진행 중으로 보고 중복 생성을 시도하지 않습니다.
 
 ### 4.3 상태와 재시도
 
@@ -175,11 +175,12 @@ matchPercentage =
 
 | 상태 | 의미 |
 |---|---|
-| `CREATED` | 추천 묶음이 정상 생성됨 |
+| `CREATED` | 추천 묶음 행이 생성되었고 결과 생성이 진행 중임 |
+| `COMPLETED` | 추천 묶음과 추천 결과가 정상 생성됨 |
 | `EMPTY` | 추천 가능하지만 조건에 맞는 후보가 없음 |
 | `FAILED` | 시스템 오류로 생성 실패, 수동 또는 자동 재시도 가능 |
 
-재시도는 `FAILED` 상태만 대상으로 합니다. `CREATED`와 `EMPTY`는 같은 날 재실행해도 새 후보를 만들지 않습니다.
+재시도는 `FAILED` 상태만 대상으로 합니다. `COMPLETED`와 `EMPTY`는 같은 날 재실행해도 새 후보를 만들지 않습니다. `CREATED`가 장시간 남아 있으면 생성 중 장애 또는 중단으로 보고 운영 기준에 따라 `FAILED`로 전환한 뒤 재시도합니다.
 
 ---
 

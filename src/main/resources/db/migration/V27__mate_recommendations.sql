@@ -47,7 +47,6 @@ CREATE TABLE mate_recommendation_batches
     user_id             BIGINT      NOT NULL,
     recommendation_date DATE        NOT NULL,
     status              VARCHAR(20) NOT NULL DEFAULT 'CREATED',
-    recommended_count   INT         NOT NULL DEFAULT 0,
     failure_reason      VARCHAR(500) NULL,
     created_at          DATETIME(6) NOT NULL,
     modified_at         DATETIME(6) NOT NULL,
@@ -55,8 +54,7 @@ CREATE TABLE mate_recommendation_batches
     UNIQUE KEY uk_mate_recommendation_batches_user_date (user_id, recommendation_date),
     KEY idx_mate_recommendation_batches_date_status (recommendation_date, status),
     CONSTRAINT fk_mate_recommendation_batches_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT chk_mate_recommendation_batches_status CHECK (status IN ('CREATED', 'EMPTY', 'FAILED')),
-    CONSTRAINT chk_mate_recommendation_batches_count CHECK (recommended_count BETWEEN 0 AND 3)
+    CONSTRAINT chk_mate_recommendation_batches_status CHECK (status IN ('CREATED', 'COMPLETED', 'EMPTY', 'FAILED'))
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
