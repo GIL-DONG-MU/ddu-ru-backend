@@ -30,7 +30,7 @@
 - 홈 추천 DTO는 `isAvailable`, `remainingFreeCount`, `recommendations`를 이미 가지고 있습니다.
 - 설문 완료 여부는 `UserOnboarding.surveyStatus == COMPLETED`로 판단합니다.
 - 성향 4축 점수는 `TravelTendency`의 `rhythmScore`, `energyScore`, `consumptionScore`, `decisionScore`에 0~10 점수로 저장됩니다.
-- 모집글은 `Post`가 `Destination`, 일정, 모집 인원, 상태, 동행 방식(`FULL`, `PARTIAL`, `MEAL`)을 가집니다.
+- 모집글은 `Post`가 `Destination`, 일정, 모집 인원, 상태, 동행 방식(`FULL`, `PARTIAL`, `MEAL`), 선호 성별, 선호 나이 조건을 가집니다.
 - 관심 여행지, 가능한 여행 기간, 추천 패스 이력은 새 테이블로 저장합니다.
 - 차단 도메인은 아직 없으므로 차단 관계 제외는 후속 차단 기능이 생기면 후보 제외 조건에 추가합니다.
 
@@ -57,10 +57,35 @@
 - `Post.endDate >= today(KST)`입니다.
 - `Post.recruitCount < Post.recruitCapacity`입니다.
 - 신청자가 해당 게시글 작성자가 아닙니다.
+- 신청자가 게시글의 선호 성별과 선호 나이 조건을 만족합니다.
 - 신청자가 해당 게시글에 이미 참여 신청하지 않았습니다.
 - 신청자가 해당 게시글을 이미 패스하지 않았습니다.
 - 신청자가 해당 게시글을 신고한 적이 없습니다. 신고 상태와 무관하게 제외합니다.
 - 게시글 작성자(호스트)의 `TravelTendency`가 존재합니다.
+
+선호 성별과 나이는 추천 저장 테이블에 복제하지 않고 후보 조회 시 `posts`와 신청자 `profiles`를 기준으로 필터링합니다.
+
+| 조건 | 통과 기준 |
+|---|---|
+| 성별 무관 | `post.preferredGender = U`이면 통과 |
+| 성별 지정 | `post.preferredGender`가 `M` 또는 `F`이면 `applicant.profile.gender`와 같아야 통과 |
+| 나이 무관 | `post.isAgeAny = true`이면 통과 |
+| 나이 지정 | `post.isAgeAny = false`이면 신청자의 KST 기준 만 나이가 `post.minAge`~`post.maxAge` 범위에 있어야 통과 |
+
+신청자의 `Profile.gender` 또는 `Profile.birthday`가 필요한 조건인데 값이 없으면 해당 게시글은 후보에서 제외합니다. 예를 들어 성별 지정 게시글에서 신청자 성별이 없거나, 나이 지정 게시글에서 생년월일이 없으면 추천하지 않습니다.
+
+참여 신청 이력은 `participations`를 source of truth로 사용합니다. 추천 후보 조회에서는 신청 상태와 무관하게 신청자와 게시글의 참여 신청 row가 하나라도 있으면 제외합니다.
+
+```sql
+NOT EXISTS (
+  SELECT 1
+  FROM participations p
+  WHERE p.post_id = post.id
+    AND p.user_id = :userId
+)
+```
+
+현재 참여 신청 상태는 `PENDING`, `CONTACTING`, `APPROVED`, `REJECTED`입니다. 네 상태 모두 추천 후보에서 제외합니다. `REJECTED`도 이미 거절된 방을 다시 노출하지 않기 위해 제외하며, 현재 도메인에 없는 `EXPIRED`, `CANCELED` 같은 상태가 추가되면 재추천 허용 여부를 별도 정책으로 정합니다.
 
 ### 3.3 사용자가 설정한 경우에만 적용하는 필터
 
@@ -183,7 +208,11 @@ matchPercentage =
 - 여행지/날짜 미설정 시 해당 필터를 적용하지 않습니다.
 - 도시와 국가 전체 여행지 필터가 각각 의도대로 동작합니다.
 - `FULL`, `PARTIAL`, `MEAL` 동행 방식별 날짜 겹침 기준을 적용합니다.
-- 자기 게시글, 이미 신청한 게시글, 패스한 게시글, 신고한 게시글을 제외합니다.
+- 게시글 선호 성별이 `U`이면 신청자 성별과 무관하게 통과하고, `M`/`F`이면 신청자 성별과 일치할 때만 통과합니다.
+- 게시글 나이 조건이 무관이면 신청자 생년월일과 무관하게 통과하고, 나이 범위가 있으면 신청자 만 나이가 범위 안에 있을 때만 통과합니다.
+- 성별 또는 생년월일이 필요한 조건인데 신청자 프로필 값이 없으면 후보에서 제외합니다.
+- 자기 게시글, 참여 신청 row가 있는 게시글, 패스한 게시글, 신고한 게시글을 제외합니다.
+- 참여 신청 상태가 `PENDING`, `CONTACTING`, `APPROVED`, `REJECTED` 중 무엇이든 추천 후보에서 제외합니다.
 - 점수 계산과 동점 정렬 기준을 검증합니다.
 
 #297에서는 아래 케이스를 검증합니다.
