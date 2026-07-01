@@ -193,10 +193,16 @@ matchPercentage =
 | `user_recommendation_destination_preferences` | 사용자 관심 여행지. 국가 전체 또는 도시 단위 선택을 저장 |
 | `user_recommendation_available_dates` | 사용자 가능한 여행 기간을 여러 개 저장 |
 | `mate_recommendation_batches` | 사용자별 KST 일자 추천 묶음 |
-| `mate_recommendations` | 묶음 안의 추천 여행방, 점수, 이유, 상태 |
+| `mate_recommendations` | 묶음 안의 추천 여행방, 추천 순위, 점수, 이유 |
 | `mate_recommendation_passes` | 사용자가 패스한 추천 여행방 |
 
-`mate_recommendations.id`가 홈 추천 응답의 `recommendationId`가 됩니다. 같은 게시글은 다른 날짜에 다시 추천될 수 있지만, 같은 일자 묶음 안에서는 중복될 수 없습니다. 신청 또는 패스 이후에는 후보 제외 조건에 따라 다시 추천되지 않습니다.
+`user_recommendation_destination_preferences`는 중복 문자열 키를 저장하지 않습니다. `COUNTRY`는 `(user_id, preference_type, country_code)`, `CITY`는 `(user_id, preference_type, destination_id)` unique key로 중복을 막습니다.
+
+`user_recommendation_available_dates`의 unique key는 동일한 기간 중복만 막습니다. 겹치는 기간까지 금지할지는 #298 또는 별도 설정 API 구현 시 애플리케이션에서 `new.start <= end_date AND new.end >= start_date` 조건으로 검증합니다.
+
+`mate_recommendations.id`가 홈 추천 응답의 `recommendationId`가 됩니다. 같은 게시글은 다른 날짜에 다시 추천될 수 있지만, 같은 일자 묶음 안에서는 중복될 수 없습니다. 추천 결과는 당시 노출된 스냅샷으로 유지하고 `APPLIED` 여부는 `participations`, `PASSED` 여부는 `mate_recommendation_passes`를 조인해서 판단합니다.
+
+추천 묶음의 실제 추천 개수는 `mate_recommendations` row 수로 계산합니다. 하루 최대 3개 정책은 `mate_recommendations.recommendation_rank`의 1~3 CHECK와 `(batch_id, recommendation_rank)` unique key로 제한하고, 별도 count 캐시 컬럼은 두지 않습니다.
 
 ---
 
@@ -222,6 +228,8 @@ matchPercentage =
 - 다음 날에는 새 묶음을 생성합니다.
 - 동시 생성 시 unique key 충돌을 기존 묶음 재조회로 처리합니다.
 - 후보가 0~2개여도 같은 날 추가 생성하지 않습니다.
+- 추천 개수는 batch 캐시 컬럼이 아니라 `mate_recommendations` row count로 계산합니다.
+- 신청/패스 상태는 추천 결과 row를 갱신하지 않고 참여 신청/패스 이력에서 계산합니다.
 - `FAILED` 상태만 재시도 대상으로 처리합니다.
 
 ---

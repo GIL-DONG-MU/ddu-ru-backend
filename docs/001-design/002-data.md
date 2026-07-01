@@ -101,10 +101,10 @@
 ## 6. 주요 제약/인덱스
 
 - `participations`: `(post_id, user_id)` unique.
-- `user_recommendation_destination_preferences`: `(user_id, preference_key)` unique.
+- `user_recommendation_destination_preferences`: `(user_id, preference_type, country_code)`, `(user_id, preference_type, destination_id)` unique.
 - `user_recommendation_available_dates`: `(user_id, start_date, end_date)` unique.
 - `mate_recommendation_batches`: `(user_id, recommendation_date)` unique.
-- `mate_recommendations`: `(batch_id, rank_order)`, `(batch_id, post_id)` unique.
+- `mate_recommendations`: `(batch_id, recommendation_rank)`, `(batch_id, post_id)` unique.
 - `mate_recommendation_passes`: `(user_id, post_id)` unique.
 - `journey_members`: `(journey_id, user_id)` unique.
 - `journeys`: `post_id` unique.
