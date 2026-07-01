@@ -109,7 +109,8 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 | `JourneyScheduleService` | `deleteSchedule()` | `ScheduleCanceledEvent` |
 | `PostService` | `update()` | `PostUpdatedEvent` |
 
-> `TRIP_UPCOMING`은 이벤트 기반이 아닌 스케줄러 기반으로 발송한다. 아래 9절 참고.
+> `TRIP_UPCOMING`은 이벤트 기반이 아닌 스케줄러 기반으로 발송한다. 아래 7절 참고.
+> 채팅 메시지 푸시는 `ChatMessageCreatedEvent`를 `ChatMessagePushEventListener`가 수신한다. 인앱 저장 없이 FCM만 발송한다. 아래 9절 참고.
 
 ---
 
@@ -251,9 +252,78 @@ TripUpcomingScheduler (@Scheduled — 매일 오전 9시)
 
 ---
 
-## 9. 현재 범위 제외 항목
+## 9. 채팅 메시지 FCM 푸시
+
+채팅 메시지는 `notifications` 테이블에 저장하지 않는다. **FCM 푸시만 발송**한다.
+채팅 메시지 자체가 `chat_messages` 테이블에 저장되므로 인앱 저장은 중복이다.
+
+### 발송 흐름
+
+```
+ChatMessageSendService (메시지 저장 트랜잭션)
+  └── ChatMessageCreatedEvent 발행
+
+                    ↓ AFTER_COMMIT
+
+ChatMessagePushEventListener
+  ├── [1] messageType == SYSTEM → return         (입장/퇴장 시스템 메시지 제외)
+  ├── [2] 수신자 = 채팅방 멤버 전체 - 발신자
+  │         수신자 없으면 → return
+  ├── [3] Redis presence 조회 → 접속 중인 유저 제외
+  │         (WebSocket으로 실시간 메시지 수신 중이므로 푸시 불필요)
+  │         전원 접속 중이면 → return
+  ├── [4] SET chat:push:lastsent:{roomId} NX EX 30
+  │         실패 (쿨다운 중) → return
+  ├── [5] findEnabledUserIds() → notificationEnabled = false 제외
+  │         없으면 → return
+  └── [6] FCM 발송
+```
+
+### Leading Edge Debounce (30초 쿨다운)
+
+같은 채팅방에서 연속 메시지가 올 때 첫 메시지에만 즉시 푸시하고, 이후 30초간 억제한다.
+
+```
+t=0초   메시지 1 → SET NX 성공 → 푸시 발송 ✅  (키 TTL 30초 시작)
+t=10초  메시지 2 → SET NX 실패 (키 있음)  → 스킵 ❌
+t=32초  메시지 3 → SET NX 성공 (키 만료됨) → 푸시 발송 ✅
+```
+
+30초 타이머는 첫 메시지 기준으로 고정된다. 이후 메시지가 와도 리셋되지 않는다.
+
+### 접속 상태 추적 (Redis)
+
+```
+chat:online:{roomId}     → Set<userId>        (TTL 2h, 좀비 세션 자동 정리)
+chat:session:{sessionId} → {userId}:{roomId}  (TTL 2h, DISCONNECT 시 cleanup용)
+```
+
+| STOMP 이벤트 | 처리 |
+|---|---|
+| SUBSCRIBE `/topic/chat/rooms/{roomId}` | `SADD chat:online:{roomId} {userId}` |
+| UNSUBSCRIBE | `SREM chat:online:{roomId} {userId}` |
+| SessionDisconnectEvent (앱 종료/네트워크 끊김) | session 키 조회 → SREM → DEL |
+
+### 알림 포맷
+
+| 채팅방 타입 | title | body |
+|---|---|---|
+| GROUP (동행 여행방) | 여정 제목 | `{닉네임}: {메시지 내용}` (30자 초과 시 `...`) |
+| GROUP IMAGE | 여정 제목 | `{닉네임}: 사진을 보냈습니다.` |
+| PRIVATE (1:1) | 발신자 닉네임 | `{메시지 내용}` (닉네임 미포함, title에 이미 표시) |
+| PRIVATE IMAGE | 발신자 닉네임 | `사진을 보냈습니다.` |
+
+> SYSTEM 메시지(입장·퇴장 등)는 푸시 대상이 아니다.
+
+### collapseKey
+
+`collapseKey = "chat:{roomId}"` 를 Android/APNS 모두에 적용한다.
+디바이스가 오프라인 상태일 때 같은 채팅방 알림이 여러 개 FCM 큐에 쌓이면, 기기가 온라인 복귀 시 최신 1개만 수신한다.
+
+---
+
+## 10. 현재 범위 제외 항목
 
 - `SCHEDULE_UPCOMING` — 시간 기반 스케줄러 + 푸시 연동 필요
-- 채팅 새 메시지 알림 — 디바운스/그룹핑 + 푸시 연동 필요
 - 시스템 공지/이벤트 (어드민 발송)
 - 90일 경과 알림 자동 삭제 배치
