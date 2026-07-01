@@ -37,16 +37,17 @@ public class ChatStompPresenceInterceptor implements ChannelInterceptor {
         extractRoomId(accessor.getDestination()).ifPresent(roomId -> {
             Long userId = extractUserId(accessor);
             if (userId == null) return;
-            chatOnlineStatusService.enter(roomId, userId, accessor.getSessionId());
+            chatOnlineStatusService.enter(roomId, userId, accessor.getSessionId(), accessor.getSubscriptionId());
         });
     }
 
+    // UNSUBSCRIBE 프레임은 destination 없이 subscriptionId만 전달 → subscriptionId로 roomId 역추적
     private void handleUnsubscribe(StompHeaderAccessor accessor) {
-        extractRoomId(accessor.getDestination()).ifPresent(roomId -> {
-            Long userId = extractUserId(accessor);
-            if (userId == null) return;
-            chatOnlineStatusService.leave(roomId, userId, accessor.getSessionId());
-        });
+        Long userId = extractUserId(accessor);
+        if (userId == null) return;
+        String subscriptionId = accessor.getSubscriptionId();
+        if (subscriptionId == null) return;
+        chatOnlineStatusService.leave(accessor.getSessionId(), subscriptionId, userId);
     }
 
     private Optional<Long> extractRoomId(String destination) {

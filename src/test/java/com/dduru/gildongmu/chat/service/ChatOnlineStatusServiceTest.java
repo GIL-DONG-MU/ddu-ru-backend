@@ -43,27 +43,50 @@ class ChatOnlineStatusServiceTest {
     class Enter {
 
         @Test
-        @DisplayName("유저를 online 셋에 추가하고 세션 매핑을 저장한다")
-        void addsUserToOnlineSetAndStoresSession() {
-            service.enter(5L, 10L, "session-1");
+        @DisplayName("유저를 online 셋에 추가하고 세션·구독 매핑을 저장한다")
+        void addsUserToOnlineSetAndStoresSessionAndSubscription() {
+            service.enter(5L, 10L, "session-1", "sub-1");
 
             verify(setOps).add("chat:online:5", "10");
             verify(redisTemplate).expire(eq("chat:online:5"), eq(Duration.ofHours(2)));
             verify(valueOps).set("chat:session:session-1", "10:5", Duration.ofHours(2));
+            verify(valueOps).set("chat:subscription:session-1:sub-1", "5", Duration.ofHours(2));
         }
     }
 
     @Nested
-    @DisplayName("leave — 채팅방 퇴장")
-    class Leave {
+    @DisplayName("leave — 구독 해제")
+    class LeaveBySubscription {
 
         @Test
-        @DisplayName("유저를 online 셋에서 제거하고 세션 매핑을 삭제한다")
-        void removesUserFromOnlineSetAndDeletesSession() {
-            service.leave(5L, 10L, "session-1");
+        @DisplayName("subscription 키로 roomId를 조회해 online 셋에서 제거하고 subscription 키를 삭제한다")
+        void removesUserFromOnlineSetAndDeletesSubscriptionKey() {
+            when(valueOps.get("chat:subscription:session-1:sub-1")).thenReturn("5");
+
+            service.leave("session-1", "sub-1", 10L);
 
             verify(setOps).remove("chat:online:5", "10");
-            verify(redisTemplate).delete("chat:session:session-1");
+            verify(redisTemplate).delete("chat:subscription:session-1:sub-1");
+        }
+
+        @Test
+        @DisplayName("subscription 키가 없으면 아무 작업도 하지 않는다")
+        void doesNothingWhenSubscriptionNotFound() {
+            when(valueOps.get("chat:subscription:session-1:sub-1")).thenReturn(null);
+
+            service.leave("session-1", "sub-1", 10L);
+
+            verify(setOps, never()).remove(any(), any());
+        }
+
+        @Test
+        @DisplayName("roomId 파싱 실패 시에도 subscription 키는 삭제한다")
+        void deletesSubscriptionKeyEvenOnParseFailure() {
+            when(valueOps.get("chat:subscription:session-1:sub-1")).thenReturn("invalid");
+
+            service.leave("session-1", "sub-1", 10L);
+
+            verify(redisTemplate).delete("chat:subscription:session-1:sub-1");
         }
     }
 
@@ -90,6 +113,16 @@ class ChatOnlineStatusServiceTest {
             service.disconnect("session-1");
 
             verify(setOps, never()).remove(any(), any());
+        }
+
+        @Test
+        @DisplayName("roomId 파싱 실패 시에도 세션 키는 삭제한다")
+        void deletesSessionKeyEvenOnParseFailure() {
+            when(valueOps.get("chat:session:session-1")).thenReturn("10:invalid");
+
+            service.disconnect("session-1");
+
+            verify(redisTemplate).delete("chat:session:session-1");
         }
     }
 

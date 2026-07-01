@@ -294,15 +294,19 @@ t=32초  메시지 3 → SET NX 성공 (키 만료됨) → 푸시 발송 ✅
 ### 접속 상태 추적 (Redis)
 
 ```
-chat:online:{roomId}     → Set<userId>        (TTL 2h, 좀비 세션 자동 정리)
-chat:session:{sessionId} → {userId}:{roomId}  (TTL 2h, DISCONNECT 시 cleanup용)
+chat:online:{roomId}                      → Set<userId>        (TTL 2h, 좀비 세션 자동 정리)
+chat:session:{sessionId}                  → {userId}:{roomId}  (TTL 2h, DISCONNECT 시 roomId 역추적용)
+chat:subscription:{sessionId}:{subId}     → {roomId}           (TTL 2h, UNSUBSCRIBE 시 roomId 역추적용)
 ```
+
+> STOMP UNSUBSCRIBE 프레임은 `destination` 없이 `subscriptionId`만 전달하므로,
+> SUBSCRIBE 시 subscription 키를 저장해두고 UNSUBSCRIBE 시 roomId를 역추적한다.
 
 | STOMP 이벤트 | 처리 |
 |---|---|
-| SUBSCRIBE `/topic/chat/rooms/{roomId}` | `SADD chat:online:{roomId} {userId}` |
-| UNSUBSCRIBE | `SREM chat:online:{roomId} {userId}` |
-| SessionDisconnectEvent (앱 종료/네트워크 끊김) | session 키 조회 → SREM → DEL |
+| SUBSCRIBE `/topic/chat/rooms/{roomId}` | `SADD chat:online:{roomId} {userId}` + subscription 키 저장 |
+| UNSUBSCRIBE | subscription 키 조회 → `SREM chat:online:{roomId} {userId}` → subscription 키 삭제 |
+| SessionDisconnectEvent (앱 종료/네트워크 끊김) | session 키 조회 → `SREM` → session 키 삭제 |
 
 ### 알림 포맷
 
