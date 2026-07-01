@@ -65,26 +65,21 @@ CREATE TABLE mate_recommendations
     batch_id         BIGINT      NOT NULL,
     user_id          BIGINT      NOT NULL,
     post_id          BIGINT      NOT NULL,
-    rank_order       INT         NOT NULL,
+    recommendation_rank INT      NOT NULL,
     match_percentage INT         NOT NULL,
     match_reasons    JSON        NOT NULL,
     caution_points   JSON        NOT NULL,
-    status           VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     created_at       DATETIME(6) NOT NULL,
     modified_at      DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_mate_recommendations_batch_rank (batch_id, rank_order),
+    UNIQUE KEY uk_mate_recommendations_batch_rank (batch_id, recommendation_rank),
     UNIQUE KEY uk_mate_recommendations_batch_post (batch_id, post_id),
     KEY idx_mate_recommendations_user_post (user_id, post_id),
-    KEY idx_mate_recommendations_batch_status (batch_id, status),
     CONSTRAINT fk_mate_recommendations_batch FOREIGN KEY (batch_id) REFERENCES mate_recommendation_batches (id) ON DELETE CASCADE,
     CONSTRAINT fk_mate_recommendations_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_mate_recommendations_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
-    CONSTRAINT chk_mate_recommendations_rank CHECK (rank_order BETWEEN 1 AND 3),
-    CONSTRAINT chk_mate_recommendations_match CHECK (match_percentage BETWEEN 0 AND 100),
-    CONSTRAINT chk_mate_recommendations_status CHECK (status IN ('ACTIVE', 'APPLIED', 'PASSED')),
-    CONSTRAINT chk_mate_recommendations_match_reasons_json CHECK (JSON_VALID(match_reasons)),
-    CONSTRAINT chk_mate_recommendations_caution_points_json CHECK (JSON_VALID(caution_points))
+    CONSTRAINT chk_mate_recommendations_rank CHECK (recommendation_rank BETWEEN 1 AND 3),
+    CONSTRAINT chk_mate_recommendations_match CHECK (match_percentage BETWEEN 0 AND 100)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
