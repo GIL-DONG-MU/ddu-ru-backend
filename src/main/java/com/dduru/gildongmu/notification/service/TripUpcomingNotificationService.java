@@ -39,8 +39,9 @@ public class TripUpcomingNotificationService {
 
     @Transactional(readOnly = true)
     public void notifyUpcomingTrips() {
-        LocalDate targetDate = timeProvider.today().plusDays(UPCOMING_DAYS_BEFORE);
-        LocalDateTime startOfToday = timeProvider.today().atStartOfDay();
+        LocalDate today = timeProvider.today();
+        LocalDate targetDate = today.plusDays(UPCOMING_DAYS_BEFORE);
+        LocalDateTime startOfToday = today.atStartOfDay();
 
         List<UpcomingTripMemberQueryResult> upcomingTripMembers =
                 journeyMemberRepository.findUpcomingTripMembers(targetDate);
