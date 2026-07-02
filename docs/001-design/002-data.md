@@ -53,6 +53,11 @@
 | `posts` | post | 공개 여행 모집글 |
 | `post_likes` | like | 게시글 좋아요 |
 | `participations` | participation | 참여 신청 이력 |
+| `user_recommendation_destination_preferences` | recommendation | 홈 추천용 관심 여행지 |
+| `user_recommendation_available_dates` | recommendation | 홈 추천용 가능한 여행 기간 |
+| `mate_recommendation_batches` | recommendation | 사용자별 KST 일자 추천 묶음 |
+| `mate_recommendations` | recommendation | 추천 묶음 내 여행방 추천 결과 |
+| `mate_recommendation_passes` | recommendation | 사용자가 패스한 추천 여행방 |
 | `journeys` | journey | 승인 이후 여정 워크스페이스 |
 | `journey_members` | journey | 여정 멤버십 |
 | `journey_posts` | journey | 여정 내부 게시글/공지 |
@@ -96,6 +101,11 @@
 ## 6. 주요 제약/인덱스
 
 - `participations`: `(post_id, user_id)` unique.
+- `user_recommendation_destination_preferences`: `(user_id, preference_type, country_code)`, `(user_id, preference_type, destination_id)` unique.
+- `user_recommendation_available_dates`: `(user_id, start_date, end_date)` unique.
+- `mate_recommendation_batches`: `(user_id, recommendation_date)` unique.
+- `mate_recommendations`: `(batch_id, recommendation_rank)`, `(batch_id, post_id)` unique.
+- `mate_recommendation_passes`: `(user_id, post_id)` unique.
 - `journey_members`: `(journey_id, user_id)` unique.
 - `journeys`: `post_id` unique.
 - `chat_rooms`: 그룹 채팅방은 `journey_id` unique.
