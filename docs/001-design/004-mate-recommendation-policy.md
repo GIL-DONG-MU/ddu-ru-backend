@@ -208,6 +208,8 @@ matchPercentage =
 
 `mate_recommendation_passes`는 패스 여부의 source of truth만 담당합니다. 추천 결과와 직접 연결하는 `recommendation_id`는 두지 않고, 같은 사용자가 같은 게시글을 패스했는지는 `(user_id, post_id)`로 판단합니다.
 
+`posts`는 soft delete 정책이므로 `mate_recommendation_passes.post_id` FK는 `ON DELETE CASCADE`를 사용하지 않습니다. 향후 게시글 물리 삭제 정책이 생기면 패스 이력 보존 여부를 별도로 결정해야 하며, 기본 FK 제약으로 조용한 이력 삭제를 막습니다.
+
 추천 묶음의 실제 추천 개수는 `mate_recommendations` row 수로 계산합니다. 하루 최대 3개 정책은 `mate_recommendations.recommendation_rank`의 1~3 CHECK와 `(batch_id, recommendation_rank)` unique key로 제한하고, 별도 count 캐시 컬럼은 두지 않습니다.
 
 ---

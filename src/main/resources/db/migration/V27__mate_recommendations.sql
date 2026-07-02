@@ -88,7 +88,7 @@ CREATE TABLE mate_recommendation_passes
     UNIQUE KEY uk_mate_recommendation_passes_user_post (user_id, post_id),
     KEY idx_mate_recommendation_passes_post (post_id),
     CONSTRAINT fk_mate_recommendation_passes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_mate_recommendation_passes_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+    CONSTRAINT fk_mate_recommendation_passes_post FOREIGN KEY (post_id) REFERENCES posts (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
