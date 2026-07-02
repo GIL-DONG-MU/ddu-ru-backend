@@ -61,7 +61,6 @@ CREATE TABLE mate_recommendations
 (
     id               BIGINT      NOT NULL AUTO_INCREMENT,
     batch_id         BIGINT      NOT NULL,
-    user_id          BIGINT      NOT NULL,
     post_id          BIGINT      NOT NULL,
     recommendation_rank INT      NOT NULL,
     match_percentage INT         NOT NULL,
@@ -72,9 +71,7 @@ CREATE TABLE mate_recommendations
     PRIMARY KEY (id),
     UNIQUE KEY uk_mate_recommendations_batch_rank (batch_id, recommendation_rank),
     UNIQUE KEY uk_mate_recommendations_batch_post (batch_id, post_id),
-    KEY idx_mate_recommendations_user_post (user_id, post_id),
     CONSTRAINT fk_mate_recommendations_batch FOREIGN KEY (batch_id) REFERENCES mate_recommendation_batches (id) ON DELETE CASCADE,
-    CONSTRAINT fk_mate_recommendations_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_mate_recommendations_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
     CONSTRAINT chk_mate_recommendations_rank CHECK (recommendation_rank BETWEEN 1 AND 3),
     CONSTRAINT chk_mate_recommendations_match CHECK (match_percentage BETWEEN 0 AND 100)
