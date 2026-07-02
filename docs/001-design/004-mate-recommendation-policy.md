@@ -198,6 +198,8 @@ matchPercentage =
 
 `user_recommendation_destination_preferences`는 중복 문자열 키를 저장하지 않습니다. `COUNTRY`는 `(user_id, preference_type, country_code)`, `CITY`는 `(user_id, preference_type, destination_id)` unique key로 중복을 막습니다.
 
+선호 여행지 조회는 사용자 기준으로 좁히는 흐름을 기본으로 하므로 `country_code`, `destination_id` 단독 조회 인덱스는 두지 않습니다. #298에서 실제 후보 조회 쿼리와 실행 계획을 확인한 뒤 필요한 조회 최적화 인덱스만 추가합니다.
+
 `user_recommendation_available_dates`의 unique key는 동일한 기간 중복만 막습니다. 겹치는 기간까지 금지할지는 #298 또는 별도 설정 API 구현 시 애플리케이션에서 `new.start <= end_date AND new.end >= start_date` 조건으로 검증합니다.
 
 `mate_recommendations.id`가 홈 추천 응답의 `recommendationId`가 됩니다. 같은 게시글은 다른 날짜에 다시 추천될 수 있지만, 같은 일자 묶음 안에서는 중복될 수 없습니다. 추천 결과는 당시 노출된 스냅샷으로 유지하고 `APPLIED` 여부는 `participations`, `PASSED` 여부는 `mate_recommendation_passes`를 조인해서 판단합니다.

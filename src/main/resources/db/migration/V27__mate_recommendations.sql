@@ -10,8 +10,6 @@ CREATE TABLE user_recommendation_destination_preferences
     PRIMARY KEY (id),
     UNIQUE KEY uk_recommendation_destination_country (user_id, preference_type, country_code),
     UNIQUE KEY uk_recommendation_destination_city (user_id, preference_type, destination_id),
-    KEY idx_recommendation_destination_country (country_code),
-    KEY idx_recommendation_destination_destination (destination_id),
     CONSTRAINT fk_recommendation_destination_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_recommendation_destination_destination FOREIGN KEY (destination_id) REFERENCES destinations (id) ON DELETE CASCADE,
     CONSTRAINT chk_recommendation_destination_type CHECK (preference_type IN ('COUNTRY', 'CITY')),
