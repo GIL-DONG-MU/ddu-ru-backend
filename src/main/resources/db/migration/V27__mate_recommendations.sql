@@ -10,7 +10,6 @@ CREATE TABLE user_recommendation_destination_preferences
     PRIMARY KEY (id),
     UNIQUE KEY uk_recommendation_destination_country (user_id, preference_type, country_code),
     UNIQUE KEY uk_recommendation_destination_city (user_id, preference_type, destination_id),
-    KEY idx_recommendation_destination_user_type (user_id, preference_type),
     KEY idx_recommendation_destination_country (country_code),
     KEY idx_recommendation_destination_destination (destination_id),
     CONSTRAINT fk_recommendation_destination_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -34,7 +33,6 @@ CREATE TABLE user_recommendation_available_dates
     modified_at DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_recommendation_available_dates_user_range (user_id, start_date, end_date),
-    KEY idx_recommendation_available_dates_user_start_end (user_id, start_date, end_date),
     CONSTRAINT fk_recommendation_available_dates_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT chk_recommendation_available_dates_range CHECK (start_date <= end_date)
 ) ENGINE = InnoDB
@@ -89,16 +87,13 @@ CREATE TABLE mate_recommendation_passes
     id                BIGINT      NOT NULL AUTO_INCREMENT,
     user_id           BIGINT      NOT NULL,
     post_id           BIGINT      NOT NULL,
-    recommendation_id BIGINT      NULL,
     created_at        DATETIME(6) NOT NULL,
     modified_at       DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_mate_recommendation_passes_user_post (user_id, post_id),
-    KEY idx_mate_recommendation_passes_user (user_id),
     KEY idx_mate_recommendation_passes_post (post_id),
     CONSTRAINT fk_mate_recommendation_passes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_mate_recommendation_passes_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
-    CONSTRAINT fk_mate_recommendation_passes_recommendation FOREIGN KEY (recommendation_id) REFERENCES mate_recommendations (id) ON DELETE SET NULL
+    CONSTRAINT fk_mate_recommendation_passes_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
