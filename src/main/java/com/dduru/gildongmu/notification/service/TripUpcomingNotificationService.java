@@ -39,8 +39,9 @@ public class TripUpcomingNotificationService {
 
     @Transactional(readOnly = true)
     public void notifyUpcomingTrips() {
-        LocalDate targetDate = timeProvider.today().plusDays(UPCOMING_DAYS_BEFORE);
-        LocalDateTime startOfToday = timeProvider.today().atStartOfDay();
+        LocalDate today = timeProvider.today();
+        LocalDate targetDate = today.plusDays(UPCOMING_DAYS_BEFORE);
+        LocalDateTime startOfToday = today.atStartOfDay();
 
         List<UpcomingTripMemberQueryResult> upcomingTripMembers =
                 journeyMemberRepository.findUpcomingTripMembers(targetDate);
@@ -85,7 +86,7 @@ public class TripUpcomingNotificationService {
         // contains() 조회를 O(1)로 처리하기 위해 Set으로 변환
         Set<Long> alreadyNotified = new HashSet<>(
                 notificationRepository.findNotifiedRecipientIds(
-                        NotificationType.TRIP_UPCOMING, journeyId, startOfToday));
+                        NotificationType.TRIP_UPCOMING, ResourceType.JOURNEY, journeyId, startOfToday));
         return allUserIds.stream()
                 .filter(id -> !alreadyNotified.contains(id))
                 .toList();

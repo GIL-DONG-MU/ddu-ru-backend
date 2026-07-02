@@ -228,12 +228,12 @@ TripUpcomingScheduler (@Scheduled — 매일 오전 9시)
   └── TripUpcomingNotificationService.notifyUpcomingTrips()
         ├── startDate = 오늘 + 3일인 여정의 ACTIVE 멤버 전체 조회
         ├── 여정별 그룹핑
-        ├── 오늘 이미 발송된 여정은 스킵 (중복 발송 방지)
-        ├── Notification 인앱 저장 (전체 멤버)
+        ├── 오늘 이미 발송된 멤버 제외 (멤버 단위 중복 방지)
+        ├── Notification 인앱 저장 (미발송 멤버)
         └── FCM 발송 (notificationEnabled = true 멤버만)
 ```
 
-**중복 발송 방지**: `notifications` 테이블에 해당 `journeyId`로 `TRIP_UPCOMING` 알림이 오늘 이미 생성돼 있으면 스킵한다.
+**중복 발송 방지**: `notifications` 테이블에서 오늘 생성된 `TRIP_UPCOMING` 알림의 recipient_id를 조회해, 이미 수신한 멤버는 제외하고 미수신 멤버에게만 발송한다.
 
 ---
 
@@ -329,5 +329,6 @@ chat:subscription:{sessionId}:{subId}     → {roomId}           (TTL 2h, UNSUBS
 ## 10. 현재 범위 제외 항목
 
 - `SCHEDULE_UPCOMING` — 시간 기반 스케줄러 + 푸시 연동 필요
+- 채팅 새 메시지 알림 — 디바운스/그룹핑 + 푸시 연동 필요
 - 시스템 공지/이벤트 (어드민 발송)
 - 90일 경과 알림 자동 삭제 배치
