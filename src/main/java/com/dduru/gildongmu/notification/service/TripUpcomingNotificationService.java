@@ -78,7 +78,8 @@ public class TripUpcomingNotificationService {
 
         List<Long> fcmTargetIds = userRepository.findEnabledUserIds(pendingUserIds);
         if (fcmTargetIds.isEmpty()) return;
-        fcmPushService.sendToUsers(fcmTargetIds, PUSH_TITLE, PUSH_BODY);
+        fcmPushService.sendToUsers(fcmTargetIds, PUSH_TITLE, PUSH_BODY, null,
+                FcmPushService.dataPayload(ResourceType.JOURNEY, journeyId));
     }
 
     private List<Long> findPendingUserIds(List<Long> allUserIds, Long journeyId, LocalDateTime startOfToday) {

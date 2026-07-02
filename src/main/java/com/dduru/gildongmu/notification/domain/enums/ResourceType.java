@@ -4,5 +4,6 @@ public enum ResourceType {
     JOURNEY,
     JOURNEY_POST,
     SCHEDULE,
-    MATCH
+    MATCH,
+    CHAT_ROOM
 }

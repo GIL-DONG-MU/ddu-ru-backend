@@ -3,6 +3,7 @@ package com.dduru.gildongmu.chat.service;
 import com.dduru.gildongmu.chat.domain.enums.ChatMessageType;
 import com.dduru.gildongmu.chat.domain.enums.ChatRoomType;
 import com.dduru.gildongmu.fcm.service.FcmPushService;
+import com.dduru.gildongmu.notification.domain.enums.ResourceType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,8 @@ public class ChatPushNotificationService {
     public void sendPush(List<Long> userIds, String roomTitle, String senderNickname,
                          String content, ChatMessageType messageType, ChatRoomType roomType, Long roomId) {
         String body = buildBody(senderNickname, content, messageType, roomType);
-        fcmPushService.sendToUsers(userIds, roomTitle, body, "chat:" + roomId);
+        fcmPushService.sendToUsers(userIds, roomTitle, body, "chat:" + roomId,
+                FcmPushService.dataPayload(ResourceType.CHAT_ROOM, roomId));
     }
 
     private String buildBody(String senderNickname, String content, ChatMessageType messageType, ChatRoomType roomType) {
