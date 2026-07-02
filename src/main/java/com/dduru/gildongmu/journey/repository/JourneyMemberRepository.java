@@ -3,6 +3,7 @@ package com.dduru.gildongmu.journey.repository;
 import com.dduru.gildongmu.journey.domain.JourneyMember;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.dto.query.JourneyMemberStatusQueryResult;
+import com.dduru.gildongmu.journey.dto.query.UpcomingTripMemberQueryResult;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -147,4 +148,15 @@ public interface JourneyMemberRepository extends JpaRepository<JourneyMember, Lo
             @Param("journeyId") Long journeyId,
             @Param("excludeUserId") Long excludeUserId
     );
+
+    // JPQL new — 엔티티 전체 로딩 없이 필요한 필드만 DTO 생성자로 직접 매핑 (FQCN 필수)
+    @Query("""
+            SELECT new com.dduru.gildongmu.journey.dto.query.UpcomingTripMemberQueryResult(
+                jm.journey.id, jm.journey.title, jm.user.id
+            )
+            FROM JourneyMember jm
+            WHERE jm.journey.post.startDate = :targetDate
+              AND jm.status = 'ACTIVE'
+            """)
+    List<UpcomingTripMemberQueryResult> findUpcomingTripMembers(@Param("targetDate") LocalDate targetDate);
 }

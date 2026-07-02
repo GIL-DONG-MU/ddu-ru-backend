@@ -15,8 +15,6 @@ public class PostStatusScheduler {
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 자정 실행
     public void updateExpiredPostStatus() {
-        log.debug("만료 게시글 상태 업데이트 스케줄러 - 실행");
-        
         try {
             int updatedCount = postService.closeExpiredPosts();
             log.info("만료 게시글 상태 업데이트됨 - count={}", updatedCount);

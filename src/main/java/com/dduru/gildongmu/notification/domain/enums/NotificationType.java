@@ -7,5 +7,6 @@ public enum NotificationType {
     SCHEDULE_CREATED,
     SCHEDULE_UPDATED,
     SCHEDULE_CANCELED,
-    POST_UPDATED
+    POST_UPDATED,
+    TRIP_UPCOMING
 }
