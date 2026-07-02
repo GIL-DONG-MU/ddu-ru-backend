@@ -49,12 +49,9 @@ public class ChatOnlineStatusService {
         if (sessionValue == null) return;
 
         String[] parts = sessionValue.split(":");
-        if (parts.length != 2) return;
-
-        String userId = parts[0];
-        String roomId = parts[1];
         try {
-            redisTemplate.opsForSet().remove(onlineKey(Long.parseLong(roomId)), userId);
+            if (parts.length != 2) return;
+            redisTemplate.opsForSet().remove(onlineKey(Long.parseLong(parts[1])), parts[0]);
         } catch (NumberFormatException e) {
             // 데이터 손상 시에도 세션 키는 반드시 삭제
         } finally {
