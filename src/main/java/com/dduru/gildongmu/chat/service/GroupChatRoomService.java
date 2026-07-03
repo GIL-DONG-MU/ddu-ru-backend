@@ -77,7 +77,7 @@ public class GroupChatRoomService {
     }
 
     private boolean isAlreadyMember(ChatRoom chatRoom, Long inviteeUserId) {
-        return chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(chatRoom.getId(), inviteeUserId);
+        return chatRoomMemberRepository.isMember(chatRoom.getId(), inviteeUserId);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.chat.websocket;
 
 import com.dduru.gildongmu.chat.constants.ChatDestinationPaths;
+import com.dduru.gildongmu.chat.repository.ChatRoomMemberRepository;
 import com.dduru.gildongmu.chat.service.ChatOnlineStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class ChatStompPresenceInterceptor implements ChannelInterceptor {
 
     private final ChatOnlineStatusService chatOnlineStatusService;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -25,20 +27,25 @@ public class ChatStompPresenceInterceptor implements ChannelInterceptor {
         if (accessor == null || accessor.getCommand() == null) return message;
 
         switch (accessor.getCommand()) {
-            case SUBSCRIBE -> handleSubscribe(accessor);
+            case SUBSCRIBE -> { if (!handleSubscribe(accessor)) return null; } // null 반환 → STOMP 프레임 드롭
             case UNSUBSCRIBE -> handleUnsubscribe(accessor);
-            default -> { }
         }
 
         return message;
     }
 
-    private void handleSubscribe(StompHeaderAccessor accessor) {
-        extractRoomId(accessor.getDestination()).ifPresent(roomId -> {
-            Long userId = extractUserId(accessor);
-            if (userId == null) return;
-            chatOnlineStatusService.enter(roomId, userId, accessor.getSessionId(), accessor.getSubscriptionId());
-        });
+    private boolean handleSubscribe(StompHeaderAccessor accessor) {
+        Optional<Long> roomIdOpt = extractRoomId(accessor.getDestination());
+        if (roomIdOpt.isEmpty()) return true;
+
+        Long roomId = roomIdOpt.get();
+        Long userId = extractUserId(accessor);
+        if (userId == null) return false;
+
+        if (!chatRoomMemberRepository.isMember(roomId, userId)) return false;
+
+        chatOnlineStatusService.enter(roomId, userId, accessor.getSessionId(), accessor.getSubscriptionId());
+        return true;
     }
 
     // UNSUBSCRIBE 프레임은 destination 없이 subscriptionId만 전달 → subscriptionId로 roomId 역추적
