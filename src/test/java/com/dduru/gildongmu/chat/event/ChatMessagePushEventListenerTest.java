@@ -113,11 +113,12 @@ class ChatMessagePushEventListenerTest {
             when(chatMessageRepository.findByIdWithSenderAndRoom(MESSAGE_ID)).thenReturn(Optional.of(message));
             when(chatRoomMemberRepository.findUserIdsByRoomId(ROOM_ID)).thenReturn(List.of(SENDER_ID, recipientId));
             when(chatOnlineStatusService.getOnlineUserIds(ROOM_ID)).thenReturn(Set.of());
+            when(userRepository.findEnabledUserIds(List.of(recipientId))).thenReturn(List.of(recipientId));
             when(chatPushNotificationService.canSendPush(ROOM_ID)).thenReturn(false);
 
             listener.handle(new ChatMessageCreatedEvent(ROOM_ID, MESSAGE_ID));
 
-            verify(userRepository, never()).findEnabledUserIds(any());
+            verify(chatPushNotificationService, never()).sendPush(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -128,7 +129,6 @@ class ChatMessagePushEventListenerTest {
             when(chatMessageRepository.findByIdWithSenderAndRoom(MESSAGE_ID)).thenReturn(Optional.of(message));
             when(chatRoomMemberRepository.findUserIdsByRoomId(ROOM_ID)).thenReturn(List.of(SENDER_ID, recipientId));
             when(chatOnlineStatusService.getOnlineUserIds(ROOM_ID)).thenReturn(Set.of());
-            when(chatPushNotificationService.canSendPush(ROOM_ID)).thenReturn(true);
             when(userRepository.findEnabledUserIds(List.of(recipientId))).thenReturn(List.of());
 
             listener.handle(new ChatMessageCreatedEvent(ROOM_ID, MESSAGE_ID));

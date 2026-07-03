@@ -272,10 +272,10 @@ ChatMessagePushEventListener
   ├── [3] Redis presence 조회 → 접속 중인 유저 제외
   │         (WebSocket으로 실시간 메시지 수신 중이므로 푸시 불필요)
   │         전원 접속 중이면 → return
-  ├── [4] SET chat:push:lastsent:{roomId} NX EX 30
-  │         실패 (쿨다운 중) → return
-  ├── [5] findEnabledUserIds() → notificationEnabled = false 제외
+  ├── [4] findEnabledUserIds() → notificationEnabled = false 제외
   │         없으면 → return
+  ├── [5] SET chat:push:lastsent:{roomId} NX EX 30
+  │         실패 (쿨다운 중) → return
   └── [6] FCM 발송
 ```
 
