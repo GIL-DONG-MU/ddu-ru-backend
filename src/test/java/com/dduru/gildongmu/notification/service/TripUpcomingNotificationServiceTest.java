@@ -87,7 +87,7 @@ class TripUpcomingNotificationServiceTest {
 
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId), any())).thenReturn(List.of());
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId), any())).thenReturn(List.of());
             when(userRepository.getReferenceById(10L)).thenReturn(createUser(10L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.findEnabledUserIds(List.of(10L, 20L))).thenReturn(List.of(10L, 20L));
@@ -119,7 +119,7 @@ class TripUpcomingNotificationServiceTest {
 
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId), any())).thenReturn(List.of());
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId), any())).thenReturn(List.of());
             when(userRepository.getReferenceById(10L)).thenReturn(createUser(10L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.findEnabledUserIds(List.of(10L, 20L))).thenReturn(List.of(10L));
@@ -139,7 +139,7 @@ class TripUpcomingNotificationServiceTest {
 
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId), any())).thenReturn(List.of());
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId), any())).thenReturn(List.of());
             when(userRepository.getReferenceById(10L)).thenReturn(createUser(10L));
             when(userRepository.findEnabledUserIds(List.of(10L))).thenReturn(List.of());
 
@@ -164,7 +164,7 @@ class TripUpcomingNotificationServiceTest {
 
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId), any())).thenReturn(List.of(10L));
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId), any())).thenReturn(List.of(10L));
 
             service.notifyUpcomingTrips();
 
@@ -184,7 +184,7 @@ class TripUpcomingNotificationServiceTest {
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             // 10L은 이미 받음, 20L은 아직 미수신
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId), any())).thenReturn(List.of(10L));
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId), any())).thenReturn(List.of(10L));
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.findEnabledUserIds(List.of(20L))).thenReturn(List.of(20L));
 
@@ -209,9 +209,9 @@ class TripUpcomingNotificationServiceTest {
 
             when(journeyMemberRepository.findUpcomingTripMembers(TARGET_DATE)).thenReturn(rows);
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId1), any())).thenReturn(List.of(10L));
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId1), any())).thenReturn(List.of(10L));
             when(notificationRepository.findNotifiedRecipientIds(
-                    eq(NotificationType.TRIP_UPCOMING), eq(journeyId2), any())).thenReturn(List.of());
+                    eq(NotificationType.TRIP_UPCOMING), eq(ResourceType.JOURNEY), eq(journeyId2), any())).thenReturn(List.of());
             when(userRepository.getReferenceById(20L)).thenReturn(createUser(20L));
             when(userRepository.findEnabledUserIds(List.of(20L))).thenReturn(List.of(20L));
 

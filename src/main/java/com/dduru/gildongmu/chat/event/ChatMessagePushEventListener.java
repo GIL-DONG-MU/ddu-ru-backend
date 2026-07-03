@@ -51,10 +51,10 @@ public class ChatMessagePushEventListener {
                 .toList();
         if (offlineRecipients.isEmpty()) return;
 
-        if (!chatPushNotificationService.canSendPush(roomId)) return;
-
         List<Long> fcmTargetIds = userRepository.findEnabledUserIds(offlineRecipients);
         if (fcmTargetIds.isEmpty()) return;
+
+        if (!chatPushNotificationService.canSendPush(roomId)) return;
 
         String roomTitle = resolveRoomTitle(message);
         String senderNickname = message.getSender().getProfile().getNickname();
