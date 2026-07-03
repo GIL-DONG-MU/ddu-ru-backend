@@ -25,7 +25,7 @@ public class FcmPushService {
 
     // 앱 딥링크 스펙 계약 키 — 변경 시 앱팀 동기화 필요
     public static Map<String, String> dataPayload(ResourceType resourceType, Long resourceId) {
-        return Map.of("resourceType", resourceType.name(), "resourceId", resourceId.toString());
+        return Map.of("resourceType", resourceType.getPayloadValue(), "resourceId", resourceId.toString());
     }
 
     @Async("fcmExecutor")
