@@ -74,7 +74,7 @@ class GroupChatRoomServiceTest {
 
             when(chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP)).thenReturn(room);
             when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(createUser(inviteeId, "invitee"));
-            when(chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, inviteeId)).thenReturn(false, true);
+            when(chatRoomMemberRepository.isMember(roomId, inviteeId)).thenReturn(false, true);
             when(chatRoomMemberRepository.countByRoom(room)).thenReturn(1);
             when(chatRoomMemberRepository.save(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
 
@@ -98,7 +98,7 @@ class GroupChatRoomServiceTest {
 
             when(chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP)).thenReturn(room);
             when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(invitee);
-            when(chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, inviteeId)).thenReturn(false);
+            when(chatRoomMemberRepository.isMember(roomId, inviteeId)).thenReturn(false);
             when(chatRoomMemberRepository.countByRoom(room)).thenReturn(1);
 
             GroupChatInviteMemberResponse response = groupChatRoomService.inviteMemberOrGetRoom(ownerId, journeyId, inviteeId);
@@ -125,7 +125,7 @@ class GroupChatRoomServiceTest {
 
             when(chatRoomRepository.getByJourneyIdAndRoomTypeWithLock(journeyId, ChatRoomType.GROUP)).thenReturn(room);
             when(userRepository.getByIdOrThrow(inviteeId)).thenReturn(createUser(inviteeId, "invitee"));
-            when(chatRoomMemberRepository.existsByChatRoom_IdAndUser_Id(roomId, inviteeId)).thenReturn(false);
+            when(chatRoomMemberRepository.isMember(roomId, inviteeId)).thenReturn(false);
             when(chatRoomMemberRepository.countByRoom(room)).thenReturn(2);
 
             assertThatThrownBy(() -> groupChatRoomService.inviteMemberOrGetRoom(ownerId, journeyId, inviteeId))

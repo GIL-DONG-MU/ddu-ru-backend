@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.config;
 
+import com.dduru.gildongmu.chat.websocket.ChatStompPresenceInterceptor;
 import com.dduru.gildongmu.common.websocket.JwtStompChannelInterceptor;
 import com.dduru.gildongmu.common.websocket.StompErrorHandler;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtStompChannelInterceptor jwtStompChannelInterceptor;
+    private final ChatStompPresenceInterceptor chatStompPresenceInterceptor;
     private final StompErrorHandler stompErrorHandler;
 
     @Override
@@ -36,6 +38,7 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(jwtStompChannelInterceptor);
+        // JWT 인증 후 presence 추적 순서 보장
+        registration.interceptors(jwtStompChannelInterceptor, chatStompPresenceInterceptor);
     }
 }
