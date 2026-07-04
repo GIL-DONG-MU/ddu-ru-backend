@@ -1,0 +1,126 @@
+package com.dduru.gildongmu.recommendation.service;
+
+import com.dduru.gildongmu.common.time.TimeProvider;
+import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
+import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
+import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
+import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
+import com.dduru.gildongmu.recommendation.domain.UserRecommendationDestinationPreference;
+import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
+import com.dduru.gildongmu.recommendation.dto.query.RecommendablePostQueryResult;
+import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
+import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
+import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
+import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
+import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
+import com.dduru.gildongmu.recommendation.support.AvailableDateRange;
+import com.dduru.gildongmu.recommendation.support.RecommendationAgeCalculator;
+import com.dduru.gildongmu.recommendation.support.RecommendationAvailableDateMatcher;
+import com.dduru.gildongmu.recommendation.support.RecommendationScore;
+import com.dduru.gildongmu.recommendation.support.RecommendationScoreCalculator;
+import com.dduru.gildongmu.recommendation.support.TravelTendencyScores;
+import com.dduru.gildongmu.survey.domain.TravelTendency;
+import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class PostRecommendationSelectionService {
+
+    private static final int RECOMMENDATION_LIMIT = 3;
+
+    private final TimeProvider timeProvider;
+    private final UserOnboardingRepository userOnboardingRepository;
+    private final ProfileRepository profileRepository;
+    private final TravelTendencyRepository travelTendencyRepository;
+    private final UserRecommendationDestinationPreferenceRepository destinationPreferenceRepository;
+    private final UserRecommendationAvailableDateRepository availableDateRepository;
+    private final RecommendablePostQueryRepository recommendablePostQueryRepository;
+    private final RecommendationAvailableDateMatcher availableDateMatcher;
+    private final RecommendationScoreCalculator scoreCalculator;
+
+    @Transactional(readOnly = true)
+    public PostRecommendationResult selectRecommendations(Long userId) {
+        Optional<UserOnboarding> onboarding = userOnboardingRepository.findByUser_Id(userId);
+        if (onboarding.isEmpty() || onboarding.get().getSurveyStatus() != SurveyStatus.COMPLETED) {
+            return PostRecommendationResult.unavailable();
+        }
+
+        Optional<Profile> profile = profileRepository.findByUser_Id(userId);
+        Optional<TravelTendency> applicantTendency = travelTendencyRepository.findByUser_Id(userId);
+        if (profile.isEmpty() || applicantTendency.isEmpty()) {
+            return PostRecommendationResult.unavailable();
+        }
+
+        LocalDate today = timeProvider.today();
+        Integer applicantAge = RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today);
+        DestinationPreferenceFilter destinationCriteria = destinationCriteria(userId);
+        List<AvailableDateRange> availableDateRanges = availableDateRanges(userId);
+        TravelTendencyScores applicantScores = TravelTendencyScores.from(applicantTendency.get());
+
+        List<ScoredPostRecommendation> recommendations = recommendablePostQueryRepository.findRecommendablePosts(
+                        userId,
+                        today,
+                        profile.get().getGender(),
+                        applicantAge,
+                        destinationCriteria
+                )
+                .stream()
+                .filter(post -> availableDateMatcher.matches(
+                        post.companionType(),
+                        post.startDate(),
+                        post.endDate(),
+                        availableDateRanges
+                ))
+                .map(post -> toScoredRecommendation(post, applicantScores))
+                .sorted(recommendationOrder())
+                .limit(RECOMMENDATION_LIMIT)
+                .toList();
+
+        return PostRecommendationResult.available(recommendations);
+    }
+
+    private DestinationPreferenceFilter destinationCriteria(Long userId) {
+        List<UserRecommendationDestinationPreference> preferences = destinationPreferenceRepository.findAllByUser_Id(userId);
+        return DestinationPreferenceFilter.from(preferences);
+    }
+
+    private List<AvailableDateRange> availableDateRanges(Long userId) {
+        List<UserRecommendationAvailableDate> availableDates = availableDateRepository.findAllByUser_Id(userId);
+        return AvailableDateRange.from(availableDates);
+    }
+
+    private ScoredPostRecommendation toScoredRecommendation(
+            RecommendablePostQueryResult post,
+            TravelTendencyScores applicantScores
+    ) {
+        RecommendationScore score = scoreCalculator.calculate(
+                applicantScores,
+                TravelTendencyScores.from(post)
+        );
+
+        return new ScoredPostRecommendation(
+                post.postId(),
+                post.startDate(),
+                post.endDate(),
+                score.matchPercentage(),
+                score.matchReasons(),
+                score.cautionPoints()
+        );
+    }
+
+    private Comparator<ScoredPostRecommendation> recommendationOrder() {
+        return Comparator.comparingInt(ScoredPostRecommendation::matchPercentage).reversed()
+                .thenComparing(ScoredPostRecommendation::startDate)
+                .thenComparing(Comparator.comparing(ScoredPostRecommendation::postId).reversed());
+    }
+}
