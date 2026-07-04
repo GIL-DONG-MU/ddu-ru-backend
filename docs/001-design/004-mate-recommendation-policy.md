@@ -39,6 +39,10 @@
 
 ## 3. 추천 정책
 
+### 3.0 구현 용어
+
+#298 구현에서는 DB 후보 조회 단계를 `RecommendablePost`, 점수 계산까지 끝난 추천 결과를 `ScoredPostRecommendation`으로 구분합니다. `RecommendablePost`는 기본 제외 조건과 optional 필터를 통과한 게시글이고, `ScoredPostRecommendation`은 해당 게시글에 적합도, 추천 이유, 확인 필요 요소를 계산해 붙인 결과입니다.
+
 ### 3.1 추천 가능 조건
 
 추천을 받을 수 있는 사용자는 아래 조건을 모두 만족해야 합니다.
@@ -150,6 +154,26 @@ matchPercentage =
 3. `Post.id DESC`
 
 추천 이유(`matchReasons`)와 확인 필요 요소(`cautionPoints`)는 #298에서 점수 차이와 축별 특성을 기반으로 생성합니다. 저장 테이블에는 JSON 배열로 보관합니다.
+
+추천 이유와 확인 필요 요소는 아래 JSON 배열 형태로 반환하고 #297에서 그대로 저장합니다.
+
+```json
+[
+  {
+    "code": "RHYTHM_MATCH",
+    "message": "여행 리듬이 잘 맞아요"
+  }
+]
+```
+
+축별 점수 차이(`abs(applicantScore - hostScore)`)가 2.0 이하이면 추천 이유 후보가 되고, 4.0 이상이면 확인 필요 요소 후보가 됩니다. 추천 이유는 최대 2개를 `diff ASC`, `weight DESC` 순으로 선택합니다. 확인 필요 요소는 최대 2개를 `diff DESC`, `weight DESC` 순으로 선택합니다. 추천 이유 후보가 없으면 가장 차이가 작은 축 1개를 fallback 추천 이유로 넣고, 확인 필요 요소 후보가 없으면 빈 배열을 저장합니다.
+    
+| 축 | reason code | caution code |
+|---|---|---|
+| 리듬 | `RHYTHM_MATCH` | `RHYTHM_DIFFERENCE` |
+| 에너지 | `ENERGY_MATCH` | `ENERGY_DIFFERENCE` |
+| 소비 | `CONSUMPTION_MATCH` | `CONSUMPTION_DIFFERENCE` |
+| 의사결정 | `DECISION_MATCH` | `DECISION_DIFFERENCE` |
 
 ---
 
