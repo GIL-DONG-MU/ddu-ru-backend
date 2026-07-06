@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,7 +75,7 @@ class ChatPushNotificationServiceTest {
             service.sendPush(List.of(1L), "도쿄 여행", "홍길동", "오늘 저녁 어때?", ChatMessageType.TEXT, ChatRoomType.GROUP, 5L);
 
             verify(fcmPushService).sendToUsers(
-                    eq(List.of(1L)), eq("도쿄 여행"), eq("홍길동: 오늘 저녁 어때?"), eq("chat:5")
+                    eq(List.of(1L)), eq("도쿄 여행"), eq("홍길동: 오늘 저녁 어때?"), eq("chat:5"), any()
             );
         }
 
@@ -86,7 +87,7 @@ class ChatPushNotificationServiceTest {
             service.sendPush(List.of(1L), "도쿄 여행", "홍길동", longContent, ChatMessageType.TEXT, ChatRoomType.GROUP, 5L);
 
             ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
-            verify(fcmPushService).sendToUsers(any(), any(), bodyCaptor.capture(), any());
+            verify(fcmPushService).sendToUsers(any(), any(), bodyCaptor.capture(), any(), any());
 
             assertThat(bodyCaptor.getValue()).isEqualTo("홍길동: " + "가".repeat(30) + "...");
         }
@@ -99,7 +100,7 @@ class ChatPushNotificationServiceTest {
             service.sendPush(List.of(1L), "도쿄 여행", "홍길동", shortContent, ChatMessageType.TEXT, ChatRoomType.GROUP, 5L);
 
             ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
-            verify(fcmPushService).sendToUsers(any(), any(), bodyCaptor.capture(), any());
+            verify(fcmPushService).sendToUsers(any(), any(), bodyCaptor.capture(), any(), any());
 
             assertThat(bodyCaptor.getValue()).isEqualTo("홍길동: " + shortContent);
         }
@@ -110,7 +111,7 @@ class ChatPushNotificationServiceTest {
             service.sendPush(List.of(1L), "도쿄 여행", "홍길동", "https://s3.example.com/img.jpg",
                     ChatMessageType.IMAGE, ChatRoomType.GROUP, 5L);
 
-            verify(fcmPushService).sendToUsers(any(), any(), eq("홍길동: 사진을 보냈습니다."), any());
+            verify(fcmPushService).sendToUsers(any(), any(), eq("홍길동: 사진을 보냈습니다."), any(), any());
         }
 
         @Test
@@ -118,7 +119,7 @@ class ChatPushNotificationServiceTest {
         void sendsPrivateTextWithoutNickname() {
             service.sendPush(List.of(1L), "홍길동", "홍길동", "안녕하세요", ChatMessageType.TEXT, ChatRoomType.PRIVATE, 5L);
 
-            verify(fcmPushService).sendToUsers(any(), any(), eq("안녕하세요"), any());
+            verify(fcmPushService).sendToUsers(any(), any(), eq("안녕하세요"), any(), any());
         }
 
         @Test
@@ -127,7 +128,7 @@ class ChatPushNotificationServiceTest {
             service.sendPush(List.of(1L), "홍길동", "홍길동", "https://s3.example.com/img.jpg",
                     ChatMessageType.IMAGE, ChatRoomType.PRIVATE, 5L);
 
-            verify(fcmPushService).sendToUsers(any(), any(), eq("사진을 보냈습니다."), any());
+            verify(fcmPushService).sendToUsers(any(), any(), eq("사진을 보냈습니다."), any(), any());
         }
 
         @Test
@@ -135,7 +136,20 @@ class ChatPushNotificationServiceTest {
         void sendsWithCorrectCollapseKey() {
             service.sendPush(List.of(1L), "도쿄 여행", "홍길동", "안녕", ChatMessageType.TEXT, ChatRoomType.GROUP, 5L);
 
-            verify(fcmPushService).sendToUsers(any(), any(), any(), eq("chat:5"));
+            verify(fcmPushService).sendToUsers(any(), any(), any(), eq("chat:5"), any());
+        }
+
+        @Test
+        @DisplayName("FCM data payload에 CHAT_ROOM resourceType과 roomId가 포함된다")
+        void sendsWithChatRoomDataPayload() {
+            service.sendPush(List.of(1L), "도쿄 여행", "홍길동", "안녕", ChatMessageType.TEXT, ChatRoomType.GROUP, 5L);
+
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<Map<String, String>> dataCaptor = ArgumentCaptor.forClass(Map.class);
+            verify(fcmPushService).sendToUsers(any(), any(), any(), any(), dataCaptor.capture());
+
+            assertThat(dataCaptor.getValue()).containsEntry("resourceType", "CHAT_ROOM");
+            assertThat(dataCaptor.getValue()).containsEntry("resourceId", "5");
         }
     }
 }

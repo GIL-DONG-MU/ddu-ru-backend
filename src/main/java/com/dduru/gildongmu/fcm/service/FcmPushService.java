@@ -9,7 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.dduru.gildongmu.notification.domain.enums.ResourceType;
+
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -20,8 +23,17 @@ public class FcmPushService {
 
     private final UserFcmTokenRepository userFcmTokenRepository;
 
+    // 앱 딥링크 스펙 계약 키 — 변경 시 앱팀 동기화 필요
+    public static Map<String, String> dataPayload(ResourceType resourceType, Long resourceId) {
+        return Map.of("resourceType", resourceType.getPayloadValue(), "resourceId", resourceId.toString());
+    }
+
     @Async("fcmExecutor")
-    public void sendToUser(Long userId, String title, String body) {
+    public void sendToUser(Long userId, String title, String body, Map<String, String> data) {
+        doSendToUser(userId, title, body, data);
+    }
+
+    private void doSendToUser(Long userId, String title, String body, Map<String, String> data) {
         if (isFirebaseNotInitialized()) return;
 
         List<String> tokens = userFcmTokenRepository.findAllByUserId(userId)
@@ -31,20 +43,15 @@ public class FcmPushService {
 
         if (tokens.isEmpty()) return;
 
-        sendMulticast(tokens, title, body, null);
+        sendMulticast(tokens, title, body, null, data);
     }
 
     @Async("fcmExecutor")
-    public void sendToUsers(List<Long> userIds, String title, String body) {
-        doSendToUsers(userIds, title, body, null);
+    public void sendToUsers(List<Long> userIds, String title, String body, String collapseKey, Map<String, String> data) {
+        doSendToUsers(userIds, title, body, collapseKey, data);
     }
 
-    @Async("fcmExecutor")
-    public void sendToUsers(List<Long> userIds, String title, String body, String collapseKey) {
-        doSendToUsers(userIds, title, body, collapseKey);
-    }
-
-    private void doSendToUsers(List<Long> userIds, String title, String body, String collapseKey) {
+    private void doSendToUsers(List<Long> userIds, String title, String body, String collapseKey, Map<String, String> data) {
         if (isFirebaseNotInitialized()) return;
         if (userIds.isEmpty()) return;
 
@@ -55,18 +62,18 @@ public class FcmPushService {
 
         if (tokens.isEmpty()) return;
 
-        sendMulticast(tokens, title, body, collapseKey);
+        sendMulticast(tokens, title, body, collapseKey, data);
     }
 
     // FCM 단일 요청 토큰 수 제한(500개)으로 인해 청크 단위로 분할 발송
-    private void sendMulticast(List<String> tokens, String title, String body, String collapseKey) {
+    private void sendMulticast(List<String> tokens, String title, String body, String collapseKey, Map<String, String> data) {
         for (int i = 0; i < tokens.size(); i += FCM_MAX_TOKENS) {
             List<String> chunk = tokens.subList(i, Math.min(i + FCM_MAX_TOKENS, tokens.size()));
-            sendBatch(chunk, title, body, collapseKey);
+            sendBatch(chunk, title, body, collapseKey, data);
         }
     }
 
-    private void sendBatch(List<String> tokens, String title, String body, String collapseKey) {
+    private void sendBatch(List<String> tokens, String title, String body, String collapseKey, Map<String, String> data) {
         MulticastMessage.Builder builder = MulticastMessage.builder()
                 .setNotification(Notification.builder()
                         .setTitle(title)
@@ -77,6 +84,10 @@ public class FcmPushService {
         if (collapseKey != null) {
             builder.setAndroidConfig(AndroidConfig.builder().setCollapseKey(collapseKey).build());
             builder.setApnsConfig(ApnsConfig.builder().putHeader("apns-collapse-id", collapseKey).build());
+        }
+
+        if (data != null && !data.isEmpty()) {
+            builder.putAllData(data);
         }
 
         MulticastMessage message = builder.build();

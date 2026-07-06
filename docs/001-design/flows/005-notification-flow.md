@@ -80,12 +80,14 @@ NotificationEventListener
 ### FCM 푸시 발송 흐름
 
 ```
-fcmPushService.sendToUser(userId, title, body)  [fcmExecutor 스레드풀, @Async]
+fcmPushService.sendToUser(userId, title, body, data)  [fcmExecutor 스레드풀, @Async]
   │
   ├── Firebase 미초기화 → return (graceful skip)
   ├── user_fcm_tokens 에서 토큰 조회 → 없으면 return
   ├── 500개 단위 청크 분할
   └── FirebaseMessaging.sendEachForMulticast()
+        ├── notification payload: title, body
+        ├── data payload: resourceType, resourceId  ← 앱 딥링크용
         ├── 성공 → 완료
         └── UNREGISTERED / INVALID_ARGUMENT → 해당 토큰 즉시 삭제
 ```
@@ -147,14 +149,19 @@ FCM 발송은 인앱 알림 저장과 독립적이다. DB 저장 후 비동기�
 
 ### resourceType / resourceId (탭 시 이동 대상)
 
-| 타입 | resourceType | resourceId |
-|---|---|---|
-| `MATCH_APPLIED` | `MATCH` | `participationId` |
-| `MATCH_APPROVED` | `JOURNEY` | `journeyId` (승인된 여정으로 이동) |
-| `JOURNEY_NOTICE` | `JOURNEY_POST` | `journeyPostId` |
-| `SCHEDULE_*` | `SCHEDULE` | `scheduleId` |
-| `POST_UPDATED` | `JOURNEY_POST` | `postId` (모집글 상세로 이동) |
-| `TRIP_UPCOMING` | `JOURNEY` | `journeyId` |
+FCM data payload에 `resourceType`, `resourceId`를 실어 보낸다. 앱은 이 값을 읽어 알림 탭 시 해당 화면으로 딥링크 처리한다. 인앱 알림함 API도 동일한 필드를 응답에 포함하므로, 앱 내 알림함 탭 시에도 동일하게 동작한다.
+
+| 알림 종류 | resourceType | resourceId | 이동 화면 |
+|---|---|---|---|
+| `MATCH_APPLIED` | `MATCH` | `participationId` | 신청 목록 화면 |
+| `MATCH_APPROVED` | `JOURNEY` | `journeyId` | 여정 상세 화면 |
+| `JOURNEY_NOTICE` | `JOURNEY_POST` | `journeyPostId` | 공지 상세 화면 |
+| `SCHEDULE_*` | `SCHEDULE` | `scheduleId` | 일정 상세 화면 |
+| `POST_UPDATED` | `JOURNEY_POST` | `postId` | 모집글 상세 화면 |
+| `TRIP_UPCOMING` | `JOURNEY` | `journeyId` | 여정 상세 화면 |
+| 채팅 메시지 | `CHAT_ROOM` | `roomId` | 채팅방 화면 |
+
+> 채팅 메시지 알림은 `notifications` 테이블에 저장되지 않으므로 인앱 알림함에는 표시되지 않는다. FCM data payload로만 딥링크를 전달한다.
 
 ---
 
@@ -318,6 +325,20 @@ chat:subscription:{sessionId}:{subId}     → {roomId}           (TTL 2h, UNSUBS
 | PRIVATE IMAGE | 발신자 닉네임 | `사진을 보냈습니다.` |
 
 > SYSTEM 메시지(입장·퇴장 등)는 푸시 대상이 아니다.
+
+### FCM data payload
+
+```json
+{
+  "notification": { "title": "도쿄 여행", "body": "홍길동: 오늘 저녁 어때?" },
+  "data": {
+    "resourceType": "CHAT_ROOM",
+    "resourceId": "123"
+  }
+}
+```
+
+앱은 `data.resourceType == "CHAT_ROOM"` 확인 후 `data.resourceId`(roomId)로 해당 채팅방 화면으로 이동한다.
 
 ### collapseKey
 

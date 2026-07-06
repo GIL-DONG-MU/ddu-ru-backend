@@ -68,7 +68,7 @@ class TripUpcomingNotificationServiceTest {
             service.notifyUpcomingTrips();
 
             verify(notificationPersistService, never()).saveAll(any());
-            verify(fcmPushService, never()).sendToUsers(any(), any(), any());
+            verify(fcmPushService, never()).sendToUsers(any(), any(), any(), any(), any());
         }
     }
 
@@ -126,7 +126,7 @@ class TripUpcomingNotificationServiceTest {
 
             service.notifyUpcomingTrips();
 
-            verify(fcmPushService).sendToUsers(eq(List.of(10L)), any(), any());
+            verify(fcmPushService).sendToUsers(eq(List.of(10L)), any(), any(), any(), any());
         }
 
         @Test
@@ -146,7 +146,7 @@ class TripUpcomingNotificationServiceTest {
             service.notifyUpcomingTrips();
 
             verify(notificationPersistService).saveAll(any());
-            verify(fcmPushService, never()).sendToUsers(any(), any(), any());
+            verify(fcmPushService, never()).sendToUsers(any(), any(), any(), any(), any());
         }
     }
 
@@ -169,7 +169,7 @@ class TripUpcomingNotificationServiceTest {
             service.notifyUpcomingTrips();
 
             verify(notificationPersistService, never()).saveAll(any());
-            verify(fcmPushService, never()).sendToUsers(any(), any(), any());
+            verify(fcmPushService, never()).sendToUsers(any(), any(), any(), any(), any());
         }
 
         @Test
