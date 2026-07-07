@@ -83,14 +83,24 @@ public class PostRecommendationSelectionService {
             Long userId,
             RecommendationApplicantContext context
     ) {
-        List<ScoredPostRecommendation> recommendations = recommendablePostQueryRepository.findRecommendablePosts(
-                        userId,
-                        context.today(),
-                        context.gender(),
-                        context.age(),
-                        context.destinationPreferenceFilter()
-                )
-                .stream()
+        List<RecommendablePostQueryResult> recommendablePosts = recommendablePostQueryRepository.findRecommendablePosts(
+                userId,
+                context.today(),
+                context.gender(),
+                context.age(),
+                context.destinationPreferenceFilter()
+        );
+
+        List<ScoredPostRecommendation> topRecommendations = filterScoreAndSelectTopPosts(recommendablePosts, context);
+
+        return PostRecommendationResult.available(topRecommendations);
+    }
+
+    private List<ScoredPostRecommendation> filterScoreAndSelectTopPosts(
+            List<RecommendablePostQueryResult> posts,
+            RecommendationApplicantContext context
+    ) {
+        return posts.stream()
                 .filter(post -> availableDateMatcher.matches(
                         post.companionType(),
                         post.startDate(),
@@ -101,8 +111,6 @@ public class PostRecommendationSelectionService {
                 .sorted(recommendationOrder())
                 .limit(RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS)
                 .toList();
-
-        return PostRecommendationResult.available(recommendations);
     }
 
     private DestinationPreferenceFilter getDestinationPreferenceFilter(Long userId) {
