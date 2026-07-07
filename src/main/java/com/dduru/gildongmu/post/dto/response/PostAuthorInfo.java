@@ -19,7 +19,7 @@ public record PostAuthorInfo(
         ProfileImageInfo profileImage,
         @Schema(description = "작성자 성별", example = "F", allowableValues = {"M", "F"})
         Gender gender,
-        @Schema(description = "작성자 연령대", example = "20대")
+        @Schema(description = "작성자 연령대. birthday 미설정 시 null", example = "20대", nullable = true)
         String ageGroup,
         @Schema(description = "작성자가 슈퍼호스트인지 여부", example = "false")
         boolean isSuperHost
