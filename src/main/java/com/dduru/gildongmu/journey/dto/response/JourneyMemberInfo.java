@@ -17,7 +17,7 @@ public record JourneyMemberInfo(
         ProfileImageInfo profileImage,
         boolean isHost,
         Gender gender,
-        Integer ageGroup,
+        String ageGroup,
         List<RoleLabelInfo> roles
 ) {
     public static JourneyMemberInfo from(JourneyMember member, ProfileImageResolver resolver, LocalDate today) {

@@ -21,8 +21,8 @@ public record ParticipantInfo(
         boolean isHost,
         @Schema(description = "참여자 성별", example = "F", allowableValues = {"M", "F"})
         Gender gender,
-        @Schema(description = "참여자 연령대. 20은 20대를 의미합니다.", example = "20")
-        Integer ageGroup
+        @Schema(description = "참여자 연령대", example = "20대")
+        String ageGroup
 ) {
     public static ParticipantInfo from(User user, boolean isHost, ProfileImageResolver profileImageResolver, LocalDate today) {
         Profile profile = user.getProfile();
