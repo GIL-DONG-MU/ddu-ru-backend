@@ -7,8 +7,8 @@ import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
-import com.dduru.gildongmu.recommendation.domain.UserRecommendationDestinationPreference;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
+import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow;
 import com.dduru.gildongmu.recommendation.dto.query.RecommendablePostQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
@@ -63,7 +63,7 @@ public class PostRecommendationSelectionService {
 
         LocalDate today = timeProvider.today();
         Integer applicantAge = RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today);
-        DestinationPreferenceFilter destinationCriteria = destinationCriteria(userId);
+        DestinationPreferenceFilter destinationPreferenceFilter = getDestinationPreferenceFilter(userId);
         List<AvailableDateRange> availableDateRanges = availableDateRanges(userId);
         TravelTendencyScores applicantScores = TravelTendencyScores.from(applicantTendency.get());
 
@@ -72,7 +72,7 @@ public class PostRecommendationSelectionService {
                         today,
                         profile.get().getGender(),
                         applicantAge,
-                        destinationCriteria
+                        destinationPreferenceFilter
                 )
                 .stream()
                 .filter(post -> availableDateMatcher.matches(
@@ -89,9 +89,9 @@ public class PostRecommendationSelectionService {
         return PostRecommendationResult.available(recommendations);
     }
 
-    private DestinationPreferenceFilter destinationCriteria(Long userId) {
-        List<UserRecommendationDestinationPreference> preferences = destinationPreferenceRepository.findAllByUser_Id(userId);
-        return DestinationPreferenceFilter.from(preferences);
+    private DestinationPreferenceFilter getDestinationPreferenceFilter(Long userId) {
+        List<DestinationPreferenceFilterRow> rows = destinationPreferenceRepository.findFilterRowsByUserId(userId);
+        return DestinationPreferenceFilter.from(rows);
     }
 
     private List<AvailableDateRange> availableDateRanges(Long userId) {

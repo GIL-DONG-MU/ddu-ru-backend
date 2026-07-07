@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.recommendation.dto.query;
 
-import com.dduru.gildongmu.recommendation.domain.UserRecommendationDestinationPreference;
 import com.dduru.gildongmu.recommendation.domain.enums.RecommendationDestinationPreferenceType;
 
 import java.util.List;
@@ -11,14 +10,14 @@ public record DestinationPreferenceFilter(
         Set<String> countryCodes,
         Set<Long> destinationIds
 ) {
-    public static DestinationPreferenceFilter from(List<UserRecommendationDestinationPreference> preferences) {
-        Set<String> countryCodes = preferences.stream()
-                .filter(preference -> preference.getPreferenceType() == RecommendationDestinationPreferenceType.COUNTRY)
-                .map(UserRecommendationDestinationPreference::getCountryCode)
+    public static DestinationPreferenceFilter from(List<DestinationPreferenceFilterRow> rows) {
+        Set<String> countryCodes = rows.stream()
+                .filter(row -> row.preferenceType() == RecommendationDestinationPreferenceType.COUNTRY)
+                .map(DestinationPreferenceFilterRow::countryCode)
                 .collect(Collectors.toUnmodifiableSet());
-        Set<Long> destinationIds = preferences.stream()
-                .filter(preference -> preference.getPreferenceType() == RecommendationDestinationPreferenceType.CITY)
-                .map(preference -> preference.getDestination().getId())
+        Set<Long> destinationIds = rows.stream()
+                .filter(row -> row.preferenceType() == RecommendationDestinationPreferenceType.CITY)
+                .map(DestinationPreferenceFilterRow::destinationId)
                 .collect(Collectors.toUnmodifiableSet());
         return new DestinationPreferenceFilter(countryCodes, destinationIds);
     }
