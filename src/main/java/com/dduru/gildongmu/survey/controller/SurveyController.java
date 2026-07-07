@@ -23,11 +23,11 @@ public class SurveyController implements SurveyApiDocs {
 
     @Override
     @PostMapping
-    public ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(
+    public ResponseEntity<ApiResult<SurveyResponse>> createSurvey(
             @CurrentUser Long userId,
             @Valid @RequestBody SurveyRequest request
     ) {
-        SurveyResponse response = surveyService.submitSurvey(userId, request);
+        SurveyResponse response = surveyService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResult.created(response));
     }
 
@@ -42,6 +42,16 @@ public class SurveyController implements SurveyApiDocs {
     @GetMapping("/questions")
     public ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions() {
         SurveyQuestionListResponse response = surveyQuestionService.getSurveyQuestions();
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResult<SurveyResponse>> updateSurvey(
+            @CurrentUser Long userId,
+            @Valid @RequestBody SurveyRequest request
+    ) {
+        SurveyResponse response = surveyService.update(userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
     }
 

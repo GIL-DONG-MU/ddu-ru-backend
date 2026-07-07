@@ -32,7 +32,7 @@ public interface SurveyApiDocs {
             ErrorCode.USER_ONBOARDING_NOT_FOUND,
             ErrorCode.AVATAR_PROFILE_NOT_FOUND
     })
-    ResponseEntity<ApiResult<SurveyResponse>> submitSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
+    ResponseEntity<ApiResult<SurveyResponse>> createSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 
     @Operation(
             summary = "내 설문 결과 조회",
@@ -52,6 +52,19 @@ public interface SurveyApiDocs {
             ErrorCode.INVALID_INPUT_VALUE
     })
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
+
+    @Operation(
+            summary = "여행선호설정 수정",
+            description = "마이페이지에서 기존 설문 응답을 수정합니다. 온보딩 완료 처리 및 보상 지급은 실행되지 않습니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponse(responseCode = "200", description = "수정 성공")
+    @ApiErrorResponses({
+            ErrorCode.INVALID_INPUT_VALUE,
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.SURVEY_RESULT_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<SurveyResponse>> updateSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 
     @Operation(
             summary = "설문조사 스킵",
