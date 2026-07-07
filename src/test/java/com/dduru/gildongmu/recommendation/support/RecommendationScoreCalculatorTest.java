@@ -53,6 +53,17 @@ class RecommendationScoreCalculatorTest {
         assertThat(score.matchPercentage()).isEqualTo(78);
     }
 
+    @Test
+    @DisplayName("비정상 점수로 가중 유사도가 0 미만이 되어도 최종 적합도는 0으로 보정한다")
+    void clampsMatchPercentageToZero() {
+        TravelTendencyScores applicant = scores(0, 0, 0, 0);
+        TravelTendencyScores host = scores(30, 30, 30, 30);
+
+        RecommendationScore score = calculator.calculate(applicant, host);
+
+        assertThat(score.matchPercentage()).isZero();
+    }
+
     private TravelTendencyScores scores(double rhythm, double energy, double consumption, double decision) {
         return new TravelTendencyScores(rhythm, energy, consumption, decision);
     }

@@ -22,12 +22,22 @@ public class RecommendationScoreCalculator {
         double weightedSimilarity = diffs.stream()
                 .mapToDouble(diff -> diff.similarity() * diff.axis().weight())
                 .sum();
+        double clampedSimilarity = clamp(weightedSimilarity);
+        int matchPercentage = toPercentage(clampedSimilarity);
 
         return new RecommendationScore(
-                (int) Math.round(weightedSimilarity * 100),
+                matchPercentage,
                 matchReasons(diffs),
                 cautionPoints(diffs)
         );
+    }
+
+    private double clamp(double value) {
+        return Math.max(0.0, Math.min(1.0, value));
+    }
+
+    private int toPercentage(double similarity) {
+        return (int) Math.round(similarity * 100);
     }
 
     private List<RecommendationReason> matchReasons(List<AxisDiff> diffs) {
