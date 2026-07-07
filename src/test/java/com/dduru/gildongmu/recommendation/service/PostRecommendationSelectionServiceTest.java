@@ -253,6 +253,23 @@ class PostRecommendationSelectionServiceTest {
     }
 
     @Test
+    @DisplayName("UNSPECIFIED 동행 방식은 날짜가 1일 이상 겹치면 후보가 된다")
+    void appliesUnspecifiedCompanionTypeDatePreference() {
+        User applicant = applicant("applicant-unspecified-date", Gender.F, LocalDate.of(2000, 7, 4), true, true);
+        Destination jeju = destination("KR", "대한민국", "제주");
+        availableDateRepository.save(UserRecommendationAvailableDate.of(applicant, date(2026, 7, 10), date(2026, 7, 12)));
+
+        Post unspecified = openPost(hostWithTendency("host-unspecified", 5, 5, 5, 5), jeju, date(2026, 7, 12), date(2026, 7, 14), CompanionType.UNSPECIFIED);
+        openPost(hostWithTendency("host-unspecified-fail", 5, 5, 5, 5), jeju, date(2026, 7, 13), date(2026, 7, 14), CompanionType.UNSPECIFIED);
+
+        PostRecommendationResult result = recommendationSelectionService.selectRecommendations(applicant.getId());
+
+        assertThat(result.recommendations())
+                .extracting(ScoredPostRecommendation::postId)
+                .containsExactly(unspecified.getId());
+    }
+
+    @Test
     @DisplayName("게시글 선호 성별과 나이 범위를 만족하는 게시글만 후보가 된다")
     void appliesPreferredGenderAndAge() {
         User applicant = applicant("applicant-gender-age", Gender.F, LocalDate.of(2000, 7, 4), true, true);

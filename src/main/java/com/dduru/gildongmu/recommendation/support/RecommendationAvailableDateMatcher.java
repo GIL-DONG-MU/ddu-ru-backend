@@ -32,7 +32,7 @@ public class RecommendationAvailableDateMatcher {
             case FULL -> !range.startDate().isAfter(postStartDate)
                     && !range.endDate().isBefore(postEndDate);
             case PARTIAL -> overlapDays(postStartDate, postEndDate, range) >= 2;
-            case MEAL -> overlapDays(postStartDate, postEndDate, range) >= 1;
+            case MEAL, UNSPECIFIED -> overlapDays(postStartDate, postEndDate, range) >= 1;
         };
     }
 

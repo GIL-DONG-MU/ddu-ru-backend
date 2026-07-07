@@ -32,7 +32,7 @@ public record PostListRequest(
         Long destinationId,
         @Schema(description = "모집 상태 필터. 미전달 시 모집 중 게시글만 반환합니다.", example = "OPEN", nullable = true)
         RecruitmentStatusFilter recruitmentStatus,
-        @Schema(description = "동행 방식 필터", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL"}, nullable = true)
+        @Schema(description = "동행 방식 필터", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL", "UNSPECIFIED"}, nullable = true)
         CompanionType companionType,
         @Schema(description = "정렬 기준. 미전달 시 LATEST로 처리됩니다.", example = "LATEST", nullable = true)
         PostSortType sort

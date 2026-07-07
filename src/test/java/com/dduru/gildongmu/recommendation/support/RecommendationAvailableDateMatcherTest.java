@@ -54,6 +54,15 @@ class RecommendationAvailableDateMatcherTest {
         assertThat(matcher.matches(CompanionType.MEAL, date(2026, 7, 3), date(2026, 7, 5), List.of(range))).isTrue();
     }
 
+    @Test
+    @DisplayName("UNSPECIFIED는 양 끝 포함 겹치는 날짜가 1일 이상이면 통과한다")
+    void unspecifiedCompanionTypeRequiresAtLeastOneOverlappedDay() {
+        AvailableDateRange range = range(2026, 7, 1, 2026, 7, 3);
+
+        assertThat(matcher.matches(CompanionType.UNSPECIFIED, date(2026, 7, 4), date(2026, 7, 5), List.of(range))).isFalse();
+        assertThat(matcher.matches(CompanionType.UNSPECIFIED, date(2026, 7, 3), date(2026, 7, 5), List.of(range))).isTrue();
+    }
+
     private AvailableDateRange range(int startYear, int startMonth, int startDay, int endYear, int endMonth, int endDay) {
         return new AvailableDateRange(
                 LocalDate.of(startYear, startMonth, startDay),

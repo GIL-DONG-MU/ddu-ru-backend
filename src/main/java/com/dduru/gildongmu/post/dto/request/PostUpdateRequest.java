@@ -49,7 +49,7 @@ public record PostUpdateRequest(
         @Schema(description = "변경할 태그 목록. 전달하면 전체 교체됩니다.", example = "[\"맛집\", \"힐링\"]", nullable = true)
         List<String> tags,
 
-        @Schema(description = "변경할 동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL"}, nullable = true)
+        @Schema(description = "변경할 동행 방식. null이면 기존 값을 유지하고 UNSPECIFIED이면 미지정으로 변경합니다.", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL", "UNSPECIFIED"}, nullable = true)
         CompanionType companionType
 ) {
     public PostUpdateRequest {

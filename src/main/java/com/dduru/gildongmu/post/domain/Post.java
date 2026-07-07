@@ -119,7 +119,7 @@ public class Post extends BaseTimeEntity {
     private Long deletedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "companion_type")
+    @Column(name = "companion_type", nullable = false)
     private CompanionType companionType;
 
     @Builder(access = AccessLevel.PRIVATE)
@@ -172,7 +172,7 @@ public class Post extends BaseTimeEntity {
                 .maxAge(maxAge)
                 .photoUrl(photoUrl)
                 .tags(tags)
-                .companionType(companionType)
+                .companionType(resolveCompanionType(companionType))
                 .build();
     }
 
@@ -387,5 +387,9 @@ public class Post extends BaseTimeEntity {
             throw new InvalidPostContentException();
         }
         return content;
+    }
+
+    private static CompanionType resolveCompanionType(CompanionType companionType) {
+        return companionType != null ? companionType : CompanionType.UNSPECIFIED;
     }
 }

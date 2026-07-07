@@ -30,7 +30,7 @@ public record PostSummaryResponse(
         Integer recruitCount,
         @Schema(description = "선호 성별. U는 성별 무관입니다.", example = "U", allowableValues = {"M", "F", "U"})
         Gender preferredGender,
-        @Schema(description = "동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL"})
+        @Schema(description = "동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL", "UNSPECIFIED"})
         CompanionType companionType,
         @Schema(description = "게시글 대표 이미지 URL. 없으면 null입니다.", example = "https://cdn.example.com/posts/cover.jpg", nullable = true)
         String photoUrl,

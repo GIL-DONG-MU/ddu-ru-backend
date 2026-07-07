@@ -83,6 +83,22 @@ class PostTest {
             )).isInstanceOf(InvalidPostDateException.class);
         }
 
+        @Test
+        @DisplayName("동행 방식이 없으면 UNSPECIFIED로 생성한다")
+        void nullCompanionTypeCreatesUnspecified() {
+            LocalDate start = LocalDate.now().plusDays(1);
+            LocalDate end = LocalDate.now().plusDays(3);
+
+            Post post = Post.createPost(
+                    createAuthor(), createDestination(),
+                    validTitle(), validContent(),
+                    start, end, 3, end.minusDays(1),
+                    Gender.U, true, null, null, null, "[]", null
+            );
+
+            assertThat(post.getCompanionType()).isEqualTo(CompanionType.UNSPECIFIED);
+        }
+
         private Post createPost(String title, String content) {
             LocalDate start = LocalDate.now().plusDays(1);
             LocalDate end = LocalDate.now().plusDays(3);
