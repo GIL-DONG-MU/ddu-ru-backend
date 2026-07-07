@@ -5,6 +5,7 @@ import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
@@ -50,38 +51,54 @@ public class PostRecommendationSelectionService {
 
     @Transactional(readOnly = true)
     public PostRecommendationResult selectRecommendations(Long userId) {
+        return resolveApplicantContext(userId)
+                .map(context -> selectRecommendablePosts(userId, context))
+                .orElseGet(PostRecommendationResult::unavailable);
+    }
+
+    private Optional<RecommendationApplicantContext> resolveApplicantContext(Long userId) {
         Optional<UserOnboarding> onboarding = userOnboardingRepository.findByUser_Id(userId);
         if (onboarding.isEmpty() || onboarding.get().getSurveyStatus() != SurveyStatus.COMPLETED) {
-            return PostRecommendationResult.unavailable();
+            return Optional.empty();
         }
 
         Optional<Profile> profile = profileRepository.findByUser_Id(userId);
         Optional<TravelTendency> applicantTendency = travelTendencyRepository.findByUser_Id(userId);
         if (profile.isEmpty() || applicantTendency.isEmpty()) {
-            return PostRecommendationResult.unavailable();
+            return Optional.empty();
         }
 
         LocalDate today = timeProvider.today();
-        Integer applicantAge = RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today);
-        DestinationPreferenceFilter destinationPreferenceFilter = getDestinationPreferenceFilter(userId);
-        List<AvailableDateRange> availableDateRanges = availableDateRanges(userId);
-        TravelTendencyScores applicantScores = TravelTendencyScores.from(applicantTendency.get());
 
+        return Optional.of(new RecommendationApplicantContext(
+                today,
+                profile.get().getGender(),
+                RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today),
+                getDestinationPreferenceFilter(userId),
+                availableDateRanges(userId),
+                TravelTendencyScores.from(applicantTendency.get())
+        ));
+    }
+
+    private PostRecommendationResult selectRecommendablePosts(
+            Long userId,
+            RecommendationApplicantContext context
+    ) {
         List<ScoredPostRecommendation> recommendations = recommendablePostQueryRepository.findRecommendablePosts(
                         userId,
-                        today,
-                        profile.get().getGender(),
-                        applicantAge,
-                        destinationPreferenceFilter
+                        context.today(),
+                        context.gender(),
+                        context.age(),
+                        context.destinationPreferenceFilter()
                 )
                 .stream()
                 .filter(post -> availableDateMatcher.matches(
                         post.companionType(),
                         post.startDate(),
                         post.endDate(),
-                        availableDateRanges
+                        context.availableDateRanges()
                 ))
-                .map(post -> toScoredRecommendation(post, applicantScores))
+                .map(post -> toScoredRecommendation(post, context.applicantScores()))
                 .sorted(recommendationOrder())
                 .limit(RECOMMENDATION_LIMIT)
                 .toList();
@@ -122,5 +139,15 @@ public class PostRecommendationSelectionService {
         return Comparator.comparingInt(ScoredPostRecommendation::matchPercentage).reversed()
                 .thenComparing(ScoredPostRecommendation::startDate)
                 .thenComparing(Comparator.comparing(ScoredPostRecommendation::postId).reversed());
+    }
+
+    private record RecommendationApplicantContext(
+            LocalDate today,
+            Gender gender,
+            Integer age,
+            DestinationPreferenceFilter destinationPreferenceFilter,
+            List<AvailableDateRange> availableDateRanges,
+            TravelTendencyScores applicantScores
+    ) {
     }
 }
