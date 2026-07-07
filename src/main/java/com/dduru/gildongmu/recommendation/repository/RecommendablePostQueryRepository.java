@@ -50,7 +50,7 @@ public class RecommendablePostQueryRepository {
                 ))
                 .from(post)
                 .join(post.destination, destination)
-                .join(travelTendency).on(travelTendency.user.id.eq(post.user.id))
+                .join(travelTendency).on(travelTendency.user.eq(post.user))
                 .where(
                         post.isDeleted.isFalse(),
                         post.status.eq(PostStatus.OPEN),
