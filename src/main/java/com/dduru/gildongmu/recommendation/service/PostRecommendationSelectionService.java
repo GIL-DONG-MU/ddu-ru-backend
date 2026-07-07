@@ -7,6 +7,7 @@ import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
+import com.dduru.gildongmu.recommendation.domain.RecommendationPolicy;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow;
@@ -36,8 +37,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class PostRecommendationSelectionService {
-
-    private static final int RECOMMENDATION_LIMIT = 3;
 
     private final TimeProvider timeProvider;
     private final UserOnboardingRepository userOnboardingRepository;
@@ -100,7 +99,7 @@ public class PostRecommendationSelectionService {
                 ))
                 .map(post -> toScoredRecommendation(post, context.applicantScores()))
                 .sorted(recommendationOrder())
-                .limit(RECOMMENDATION_LIMIT)
+                .limit(RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS)
                 .toList();
 
         return PostRecommendationResult.available(recommendations);
