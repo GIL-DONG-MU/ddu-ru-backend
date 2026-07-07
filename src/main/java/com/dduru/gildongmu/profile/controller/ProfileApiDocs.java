@@ -6,6 +6,7 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.dto.response.MyProfileResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,16 @@ import org.springframework.http.ResponseEntity;
 @Tag(name = "Profiles", description = "사용자 프로필 관리 API")
 @SecurityRequirement(name = "JWT")
 public interface ProfileApiDocs {
+
+    @Operation(summary = "마이페이지 프로필 조회", description = "내 닉네임, 나이대, 한줄소개, 프로필 이미지 정보를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "프로필 조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.PROFILE_NOT_FOUND
+    })
+    ResponseEntity<ApiResult<MyProfileResponse>> getMyProfile(
+            @Parameter(hidden = true) Long userId
+    );
 
     @Operation(summary = "닉네임 수정", description = "사용자의 닉네임을 수정합니다.")
     @ApiResponse(responseCode = "204", description = "닉네임 수정 성공", content = @Content())

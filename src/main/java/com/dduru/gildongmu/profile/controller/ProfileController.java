@@ -5,11 +5,13 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.profile.dto.request.NicknameUpdateRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileSetupRequest;
 import com.dduru.gildongmu.profile.dto.request.ProfileUpdateRequest;
+import com.dduru.gildongmu.profile.dto.response.MyProfileResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameRandomResponse;
 import com.dduru.gildongmu.profile.dto.response.NicknameValidateResponse;
 import com.dduru.gildongmu.profile.service.NicknameService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.profile.service.ProfileOnboardingService;
+import com.dduru.gildongmu.profile.service.ProfileQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,14 @@ public class ProfileController implements ProfileApiDocs {
     private final NicknameService nicknameService;
     private final ProfileOnboardingService profileOnboardingService;
     private final ProfileManagementService profileManagementService;
+    private final ProfileQueryService profileQueryService;
+
+    @Override
+    @GetMapping("/users/me/profile")
+    public ResponseEntity<ApiResult<MyProfileResponse>> getMyProfile(@CurrentUser Long userId) {
+        MyProfileResponse response = profileQueryService.getMyProfile(userId);
+        return ResponseEntity.ok(ApiResult.ok(response));
+    }
 
     @Override
     @PutMapping("/users/nickname")
