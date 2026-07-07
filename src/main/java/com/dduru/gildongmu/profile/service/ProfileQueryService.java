@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.profile.service;
 
-import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.response.MyProfileResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
@@ -16,10 +15,9 @@ public class ProfileQueryService {
 
     private final ProfileRepository profileRepository;
     private final ProfileImageResolver profileImageResolver;
-    private final TimeProvider timeProvider;
 
     public MyProfileResponse getMyProfile(Long userId) {
         Profile profile = profileRepository.getByUserIdOrThrow(userId);
-        return MyProfileResponse.of(profile, profileImageResolver, timeProvider.today());
+        return MyProfileResponse.of(profile, profileImageResolver);
     }
 }

@@ -1,6 +1,5 @@
 package com.dduru.gildongmu.profile.service;
 
-import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.dto.response.MyProfileResponse;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
@@ -17,8 +16,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDate;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +25,6 @@ class ProfileQueryServiceTest {
 
     @Mock private ProfileRepository profileRepository;
     @Mock private ProfileImageResolver profileImageResolver;
-    @Mock private TimeProvider timeProvider;
 
     @InjectMocks
     private ProfileQueryService profileQueryService;
@@ -50,46 +46,6 @@ class ProfileQueryServiceTest {
     }
 
     @Nested
-    @DisplayName("나이대 계산")
-    class AgeGroup {
-
-        @Test
-        @DisplayName("birthday가 있으면 나이대를 계산해 반환한다")
-        void returnsAgeGroupWhenBirthdayExists() {
-            ReflectionTestUtils.setField(profile, "birthday", LocalDate.of(1998, 5, 10));
-            when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-            when(timeProvider.today()).thenReturn(LocalDate.of(2026, 7, 1));
-
-            MyProfileResponse response = profileQueryService.getMyProfile(1L);
-
-            assertThat(response.ageGroup()).isEqualTo("20대");
-        }
-
-        @Test
-        @DisplayName("birthday가 없으면 ageGroup은 null이다")
-        void returnsNullAgeGroupWhenNoBirthday() {
-            when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-            when(timeProvider.today()).thenReturn(LocalDate.of(2026, 7, 1));
-
-            MyProfileResponse response = profileQueryService.getMyProfile(1L);
-
-            assertThat(response.ageGroup()).isNull();
-        }
-
-        @Test
-        @DisplayName("생일이 지나지 않은 경우에도 올바른 나이대를 반환한다")
-        void calculatesCorrectlyBeforeBirthday() {
-            ReflectionTestUtils.setField(profile, "birthday", LocalDate.of(1997, 12, 31));
-            when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-            when(timeProvider.today()).thenReturn(LocalDate.of(2026, 7, 1));
-
-            MyProfileResponse response = profileQueryService.getMyProfile(1L);
-
-            assertThat(response.ageGroup()).isEqualTo("20대");
-        }
-    }
-
-    @Nested
     @DisplayName("프로필 조회")
     class GetMyProfile {
 
@@ -97,7 +53,6 @@ class ProfileQueryServiceTest {
         @DisplayName("닉네임과 한줄소개를 반환한다")
         void returnsNicknameAndBio() {
             when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-            when(timeProvider.today()).thenReturn(LocalDate.of(2026, 7, 1));
 
             MyProfileResponse response = profileQueryService.getMyProfile(1L);
 
@@ -110,7 +65,6 @@ class ProfileQueryServiceTest {
         void returnsNullBioWhenNotSet() {
             ReflectionTestUtils.setField(profile, "bio", null);
             when(profileRepository.getByUserIdOrThrow(1L)).thenReturn(profile);
-            when(timeProvider.today()).thenReturn(LocalDate.of(2026, 7, 1));
 
             MyProfileResponse response = profileQueryService.getMyProfile(1L);
 
