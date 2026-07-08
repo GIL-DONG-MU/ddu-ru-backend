@@ -15,12 +15,15 @@ import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.exception.ProfileNotFoundException;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.recommendation.domain.MateRecommendationPass;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationDestinationPreference;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
+import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResultStatus;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
+import com.dduru.gildongmu.recommendation.exception.RecommendationTendencyMissingException;
 import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.MateRecommendationPassRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
@@ -50,6 +53,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({QueryDslConfig.class, RecommendablePostQueryRepository.class})
@@ -117,19 +121,46 @@ class PostRecommendationSelectionServiceTest {
     }
 
     @Test
-    @DisplayName("설문 미완료, 프로필 없음, 신청자 성향 없음은 추천 불가다")
+    @DisplayName("설문 미완료는 SURVEY_REQUIRED 상태를 반환한다")
     void unavailableWhenRequiredApplicantInputsMissing() {
         User surveyRequiredUser = applicant("survey-required", Gender.F, LocalDate.of(2000, 7, 4), false, true);
+
+        PostRecommendationResult surveyRequired = recommendationSelectionService.selectRecommendations(surveyRequiredUser.getId());
+
+        assertThat(surveyRequired.status()).isEqualTo(PostRecommendationResultStatus.SURVEY_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("설문 완료 사용자의 프로필이 없으면 데이터 정합성 오류로 예외가 발생한다")
+    void throwsWhenCompletedSurveyUserHasNoProfile() {
         User noProfileUser = user("no-profile");
         completeSurvey(noProfileUser);
         saveTendency(noProfileUser, 5, 5, 5, 5);
+
+        assertThatThrownBy(() -> recommendationSelectionService.selectRecommendations(noProfileUser.getId()))
+                .isInstanceOf(ProfileNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("설문 완료 사용자의 성향 점수가 없으면 데이터 정합성 오류로 예외가 발생한다")
+    void throwsWhenCompletedSurveyUserHasNoTendency() {
         User noTendencyUser = user("no-tendency");
         saveProfile(noTendencyUser, Gender.F, LocalDate.of(2000, 7, 4));
         completeSurvey(noTendencyUser);
 
-        assertThat(recommendationSelectionService.selectRecommendations(surveyRequiredUser.getId()).available()).isFalse();
-        assertThat(recommendationSelectionService.selectRecommendations(noProfileUser.getId()).available()).isFalse();
-        assertThat(recommendationSelectionService.selectRecommendations(noTendencyUser.getId()).available()).isFalse();
+        assertThatThrownBy(() -> recommendationSelectionService.selectRecommendations(noTendencyUser.getId()))
+                .isInstanceOf(RecommendationTendencyMissingException.class);
+    }
+
+    @Test
+    @DisplayName("추천 가능 사용자지만 후보가 없으면 NO_CANDIDATES 상태와 빈 목록을 반환한다")
+    void returnsNoCandidatesStatusWhenNoRecommendablePosts() {
+        User applicant = applicant("applicant-no-candidates", Gender.F, LocalDate.of(2000, 7, 4), true, true);
+
+        PostRecommendationResult result = recommendationSelectionService.selectRecommendations(applicant.getId());
+
+        assertThat(result.status()).isEqualTo(PostRecommendationResultStatus.NO_CANDIDATES);
+        assertThat(result.recommendations()).isEmpty();
     }
 
     @Test
@@ -145,7 +176,7 @@ class PostRecommendationSelectionServiceTest {
 
         PostRecommendationResult result = recommendationSelectionService.selectRecommendations(applicant.getId());
 
-        assertThat(result.available()).isTrue();
+        assertThat(result.status()).isEqualTo(PostRecommendationResultStatus.READY);
         assertThat(result.recommendations())
                 .extracting(ScoredPostRecommendation::postId)
                 .containsExactly(earlierNewId.getId(), earlierOldId.getId(), later.getId());

@@ -6,6 +6,7 @@ import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.exception.ProfileNotFoundException;
 import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.recommendation.domain.RecommendationPolicy;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
@@ -14,6 +15,7 @@ import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterR
 import com.dduru.gildongmu.recommendation.dto.query.RecommendablePostQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
+import com.dduru.gildongmu.recommendation.exception.RecommendationTendencyMissingException;
 import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
@@ -50,33 +52,33 @@ public class PostRecommendationSelectionService {
 
     @Transactional(readOnly = true)
     public PostRecommendationResult selectRecommendations(Long userId) {
-        return resolveApplicantContext(userId)
-                .map(context -> selectRecommendablePosts(userId, context))
-                .orElseGet(PostRecommendationResult::unavailable);
-    }
-
-    private Optional<RecommendationApplicantContext> resolveApplicantContext(Long userId) {
         Optional<UserOnboarding> onboarding = userOnboardingRepository.findByUser_Id(userId);
         if (onboarding.isEmpty() || onboarding.get().getSurveyStatus() != SurveyStatus.COMPLETED) {
-            return Optional.empty();
+            return PostRecommendationResult.surveyRequired();
         }
 
         Optional<Profile> profile = profileRepository.findByUser_Id(userId);
+        if (profile.isEmpty()) {
+            throw new ProfileNotFoundException();
+        }
+
         Optional<TravelTendency> applicantTendency = travelTendencyRepository.findByUser_Id(userId);
-        if (profile.isEmpty() || applicantTendency.isEmpty()) {
-            return Optional.empty();
+        if (applicantTendency.isEmpty()) {
+            throw new RecommendationTendencyMissingException();
         }
 
         LocalDate today = timeProvider.today();
 
-        return Optional.of(new RecommendationApplicantContext(
+        RecommendationApplicantContext context = new RecommendationApplicantContext(
                 today,
                 profile.get().getGender(),
                 RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today),
                 getDestinationPreferenceFilter(userId),
                 availableDateRanges(userId),
                 TravelTendencyScores.from(applicantTendency.get())
-        ));
+        );
+
+        return selectRecommendablePosts(userId, context);
     }
 
     private PostRecommendationResult selectRecommendablePosts(
@@ -93,7 +95,11 @@ public class PostRecommendationSelectionService {
 
         List<ScoredPostRecommendation> topRecommendations = filterScoreAndSelectTopPosts(recommendablePosts, context);
 
-        return PostRecommendationResult.available(topRecommendations);
+        if (topRecommendations.isEmpty()) {
+            return PostRecommendationResult.noCandidates();
+        }
+
+        return PostRecommendationResult.ready(topRecommendations);
     }
 
     private List<ScoredPostRecommendation> filterScoreAndSelectTopPosts(
