@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.recommendation.support;
 
+import java.util.Arrays;
 import java.util.function.ToDoubleFunction;
 
 public enum RecommendationScoreAxis {
@@ -35,6 +36,21 @@ public enum RecommendationScoreAxis {
             "DECISION_DIFFERENCE",
             "일정 결정 방식은 미리 조율해보세요"
     );
+
+    private static final double TOTAL_WEIGHT = 1.0;
+    private static final double WEIGHT_EPSILON = 0.000_001;
+
+    static {
+        double totalWeight = Arrays.stream(values())
+                .mapToDouble(RecommendationScoreAxis::weight)
+                .sum();
+        if (Math.abs(totalWeight - TOTAL_WEIGHT) > WEIGHT_EPSILON) {
+            throw new IllegalStateException(
+                    "Invalid recommendation score axis weights: expectedTotalWeight=%s, actualTotalWeight=%s, weights=%s"
+                            .formatted(TOTAL_WEIGHT, totalWeight, weightSummary())
+            );
+        }
+    }
 
     private final double weight;
     private final ToDoubleFunction<TravelTendencyScores> scoreSelector;
@@ -81,5 +97,12 @@ public enum RecommendationScoreAxis {
 
     String cautionMessage() {
         return cautionMessage;
+    }
+
+    private static String weightSummary() {
+        return Arrays.stream(values())
+                .map(axis -> axis.name() + "=" + axis.weight)
+                .toList()
+                .toString();
     }
 }
