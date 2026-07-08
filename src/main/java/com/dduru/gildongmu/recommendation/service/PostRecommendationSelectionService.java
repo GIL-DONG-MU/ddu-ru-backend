@@ -1,21 +1,18 @@
 package com.dduru.gildongmu.recommendation.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
-import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
-import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
-import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.exception.ProfileNotFoundException;
-import com.dduru.gildongmu.profile.repository.ProfileRepository;
 import com.dduru.gildongmu.recommendation.domain.RecommendationPolicy;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
+import com.dduru.gildongmu.recommendation.dto.query.ApplicantRecommendationQueryResult;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow;
 import com.dduru.gildongmu.recommendation.dto.query.RecommendablePostQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
 import com.dduru.gildongmu.recommendation.exception.RecommendationTendencyMissingException;
+import com.dduru.gildongmu.recommendation.repository.ApplicantRecommendationQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
@@ -25,8 +22,6 @@ import com.dduru.gildongmu.recommendation.support.RecommendationAvailableDateMat
 import com.dduru.gildongmu.recommendation.support.RecommendationScore;
 import com.dduru.gildongmu.recommendation.support.RecommendationScoreCalculator;
 import com.dduru.gildongmu.recommendation.support.TravelTendencyScores;
-import com.dduru.gildongmu.survey.domain.TravelTendency;
-import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +37,7 @@ import java.util.Optional;
 public class PostRecommendationSelectionService {
 
     private final TimeProvider timeProvider;
-    private final UserOnboardingRepository userOnboardingRepository;
-    private final ProfileRepository profileRepository;
-    private final TravelTendencyRepository travelTendencyRepository;
+    private final ApplicantRecommendationQueryRepository applicantRecommendationQueryRepository;
     private final UserRecommendationDestinationPreferenceRepository destinationPreferenceRepository;
     private final UserRecommendationAvailableDateRepository availableDateRepository;
     private final RecommendablePostQueryRepository recommendablePostQueryRepository;
@@ -53,18 +46,20 @@ public class PostRecommendationSelectionService {
 
     @Transactional(readOnly = true)
     public PostRecommendationResult selectRecommendations(Long userId) {
-        Optional<UserOnboarding> onboarding = userOnboardingRepository.findByUser_Id(userId);
-        if (onboarding.isEmpty() || onboarding.get().getSurveyStatus() != SurveyStatus.COMPLETED) {
+        Optional<ApplicantRecommendationQueryResult> applicantQueryResult =
+                applicantRecommendationQueryRepository.findApplicantContext(userId);
+
+        if (applicantQueryResult.isEmpty() || !applicantQueryResult.get().isSurveyCompleted()) {
             return PostRecommendationResult.surveyRequired();
         }
 
-        Optional<Profile> profile = profileRepository.findByUser_Id(userId);
-        if (profile.isEmpty()) {
+        ApplicantRecommendationQueryResult applicant = applicantQueryResult.get();
+
+        if (!applicant.hasProfile()) {
             throw new ProfileNotFoundException();
         }
 
-        Optional<TravelTendency> applicantTendency = travelTendencyRepository.findByUser_Id(userId);
-        if (applicantTendency.isEmpty()) {
+        if (!applicant.hasTravelTendency()) {
             throw new RecommendationTendencyMissingException();
         }
 
@@ -72,11 +67,11 @@ public class PostRecommendationSelectionService {
 
         RecommendationApplicantContext context = new RecommendationApplicantContext(
                 today,
-                profile.get().getGender(),
-                RecommendationAgeCalculator.calculate(profile.get().getBirthday(), today),
+                applicant.gender(),
+                RecommendationAgeCalculator.calculate(applicant.birthday(), today),
                 getDestinationPreferenceFilter(userId),
                 availableDateRanges(userId),
-                TravelTendencyScores.from(applicantTendency.get())
+                toApplicantScores(applicant)
         );
 
         return selectRecommendablePosts(userId, context);
@@ -128,6 +123,15 @@ public class PostRecommendationSelectionService {
     private List<AvailableDateRange> availableDateRanges(Long userId) {
         List<UserRecommendationAvailableDate> availableDates = availableDateRepository.findAllByUser_Id(userId);
         return AvailableDateRange.from(availableDates);
+    }
+
+    private TravelTendencyScores toApplicantScores(ApplicantRecommendationQueryResult applicant) {
+        return new TravelTendencyScores(
+                toDouble(applicant.rhythmScore()),
+                toDouble(applicant.energyScore()),
+                toDouble(applicant.consumptionScore()),
+                toDouble(applicant.decisionScore())
+        );
     }
 
     private ScoredPostRecommendation toScoredRecommendation(

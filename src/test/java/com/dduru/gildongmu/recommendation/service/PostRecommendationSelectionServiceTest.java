@@ -24,8 +24,9 @@ import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResultStatus;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
 import com.dduru.gildongmu.recommendation.exception.RecommendationTendencyMissingException;
-import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
+import com.dduru.gildongmu.recommendation.repository.ApplicantRecommendationQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.MateRecommendationPassRepository;
+import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
 import com.dduru.gildongmu.recommendation.support.RecommendationAvailableDateMatcher;
@@ -56,7 +57,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({QueryDslConfig.class, RecommendablePostQueryRepository.class})
+@Import({QueryDslConfig.class, ApplicantRecommendationQueryRepository.class, RecommendablePostQueryRepository.class})
 @DisplayName("PostRecommendationSelectionService 테스트")
 class PostRecommendationSelectionServiceTest {
 
@@ -96,6 +97,9 @@ class PostRecommendationSelectionServiceTest {
     private MateRecommendationPassRepository recommendationPassRepository;
 
     @Autowired
+    private ApplicantRecommendationQueryRepository applicantRecommendationQueryRepository;
+
+    @Autowired
     private RecommendablePostQueryRepository recommendablePostQueryRepository;
 
     private PostRecommendationSelectionService recommendationSelectionService;
@@ -109,9 +113,7 @@ class PostRecommendationSelectionServiceTest {
         ));
         recommendationSelectionService = new PostRecommendationSelectionService(
                 timeProvider,
-                userOnboardingRepository,
-                profileRepository,
-                travelTendencyRepository,
+                applicantRecommendationQueryRepository,
                 destinationPreferenceRepository,
                 availableDateRepository,
                 recommendablePostQueryRepository,
