@@ -32,6 +32,7 @@ public class RecommendationAvailableDateMatcher {
             case FULL -> !range.startDate().isAfter(postStartDate)
                     && !range.endDate().isBefore(postEndDate);
             case PARTIAL -> overlapDays(postStartDate, postEndDate, range) >= 2;
+            // UNSPECIFIED는 게시글 작성자가 동행 범위를 정하지 않은 상태이므로, 추천에서 과도하게 제외하지 않도록 MEAL과 같은 최소 겹침 기준을 적용한다.
             case MEAL, UNSPECIFIED -> overlapDays(postStartDate, postEndDate, range) >= 1;
         };
     }
