@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -135,7 +136,7 @@ public class PostRecommendationSelectionService {
     ) {
         RecommendationScore score = scoreCalculator.calculate(
                 applicantScores,
-                TravelTendencyScores.from(post)
+                toHostScores(post)
         );
 
         return new ScoredPostRecommendation(
@@ -146,6 +147,19 @@ public class PostRecommendationSelectionService {
                 score.matchReasons(),
                 score.cautionPoints()
         );
+    }
+
+    private TravelTendencyScores toHostScores(RecommendablePostQueryResult post) {
+        return new TravelTendencyScores(
+                toDouble(post.hostRhythmScore()),
+                toDouble(post.hostEnergyScore()),
+                toDouble(post.hostConsumptionScore()),
+                toDouble(post.hostDecisionScore())
+        );
+    }
+
+    private double toDouble(BigDecimal value) {
+        return value.doubleValue();
     }
 
     private Comparator<ScoredPostRecommendation> recommendationOrder() {
