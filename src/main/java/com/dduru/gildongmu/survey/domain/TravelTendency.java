@@ -76,6 +76,10 @@ public class TravelTendency extends BaseTimeEntity {
         this.avatarType = avatarType;
     }
 
+    public static double scoreRange() {
+        return MAX_SCORE.subtract(MIN_SCORE).doubleValue();
+    }
+
     private void updateScores(BigDecimal rhythmScore, BigDecimal energyScore,
                               BigDecimal consumptionScore, BigDecimal decisionScore) {
         this.rhythmScore = requireValidScore(rhythmScore);

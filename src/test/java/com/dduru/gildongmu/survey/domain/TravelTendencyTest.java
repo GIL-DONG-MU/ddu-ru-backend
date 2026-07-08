@@ -91,6 +91,12 @@ class TravelTendencyTest {
         )).isInstanceOf(InvalidTravelTendencyScoreException.class);
     }
 
+    @Test
+    @DisplayName("성향 점수 범위를 제공한다")
+    void scoreRange() {
+        assertThat(TravelTendency.scoreRange()).isEqualTo(10.0);
+    }
+
     private User user() {
         return User.builder()
                 .email("travel-tendency@example.com")

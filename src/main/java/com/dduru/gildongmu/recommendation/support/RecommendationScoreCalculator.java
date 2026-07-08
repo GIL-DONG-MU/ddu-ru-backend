@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.recommendation.support;
 
 import com.dduru.gildongmu.recommendation.dto.result.RecommendationReason;
+import com.dduru.gildongmu.survey.domain.TravelTendency;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -8,7 +9,7 @@ import java.util.List;
 
 public class RecommendationScoreCalculator {
 
-    private static final double MAX_AXIS_DIFF = 10.0;
+    private static final double MAX_AXIS_DIFF = TravelTendency.scoreRange();
     private static final double REASON_DIFF_THRESHOLD = 2.0;
     private static final double CAUTION_DIFF_THRESHOLD = 4.0;
     private static final int MAX_REASON_COUNT = 2;
