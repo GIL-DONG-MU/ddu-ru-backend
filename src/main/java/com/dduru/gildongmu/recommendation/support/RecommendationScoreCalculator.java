@@ -54,11 +54,7 @@ public class RecommendationScoreCalculator {
             return reasons;
         }
 
-        return diffs.stream()
-                .min(Comparator.comparingDouble(AxisDiff::diff)
-                        .thenComparing(Comparator.comparingDouble((AxisDiff diff) -> diff.axis().weight()).reversed()))
-                .map(diff -> List.of(new RecommendationReason(diff.axis().reasonCode(), diff.axis().reasonMessage())))
-                .orElseGet(List::of);
+        return List.of();
     }
 
     private List<RecommendationReason> cautionPoints(List<AxisDiff> diffs) {

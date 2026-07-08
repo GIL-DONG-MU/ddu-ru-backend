@@ -167,7 +167,7 @@ matchPercentage =
 ]
 ```
 
-축별 점수 차이(`abs(applicantScore - hostScore)`)가 2.0 이하이면 추천 이유 후보가 되고, 4.0 이상이면 확인 필요 요소 후보가 됩니다. 추천 이유는 최대 2개를 `diff ASC`, `weight DESC` 순으로 선택합니다. 확인 필요 요소는 최대 2개를 `diff DESC`, `weight DESC` 순으로 선택합니다. 추천 이유 후보가 없으면 가장 차이가 작은 축 1개를 fallback 추천 이유로 넣고, 확인 필요 요소 후보가 없으면 빈 배열을 저장합니다.
+축별 점수 차이(`abs(applicantScore - hostScore)`)가 2.0 이하이면 추천 이유 후보가 되고, 4.0 이상이면 확인 필요 요소 후보가 됩니다. 추천 이유는 최대 2개를 `diff ASC`, `weight DESC` 순으로 선택합니다. 확인 필요 요소는 최대 2개를 `diff DESC`, `weight DESC` 순으로 선택합니다. 추천 이유 후보가 없으면 빈 배열을 저장합니다. 확인 필요 요소 후보가 없으면 빈 배열을 저장합니다.
     
 | 축 | reason code | caution code |
 |---|---|---|

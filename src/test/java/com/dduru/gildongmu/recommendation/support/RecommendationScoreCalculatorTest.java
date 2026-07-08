@@ -26,7 +26,7 @@ class RecommendationScoreCalculatorTest {
     }
 
     @Test
-    @DisplayName("성향 점수가 모두 반대면 적합도 0점과 fallback reason, caution 2개를 반환한다")
+    @DisplayName("성향 점수가 모두 반대면 적합도 0점과 빈 reason, caution 2개를 반환한다")
     void calculateOppositeMatch() {
         TravelTendencyScores applicant = scores(0, 0, 0, 0);
         TravelTendencyScores host = scores(10, 10, 10, 10);
@@ -34,12 +34,24 @@ class RecommendationScoreCalculatorTest {
         RecommendationScore score = calculator.calculate(applicant, host);
 
         assertThat(score.matchPercentage()).isEqualTo(0);
-        assertThat(score.matchReasons())
-                .extracting("code")
-                .containsExactly("RHYTHM_MATCH");
+        assertThat(score.matchReasons()).isEmpty();
         assertThat(score.cautionPoints())
                 .extracting("code")
                 .containsExactly("RHYTHM_DIFFERENCE", "ENERGY_DIFFERENCE");
+    }
+
+    @Test
+    @DisplayName("reason 임계값을 넘는 축에는 긍정 매칭 이유를 만들지 않는다")
+    void doesNotCreateMatchReasonWhenAllAxisDiffsExceedReasonThreshold() {
+        TravelTendencyScores applicant = scores(0, 0, 0, 0);
+        TravelTendencyScores host = scores(8, 7, 9, 6);
+
+        RecommendationScore score = calculator.calculate(applicant, host);
+
+        assertThat(score.matchReasons()).isEmpty();
+        assertThat(score.cautionPoints())
+                .extracting("code")
+                .containsExactly("CONSUMPTION_DIFFERENCE", "RHYTHM_DIFFERENCE");
     }
 
     @Test
