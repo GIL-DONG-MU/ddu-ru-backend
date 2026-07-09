@@ -13,6 +13,7 @@ import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
+import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -132,6 +133,7 @@ class SurveyServiceTest {
                 List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
 
+        when(surveyRepository.existsByUserId(1L)).thenReturn(false);
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
         when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
         when(surveyConverter.toEntity(testUser, parsedData)).thenReturn(testSurvey);
@@ -193,8 +195,21 @@ class SurveyServiceTest {
     }
 
     @Test
+    @DisplayName("이미_제출된_설문_중복_제출_예외발생")
+    void 이미_제출된_설문_중복_제출_예외발생() {
+        when(surveyRepository.existsByUserId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> surveyService.create(1L, testRequest))
+                .isInstanceOf(SurveyAlreadySubmittedException.class);
+
+        verify(surveyRepository, never()).save(any());
+        verify(userRepository, never()).getByIdOrThrow(any());
+    }
+
+    @Test
     @DisplayName("존재하지_않는_사용자_예외발생")
     void 존재하지_않는_사용자_예외발생() {
+        when(surveyRepository.existsByUserId(999L)).thenReturn(false);
         when(userRepository.getByIdOrThrow(999L)).thenThrow(new UserNotFoundException());
 
         assertThatThrownBy(() -> surveyService.create(999L, testRequest))

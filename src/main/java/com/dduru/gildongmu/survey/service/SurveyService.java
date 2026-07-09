@@ -11,6 +11,7 @@ import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
+import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -45,6 +46,9 @@ public class SurveyService {
     private final SuperHostService superHostService;
 
     public SurveyResponse create(Long userId, SurveyRequest request) {
+        if (surveyRepository.existsByUserId(userId)) {
+            throw new SurveyAlreadySubmittedException();
+        }
         User user = userRepository.getByIdOrThrow(userId);
 
         ParsedSurveyData parsed = surveyConverter.parseRequest(request);

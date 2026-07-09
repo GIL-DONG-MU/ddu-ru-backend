@@ -9,6 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface SurveyRepository extends JpaRepository<Survey, Long> {
+    boolean existsByUserId(Long userId);
+
     Optional<Survey> findByUserId(Long userId);
 
     default Survey getByUserIdOrThrow(Long userId) {
