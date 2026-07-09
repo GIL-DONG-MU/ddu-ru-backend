@@ -147,6 +147,38 @@ class PostServiceTest {
         }
 
         @Test
+        @DisplayName("UNSPECIFIED 동행 방식을 보내면 UNSPECIFIED로 저장한다")
+        void createsPostWithUnspecifiedCompanionType() {
+            Long userId = 1L;
+            Long destinationId = 10L;
+            User user = createUser(userId, "user");
+            Destination destination = createDestination("제주도", null);
+            ReflectionTestUtils.setField(destination, "id", destinationId);
+
+            PostCreateRequest request = new PostCreateRequest(
+                    destinationId, "제주 여행 같이 가실 분 모집합니다",
+                    "내용은 스무글자 이상이어야 합니다!!!!!!!!!!!!!",
+                    TODAY.plusDays(10), TODAY.plusDays(12),
+                    5, Gender.M, true, null, null, null,
+                    List.of("태그1"), CompanionType.UNSPECIFIED
+            );
+
+            givenCreateContext(userId, destinationId, user, destination);
+            when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
+                Post post = invocation.getArgument(0);
+                ReflectionTestUtils.setField(post, "id", 100L);
+                return post;
+            });
+            when(journeyRepository.save(any(Journey.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            postService.create(userId, request);
+
+            ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(postCaptor.capture());
+            assertThat(postCaptor.getValue().getCompanionType()).isEqualTo(CompanionType.UNSPECIFIED);
+        }
+
+        @Test
         @DisplayName("journey는 생성 시 제목과 대표 사진을 post 초기값으로 저장한다")
         void createsJourneyWithCopiedTitleAndPhoto() {
             Long userId = 1L;

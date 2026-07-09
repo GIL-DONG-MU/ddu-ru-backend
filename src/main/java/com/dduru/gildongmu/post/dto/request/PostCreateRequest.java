@@ -58,7 +58,7 @@ public record PostCreateRequest(
         @Schema(description = "게시글 태그 목록. 최대 4개까지 사용할 수 있습니다.", example = "[\"맛집\", \"힐링\"]", nullable = true)
         List<String> tags,
 
-        @Schema(description = "동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL"})
+        @Schema(description = "동행 방식. 미지정이면 UNSPECIFIED를 전달합니다.", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL", "UNSPECIFIED"})
         @NotNull(message = "동행 방식은 필수입니다")
         CompanionType companionType
 ) {

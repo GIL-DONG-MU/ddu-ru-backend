@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.survey.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.survey.exception.InvalidTravelTendencyScoreException;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import jakarta.persistence.*;
@@ -16,6 +17,9 @@ import java.math.BigDecimal;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TravelTendency extends BaseTimeEntity {
+
+    private static final BigDecimal MIN_SCORE = BigDecimal.ZERO;
+    private static final BigDecimal MAX_SCORE = BigDecimal.TEN;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,10 +51,7 @@ public class TravelTendency extends BaseTimeEntity {
                           BigDecimal consumptionScore, BigDecimal decisionScore,
                           AvatarType avatarType) {
         this.user = user;
-        this.rhythmScore = rhythmScore;
-        this.energyScore = energyScore;
-        this.consumptionScore = consumptionScore;
-        this.decisionScore = decisionScore;
+        updateScores(rhythmScore, energyScore, consumptionScore, decisionScore);
         this.avatarType = avatarType;
     }
 
@@ -71,10 +72,26 @@ public class TravelTendency extends BaseTimeEntity {
     public void update(BigDecimal rhythmScore, BigDecimal energyScore,
                        BigDecimal consumptionScore, BigDecimal decisionScore,
                        AvatarType avatarType) {
-        this.rhythmScore = rhythmScore;
-        this.energyScore = energyScore;
-        this.consumptionScore = consumptionScore;
-        this.decisionScore = decisionScore;
+        updateScores(rhythmScore, energyScore, consumptionScore, decisionScore);
         this.avatarType = avatarType;
+    }
+
+    public static double scoreRange() {
+        return MAX_SCORE.subtract(MIN_SCORE).doubleValue();
+    }
+
+    private void updateScores(BigDecimal rhythmScore, BigDecimal energyScore,
+                              BigDecimal consumptionScore, BigDecimal decisionScore) {
+        this.rhythmScore = requireValidScore(rhythmScore);
+        this.energyScore = requireValidScore(energyScore);
+        this.consumptionScore = requireValidScore(consumptionScore);
+        this.decisionScore = requireValidScore(decisionScore);
+    }
+
+    private static BigDecimal requireValidScore(BigDecimal score) {
+        if (score == null || score.compareTo(MIN_SCORE) < 0 || score.compareTo(MAX_SCORE) > 0) {
+            throw new InvalidTravelTendencyScoreException();
+        }
+        return score;
     }
 }

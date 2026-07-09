@@ -74,7 +74,7 @@ public record PostDetailResponse(
         String tripDurationText,
         @Schema(description = "모집 마감 D-Day 표시 문구", example = "D-3")
         String recruitDeadlineDDay,
-        @Schema(description = "동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL"})
+        @Schema(description = "동행 방식", example = "FULL", allowableValues = {"FULL", "PARTIAL", "MEAL", "UNSPECIFIED"})
         CompanionType companionType
 ) {
     public static PostDetailResponse from(Post post, JsonConverter jsonConverter,

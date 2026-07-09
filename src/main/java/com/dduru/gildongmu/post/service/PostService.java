@@ -15,6 +15,7 @@ import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.participation.service.ParticipationApplicantService;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.request.PostCreateRequest;
 import com.dduru.gildongmu.post.dto.request.PostStatusUpdateRequest;
@@ -222,7 +223,7 @@ public class PostService {
                 isAgeAny ? null : request.maxAge(),
                 resolvePhotoUrl(request.photoUrl(), destination),
                 tagsToJson(request.tags()),
-                request.companionType()
+                request.companionType() != null ? request.companionType() : CompanionType.UNSPECIFIED
         );
     }
 
