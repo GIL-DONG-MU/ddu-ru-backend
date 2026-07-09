@@ -65,6 +65,10 @@ public class Profile extends BaseTimeEntity {
     @Column(name = "bio", length = 60)
     private String bio;
 
+    public ProfileImageType getProfileImageType() {
+        return profileImageType != null ? profileImageType : ProfileImageType.DEFAULT;
+    }
+
     public Profile(User user) {
         this.user = user;
     }

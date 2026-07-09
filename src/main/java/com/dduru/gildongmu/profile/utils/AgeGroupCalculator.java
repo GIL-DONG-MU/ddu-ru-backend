@@ -7,9 +7,9 @@ public class AgeGroupCalculator {
 
     private AgeGroupCalculator() {}
 
-    public static Integer toAgeGroup(LocalDate birthday, LocalDate today) {
+    public static String toAgeGroup(LocalDate birthday, LocalDate today) {
         if (birthday == null) return null;
         int age = Math.max(0, Period.between(birthday, today).getYears());
-        return (age / 10) * 10;
+        return (age / 10) * 10 + "대";
     }
 }
