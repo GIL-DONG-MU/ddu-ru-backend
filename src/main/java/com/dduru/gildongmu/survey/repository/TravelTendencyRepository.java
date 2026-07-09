@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface TravelTendencyRepository extends JpaRepository<TravelTendency, Long> {
-    Optional<TravelTendency> findByUser_Id(Long userId);
+    Optional<TravelTendency> findByUserId(Long userId);
 }

@@ -11,6 +11,7 @@ import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
+import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -44,17 +45,16 @@ public class SurveyService {
     private final OnboardingService onboardingService;
     private final SuperHostService superHostService;
 
-    public SurveyResponse submitSurvey(Long userId, SurveyRequest request) {
+    public SurveyResponse create(Long userId, SurveyRequest request) {
+        if (surveyRepository.existsByUserId(userId)) {
+            throw new SurveyAlreadySubmittedException();
+        }
         User user = userRepository.getByIdOrThrow(userId);
 
-        Survey survey = saveOrUpdateSurvey(user, request);
+        ParsedSurveyData parsed = surveyConverter.parseRequest(request);
+        Survey survey = createSurvey(user, parsed);
         TendencyScoreResponse scores = tendencyCalculator.calculate(survey);
-        AvatarType avatarType = avatarMatcher.match(
-                scores.rhythmScore(),
-                scores.energyScore(),
-                scores.consumptionScore(),
-                scores.decisionScore()
-        );
+        AvatarType avatarType = matchAvatarType(scores);
 
         saveOrUpdateTravelTendency(user, scores, avatarType);
         updateProfileAvatar(userId, avatarType);
@@ -62,7 +62,6 @@ public class SurveyService {
         superHostService.grantOnboardingRewardTicket(userId);
 
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
-
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}", userId, avatarType);
         return SurveyResponse.of(scores, avatarType, survey.getRecordStyle().getStyleType(), avatarProfile);
     }
@@ -74,19 +73,27 @@ public class SurveyService {
 
     @Transactional(readOnly = true)
     public SurveyResponse getMySurveyResult(Long userId) {
-        TravelTendency travelTendency = travelTendencyRepository.findByUser_Id(userId)
+        TravelTendency travelTendency = travelTendencyRepository.findByUserId(userId)
                 .orElseThrow(SurveyResultNotFoundException::new);
-        Survey survey = surveyRepository.findByUser_Id(userId)
-                .orElseThrow(SurveyResultNotFoundException::new);
+        Survey survey = surveyRepository.getByUserIdOrThrow(userId);
         return SurveyResponse.from(travelTendency, survey.getRecordStyle().getStyleType(), avatarProfileService);
     }
 
-    private Survey saveOrUpdateSurvey(User user, SurveyRequest request) {
-        ParsedSurveyData parsed = surveyConverter.parseRequest(request);
+    public SurveyResponse update(Long userId, SurveyRequest request) {
+        User user = userRepository.getByIdOrThrow(userId);
+        Survey survey = surveyRepository.getByUserIdOrThrow(userId);
 
-        return surveyRepository.findByUser_Id(user.getId())
-                .map(existing -> updateSurvey(existing, parsed))
-                .orElseGet(() -> createSurvey(user, parsed));
+        ParsedSurveyData parsed = surveyConverter.parseRequest(request);
+        updateSurvey(survey, parsed);
+
+        TendencyScoreResponse scores = tendencyCalculator.calculate(survey);
+        AvatarType avatarType = matchAvatarType(scores);
+
+        saveOrUpdateTravelTendency(user, scores, avatarType);
+        updateProfileAvatar(userId, avatarType);
+
+        AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
+        return SurveyResponse.of(scores, avatarType, survey.getRecordStyle().getStyleType(), avatarProfile);
     }
 
     private Survey createSurvey(User user, ParsedSurveyData parsed) {
@@ -94,7 +101,7 @@ public class SurveyService {
         return surveyRepository.save(survey);
     }
 
-    private Survey updateSurvey(Survey survey, ParsedSurveyData parsed) {
+    private void updateSurvey(Survey survey, ParsedSurveyData parsed) {
         survey.updateSurvey(
                 parsed.rhythmQ1(),
                 parsed.rhythmQ2(),
@@ -111,7 +118,6 @@ public class SurveyService {
                 parsed.recordStyle(),
                 parsed.activityTags()
         );
-        return survey;
     }
 
     private void saveOrUpdateTravelTendency(User user, TendencyScoreResponse scores, AvatarType avatarType) {
@@ -120,7 +126,7 @@ public class SurveyService {
         BigDecimal consumption = toBigDecimal(scores.consumptionScore());
         BigDecimal decision = toBigDecimal(scores.decisionScore());
 
-        travelTendencyRepository.findByUser_Id(user.getId())
+        travelTendencyRepository.findByUserId(user.getId())
                 .ifPresentOrElse(
                         existing -> existing.update(rhythm, energy, consumption, decision, avatarType),
                         () -> travelTendencyRepository.save(
@@ -135,6 +141,15 @@ public class SurveyService {
                         avatarProfile -> profileManagementService.updateAvatar(userId, avatarProfile.getId()),
                         () -> log.warn("아바타 프로필을 찾을 수 없어 Profile에 저장하지 않음 - userId: {}, avatarType: {}", userId, avatarType)
                 );
+    }
+
+    private AvatarType matchAvatarType(TendencyScoreResponse scores) {
+        return avatarMatcher.match(
+                scores.rhythmScore(),
+                scores.energyScore(),
+                scores.consumptionScore(),
+                scores.decisionScore()
+        );
     }
 
     private BigDecimal toBigDecimal(double value) {

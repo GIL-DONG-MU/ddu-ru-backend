@@ -13,6 +13,7 @@ import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
+import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -132,8 +133,8 @@ class SurveyServiceTest {
                 List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
 
+        when(surveyRepository.existsByUserId(1L)).thenReturn(false);
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
         when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
         when(surveyConverter.toEntity(testUser, parsedData)).thenReturn(testSurvey);
         when(surveyRepository.save(any(Survey.class))).thenReturn(testSurvey);
@@ -168,10 +169,10 @@ class SurveyServiceTest {
         ReflectionTestUtils.setField(avatarProfile, "id", 1L);
         when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_DASOM)).thenReturn(Optional.of(avatarProfile));
 
-        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
+        when(travelTendencyRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
+        SurveyResponse response = surveyService.create(1L, testRequest);
 
         assertThat(response.tendencyScores().rhythmScore()).isEqualTo(5.5);
         assertThat(response.tendencyScores().energyScore()).isEqualTo(4.5);
@@ -194,102 +195,24 @@ class SurveyServiceTest {
     }
 
     @Test
-    @DisplayName("기존_설문_업데이트_성공")
-    void 기존_설문_업데이트_성공() {
-        Survey existingSurvey = Survey.createSurvey(
-                testUser,
-                RhythmQuestion1.IMPULSE_SIDE_TRIP,
-                RhythmQuestion2.PACK_LAST_MINUTE,
-                RhythmQuestion3.ROUGH_LIST_ONLY,
-                ConsumptionQuestion1.FLEX_OK,
-                ConsumptionQuestion2.SAVE_TIME_TAXI,
-                ConsumptionQuestion3.INVEST_EXPERIENCE,
-                EnergyQuestion1.PACKED_DAY,
-                EnergyQuestion2.BREAKFAST_SPRINT,
-                EnergyQuestion3.FILL_WITH_SPOTS,
-                DecisionQuestion1.LEAD_OR_ORGANIZE,
-                DecisionQuestion2.PROPOSE_FIRST,
-                DecisionQuestion3.DRIVE_CONCLUSION,
-                RecordStyleQuestion.SHOOT_NOW,
-                List.of(ActivityTag.FOOD, ActivityTag.SHOPPING, ActivityTag.ACTIVITY)
-        );
+    @DisplayName("이미_제출된_설문_중복_제출_예외발생")
+    void 이미_제출된_설문_중복_제출_예외발생() {
+        when(surveyRepository.existsByUserId(1L)).thenReturn(true);
 
-        ParsedSurveyData parsedData = new ParsedSurveyData(
-                RhythmQuestion1.PLANNED_ROUTE,
-                RhythmQuestion2.PACK_EARLY,
-                RhythmQuestion3.ROUTE_TIME_SET,
-                ConsumptionQuestion1.ADJUST_BUDGET,
-                ConsumptionQuestion2.VALUE_TRANSPORT,
-                ConsumptionQuestion3.VALUE_CHOICE,
-                EnergyQuestion1.RELAXED_DAY,
-                EnergyQuestion2.BRUNCH_INSTEAD,
-                EnergyQuestion3.DO_NOTHING_OK,
-                DecisionQuestion1.DELEGATE_ROLE,
-                DecisionQuestion2.FOLLOW_OTHERS,
-                DecisionQuestion3.WAIT_AND_SEE,
-                RecordStyleQuestion.EYES_FIRST,
-                List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
-        );
+        assertThatThrownBy(() -> surveyService.create(1L, testRequest))
+                .isInstanceOf(SurveyAlreadySubmittedException.class);
 
-        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
-        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.of(existingSurvey));
-        when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
-
-        TendencyScoreResponse scores =
-                new TendencyScoreResponse(6.0, 5.0, 7.5, 8.0);
-        when(tendencyCalculator.calculate(existingSurvey)).thenReturn(scores);
-        when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
-                .thenReturn(AvatarType.TTUR_BANJJAK);
-
-        AvatarProfileResponse profile = new AvatarProfileResponse(
-                "뚜르 파도",
-                "설명2",
-                List.of("태그1", "태그2", "태그3"),
-                "성격2",
-                "강점2",
-                "팁2",
-                "https://example.com/avatar-pado.png"
-        );
-        when(avatarProfileService.getProfile(AvatarType.TTUR_BANJJAK)).thenReturn(profile);
-
-        AvatarProfile avatarProfile = AvatarProfile.builder()
-                .avatarType(AvatarType.TTUR_BANJJAK)
-                .displayName("뚜르 파도")
-                .speechBubbleText("설명2")
-                .descriptionLine1("성격2")
-                .descriptionLine2("강점2")
-                .descriptionLine3("팁2")
-                .imageUrl("https://example.com/avatar-pado.png")
-                .tags("[]")
-                .build();
-        ReflectionTestUtils.setField(avatarProfile, "id", 2L);
-        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_BANJJAK)).thenReturn(Optional.of(avatarProfile));
-
-        TravelTendency existingTendency = TravelTendency.create(
-                testUser,
-                BigDecimal.valueOf(5.0),
-                BigDecimal.valueOf(4.0),
-                BigDecimal.valueOf(6.0),
-                BigDecimal.valueOf(7.0),
-                AvatarType.TTUR_DASOM
-        );
-        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(existingTendency));
-
-        SurveyResponse response = surveyService.submitSurvey(1L, testRequest);
-
-        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_BANJJAK);
-        assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
-        assertThat(response.avatarLabel()).isEqualTo("뚜르 파도-A");
-        verify(surveyRepository, never()).save(any(Survey.class));
-        verify(superHostService).grantOnboardingRewardTicket(1L);
+        verify(surveyRepository, never()).save(any());
+        verify(userRepository, never()).getByIdOrThrow(any());
     }
 
     @Test
     @DisplayName("존재하지_않는_사용자_예외발생")
     void 존재하지_않는_사용자_예외발생() {
+        when(surveyRepository.existsByUserId(999L)).thenReturn(false);
         when(userRepository.getByIdOrThrow(999L)).thenThrow(new UserNotFoundException());
 
-        assertThatThrownBy(() -> surveyService.submitSurvey(999L, testRequest))
+        assertThatThrownBy(() -> surveyService.create(999L, testRequest))
                 .isInstanceOf(UserNotFoundException.class);
 
         verify(surveyRepository, never()).save(any());
@@ -308,8 +231,8 @@ class SurveyServiceTest {
                 AvatarType.TTUR_DASOM
         );
 
-        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.of(travelTendency));
-        when(surveyRepository.findByUser_Id(1L)).thenReturn(Optional.of(testSurvey));
+        when(travelTendencyRepository.findByUserId(1L)).thenReturn(Optional.of(travelTendency));
+        when(surveyRepository.getByUserIdOrThrow(1L)).thenReturn(testSurvey);
 
         AvatarProfileResponse profile = new AvatarProfileResponse(
                 "뚜르 스윗",
@@ -338,9 +261,81 @@ class SurveyServiceTest {
     @Test
     @DisplayName("설문_결과_없을때_예외발생")
     void 설문_결과_없을때_예외발생() {
-        when(travelTendencyRepository.findByUser_Id(1L)).thenReturn(Optional.empty());
+        when(travelTendencyRepository.findByUserId(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> surveyService.getMySurveyResult(1L))
                 .isInstanceOf(SurveyResultNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("마이페이지_여행선호설정_수정_성공_온보딩_보상_미호출")
+    void 마이페이지_여행선호설정_수정_성공_온보딩_보상_미호출() {
+        ParsedSurveyData parsedData = new ParsedSurveyData(
+                RhythmQuestion1.PLANNED_ROUTE,
+                RhythmQuestion2.PACK_EARLY,
+                RhythmQuestion3.ROUTE_TIME_SET,
+                ConsumptionQuestion1.ADJUST_BUDGET,
+                ConsumptionQuestion2.VALUE_TRANSPORT,
+                ConsumptionQuestion3.VALUE_CHOICE,
+                EnergyQuestion1.RELAXED_DAY,
+                EnergyQuestion2.BRUNCH_INSTEAD,
+                EnergyQuestion3.DO_NOTHING_OK,
+                DecisionQuestion1.DELEGATE_ROLE,
+                DecisionQuestion2.FOLLOW_OTHERS,
+                DecisionQuestion3.WAIT_AND_SEE,
+                RecordStyleQuestion.EYES_FIRST,
+                List.of(ActivityTag.SIGHTSEEING)
+        );
+
+        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
+        when(surveyRepository.getByUserIdOrThrow(1L)).thenReturn(testSurvey);
+        when(surveyConverter.parseRequest(testRequest)).thenReturn(parsedData);
+
+        TendencyScoreResponse scores = new TendencyScoreResponse(5.5, 4.5, 6.0, 7.0);
+        when(tendencyCalculator.calculate(testSurvey)).thenReturn(scores);
+        when(avatarMatcher.match(scores.rhythmScore(), scores.energyScore(), scores.consumptionScore(), scores.decisionScore()))
+                .thenReturn(AvatarType.TTUR_DASOM);
+
+        AvatarProfileResponse profile = new AvatarProfileResponse(
+                "뚜르 스윗", "말풍선", List.of("태그1", "태그2", "태그3"), "성격", "강점", "팁",
+                "https://example.com/avatar-sweet.png"
+        );
+        when(avatarProfileService.getProfile(AvatarType.TTUR_DASOM)).thenReturn(profile);
+
+        AvatarProfile avatarProfile = AvatarProfile.builder()
+                .avatarType(AvatarType.TTUR_DASOM)
+                .displayName("뚜르 스윗")
+                .speechBubbleText("말풍선")
+                .descriptionLine1("성격")
+                .descriptionLine2("강점")
+                .descriptionLine3("팁")
+                .imageUrl("https://example.com/avatar-sweet.png")
+                .tags("[]")
+                .build();
+        ReflectionTestUtils.setField(avatarProfile, "id", 1L);
+        when(avatarProfileRepository.findByAvatarType(AvatarType.TTUR_DASOM)).thenReturn(Optional.of(avatarProfile));
+
+        when(travelTendencyRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(travelTendencyRepository.save(any(TravelTendency.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SurveyResponse response = surveyService.update(1L, testRequest);
+
+        assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
+        verify(onboardingService, never()).completeSurvey(any());
+        verify(superHostService, never()).grantOnboardingRewardTicket(any());
+    }
+
+    @Test
+    @DisplayName("마이페이지_여행선호설정_수정_설문없으면_예외발생")
+    void 마이페이지_여행선호설정_수정_설문없으면_예외발생() {
+        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
+        when(surveyRepository.getByUserIdOrThrow(1L)).thenThrow(SurveyResultNotFoundException.class);
+
+        assertThatThrownBy(() -> surveyService.update(1L, testRequest))
+                .isInstanceOf(SurveyResultNotFoundException.class);
+
+        verify(tendencyCalculator, never()).calculate(any());
+        verify(onboardingService, never()).completeSurvey(any());
+        verify(superHostService, never()).grantOnboardingRewardTicket(any());
     }
 }
