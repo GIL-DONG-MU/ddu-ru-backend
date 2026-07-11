@@ -87,7 +87,7 @@
 
 ## 다음 읽기
 
-- 도메인별 책임과 흐름: [도메인 명세](./001-design/001-domain.md)
-- 테이블/마이그레이션: [데이터 명세](./001-design/002-data.md)
-- 코드 구조: [패키지 구조 가이드](./002-architecture/001-package-structure.md)
-- 배포 구조: [배포 파이프라인](./004-operations/002-deployment.md)
+- 도메인별 책임과 흐름: [도메인 명세](./002-design/001-domain.md)
+- 테이블/마이그레이션: [데이터 명세](./002-design/002-data.md)
+- 코드 구조: [패키지 구조 가이드](./005-architecture/001-package-structure.md)
+- 배포 구조: [배포 파이프라인](./006-operations/004-deployment.md)

@@ -131,7 +131,7 @@ public class NotificationEventListener {
             List<Long> recipientIds = postLikeRepository.findUserIdsByPostId(event.postId());
             String body = "관심 있는 모집글에 변경이 있습니다.";
             notifyUsers(recipientIds, NotificationType.POST_UPDATED, body,
-                    ResourceType.JOURNEY_POST, event.postId(), "찜한 글 업데이트");
+                    ResourceType.POST, event.postId(), "찜한 글 업데이트");
         } catch (Exception e) {
             log.error("POST_UPDATED 알림 저장 실패 - postId={}", event.postId(), e);
         }
