@@ -37,13 +37,13 @@
 
 ### 락 순서
 
-데드락 방지를 위해 동일 트랜잭션 내에서 반드시 아래 순서로 락을 잡는다.
+기존 참여 신청 row를 변경하는 흐름에서는 데드락 방지를 위해 동일 트랜잭션 내에서 반드시 아래 순서로 락을 잡는다.
 
 ```
 Participation FOR UPDATE → Post FOR UPDATE
 ```
 
-다른 코드 경로에서 Post를 먼저 잡고 Participation을 잡는 구조를 피해야 한다.
+신청 생성은 아직 `Participation` row가 없으므로 예외적으로 `Post FOR UPDATE`를 먼저 잡고, 검증 후 `Participation` row를 생성한다.
 
 ---
 
