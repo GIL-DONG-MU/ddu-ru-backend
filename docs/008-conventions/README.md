@@ -9,6 +9,7 @@
 | [예외 처리 전략](./003-exception.md) | 중앙 `ErrorCode` + 개별 예외 클래스 사용 기준 |
 | [데이터 검증 및 문자열 정제 전략](./004-validation.md) | 계층별 검증 책임, trim 정책, 안티패턴 |
 | [Swagger API 명세 작성 가이드](./005-swagger-api-docs.md) | Swagger UI에 노출되는 API 명세 작성 기준 |
+| [날짜/시간 사용 기준](./006-time-provider.md) | `TimeProvider`, KST 기준 시간, 테스트 시간 고정 원칙 |
 
 ## 파일명 / 제목 규칙
 
