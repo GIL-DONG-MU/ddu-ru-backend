@@ -138,7 +138,6 @@ MVP에서는 패스 취소 기능을 제공하지 않습니다. 향후 패스 �
 
 ## 관련 문서
 
-- [추천 구현 문서](../005-implementation/002-recommendation.md)
-- [홈 API 섹션 기반 로딩 ADR](../009-adr/006-home-api-section-based-loading.md)
-- [도메인 명세](../003-design/001-domain.md)
-- [데이터 명세](../003-design/002-data.md)
+- 구현 세부: [005-implementation](../005-implementation/)
+- 의사결정 기록: [009-adr](../009-adr/)
+- 도메인/데이터 설계: [003-design](../003-design/)
