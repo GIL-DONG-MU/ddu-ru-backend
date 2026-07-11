@@ -65,6 +65,18 @@ participations.status == APPROVED
 
 호스트(`isOwner == true`) 또는 비로그인(`currentUserId == null`)이면 `NONE`을 반환합니다.
 
+### 내 신청 내역 조회
+
+신청한 모든 모집글의 신청 상태와 채팅방 이동 정보를 함께 반환합니다.
+
+| 신청 상태 | 응답 필드 |
+| --- | --- |
+| `PENDING` | 채팅방 ID 없음, `cancellable=true` |
+| `CONTACTING` | `privateRoomId` |
+| `APPROVED` + `journey_members.status = ACTIVE` | `groupRoomId` |
+| `APPROVED` + `journey_members.status = REMOVED` | 채팅방 ID 없음, 상태는 `REMOVED_BY_HOST`로 계산 |
+| `REJECTED` | 채팅방 ID 없음 |
+
 ---
 
 ## 4. 저장 모델
