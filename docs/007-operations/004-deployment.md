@@ -58,7 +58,8 @@ CI가 성공한 `dev` 브랜치 push 또는 수동 실행을 기준으로 Docker
 
 핵심 동작:
 
-- 필수 환경변수(`AWS_REGION`, `ECR_REGISTRY`, `ECR_REPOSITORY`, `IMAGE_TAG`, `CORS_ALLOWED_ORIGIN_PATTERNS`, `WEBSOCKET_ALLOWED_ORIGIN_PATTERNS`) 검증
+- `deploy.sh` 실행 필수 환경변수(`AWS_REGION`, `ECR_REGISTRY`, `ECR_REPOSITORY`, `IMAGE_TAG`) 검증
+- app 실행 환경변수는 CD workflow가 GitHub Secrets/수동 입력값에서 export하고 Compose가 주입
 - `aws`, `docker`, Docker Compose v2 존재 확인
 - Nginx upstream 파일 존재 확인
 - ECR login

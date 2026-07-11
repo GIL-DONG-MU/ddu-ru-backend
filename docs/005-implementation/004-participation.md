@@ -111,7 +111,7 @@ participations.status == APPROVED
 - `approved_at`
 - `rejected_at`
 - `created_at`
-- `updated_at`
+- `modified_at`
 
 권장 제약:
 

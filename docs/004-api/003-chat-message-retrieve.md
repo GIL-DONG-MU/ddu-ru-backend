@@ -432,13 +432,12 @@ public ChatMessagesResponse retrieveMessages(Long userId, Long roomId, ChatMessa
 조회 API에서는 아래 작업을 하지 않는다.
 
 - `last_read_message_id` 갱신
-- 안 읽은 수 계산 반영
 - 메시지 전송
 - 시스템 메시지 생성
 
-읽음 처리는 추후 별도 API 또는 방 입장 이벤트에서 구현한다.
+읽음 위치 갱신은 별도 읽음 처리 API에서 수행한다.
 
-권장 후속 API:
+읽음 처리 API:
 
 ```http
 PATCH /api/v1/chat-rooms/{chatRoomId}/read
@@ -507,96 +506,6 @@ LIMIT :sizePlusOne;
 - `beforeMessageId <= 0`이면 `INVALID_INPUT_VALUE`를 반환한다.
 - 커서 메시지 검증 정책을 사용할 경우, 다른 방의 `beforeMessageId`는 `CHAT_MESSAGE_NOT_FOUND`를 반환한다.
 
-## 12. 구현 체크리스트
+## 12. 구현 참고
 
-### Controller / Docs
-
-- `ChatController`에 메시지 조회 엔드포인트 추가
-- `GET /api/v1/chat-rooms/{chatRoomId}/messages` 추가
-- `ChatApiDocs`에 Swagger 문서 추가
-- `@ApiErrorResponses`에 `UNAUTHORIZED`, `INVALID_INPUT_VALUE`, `CHAT_ROOM_NOT_FOUND`, `CHAT_ACCESS_DENIED`, `CHAT_MESSAGE_NOT_FOUND` 반영
-
-### DTO
-
-- `ChatMessageRetrieveRequest`
-  - `beforeMessageId`
-  - `size`
-- `ChatMessagesResponse`
-  - `roomInfo`
-  - `page`
-  - `messages`
-- `ChatRoomInfoResponse`
-  - `chatRoomId`
-  - `roomType`
-  - `isActive`
-  - `postTitle`
-  - `opponentNickname`
-  - `journeyTitle`
-  - `memberCount`
-- `ChatMessagePageResponse`
-  - `size`
-  - `hasNext`
-  - `nextCursor`
-- `ChatMessageItemResponse`
-  - `messageId`
-  - `messageType`
-  - `sender`
-  - `isMine`
-  - `content`
-  - `images`
-  - `systemMessage`
-  - `unreadCount`
-  - `createdAt`
-- `ChatMessageSenderResponse`
-  - `userId`
-  - `nickname`
-  - `isHost`
-- `ChatMessageImageResponse`
-  - `imageUrl`
-  - MVP에서는 `imageUrl`만 포함한다.
-  - Figma 표시 규격인 `220 x 180`은 응답 필드가 아니라 클라이언트 렌더링 규칙으로 둔다.
-- `ChatSystemMessageResponse`
-  - `type`
-  - `displayText`
-  - `actorUserId`
-  - `inviteeUserId`
-  - `userId`
-  - `targetUserId`
-
-### Service
-
-- `ChatMessageQueryService` 추가
-- `ChatRoom` 조회 및 `DELETED` 검증
-- 현재 `ChatRoomMember` 조회
-- 그룹방 `JourneyMember ACTIVE` 검증
-- `visibleFrom = chatRoomMember.createdAt` 계산
-- 커서 메시지 검증
-- 메시지 목록 조회
-- sender 정보 batch 조회 또는 fetch join
-- 시스템 메시지 `displayText` 생성
-- roomInfo 조립
-
-### Repository
-
-- `ChatRoomMemberRepository`
-  - `Optional<ChatRoomMember> findByRoomIdAndUserId(Long roomId, Long userId)`
-  - `List<ChatRoomMember> findByRoomIdWithUserProfile(Long roomId)`
-- `ChatMessageRepository`
-  - `List<ChatMessage> findMessagesForInitialPage(...)`
-  - `List<ChatMessage> findMessagesBefore(...)`
-  - 필요 시 QueryDSL 또는 JPQL 직접 구현
-- `JourneyMemberRepository`
-  - `existsByJourneyIdAndUserIdAndStatus(...)` 기존 메서드 활용
-  - `countByJourneyIdAndStatus(...)` 추가
-
-### DB Migration
-
-- `idx_chat_messages_room_id_id` 인덱스 추가
-
-### Tests
-
-- `ChatMessageQueryServiceTest`
-- `ChatControllerTest` 또는 통합 테스트
-- 시스템 메시지 `displayText` 매핑 테스트
-- 그룹 참여 시점 이후 메시지만 노출되는지 검증
-- `CLOSED` 방 조회 가능, 전송 불가 정책 회귀 테스트
+구현 클래스, 저장소 메서드, 테스트 기준은 [채팅 구현 문서](../005-implementation/006-chat.md)를 참고한다.

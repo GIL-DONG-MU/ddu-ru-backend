@@ -10,6 +10,7 @@ public enum ResourceType {
     JOURNEY_POST("JOURNEY_POST"),
     SCHEDULE("SCHEDULE"),
     MATCH("MATCH"),
+    POST("POST"),
     CHAT_ROOM("CHAT_ROOM");
 
     private final String payloadValue;

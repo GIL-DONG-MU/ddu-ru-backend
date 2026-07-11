@@ -23,7 +23,7 @@ API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된
 
 > 모집글은 `참여 전` 공개 탐색 공간이고, 승인 이후에는 [나의 여정](004-my-journey-product-flow.md)으로 전환된다.
 
-참여 신청과 승인 흐름의 상세는 [참여/그룹 채팅 흐름](003-participation-group-chat-flow.md)을 참고한다.
+참여 신청과 승인 흐름의 상세는 [참여 신청 흐름](002-participation-flow.md)과 [동행 신청/그룹 채팅 흐름](003-participation-group-chat-flow.md)을 참고한다.
 
 ---
 
@@ -40,7 +40,7 @@ API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된
 
 ## 3. 핵심 컨셉
 
-### 모집글 작성 = 여정 공간 자동 생성
+### 모집글 작성 = 여정 기반 자동 생성
 
 호스트가 모집글을 작성하는 순간 아래가 자동으로 함께 생성된다.
 
@@ -52,8 +52,7 @@ API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된
 
 ### 모집 마감일은 자동 계산
 
-`recruitDeadline`은 호스트가 직접 설정하지 않고,
-`endDate - 1일`로 자동 계산된다.
+모집 마감일은 호스트가 직접 설정하지 않고 여행 종료일 전날로 자동 계산된다.
 
 여행 종료일 전날까지만 신청을 받는다는 원칙을 코드로 강제한다.
 
@@ -165,17 +164,12 @@ flowchart LR
 
 ### 생성 시 자동 처리
 
-```
-POST /api/v1/posts
-    ↓
-Post 저장
-    ↓
-Journey.create(post) 저장
-    ↓
-JourneyMember.createHost(journey, user) 저장
-    ↓
-GroupChatRoom 생성
-```
+모집글이 생성되면 아래 기반이 함께 준비된다.
+
+- 공개 모집글
+- 승인 이후 사용할 나의 여정 공간
+- 호스트의 여정 멤버십
+- 여정 멤버가 사용할 그룹 채팅방
 
 모집글 생성 한 번으로 여정 운영에 필요한 기반이 모두 만들어진다.
 
@@ -183,14 +177,15 @@ GroupChatRoom 생성
 
 - `title` — 5~40자
 - `content` — 20~1000자
-- `endDate >= startDate` — 종료일은 시작일과 같거나 이후여야 함
-- `isAgeAny == true`이면 `minAge`, `maxAge`는 null이어야 함
-- `isAgeAny == false`이면 `minAge`, `maxAge` 모두 필수 (20~100 범위)
+- 종료일은 시작일과 같거나 이후여야 함
+- 연령 무관이면 최소/최대 연령을 받지 않음
+- 연령 조건을 설정하면 최소/최대 연령이 모두 필요함 (20~100 범위)
 - 태그는 최대 4개
-- `recruitCapacity`는 2~10명 (호스트 포함)
+- 모집 정원은 2~10명 (호스트 포함)
 
 ### recruitDeadline 자동 계산
 
+모집 마감일은 여행 종료일 하루 전으로 계산한다.
 ```
 recruitDeadline = endDate - 1일
 ```
@@ -201,8 +196,8 @@ recruitDeadline = endDate - 1일
 
 수정 가능 조건:
 
-- 요청자가 호스트(`posts.user_id == userId`)
-- `recruitDeadline`이 지나지 않았음
+- 요청자가 모집글 작성자(`posts.user_id == userId`)
+- 모집 마감일(`recruitDeadline`)이 지나지 않았음
 - 여행이 시작되지 않았음
 - 여행이 끝나지 않았음
 
@@ -214,7 +209,7 @@ recruitDeadline = endDate - 1일
 
 ## 10. 모집글 삭제
 
-소프트 삭제(`isDeleted = true`)로 처리한다.
+모집글은 실제 데이터 삭제가 아니라 soft delete로 처리한다.
 
 삭제 시 슈퍼호스트 활성 노출을 함께 취소한다.
 
@@ -238,11 +233,8 @@ recruitDeadline = endDate - 1일
 
 매일 자정(`0 0 0 * * *`)에 실행된다.
 
-```
-모집 마감일(recruitDeadline) < 오늘인 OPEN 게시글
-    → status = CLOSED 일괄 업데이트
-    → 슈퍼호스트 활성 노출 일괄 취소
-```
+모집 마감일이 지난 `OPEN` 게시글은 일괄 `CLOSED` 처리하고,
+슈퍼호스트 활성 노출도 함께 취소한다.
 
 ---
 

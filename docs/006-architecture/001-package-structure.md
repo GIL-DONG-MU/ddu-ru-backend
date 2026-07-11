@@ -19,17 +19,22 @@ src/main/java/com/dduru/gildongmu/
 ├── profile/
 ├── survey/
 ├── post/
+├── like/
 ├── participation/
 ├── journey/
 ├── chat/
+├── home/
+├── recommendation/
 ├── report/
 ├── superhost/
 ├── destination/
+├── tag/
 ├── s3/
 ├── verification/
 ├── admin/
 ├── notification/
 ├── fcm/
+├── root/
 └── common/
 ```
 

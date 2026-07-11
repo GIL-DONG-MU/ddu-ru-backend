@@ -340,7 +340,7 @@ class NotificationEventListenerTest {
             assertThat(saved).allSatisfy(n -> {
                 assertThat(n.getType()).isEqualTo(NotificationType.POST_UPDATED);
                 assertThat(n.getBody()).isEqualTo("관심 있는 모집글에 변경이 있습니다.");
-                assertThat(n.getResourceType()).isEqualTo(ResourceType.JOURNEY_POST);
+                assertThat(n.getResourceType()).isEqualTo(ResourceType.POST);
                 assertThat(n.getResourceId()).isEqualTo(postId);
                 assertThat(n.isRead()).isFalse();
             });

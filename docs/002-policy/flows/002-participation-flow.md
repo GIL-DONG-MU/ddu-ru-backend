@@ -1,7 +1,7 @@
 # 002. Participation Flow
 
 > 참여 신청은 신청자가 모집글에 동행을 요청하고, 호스트가 검토 후 승인/거절하는 흐름이다.
-> 승인이 확정되면 신청 이력은 유지되고, 협업 멤버십(`journey_members`)이 별도로 생성된다.
+> 승인이 확정되면 신청 이력은 유지되고, 여정 멤버십(`journey_members`)이 별도로 생성된다.
 
 이 문서는 `참여 신청` 기능을 처음 보는 사람이 아래를 한 번에 이해할 수 있도록 정리한 제품 흐름 문서다.
 
@@ -15,19 +15,18 @@
 
 ## 1. 핵심 컨셉
 
-### 신청 이력과 여정 멤버십은 분리된다
+### 신청 이력과 여정 멤버십은 분리된다(`participations`/`journey_members`)
 
-`participations`는 신청과 승인 **이력**을 보관한다.
-`journey_members`는 실제 협업 공간에 진입한 **현재 멤버십** 상태를 관리한다.
+신청 이력은 사용자가 어떤 모집글에 신청했고 어떤 결정을 받았는지 보관한다.
+여정 멤버십은 승인 이후 실제 협업 공간에 들어갈 수 있는 현재 권한을 관리한다.
 
 승인 이후 방장이 멤버를 내보내더라도 `participations.status`는 `APPROVED`로 유지된다.
-내보내기 사실은 `journey_members.status = REMOVED`로 표현하고,
-응답 시에만 `REMOVED_BY_HOST`로 파생 계산해서 내려준다.
+내보내기 사실은 여정 멤버십 상태로 구분하고, 사용자에게는 `REMOVED_BY_HOST` 상태로 보여준다.
 
 ### 신청 취소는 PENDING일 때만 가능
 
 `CONTACTING` 이후에는 단순 신청 취소가 아니라 별도 흐름으로 처리한다.
-취소 시 `participations` row를 삭제한다.
+취소 시 신청 이력을 삭제한다(`participations` row).
 
 ### 중복 신청 방지
 
@@ -155,7 +154,7 @@ flowchart LR
 상태(`PENDING`, `CONTACTING`, `APPROVED`, `REJECTED`)로 필터링해서 조회한다.
 미지정 시 전체 신청을 반환한다.
 
-### 6.2 채팅하기 (연락 시작)
+### 6.2 채팅하기
 
 **조건**
 
@@ -213,4 +212,4 @@ flowchart LR
 
 ## 8. 구현 참고
 
-응답 상태 계산, 락 순서, 저장 모델, 서비스 책임, 예외 규칙은 [참여 신청/그룹 채팅 구현 문서](../../005-implementation/004-participation.md)를 참고한다.
+상태 계산, 동시성 처리, 저장 모델, 서비스 책임, 예외 규칙은 [참여 신청/그룹 채팅 구현 문서](../../005-implementation/004-participation.md)를 참고한다.

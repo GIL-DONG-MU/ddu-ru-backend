@@ -48,7 +48,9 @@ docs/
 │   ├── 001-my-journey.md
 │   ├── 002-recommendation.md
 │   ├── 003-post.md
-│   └── 004-participation.md
+│   ├── 004-participation.md
+│   ├── 005-notification.md
+│   └── 006-chat.md
 ├── 006-architecture/
 │   ├── 001-package-structure.md
 │   ├── 002-common-foundation.md
@@ -109,6 +111,8 @@ AI와 개발자가 기능 구현 시 참고할 내부 구현 세부를 정리합
 - [홈 여행방 추천 구현 문서](./005-implementation/002-recommendation.md)
 - [모집글 구현 문서](./005-implementation/003-post.md)
 - [참여 신청/그룹 채팅 구현 문서](./005-implementation/004-participation.md)
+- [알림 구현 문서](./005-implementation/005-notification.md)
+- [채팅 구현 문서](./005-implementation/006-chat.md)
 
 ### 006-architecture - 코드 구조
 

@@ -28,7 +28,7 @@
 |---|---:|---|---|
 | dev | disabled | `update` | 로컬 개발 편의 우선 |
 | test | disabled | `create-drop` | H2 MySQL mode |
-| prod | enabled | `${DDL_AUTO:validate}` | `validate-on-migrate=true`, 기본값 `validate` |
+| prod | enabled | `${DDL_AUTO}` | `validate-on-migrate=true`, 배포 환경변수로 지정 |
 
 운영에서는 Hibernate보다 Flyway가 먼저 실행됩니다.
 
@@ -42,8 +42,6 @@
 4. 운영에 적용될 수 있는 DDL/DML인지 검토합니다.
 5. 필요한 경우 로컬 MySQL에 수동 적용하거나 prod 유사 환경에서 검증합니다.
 6. PR에 스키마 변경 영향과 rollback 또는 복구 방안을 적습니다.
-
-현재 문서 정리 시점의 최신 마이그레이션은 `V18__journey_posts.sql`입니다.
 
 ---
 
@@ -94,6 +92,6 @@ testImplementation 'org.testcontainers:mysql'
 
 1. 현재 운영 스키마를 기준으로 baseline/squash SQL을 작성합니다.
 2. 이미 운영에 적용된 migration checksum을 바꾸지 않는 방식인지 검토합니다.
-3. `V11_update_background_color.sql`처럼 이름 규칙을 벗어난 파일의 처리 방식을 결정합니다.
+3. 기존 운영 마이그레이션 파일을 수정하지 않는 baseline/squash 적용 방식을 결정합니다.
 4. `FlywayMigrationTest`의 `@Disabled`를 제거합니다.
 5. CI에서 Testcontainers MySQL migration test를 필수로 실행합니다.

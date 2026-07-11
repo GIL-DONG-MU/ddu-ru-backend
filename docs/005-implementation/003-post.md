@@ -18,10 +18,11 @@
 | `minAge` | Integer | - | 선호 연령 최솟값. 게시글 나이 범위와 겹치는 게시글 반환 |
 | `maxAge` | Integer | - | 선호 연령 최댓값 |
 | `destinationId` | Long | - | 여행지 필터 |
-| `recruitmentStatus` | PostRecruitmentStatus | - | 모집 상태 필터 |
+| `recruitmentStatus` | RecruitmentStatusFilter | - | 모집 상태 필터 |
 | `companionType` | CompanionType | - | 동행 방식 필터 |
 | `sort` | PostSortType | `LATEST` | 정렬 조건 |
 | `cursor` | Long | - | 커서 기반 페이지네이션. 직전 마지막 항목의 postId |
+| `cursorValue` | Integer | - | 조회순/좋아요순 보조 커서 값. 서버가 내려준 `nextCursorValue`를 다음 요청에 그대로 전달 |
 | `size` | Integer | `10` | 페이지 크기. 최대 50 |
 
 ### 모집 상태 필터
@@ -55,7 +56,7 @@
 | `VIEW` | `viewCount < cursorViewCount OR (viewCount = cursorViewCount AND id < cursorId)` |
 | `LIKE` | `likeCount < cursorLikeCount OR (likeCount = cursorLikeCount AND id < cursorId)` |
 
-`cursor` 값(postId)으로 커서 게시글을 1회 조회한 뒤, 해당 게시글의 `viewCount`/`likeCount`/`id`를 복합 조건으로 사용합니다.
+`VIEW`, `LIKE` 정렬에서는 `cursor`와 함께 서버가 내려준 `cursorValue`를 전달받아 복합 조건으로 사용합니다.
 
 ### PostSummaryResponse
 
@@ -238,32 +239,3 @@ recruitDeadline = endDate - 1일
     -> status = CLOSED 일괄 업데이트
     -> 슈퍼호스트 활성 노출 일괄 취소
 ```
-
----
-
-## 5. 도메인 모델
-
-### Post
-
-| 필드 | 설명 |
-| --- | --- |
-| `user_id` | 호스트 |
-| `destination_id` | 여행지 |
-| `title` | 제목 |
-| `content` | 내용 |
-| `start_date` | 여행 시작일 |
-| `end_date` | 여행 종료일 |
-| `recruit_capacity` | 모집 정원. 호스트 포함 |
-| `recruit_count` | 현재 승인 인원. 초기값 1 |
-| `recruit_deadline` | 모집 마감일 |
-| `preferred_gender` | 선호 성별 |
-| `is_age_any` | 연령 무관 여부 |
-| `min_age` | 최소 선호 나이 |
-| `max_age` | 최대 선호 나이 |
-| `photo_url` | 대표 사진 URL |
-| `tags` | 태그 |
-| `companion_type` | 동행 방식 |
-| `status` | 모집 상태 |
-| `view_count` | 조회수 |
-| `like_count` | 좋아요 수 |
-| `is_deleted` | 소프트 삭제 여부 |

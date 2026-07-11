@@ -15,14 +15,11 @@
 ## 2. 확정 정책
 
 - 게시글 신청 상태는 `PENDING`, `CONTACTING`, `APPROVED`, `REJECTED`만 사용한다.
-- 게시글 신청 취소 시 `Participation` row를 삭제한다.
-- 승인 이후의 실제 여행 접근 권한은 `journey_members`로 판단한다.
-- 방장이 승인된 사용자를 내보내면 `journey_members.status = REMOVED`로 변경하고 `Participation` row는 승인 이력으로 유지한다.
-- 내보내진 사용자는 그룹 채팅방의 `ChatRoomMember` row를 삭제한다.
-- 신청이 `REJECTED` 되면 row는 유지되며 재신청할 수 없다.
-- 모집 가능 여부는 `Post.recruitCount < recruitCapacity` 기준으로 판단한다.
-- 나의 여정 접근 권한은 `journey_members.status = ACTIVE` 기준으로 판단한다.
-- 그룹방 현재 인원은 `ChatRoomMember` 기준으로 계산한다.
+- 신청 취소, 거절 이력, 승인 이력의 기본 원칙은 [참여 신청 흐름](002-participation-flow.md)을 따른다.
+- 승인 이후의 실제 여행 접근 권한은 여정 멤버십으로 판단한다.
+- 내보내진 사용자는 여정과 그룹 채팅방에서 모두 제외한다.
+- 모집 가능 여부는 현재 승인 인원과 모집 정원으로 판단한다.
+- 그룹방 현재 인원은 실제 그룹 채팅방에 남아 있는 멤버 기준으로 판단한다.
 - 게시글이 마감되거나 삭제되어도 그룹 채팅방은 삭제하지 않는다.
 - 정원이 가득 차면 신규 신청, 연락 시작, 승인이 모두 불가하다.
 
@@ -36,9 +33,9 @@
 ## 4. 채팅방 원칙
 
 - 나의 여정(`journey`)당 그룹방 1개를 가진다.
-- 공개 모집글(`post`)이 아니라 참여 후 워크스페이스(`journey`)의 채팅방으로 본다.
+- 공개 모집글(`post`)이 아니라 참여 후 나의 여정(`journey`)의 채팅방으로 본다.
 - 게시글 삭제/마감과 분리된 생명주기를 가진다.
-- 현재 그룹방 인원은 `ChatRoomMember` row로만 판단한다.
+- 현재 그룹방 인원은 실제 그룹방 멤버 기준(`ChatRoomMember` row)으로 판단한다.
 
 ## 5. 연락 시작
 
