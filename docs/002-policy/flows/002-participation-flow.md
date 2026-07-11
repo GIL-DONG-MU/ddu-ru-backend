@@ -32,22 +32,15 @@
 
 ### 중복 신청 방지
 
-`participations(post_id, user_id)` UNIQUE 제약으로 DB 수준에서 중복을 막는다.
-동시성 충돌(DataIntegrityViolationException) 발생 시에도 중복 감지 후 예외를 반환한다.
+같은 사용자는 같은 모집글에 중복 신청할 수 없다.
+거절된 신청 이력이 있으면 다시 신청할 수 없고, 신청자가 대기 중 신청을 취소한 경우에만 다시 신청할 수 있다.
 
-### 락 순서
-
-기존 참여 신청 row를 변경하는 흐름에서는 데드락 방지를 위해 동일 트랜잭션 내에서 반드시 아래 순서로 락을 잡는다.
-
-```
-Participation FOR UPDATE → Post FOR UPDATE
-```
-
-신청 생성은 아직 `Participation` row가 없으므로 예외적으로 `Post FOR UPDATE`를 먼저 잡고, 검증 후 `Participation` row를 생성한다.
+락 순서와 중복 방지 구현은 [참여 신청/그룹 채팅 구현 문서](../../005-implementation/004-participation.md)를 참고한다.
 
 ---
 
 ## 2. 사용자 구분
+
 
 ### 신청자 (Applicant)
 
@@ -84,7 +77,7 @@ Participation FOR UPDATE → Post FOR UPDATE
 | `PENDING` | 신청 완료. 호스트 액션 대기 중 |
 | `CONTACTING` | 호스트가 1:1 채팅으로 연락 시작 |
 | `APPROVED` | 수락 완료. 그룹 채팅방 자동 초대 및 여정 멤버 등록 |
-| `REJECTED` | 거절됨. 재신청 불가 (`UNIQUE` 제약으로 row 유지) |
+| `REJECTED` | 거절됨. 재신청 불가 |
 
 `REMOVED_BY_HOST`는 DB 상태가 아니라, `APPROVED` + `journey_members.status = REMOVED`를 조합해서 응답에만 표현하는 파생 상태다.
 
@@ -130,12 +123,9 @@ flowchart LR
 - 정원이 가득 차지 않아야 함 (`recruitCount < recruitCapacity`)
 - 이미 신청한 이력이 없어야 함 (REJECTED row가 남아 있으면 재신청 불가)
 
-**처리 순서**
+**결과**
 
-1. `Post`를 `FOR UPDATE`로 잠금
-2. 신청 가능 조건 검증
-3. `Participation` row 생성 (상태: `PENDING`)
-4. 동시성 충돌 시 `DataIntegrityViolationException` 포착 → 중복 신청 예외 반환
+신청이 생성되면 상태는 `PENDING`이 된다.
 
 ### 5.2 내 신청 내역 조회
 
@@ -174,11 +164,9 @@ flowchart LR
 - 모집글이 `OPEN`이고 정원이 가득 차지 않아야 함
 - 신청 상태가 `PENDING`이어야 함
 
-**처리 순서**
+**결과**
 
-1. `Participation` → `Post` 순서로 락 획득
-2. 1:1 채팅방 생성 또는 기존 방 재사용
-3. 신청 상태를 `CONTACTING`으로 변경
+1:1 채팅방을 생성하거나 기존 방을 재사용하고, 신청 상태를 `CONTACTING`으로 변경한다.
 
 ### 6.3 수락
 
@@ -188,12 +176,9 @@ flowchart LR
 - 모집글이 `OPEN`이고 정원이 가득 차지 않아야 함
 - 신청 상태가 `PENDING` 또는 `CONTACTING`이어야 함
 
-**처리 순서**
+**결과**
 
-1. `Participation` → `Post` 순서로 락 획득
-2. `Post.approveParticipation()` 호출 → 내부에서 `participation.approve()` (상태 `APPROVED` 전환) + `recruitCount` 증가
-3. `JourneyMember` 생성 (이미 있으면 활성화)
-4. 그룹 채팅방에 자동 초대
+신청 상태를 `APPROVED`로 전환하고, 여정 멤버십을 생성하거나 활성화한 뒤 그룹 채팅방에 자동 초대한다.
 
 수락 시 `participations.status = APPROVED`와 `journey_members` 생성이 함께 처리된다.
 
@@ -227,77 +212,6 @@ flowchart LR
 
 ---
 
-## 8. 응답 상태 계산 (MyParticipationStatus)
+## 8. 구현 참고
 
-신청자 화면에 내려가는 상태는 DB 상태를 그대로 쓰지 않고 파생 계산한다.
-
-```
-participations.status == APPROVED
-    AND journey_members.status == REMOVED
-    → REMOVED_BY_HOST
-
-그 외
-    → participations.status 그대로 사용
-```
-
-호스트(`isOwner == true`) 또는 비로그인(`currentUserId == null`)이면 `NONE`을 반환한다.
-
----
-
-## 9. 서비스 책임 분리
-
-### ParticipationApplicantService
-
-신청자 관점의 기능을 담당한다.
-
-- 신청 생성 및 중복/자기 신청 검증
-- 내 신청 내역 조회 (채팅방 ID 포함)
-- 신청 취소
-- 모집글 상세의 참여자 목록 제공 (`journey_members` 기반)
-- 내 신청 상태 조회 (`myParticipationStatus`)
-
-### ParticipationCommandService
-
-호스트 관점의 커맨드를 담당한다.
-
-- 받은 신청 목록 조회
-- 연락 시작 (1:1 채팅방 생성 + 상태 전환)
-- 승인 (그룹방 초대 + JourneyMember 생성 + recruitCount 증가)
-- 거절
-
----
-
-## 10. 도메인 모델
-
-### Participation
-
-| 필드 | 설명 |
-| --- | --- |
-| `post_id` | 신청 대상 모집글 |
-| `user_id` | 신청자 |
-| `status` | 신청 상태 (`PENDING`, `CONTACTING`, `APPROVED`, `REJECTED`) |
-| `message` | 신청 메시지 (최대 500자) |
-| `contacted_at` | 연락 시작 시각 |
-| `approved_at` | 승인 시각 |
-| `rejected_at` | 거절 시각 |
-
-**UNIQUE 제약**: `(post_id, user_id)`
-
-이 제약 덕분에:
-- `REJECTED` row가 남아 있으면 재신청이 DB 수준에서 막힌다
-- 신청 취소는 row 삭제이므로 재신청이 가능하다
-- 방장 내보내기는 신청 이력을 유지하면서 `journey_members`로만 접근을 차단한다
-
----
-
-## 11. 예외 규칙
-
-| 상황 | 예외 |
-| --- | --- |
-| 자신의 모집글에 신청 | `SelfParticipationNotAllowedException` |
-| 모집 마감/정원 가득 참 | `RecruitmentClosedException` |
-| 이미 신청한 이력 있음 | `DuplicateParticipationException` |
-| 신청 상태 전이 불가 | `InvalidParticipationStatusException` |
-| 자신의 신청이 아닌데 취소 | `ParticipationApplicantAccessDeniedException` |
-| 호스트가 아닌데 수락/거절 | `PostAccessDeniedException` |
-| 신청 ID와 게시글 ID 불일치 | `ParticipationPostMismatchException` |
+응답 상태 계산, 락 순서, 저장 모델, 서비스 책임, 예외 규칙은 [참여 신청/그룹 채팅 구현 문서](../../005-implementation/004-participation.md)를 참고한다.
