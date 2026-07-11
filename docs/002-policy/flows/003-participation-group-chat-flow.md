@@ -119,10 +119,9 @@ row 삭제 이벤트:
 2. `Participation` row를 삭제한다.
 3. 방장 목록에서는 더 이상 보이지 않는다.
 
-권장 허용 범위:
+허용 범위:
 
 - `PENDING`
-- `CONTACTING`
 
 `APPROVED` 이후에는 단순 신청 취소가 아니라 그룹방 나가기 흐름으로 처리한다.
 
@@ -173,7 +172,6 @@ row 삭제 이벤트:
 | `CONTACTING` | 수락 | `APPROVED` | 그룹방 자동 초대 |
 | `CONTACTING` | 거절하기 | `REJECTED` | row 유지 |
 | `PENDING` | 신청자 취소 | 삭제 | row 삭제 |
-| `CONTACTING` | 신청자 취소 | 삭제 | row 삭제 |
 | `APPROVED` | 신청자 그룹방 나가기 | 정책 확정 필요 | `journey_members.status = LEFT` 사용 후보 |
 | `APPROVED` | 방장 내보내기 | `APPROVED` 유지 | `journey_members.status = REMOVED` + 그룹방 멤버 삭제 |
 

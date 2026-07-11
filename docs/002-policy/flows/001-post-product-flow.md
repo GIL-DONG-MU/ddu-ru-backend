@@ -91,7 +91,7 @@ API 명세서나 ERD 전에 보는 `전체 그림 문서`라고 생각하면 된
 - 모집글에 참여 신청한 사용자
 - `participations` 테이블에 row가 있음
 - 자신의 신청 상태를 조회할 수 있음
-- 신청 취소 가능 (PENDING, CONTACTING 상태에서만)
+- 신청 취소 가능 (`PENDING` 상태에서만)
 
 ### 일반 사용자 (Visitor)
 
@@ -462,4 +462,3 @@ recruitDeadline = endDate - 1일
 | 상태 변경 | O | X | X |
 | 참여 신청 | X (자신 글) | O | X |
 | 좋아요 | O | O | X |
-
