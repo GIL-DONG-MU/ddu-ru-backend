@@ -1,11 +1,15 @@
 package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
+import com.dduru.gildongmu.like.domain.PostLike;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
+import com.dduru.gildongmu.post.dto.request.MyPageLikedPostListRequest;
 import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.dto.response.MyPageLikedPostListResponse;
+import com.dduru.gildongmu.post.dto.response.MyPageLikedPostSummaryResponse;
 import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.post.dto.response.MyPagePostSummaryResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
@@ -79,6 +83,18 @@ public class PostQueryService {
         int currentRecruitingCount = postRepository.countRecruitingPostsByUserId(userId, today);
         int activePostCount = postRepository.countActivePostsByUserId(userId, today);
         return MyPagePostListResponse.of(summaries, hasNext, currentRecruitingCount, activePostCount);
+    }
+
+    public MyPageLikedPostListResponse retrieveMyLikedPosts(Long userId, MyPageLikedPostListRequest request) {
+        Pageable pageable = PageRequest.of(0, request.size() + 1);
+        List<PostLike> postLikes = postLikeRepository.findLikedPostsByUserIdWithCursor(userId, request.cursor(), pageable);
+        boolean hasNext = postLikes.size() > request.size();
+        if (hasNext) postLikes = postLikes.subList(0, request.size());
+        List<MyPageLikedPostSummaryResponse> summaries = postLikes.stream()
+                .map(like -> MyPageLikedPostSummaryResponse.from(like.getPost()))
+                .toList();
+        Long lastLikeId = postLikes.isEmpty() ? null : postLikes.get(postLikes.size() - 1).getId();
+        return MyPageLikedPostListResponse.of(summaries, hasNext, lastLikeId);
     }
 
     private Integer computeNextCursorValue(PostSortType sort, boolean hasNext, List<Post> posts) {

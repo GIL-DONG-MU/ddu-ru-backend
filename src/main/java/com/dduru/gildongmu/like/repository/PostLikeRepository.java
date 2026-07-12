@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.like.repository;
 
 import com.dduru.gildongmu.like.domain.PostLike;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +21,19 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     @Query("SELECT pl.user.id FROM PostLike pl WHERE pl.post.id = :postId")
     List<Long> findUserIdsByPostId(@Param("postId") Long postId);
+
+    @Query("""
+            SELECT pl FROM PostLike pl
+            JOIN FETCH pl.post post
+            JOIN FETCH post.destination
+            WHERE pl.user.id = :userId
+              AND post.isDeleted = false
+              AND (:cursor IS NULL OR pl.id < :cursor)
+            ORDER BY pl.id DESC
+            """)
+    List<PostLike> findLikedPostsByUserIdWithCursor(
+            @Param("userId") Long userId,
+            @Param("cursor") Long cursor,
+            Pageable pageable
+    );
 }
