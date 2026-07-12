@@ -12,6 +12,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
@@ -23,6 +26,7 @@ public class JwtTokenProvider {
     private static final String ROLE_CLAIM = "role";
 
     private final UserRepository userRepository;
+    private final Clock clock;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -34,26 +38,26 @@ public class JwtTokenProvider {
     private long jwtRefreshExpirationMs;
 
     public String createToken(Long userId, Role role) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
+        Instant issuedAt = clock.instant();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("type", "access")
                 .claim(ROLE_CLAIM, role.name())
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
+                .setIssuedAt(toDate(issuedAt))
+                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
 
     public String createRefreshToken(Long userId) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtRefreshExpirationMs);
+        Instant issuedAt = clock.instant();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("type", "refresh")
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
+                .setIssuedAt(toDate(issuedAt))
+                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtRefreshExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -147,7 +151,7 @@ public class JwtTokenProvider {
     }
 
     public String createVerificationToken(Long userId, String phoneNumber) {
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationMs);
+        Instant issuedAt = clock.instant();
 
         String subject = userId != null ? userId.toString() : phoneNumber;
 
@@ -155,8 +159,8 @@ public class JwtTokenProvider {
                 .setSubject(subject)
                 .claim("type", "verification")
                 .claim("phone_number", phoneNumber)
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
+                .setIssuedAt(toDate(issuedAt))
+                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -210,5 +214,9 @@ public class JwtTokenProvider {
                 .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    private static Date toDate(Instant instant) {
+        return Date.from(instant);
     }
 }
