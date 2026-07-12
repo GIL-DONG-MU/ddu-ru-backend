@@ -104,7 +104,7 @@ public class PostService {
     public void delete(Long postId, Long userId) {
         Post post = getOwnedPost(postId, userId);
 
-        post.softDelete(userId);
+        post.softDelete(userId, timeProvider.now());
         superHostService.cancelActiveExposureByPostId(postId);
 
         log.info("게시글 삭제됨 - postId={}, userId={}", postId, userId);

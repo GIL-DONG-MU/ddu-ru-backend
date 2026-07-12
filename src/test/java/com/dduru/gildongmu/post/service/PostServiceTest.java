@@ -51,6 +51,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,6 +69,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("PostService 테스트")
 class PostServiceTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 5, 5);
+    private static final LocalDateTime NOW = TODAY.atTime(12, 0);
 
     @Mock private PostRepository postRepository;
     @Mock private UserRepository userRepository;
@@ -90,6 +92,7 @@ class PostServiceTest {
     @BeforeEach
     void setUpTimeProvider() {
         lenient().when(timeProvider.today()).thenReturn(TODAY);
+        lenient().when(timeProvider.now()).thenReturn(NOW);
         lenient().when(s3ImageUrlValidator.validateAndNormalize(anyString(), any(S3ImageDirectory.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
     }

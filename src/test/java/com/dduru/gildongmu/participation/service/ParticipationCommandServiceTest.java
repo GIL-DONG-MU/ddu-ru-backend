@@ -28,11 +28,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +44,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ParticipationCommandService 테스트")
 class ParticipationCommandServiceTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
 
     @Mock
     private PrivateChatRoomService privateChatRoomService;
@@ -95,6 +98,7 @@ class ParticipationCommandServiceTest {
 
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
+            when(timeProvider.now()).thenReturn(NOW);
             when(privateChatRoomService.createOrGetRoomWithLockedPost(ownerId, post, participantId))
                     .thenReturn(new PrivateChatRoomCreateResponse(roomId, true));
 
@@ -123,13 +127,14 @@ class ParticipationCommandServiceTest {
             Post post = createPost(100L, owner);
             Journey journey = createJourney(500L, post);
             Participation participation = createParticipation(participationId, post, participantId);
-            participation.contact();
+            participation.contact(NOW);
 
             Profile ownerProfile = mock(Profile.class);
             when(ownerProfile.getNickname()).thenReturn("호스트닉네임");
 
             when(participationRepository.getByIdWithLockOrThrow(participationId)).thenReturn(participation);
             when(postRepository.getActiveByIdWithLockOrThrow(post.getId())).thenReturn(post);
+            when(timeProvider.now()).thenReturn(NOW);
             when(journeyRepository.getByPostIdOrThrow(post.getId())).thenReturn(journey);
             when(profileRepository.findByUser_Id(ownerId)).thenReturn(Optional.of(ownerProfile));
             when(groupChatRoomService.inviteMemberOrGetRoom(ownerId, journey.getId(), participantId))

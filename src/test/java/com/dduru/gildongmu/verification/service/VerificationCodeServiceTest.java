@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.verification.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.verification.dto.VerificationData;
 import com.dduru.gildongmu.verification.exception.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,8 @@ class VerificationCodeServiceTest {
     private ValueOperations<String, String> valueOperations;
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private VerificationCodeService verificationCodeService;

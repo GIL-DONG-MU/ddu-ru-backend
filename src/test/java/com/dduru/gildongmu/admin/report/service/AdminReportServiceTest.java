@@ -3,6 +3,7 @@ package com.dduru.gildongmu.admin.report.service;
 import com.dduru.gildongmu.admin.report.dto.request.AdminReportUpdateRequest;
 import com.dduru.gildongmu.admin.report.dto.response.AdminReportListResponse;
 import com.dduru.gildongmu.admin.report.dto.response.AdminReportResponse;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,11 +44,16 @@ import static org.mockito.Mockito.when;
 @DisplayName("AdminReportService 테스트")
 class AdminReportServiceTest {
 
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
+
     @Mock
     private ReportRepository reportRepository;
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private AdminReportService adminReportService;
@@ -88,13 +95,14 @@ class AdminReportServiceTest {
 
             when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
             when(userRepository.getByIdOrThrow(reviewerId)).thenReturn(reviewer);
+            when(timeProvider.now()).thenReturn(NOW);
 
             AdminReportResponse response = adminReportService.update(reportId, reviewerId, request);
 
             assertThat(response.status()).isEqualTo(ReportStatus.RESOLVED);
             assertThat(response.reviewerId()).isEqualTo(reviewerId);
             assertThat(response.reviewerName()).isEqualTo("관리자");
-            assertThat(response.reviewedAt()).isNotNull();
+            assertThat(response.reviewedAt()).isEqualTo(NOW);
             assertThat(response.reviewNote()).isEqualTo("검토 및 조치 완료");
         }
 

@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.admin.post.service;
 
 import com.dduru.gildongmu.admin.post.dto.response.AdminPostDetailResponse;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.repository.PostRepository;
@@ -17,6 +18,7 @@ public class AdminPostService {
 
     private final PostRepository postRepository;
     private final JsonConverter jsonConverter;
+    private final TimeProvider timeProvider;
 
     public AdminPostDetailResponse getDetail(Long postId) {
         Post post = postRepository.getByIdOrThrow(postId);
@@ -31,7 +33,7 @@ public class AdminPostService {
             return;
         }
 
-        post.softDelete(adminUserId);
+        post.softDelete(adminUserId, timeProvider.now());
         log.info("관리자 게시글 삭제됨 - postId={}, adminUserId={}", postId, adminUserId);
     }
 }

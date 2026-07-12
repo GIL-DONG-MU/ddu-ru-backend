@@ -64,22 +64,22 @@ public class Participation extends BaseTimeEntity {
                 .build();
     }
 
-    public void approve() {
+    public void approve(LocalDateTime now) {
         validateApprovalAllowed();
         this.status = ParticipationStatus.APPROVED;
-        this.approvedAt = LocalDateTime.now();
+        this.approvedAt = now;
     }
 
-    public void contact() {
+    public void contact(LocalDateTime now) {
         validateContactAllowed();
         this.status = ParticipationStatus.CONTACTING;
-        this.contactedAt = LocalDateTime.now();
+        this.contactedAt = now;
     }
 
-    public void reject() {
+    public void reject(LocalDateTime now) {
         validateRejectionAllowed();
         this.status = ParticipationStatus.REJECTED;
-        this.rejectedAt = LocalDateTime.now();
+        this.rejectedAt = now;
     }
 
     public boolean isPending() {

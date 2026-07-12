@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.destination.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
@@ -28,9 +29,10 @@ public class DestinationService {
     );
 
     private final DestinationRepository destinationRepository;
+    private final TimeProvider timeProvider;
 
     public List<DestinationInfo> getPopularDestinations() {
-        LocalDateTime since = LocalDateTime.now().minusDays(POPULAR_DAYS_LIMIT);
+        LocalDateTime since = timeProvider.now().minusDays(POPULAR_DAYS_LIMIT);
         List<Long> ids = destinationRepository.findPopularDestinationIds(since);
 
         if (ids.isEmpty()) {
