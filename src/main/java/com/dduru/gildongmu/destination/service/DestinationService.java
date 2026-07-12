@@ -2,6 +2,7 @@ package com.dduru.gildongmu.destination.service;
 
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
+import com.dduru.gildongmu.destination.dto.DestinationPreferenceSearchResponse;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,5 +63,31 @@ public class DestinationService {
         return destinations.stream()
                 .map(DestinationInfo::from)
                 .toList();
+    }
+
+    public List<DestinationPreferenceSearchResponse> searchPreferenceDestinations(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return List.of();
+        }
+        String trimmedKeyword = keyword.trim();
+        List<Destination> matchedDestinations = destinationRepository.searchByKeyword(trimmedKeyword);
+
+        List<DestinationPreferenceSearchResponse> searchResponses = new ArrayList<>();
+
+        Map<String, Destination> countryDestinationByCode = new LinkedHashMap<>();
+        for (Destination destination : matchedDestinations) {
+            if (destination.getCountryName().contains(trimmedKeyword)) {
+                countryDestinationByCode.putIfAbsent(destination.getCountryCode(), destination);
+            }
+        }
+        countryDestinationByCode.values().stream()
+                .map(DestinationPreferenceSearchResponse::country)
+                .forEach(searchResponses::add);
+
+        matchedDestinations.stream()
+                .map(DestinationPreferenceSearchResponse::city)
+                .forEach(searchResponses::add);
+
+        return searchResponses;
     }
 }

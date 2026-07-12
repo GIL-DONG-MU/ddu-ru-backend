@@ -2,6 +2,7 @@ package com.dduru.gildongmu.destination.controller;
 
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
+import com.dduru.gildongmu.destination.dto.DestinationPreferenceSearchResponse;
 import com.dduru.gildongmu.destination.service.DestinationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,5 +34,14 @@ public class DestinationController implements DestinationApiDocs {
     ) {
         List<DestinationInfo> destinations = destinationService.searchDestinations(keyword);
         return ResponseEntity.ok(ApiResult.ok(destinations));
+    }
+
+    @Override
+    @GetMapping("/preference-search")
+    public ResponseEntity<ApiResult<List<DestinationPreferenceSearchResponse>>> searchPreferenceDestinations(
+            @RequestParam(required = false) String keyword
+    ) {
+        List<DestinationPreferenceSearchResponse> results = destinationService.searchPreferenceDestinations(keyword);
+        return ResponseEntity.ok(ApiResult.ok(results));
     }
 }
