@@ -18,12 +18,13 @@ class JwtTokenProviderTest {
 
     private static final String SECRET = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
     private static final Instant NOW = Instant.parse("2026-07-11T03:00:00Z");
+    private static final Clock FIXED_CLOCK = Clock.fixed(NOW, KoreaTime.ZONE_ID);
     private static final int ACCESS_EXPIRATION_MS = 60_000;
 
     private JwtTokenProvider createProvider() {
         JwtTokenProvider provider = new JwtTokenProvider(
                 mock(UserRepository.class),
-                Clock.fixed(NOW, KoreaTime.ZONE_ID)
+                FIXED_CLOCK
         );
         ReflectionTestUtils.setField(provider, "jwtSecret", SECRET);
         ReflectionTestUtils.setField(provider, "jwtExpirationMs", ACCESS_EXPIRATION_MS);
@@ -39,10 +40,7 @@ class JwtTokenProviderTest {
         String token = provider.createVerificationToken(42L, "01012345678");
 
         // then
-        Claims claims = Jwts.parser()
-                .setSigningKey(SECRET)
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = parseClaims(token);
 
         assertThat(claims.getSubject()).isEqualTo("42");
         assertThat(claims.get("phone_number", String.class)).isEqualTo("01012345678");
@@ -60,13 +58,18 @@ class JwtTokenProviderTest {
         String token = provider.createVerificationToken(null, "01099998888");
 
         // then
-        Claims claims = Jwts.parser()
-                .setSigningKey(SECRET)
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = parseClaims(token);
 
         assertThat(claims.getSubject()).isEqualTo("01099998888");
         assertThat(claims.get("phone_number", String.class)).isEqualTo("01099998888");
         assertThat(claims.get("type", String.class)).isEqualTo("verification");
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .setClock(() -> Date.from(NOW.plusSeconds(30)))
+                .setSigningKey(SECRET)
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
