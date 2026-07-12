@@ -78,27 +78,11 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     }
 
     @Override
-    public int countActivePostsByUserId(Long userId, LocalDate today) {
+    public int countTotalPostsByUserId(Long userId) {
         Long count = queryFactory
                 .select(post.count())
                 .from(post)
-                .where(post.user.id.eq(userId), isNotDeleted(), post.endDate.goe(today))
-                .fetchOne();
-        return count == null ? 0 : count.intValue();
-    }
-
-    @Override
-    public int countRecruitingPostsByUserId(Long userId, LocalDate today) {
-        Long count = queryFactory
-                .select(post.count())
-                .from(post)
-                .where(
-                        post.user.id.eq(userId),
-                        isNotDeleted(),
-                        post.endDate.goe(today),
-                        post.status.eq(PostStatus.OPEN),
-                        post.recruitCount.lt(post.recruitCapacity)
-                )
+                .where(post.user.id.eq(userId), isNotDeleted())
                 .fetchOne();
         return count == null ? 0 : count.intValue();
     }

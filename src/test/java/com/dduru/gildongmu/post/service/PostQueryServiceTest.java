@@ -391,8 +391,7 @@ class PostQueryServiceTest {
         void passesRecruitingFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.RECRUITING), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(0);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.RECRUITING));
 
@@ -404,8 +403,7 @@ class PostQueryServiceTest {
         void passesTravelEndedFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.TRAVEL_ENDED), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(0);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
 
@@ -417,8 +415,7 @@ class PostQueryServiceTest {
         void passesAllFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(0);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
@@ -431,35 +428,30 @@ class PostQueryServiceTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Nested
-    @DisplayName("요약 카드 카운트")
-    class SummaryCount {
+    @DisplayName("전체 게시글 수")
+    class TotalPostCount {
 
         @Test
-        @DisplayName("currentRecruitingCount와 activePostCount를 응답에 포함한다")
-        void includesSummaryCountsInResponse() {
+        @DisplayName("totalPostCount를 응답에 포함한다")
+        void includesTotalPostCountInResponse() {
             when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
-            when(postRepository.countRecruitingPostsByUserId(eq(1L), eq(TODAY))).thenReturn(3);
-            when(postRepository.countActivePostsByUserId(eq(1L), eq(TODAY))).thenReturn(7);
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(4);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
-            assertThat(response.currentRecruitingCount()).isEqualTo(3);
-            assertThat(response.activePostCount()).isEqualTo(7);
+            assertThat(response.totalPostCount()).isEqualTo(4);
         }
 
         @Test
-        @DisplayName("필터와 무관하게 전체 카운트를 조회한다")
-        void countsAreIndependentOfFilter() {
+        @DisplayName("필터와 무관하게 삭제되지 않은 전체 게시글 수를 조회한다")
+        void totalCountIsIndependentOfFilter() {
             when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
-            when(postRepository.countRecruitingPostsByUserId(eq(1L), eq(TODAY))).thenReturn(2);
-            when(postRepository.countActivePostsByUserId(eq(1L), eq(TODAY))).thenReturn(5);
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(5);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
 
-            assertThat(response.currentRecruitingCount()).isEqualTo(2);
-            assertThat(response.activePostCount()).isEqualTo(5);
-            verify(postRepository).countRecruitingPostsByUserId(eq(1L), eq(TODAY));
-            verify(postRepository).countActivePostsByUserId(eq(1L), eq(TODAY));
+            assertThat(response.totalPostCount()).isEqualTo(5);
+            verify(postRepository).countTotalPostsByUserId(eq(1L));
         }
     }
 
@@ -477,8 +469,7 @@ class PostQueryServiceTest {
             Long userId = 1L;
             when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of(createPost(10L), createPost(5L), createPost(1L)));
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(3);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(3);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
 
@@ -493,8 +484,7 @@ class PostQueryServiceTest {
             Long userId = 1L;
             when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(0);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
@@ -510,8 +500,7 @@ class PostQueryServiceTest {
             Long cursor = 50L;
             when(postRepository.findPostsByUserId(eq(userId), any(), eq(cursor), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(0);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
 
             postQueryService.retrieveMyPosts(userId, myPageRequest(cursor, 10, MyPagePostFilter.ALL));
 
@@ -527,8 +516,7 @@ class PostQueryServiceTest {
             Post post1 = createPost(1L);
             when(postRepository.findPostsByUserId(eq(userId), any(), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of(post10, post5, post1));
-            lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(3);
-            lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(3);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
 
@@ -544,8 +532,7 @@ class PostQueryServiceTest {
 
     private void stubMyPosts(List<Post> posts) {
         lenient().when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(posts);
-        lenient().when(postRepository.countActivePostsByUserId(any(), any())).thenReturn(posts.size());
-        lenient().when(postRepository.countRecruitingPostsByUserId(any(), any())).thenReturn(0);
+        lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(posts.size());
     }
 
     private MyPagePostListRequest myPageRequest(Long cursor, int size, MyPagePostFilter filter) {

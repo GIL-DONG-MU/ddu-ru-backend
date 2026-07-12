@@ -11,6 +11,5 @@ import java.util.List;
 public interface PostRepositoryCustom {
     List<Post> findPostsWithFilters(PostListRequest request, LocalDate today, Integer cursorValue, Pageable pageable);
     List<Post> findPostsByUserId(Long userId, MyPagePostFilter filter, Long cursor, Pageable pageable, LocalDate today);
-    int countActivePostsByUserId(Long userId, LocalDate today);
-    int countRecruitingPostsByUserId(Long userId, LocalDate today);
+    int countTotalPostsByUserId(Long userId);
 }

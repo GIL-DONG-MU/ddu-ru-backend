@@ -13,18 +13,15 @@ public record MyPagePostListResponse(
         boolean hasNext,
         @Schema(description = "현재 응답에 포함된 게시글 수", example = "10")
         int size,
-        @Schema(description = "모집 중인 내 게시글 수 (status=OPEN, 정원 미달, 여행 미종료)", example = "2")
-        int currentRecruitingCount,
-        @Schema(description = "모집 중 + 모집 완료 게시글 수 (여행 종료 제외)", example = "5")
-        int activePostCount
+        @Schema(description = "삭제되지 않은 내 전체 게시글 수. 전체보기 탭의 '전체 N' 표시에 사용됩니다.", example = "4")
+        int totalPostCount
 ) {
     public static MyPagePostListResponse of(
             List<MyPagePostSummaryResponse> posts,
             boolean hasNext,
-            int currentRecruitingCount,
-            int activePostCount
+            int totalPostCount
     ) {
         Long nextCursor = hasNext && !posts.isEmpty() ? posts.get(posts.size() - 1).id() : null;
-        return new MyPagePostListResponse(posts, nextCursor, hasNext, posts.size(), currentRecruitingCount, activePostCount);
+        return new MyPagePostListResponse(posts, nextCursor, hasNext, posts.size(), totalPostCount);
     }
 }

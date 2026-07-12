@@ -76,9 +76,8 @@ public class PostQueryService {
         List<MyPagePostSummaryResponse> summaries = posts.stream()
                 .map(p -> MyPagePostSummaryResponse.from(p, today))
                 .toList();
-        int currentRecruitingCount = postRepository.countRecruitingPostsByUserId(userId, today);
-        int activePostCount = postRepository.countActivePostsByUserId(userId, today);
-        return MyPagePostListResponse.of(summaries, hasNext, currentRecruitingCount, activePostCount);
+        int totalPostCount = postRepository.countTotalPostsByUserId(userId);
+        return MyPagePostListResponse.of(summaries, hasNext, totalPostCount);
     }
 
     private Integer computeNextCursorValue(PostSortType sort, boolean hasNext, List<Post> posts) {
