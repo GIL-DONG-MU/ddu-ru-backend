@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.common.jwt;
 
 import com.dduru.gildongmu.common.time.KoreaTime;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -24,7 +25,7 @@ class JwtTokenProviderTest {
     private JwtTokenProvider createProvider() {
         JwtTokenProvider provider = new JwtTokenProvider(
                 mock(UserRepository.class),
-                FIXED_CLOCK
+                new TimeProvider(FIXED_CLOCK)
         );
         ReflectionTestUtils.setField(provider, "jwtSecret", SECRET);
         ReflectionTestUtils.setField(provider, "jwtExpirationMs", ACCESS_EXPIRATION_MS);

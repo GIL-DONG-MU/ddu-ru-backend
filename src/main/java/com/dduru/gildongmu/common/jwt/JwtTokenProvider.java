@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.common.jwt;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.Role;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -12,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class JwtTokenProvider {
     private static final String ROLE_CLAIM = "role";
 
     private final UserRepository userRepository;
-    private final Clock clock;
+    private final TimeProvider timeProvider;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -38,7 +38,7 @@ public class JwtTokenProvider {
     private long jwtRefreshExpirationMs;
 
     public String createToken(Long userId, Role role) {
-        Instant issuedAt = clock.instant();
+        Instant issuedAt = timeProvider.instant();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
@@ -51,7 +51,7 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken(Long userId) {
-        Instant issuedAt = clock.instant();
+        Instant issuedAt = timeProvider.instant();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
@@ -151,7 +151,7 @@ public class JwtTokenProvider {
     }
 
     public String createVerificationToken(Long userId, String phoneNumber) {
-        Instant issuedAt = clock.instant();
+        Instant issuedAt = timeProvider.instant();
 
         String subject = userId != null ? userId.toString() : phoneNumber;
 
