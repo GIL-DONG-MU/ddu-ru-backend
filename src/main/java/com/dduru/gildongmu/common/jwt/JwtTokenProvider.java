@@ -44,8 +44,8 @@ public class JwtTokenProvider {
                 .setSubject(userId.toString())
                 .claim("type", "access")
                 .claim(ROLE_CLAIM, role.name())
-                .setIssuedAt(toDate(issuedAt))
-                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
+                .setIssuedAt(Date.from(issuedAt))
+                .setExpiration(Date.from(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -56,8 +56,8 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("type", "refresh")
-                .setIssuedAt(toDate(issuedAt))
-                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtRefreshExpirationMs))))
+                .setIssuedAt(Date.from(issuedAt))
+                .setExpiration(Date.from(issuedAt.plus(Duration.ofMillis(jwtRefreshExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -159,8 +159,8 @@ public class JwtTokenProvider {
                 .setSubject(subject)
                 .claim("type", "verification")
                 .claim("phone_number", phoneNumber)
-                .setIssuedAt(toDate(issuedAt))
-                .setExpiration(toDate(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
+                .setIssuedAt(Date.from(issuedAt))
+                .setExpiration(Date.from(issuedAt.plus(Duration.ofMillis(jwtExpirationMs))))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -216,7 +216,4 @@ public class JwtTokenProvider {
                 .getBody();
     }
 
-    private static Date toDate(Instant instant) {
-        return Date.from(instant);
-    }
 }
