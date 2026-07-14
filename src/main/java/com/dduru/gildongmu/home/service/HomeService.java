@@ -10,10 +10,10 @@ import com.dduru.gildongmu.home.dto.response.HomeResponse;
 import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
 import com.dduru.gildongmu.home.dto.response.MateRecommendationItemResponse;
 import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
+import com.dduru.gildongmu.home.dto.response.RecommendationReasonResponse;
 import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
 import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
 import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
-import com.dduru.gildongmu.home.exception.HomeSurveyRequiredException;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.domain.enums.SurveyStatus;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
@@ -21,6 +21,15 @@ import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
+import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.recommendation.dto.query.MateRecommendationCardQueryResult;
+import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
+import com.dduru.gildongmu.recommendation.domain.enums.RecommendationAvailabilityStatus;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationService;
+import com.dduru.gildongmu.recommendation.service.MateRecommendationCardQueryService;
+import com.dduru.gildongmu.recommendation.support.RecommendationAgeCalculator;
+import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +48,11 @@ public class HomeService {
 
     private final TimeProvider timeProvider;
     private final UserOnboardingRepository userOnboardingRepository;
+    private final DailyMateRecommendationService dailyMateRecommendationService;
+    private final MateRecommendationCardQueryService recommendationCardQueryService;
+    private final RecommendationReasonJsonConverter recommendationReasonJsonConverter;
+    private final ProfileImageResolver profileImageResolver;
+    private final JsonConverter jsonConverter;
 
     @Transactional(readOnly = true)
     public HomeResponse retrieveHome(Long userId) {
@@ -57,14 +71,21 @@ public class HomeService {
         return upcomingTrip(upcomingStartDate, upcomingEndDate, today);
     }
 
-    @Transactional(readOnly = true)
     public MateRecommendationResponse retrieveMateRecommendations(Long userId) {
-        requireSurveyCompleted(userId);
+        DailyMateRecommendationResult dailyResult = dailyMateRecommendationService.getOrCreate(userId);
+        if (dailyResult.availabilityStatus() == RecommendationAvailabilityStatus.SURVEY_REQUIRED) {
+            return MateRecommendationResponse.surveyRequired();
+        }
+        if (!dailyResult.hasCompletedRecommendations()) {
+            return MateRecommendationResponse.available(List.of());
+        }
 
-        LocalDate upcomingStartDate = timeProvider.today().plusDays(12);
-        LocalDate upcomingEndDate = upcomingStartDate.plusDays(3);
-
-        return mateRecommendation(upcomingStartDate, upcomingEndDate);
+        List<MateRecommendationItemResponse> recommendations = recommendationCardQueryService
+                .findVisibleCards(dailyResult.batchId(), userId, dailyResult.applicantContext())
+                .stream()
+                .map(card -> toMateRecommendationItem(card, dailyResult.applicantContext().today()))
+                .toList();
+        return MateRecommendationResponse.available(recommendations);
     }
 
     @Transactional(readOnly = true)
@@ -97,13 +118,6 @@ public class HomeService {
 
     private UserOnboarding requireOnboarding(Long userId) {
         return userOnboardingRepository.getByUserIdOrThrow(userId);
-    }
-
-    private void requireSurveyCompleted(Long userId) {
-        UserOnboarding onboarding = requireOnboarding(userId);
-        if (onboarding.getSurveyStatus() != SurveyStatus.COMPLETED) {
-            throw new HomeSurveyRequiredException();
-        }
     }
 
     private UserAccessStatus resolveUserAccessStatus(Long userId) {
@@ -219,43 +233,45 @@ public class HomeService {
         );
     }
 
-    private static MateRecommendationResponse mateRecommendation(
-            LocalDate startDate,
-            LocalDate endDate
+    private MateRecommendationItemResponse toMateRecommendationItem(
+            MateRecommendationCardQueryResult card,
+            LocalDate today
     ) {
-        return new MateRecommendationResponse(
-                true,
-                3,
-                List.of(
-                        new MateRecommendationItemResponse(
-                                5001L,
-                                801L,
-                                92,
-                                "제주 서쪽 해안 카페 투어",
-                                "제주 서귀포",
-                                startDate,
-                                endDate,
-                                uploadedHost("여행자민지", 28, Gender.F),
-                                3,
-                                4,
-                                "제주 서쪽 해안을 따라 사진 찍고 카페를 둘러볼 동행을 찾아요.",
-                                List.of("카페투어", "사진", "힐링")
-                        ),
-                        new MateRecommendationItemResponse(
-                                5002L,
-                                802L,
-                                87,
-                                "한라산 초보 등반 메이트",
-                                "제주 한라산",
-                                startDate.plusDays(1),
-                                endDate.plusDays(1),
-                                avatarHost("오름러버", 31, Gender.M, 2L),
-                                2,
-                                4,
-                                "무리하지 않고 천천히 한라산을 오를 동행을 모집합니다.",
-                                List.of("등산", "자연", "느긋한")
-                        )
-                )
+        ProfileImageType imageType = card.hostProfileImageType() == null
+                ? ProfileImageType.DEFAULT
+                : card.hostProfileImageType();
+        ProfileImageInfo profileImageInfo = ProfileImageInfo.from(
+                imageType,
+                card.hostUploadedImageUrl(),
+                card.hostAvatarImageUrl(),
+                card.hostBgColorId(),
+                profileImageResolver
+        );
+
+        return new MateRecommendationItemResponse(
+                card.recommendationId(),
+                card.postId(),
+                card.matchPercentage(),
+                card.title(),
+                card.countryName() + " " + card.city(),
+                card.startDate(),
+                card.endDate(),
+                new HostResponse(
+                        card.hostNickname(),
+                        profileImageInfo,
+                        RecommendationAgeCalculator.calculate(card.hostBirthday(), today),
+                        card.hostGender()
+                ),
+                card.recruitCount(),
+                card.recruitCapacity(),
+                card.content(),
+                jsonConverter.convertJsonToList(card.tags()),
+                recommendationReasonJsonConverter.fromJson(card.matchReasons()).stream()
+                        .map(RecommendationReasonResponse::from)
+                        .toList(),
+                recommendationReasonJsonConverter.fromJson(card.cautionPoints()).stream()
+                        .map(RecommendationReasonResponse::from)
+                        .toList()
         );
     }
 
@@ -432,4 +448,5 @@ public class HomeService {
                 gender
         );
     }
+
 }

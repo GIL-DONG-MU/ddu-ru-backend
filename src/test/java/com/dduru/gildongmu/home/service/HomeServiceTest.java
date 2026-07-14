@@ -2,14 +2,29 @@ package com.dduru.gildongmu.home.service;
 
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
+import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.home.dto.response.HomePopularDestinationResponse;
 import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
-import com.dduru.gildongmu.home.exception.HomeSurveyRequiredException;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
+import com.dduru.gildongmu.recommendation.domain.enums.MateRecommendationBatchStatus;
+import com.dduru.gildongmu.recommendation.domain.enums.RecommendationAvailabilityStatus;
+import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
+import com.dduru.gildongmu.recommendation.dto.query.MateRecommendationCardQueryResult;
+import com.dduru.gildongmu.recommendation.dto.query.RecommendationApplicantContext;
+import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationService;
+import com.dduru.gildongmu.recommendation.service.MateRecommendationCardQueryService;
+import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
+import com.dduru.gildongmu.recommendation.support.TravelTendencyScores;
+import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,9 +33,11 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +47,8 @@ class HomeServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 13, 12, 30);
 
     private UserOnboardingRepository userOnboardingRepository;
+    private DailyMateRecommendationService dailyMateRecommendationService;
+    private MateRecommendationCardQueryService recommendationCardQueryService;
     private HomeService homeService;
 
     @BeforeEach
@@ -39,9 +58,16 @@ class HomeServiceTest {
                 KoreaTime.ZONE_ID
         ));
         userOnboardingRepository = mock(UserOnboardingRepository.class);
+        dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
+        recommendationCardQueryService = mock(MateRecommendationCardQueryService.class);
         homeService = new HomeService(
                 timeProvider,
-                userOnboardingRepository
+                userOnboardingRepository,
+                dailyMateRecommendationService,
+                recommendationCardQueryService,
+                new RecommendationReasonJsonConverter(new ObjectMapper()),
+                mock(ProfileImageResolver.class),
+                new JsonConverter(new ObjectMapper())
         );
     }
 
@@ -94,20 +120,75 @@ class HomeServiceTest {
     class MateRecommendations {
 
         @Test
-        @DisplayName("설문 미완료 회원은 메이트 추천을 직접 조회할 수 없다")
+        @DisplayName("설문 미완료 회원은 SURVEY_REQUIRED 상태를 받는다")
         void retrieveMateRecommendationsRequiresSurveyCompleted() {
-            when(userOnboardingRepository.getByUserIdOrThrow(10L)).thenReturn(onboarding(false));
+            when(dailyMateRecommendationService.getOrCreate(10L))
+                    .thenReturn(DailyMateRecommendationResult.surveyRequired());
 
-            assertThatThrownBy(() -> homeService.retrieveMateRecommendations(10L))
-                    .isInstanceOf(HomeSurveyRequiredException.class);
+            assertThat(homeService.retrieveMateRecommendations(10L).availabilityStatus())
+                    .isEqualTo(RecommendationAvailabilityStatus.SURVEY_REQUIRED);
         }
 
         @Test
-        @DisplayName("설문 완료 회원은 메이트 추천을 조회할 수 있다")
+        @DisplayName("추천 가능하지만 후보가 없으면 AVAILABLE과 빈 목록을 반환한다")
         void retrieveMateRecommendationsSurveyCompleted() {
-            when(userOnboardingRepository.getByUserIdOrThrow(10L)).thenReturn(onboarding(true));
+            when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(
+                    DailyMateRecommendationResult.available(1L, MateRecommendationBatchStatus.EMPTY, null)
+            );
 
-            assertThat(homeService.retrieveMateRecommendations(10L).recommendations()).hasSize(2);
+            assertThat(homeService.retrieveMateRecommendations(10L).availabilityStatus())
+                    .isEqualTo(RecommendationAvailabilityStatus.AVAILABLE);
+            assertThat(homeService.retrieveMateRecommendations(10L).recommendations()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("저장된 추천 이유 객체를 홈 카드 응답에 포함한다")
+        void returnsRecommendationReasons() {
+            RecommendationApplicantContext context = new RecommendationApplicantContext(
+                    NOW.toLocalDate(),
+                    Gender.F,
+                    27,
+                    new DestinationPreferenceFilter(Set.of(), Set.of()),
+                    List.of(),
+                    new TravelTendencyScores(5, 5, 5, 5)
+            );
+            when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(
+                    DailyMateRecommendationResult.available(1L, MateRecommendationBatchStatus.COMPLETED, context)
+            );
+            when(recommendationCardQueryService.findVisibleCards(1L, 10L, context)).thenReturn(List.of(
+                    new MateRecommendationCardQueryResult(
+                            11L,
+                            101L,
+                            1,
+                            92,
+                            "[{\"code\":\"RHYTHM_MATCH\",\"message\":\"여행 리듬이 잘 맞아요\"}]",
+                            "[]",
+                            "제주 여행 동행 모집",
+                            "대한민국",
+                            "제주",
+                            NOW.toLocalDate().plusDays(5),
+                            NOW.toLocalDate().plusDays(7),
+                            CompanionType.FULL,
+                            2,
+                            4,
+                            "홈 추천 카드 응답을 검증하기 위한 충분한 길이의 본문입니다.",
+                            "[\"힐링\"]",
+                            "제주호스트",
+                            ProfileImageType.DEFAULT,
+                            null,
+                            null,
+                            null,
+                            NOW.toLocalDate().minusYears(30),
+                            Gender.M
+                    )
+            ));
+
+            var response = homeService.retrieveMateRecommendations(10L);
+
+            assertThat(response.recommendations()).hasSize(1);
+            assertThat(response.recommendations().get(0).matchReasons())
+                    .extracting("code", "message")
+                    .containsExactly(tuple("RHYTHM_MATCH", "여행 리듬이 잘 맞아요"));
         }
     }
 

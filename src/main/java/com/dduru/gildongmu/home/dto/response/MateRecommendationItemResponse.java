@@ -15,6 +15,8 @@ public record MateRecommendationItemResponse(
         int currentMemberCount,
         int maxMemberCount,
         String description,
-        List<String> tags
+        List<String> tags,
+        List<RecommendationReasonResponse> matchReasons,
+        List<RecommendationReasonResponse> cautionPoints
 ) {
 }
