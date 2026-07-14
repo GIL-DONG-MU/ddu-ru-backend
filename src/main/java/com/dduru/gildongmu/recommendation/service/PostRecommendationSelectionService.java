@@ -1,23 +1,11 @@
 package com.dduru.gildongmu.recommendation.service;
 
-import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.profile.domain.enums.Gender;
-import com.dduru.gildongmu.profile.exception.ProfileNotFoundException;
 import com.dduru.gildongmu.recommendation.domain.RecommendationPolicy;
-import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
-import com.dduru.gildongmu.recommendation.dto.query.ApplicantRecommendationQueryResult;
-import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
-import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow;
 import com.dduru.gildongmu.recommendation.dto.query.RecommendablePostQueryResult;
+import com.dduru.gildongmu.recommendation.dto.query.RecommendationApplicantContext;
 import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
-import com.dduru.gildongmu.recommendation.exception.RecommendationTendencyMissingException;
-import com.dduru.gildongmu.recommendation.repository.ApplicantRecommendationQueryRepository;
 import com.dduru.gildongmu.recommendation.repository.RecommendablePostQueryRepository;
-import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
-import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
-import com.dduru.gildongmu.recommendation.support.AvailableDateRange;
-import com.dduru.gildongmu.recommendation.support.RecommendationAgeCalculator;
 import com.dduru.gildongmu.recommendation.support.RecommendationAvailableDateMatcher;
 import com.dduru.gildongmu.recommendation.support.RecommendationScore;
 import com.dduru.gildongmu.recommendation.support.RecommendationScoreCalculator;
@@ -27,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -36,48 +23,22 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PostRecommendationSelectionService {
 
-    private final TimeProvider timeProvider;
-    private final ApplicantRecommendationQueryRepository applicantRecommendationQueryRepository;
-    private final UserRecommendationDestinationPreferenceRepository destinationPreferenceRepository;
-    private final UserRecommendationAvailableDateRepository availableDateRepository;
+    private final RecommendationApplicantContextResolver applicantContextResolver;
     private final RecommendablePostQueryRepository recommendablePostQueryRepository;
     private final RecommendationAvailableDateMatcher availableDateMatcher;
     private final RecommendationScoreCalculator scoreCalculator;
 
     @Transactional(readOnly = true)
     public PostRecommendationResult selectRecommendations(Long userId) {
-        Optional<ApplicantRecommendationQueryResult> applicantQueryResult =
-                applicantRecommendationQueryRepository.findApplicantContext(userId);
-
-        if (applicantQueryResult.isEmpty() || !applicantQueryResult.get().isSurveyCompleted()) {
+        Optional<RecommendationApplicantContext> context = applicantContextResolver.resolve(userId);
+        if (context.isEmpty()) {
             return PostRecommendationResult.surveyRequired();
         }
-
-        ApplicantRecommendationQueryResult applicant = applicantQueryResult.get();
-
-        if (!applicant.hasProfile()) {
-            throw new ProfileNotFoundException();
-        }
-
-        if (!applicant.hasTravelTendency()) {
-            throw new RecommendationTendencyMissingException();
-        }
-
-        LocalDate today = timeProvider.today();
-
-        RecommendationApplicantContext context = new RecommendationApplicantContext(
-                today,
-                applicant.gender(),
-                RecommendationAgeCalculator.calculate(applicant.birthday(), today),
-                getDestinationPreferenceFilter(userId),
-                availableDateRanges(userId),
-                toApplicantScores(applicant)
-        );
-
-        return selectRecommendablePosts(userId, context);
+        return selectRecommendations(userId, context.get());
     }
 
-    private PostRecommendationResult selectRecommendablePosts(
+    @Transactional(readOnly = true)
+    public PostRecommendationResult selectRecommendations(
             Long userId,
             RecommendationApplicantContext context
     ) {
@@ -113,25 +74,6 @@ public class PostRecommendationSelectionService {
                 .sorted(recommendationOrder())
                 .limit(RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS)
                 .toList();
-    }
-
-    private DestinationPreferenceFilter getDestinationPreferenceFilter(Long userId) {
-        List<DestinationPreferenceFilterRow> rows = destinationPreferenceRepository.findFilterRowsByUserId(userId);
-        return DestinationPreferenceFilter.from(rows);
-    }
-
-    private List<AvailableDateRange> availableDateRanges(Long userId) {
-        List<UserRecommendationAvailableDate> availableDates = availableDateRepository.findAllByUser_Id(userId);
-        return AvailableDateRange.from(availableDates);
-    }
-
-    private TravelTendencyScores toApplicantScores(ApplicantRecommendationQueryResult applicant) {
-        return new TravelTendencyScores(
-                toDouble(applicant.rhythmScore()),
-                toDouble(applicant.energyScore()),
-                toDouble(applicant.consumptionScore()),
-                toDouble(applicant.decisionScore())
-        );
     }
 
     private ScoredPostRecommendation toScoredRecommendation(
@@ -172,13 +114,4 @@ public class PostRecommendationSelectionService {
                 .thenComparing(Comparator.comparing(ScoredPostRecommendation::postId).reversed());
     }
 
-    private record RecommendationApplicantContext(
-            LocalDate today,
-            Gender gender,
-            Integer age,
-            DestinationPreferenceFilter destinationPreferenceFilter,
-            List<AvailableDateRange> availableDateRanges,
-            TravelTendencyScores applicantScores
-    ) {
-    }
 }
