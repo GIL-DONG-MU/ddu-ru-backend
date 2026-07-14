@@ -3,9 +3,11 @@ package com.dduru.gildongmu.user.repository;
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -41,6 +43,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
         return findById(id)
                 .orElseThrow(UserNotFoundException::new);
     }
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdForUpdate(@Param("id") Long id);
 
     @Query("SELECT u.id FROM User u WHERE u.id IN :ids AND u.notificationEnabled = true")
     List<Long> findEnabledUserIds(@Param("ids") List<Long> ids);
