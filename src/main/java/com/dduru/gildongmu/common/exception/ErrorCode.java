@@ -173,7 +173,12 @@ public enum ErrorCode {
     NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 알림에 접근할 수 없습니다."),
 
     // 추천 (RECOMMENDATION)
-    RECOMMENDATION_TENDENCY_MISSING(HttpStatus.INTERNAL_SERVER_ERROR, "설문 완료 사용자의 여행 성향 점수를 찾을 수 없습니다.");
+    RECOMMENDATION_TENDENCY_MISSING(HttpStatus.INTERNAL_SERVER_ERROR, "설문 완료 사용자의 여행 성향 점수를 찾을 수 없습니다."),
+
+    // 여행 선호 설정 (TRAVEL_PREFERENCE)
+    INVALID_AVAILABLE_DATE(HttpStatus.BAD_REQUEST, "여행 가능 종료일은 시작일과 같거나 이후여야 합니다."),
+    DUPLICATE_AVAILABLE_DATE(HttpStatus.BAD_REQUEST, "중복된 여행 가능 날짜가 있습니다."),
+    INVALID_DESTINATION_PREFERENCE(HttpStatus.BAD_REQUEST, "잘못된 여행지 선호 입력입니다.");
 
     private final int status;
     private final String message;

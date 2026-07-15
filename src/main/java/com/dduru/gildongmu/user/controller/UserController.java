@@ -5,12 +5,14 @@ import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
 import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.post.service.PostQueryService;
+import com.dduru.gildongmu.recommendation.dto.request.TravelPreferenceUpdateRequest;
+import com.dduru.gildongmu.recommendation.dto.response.TravelPreferenceResponse;
+import com.dduru.gildongmu.recommendation.service.TravelPreferenceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements UserApiDocs {
 
     private final PostQueryService postQueryService;
+    private final TravelPreferenceService travelPreferenceService;
 
     @Override
     @GetMapping("/posts")
@@ -27,6 +30,24 @@ public class UserController implements UserApiDocs {
     ) {
         MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, request);
         return ResponseEntity.ok(ApiResult.ok(response));
+    }
+
+    @Override
+    @GetMapping("/travel-preferences")
+    public ResponseEntity<ApiResult<TravelPreferenceResponse>> getTravelPreferences(
+            @CurrentUser Long userId
+    ) {
+        return ResponseEntity.ok(ApiResult.ok(travelPreferenceService.getTravelPreferences(userId)));
+    }
+
+    @Override
+    @PutMapping("/travel-preferences")
+    public ResponseEntity<ApiResult<Void>> updateTravelPreferences(
+            @CurrentUser Long userId,
+            @Valid @RequestBody TravelPreferenceUpdateRequest request
+    ) {
+        travelPreferenceService.updateTravelPreferences(userId, request);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResult.noContent());
     }
 
 }

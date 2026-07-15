@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
+import com.dduru.gildongmu.destination.dto.DestinationPreferenceSearchResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,6 +33,18 @@ public interface DestinationApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
     ResponseEntity<ApiResult<List<DestinationInfo>>> searchDestinations(
+            @Parameter(description = "검색어 (도시, 국가명)") String keyword
+    );
+
+    @Operation(
+            summary = "여행지 선호 검색",
+            description = "여행 선호 설정에서 사용할 여행지를 국가명/도시명으로 검색합니다. " +
+                    "keyword가 없으면 빈 목록을 반환합니다. " +
+                    "국가 타입(COUNTRY)은 중복 제거하여 먼저 반환하고, 도시 타입(CITY)이 뒤따릅니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({ErrorCode.UNAUTHORIZED})
+    ResponseEntity<ApiResult<List<DestinationPreferenceSearchResponse>>> searchPreferenceDestinations(
             @Parameter(description = "검색어 (도시, 국가명)") String keyword
     );
 }
