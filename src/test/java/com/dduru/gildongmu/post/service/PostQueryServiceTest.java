@@ -5,8 +5,13 @@ import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.MyPagePostFilter;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
+import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.dto.response.MyPagePostDisplayStatus;
+import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
@@ -28,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +64,7 @@ class PostQueryServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(timeProvider.today()).thenReturn(TODAY);
+        lenient().when(timeProvider.today()).thenReturn(TODAY);
         lenient().when(profileImageResolver.resolve(any(Profile.class))).thenReturn(null);
         lenient().when(superHostService.findActiveSuperHostExposures(any())).thenReturn(Map.of());
     }
@@ -307,8 +313,232 @@ class PostQueryServiceTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 내가 작성한 게시글 - displayStatus 분류
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("displayStatus 분류")
+    class DisplayStatus {
+
+        @Test
+        @DisplayName("endDate가 오늘 이전이면 TRAVEL_ENDED다")
+        void travelEndedWhenEndDateBeforeToday() {
+            Post post = createPostWithEndDate(1L, TODAY.minusDays(1));
+            stubMyPosts(List.of(post));
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts().get(0).displayStatus()).isEqualTo(MyPagePostDisplayStatus.TRAVEL_ENDED);
+        }
+
+        @Test
+        @DisplayName("endDate가 오늘이고 OPEN이며 정원이 안 찼으면 RECRUITING이다")
+        void recruitingWhenEndDateTodayAndOpenAndNotFull() {
+            Post post = createPostWithEndDate(1L, TODAY);
+            stubMyPosts(List.of(post));
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts().get(0).displayStatus()).isEqualTo(MyPagePostDisplayStatus.RECRUITING);
+        }
+
+        @Test
+        @DisplayName("endDate가 미래이고 OPEN이며 정원이 안 찼으면 RECRUITING이다")
+        void recruitingWhenOpenAndNotFull() {
+            Post post = createPost(1L);
+            stubMyPosts(List.of(post));
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts().get(0).displayStatus()).isEqualTo(MyPagePostDisplayStatus.RECRUITING);
+        }
+
+        @Test
+        @DisplayName("CLOSED 상태이고 endDate가 미래이면 RECRUITMENT_CLOSED다")
+        void recruitmentClosedWhenStatusClosed() {
+            Post post = createPost(1L);
+            ReflectionTestUtils.setField(post, "status", PostStatus.CLOSED);
+            stubMyPosts(List.of(post));
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts().get(0).displayStatus()).isEqualTo(MyPagePostDisplayStatus.RECRUITMENT_CLOSED);
+        }
+
+        @Test
+        @DisplayName("OPEN이지만 정원이 찼으면 RECRUITMENT_CLOSED다")
+        void recruitmentClosedWhenFull() {
+            Post post = createPost(1L);
+            ReflectionTestUtils.setField(post, "recruitCapacity", 2);
+            ReflectionTestUtils.setField(post, "recruitCount", 2);
+            stubMyPosts(List.of(post));
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts().get(0).displayStatus()).isEqualTo(MyPagePostDisplayStatus.RECRUITMENT_CLOSED);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 내가 작성한 게시글 - 필터
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("마이페이지 상태 필터")
+    class MyPageFilter {
+
+        @Test
+        @DisplayName("RECRUITING 필터를 레포지토리에 전달한다")
+        void passesRecruitingFilterToRepository() {
+            when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.RECRUITING), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of());
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
+
+            postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.RECRUITING));
+
+            verify(postRepository).findPostsByUserId(eq(1L), eq(MyPagePostFilter.RECRUITING), isNull(), any(Pageable.class), eq(TODAY));
+        }
+
+        @Test
+        @DisplayName("TRAVEL_ENDED 필터를 레포지토리에 전달한다")
+        void passesTravelEndedFilterToRepository() {
+            when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.TRAVEL_ENDED), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of());
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
+
+            postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
+
+            verify(postRepository).findPostsByUserId(eq(1L), eq(MyPagePostFilter.TRAVEL_ENDED), isNull(), any(Pageable.class), eq(TODAY));
+        }
+
+        @Test
+        @DisplayName("ALL 필터를 레포지토리에 전달한다")
+        void passesAllFilterToRepository() {
+            when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of());
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
+
+            postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            verify(postRepository).findPostsByUserId(eq(1L), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY));
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 내가 작성한 게시글 - 요약 카드 카운트
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("전체 게시글 수")
+    class TotalPostCount {
+
+        @Test
+        @DisplayName("totalPostCount를 응답에 포함한다")
+        void includesTotalPostCountInResponse() {
+            when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(4L);
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.totalPostCount()).isEqualTo(4);
+        }
+
+        @Test
+        @DisplayName("필터와 무관하게 삭제되지 않은 전체 게시글 수를 조회한다")
+        void totalCountIsIndependentOfFilter() {
+            when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(5L);
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
+
+            assertThat(response.totalPostCount()).isEqualTo(5);
+            verify(postRepository).countTotalPostsByUserId(eq(1L));
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 내가 작성한 게시글 - 페이지네이션
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("내가 작성한 게시글")
+    class MyPosts {
+
+        @Test
+        @DisplayName("결과가 있으면 게시글 목록과 nextCursor를 반환한다")
+        void returnsPostsWithNextCursor() {
+            Long userId = 1L;
+            when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of(createPost(10L), createPost(5L), createPost(1L)));
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3L);
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
+
+            assertThat(response.posts()).hasSize(2);
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.nextCursor()).isEqualTo(5L);
+        }
+
+        @Test
+        @DisplayName("결과가 없으면 빈 목록을 반환한다")
+        void returnsEmptyWhenNoPosts() {
+            Long userId = 1L;
+            when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of());
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 10, MyPagePostFilter.ALL));
+
+            assertThat(response.posts()).isEmpty();
+            assertThat(response.hasNext()).isFalse();
+            assertThat(response.nextCursor()).isNull();
+        }
+
+        @Test
+        @DisplayName("커서가 있으면 레포지토리에 커서를 전달한다")
+        void passesCursorToRepository() {
+            Long userId = 1L;
+            Long cursor = 50L;
+            when(postRepository.findPostsByUserId(eq(userId), any(), eq(cursor), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of());
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
+
+            postQueryService.retrieveMyPosts(userId, myPageRequest(cursor, 10, MyPagePostFilter.ALL));
+
+            verify(postRepository).findPostsByUserId(eq(userId), any(), eq(cursor), any(Pageable.class), eq(TODAY));
+        }
+
+        @Test
+        @DisplayName("페이지 크기 만큼만 반환하고 마지막 항목의 ID가 nextCursor다")
+        void returnsExactSizeAndCorrectNextCursor() {
+            Long userId = 1L;
+            Post post10 = createPost(10L);
+            Post post5 = createPost(5L);
+            Post post1 = createPost(1L);
+            when(postRepository.findPostsByUserId(eq(userId), any(), isNull(), any(Pageable.class), eq(TODAY)))
+                    .thenReturn(List.of(post10, post5, post1));
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3L);
+
+            MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
+
+            assertThat(response.posts()).hasSize(2);
+            assertThat(response.nextCursor()).isEqualTo(5L);
+            assertThat(response.size()).isEqualTo(2);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 헬퍼
     // ─────────────────────────────────────────────────────────────────────────
+
+    private void stubMyPosts(List<Post> posts) {
+        lenient().when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(posts);
+        lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn((long) posts.size());
+    }
+
+    private MyPagePostListRequest myPageRequest(Long cursor, int size, MyPagePostFilter filter) {
+        return new MyPagePostListRequest(cursor, size, filter);
+    }
 
     private PostListRequest listRequest(int size, Long cursor) {
         return new PostListRequest(cursor, null, size, null, null, null, null, null, null, null, null, null, PostSortType.LATEST);
@@ -319,6 +549,10 @@ class PostQueryServiceTest {
     }
 
     private Post createPost(Long postId) {
+        return createPostWithEndDate(postId, TODAY.plusDays(5));
+    }
+
+    private Post createPostWithEndDate(Long postId, LocalDate endDate) {
         User user = User.builder()
                 .email("user" + postId + "@a.com")
                 .name("user" + postId)
@@ -335,16 +569,17 @@ class PostQueryServiceTest {
         Destination destination = Destination.builder()
                 .countryCode("KR").countryName("대한민국").city("서울").build();
 
-        LocalDate start = TODAY.plusDays(1);
-        LocalDate end = TODAY.plusDays(3);
+        LocalDate start = endDate.minusDays(2);
+        LocalDate recruitDeadline = endDate.minusDays(1);
         Post post = Post.createPost(
                 user, destination,
                 "서울 여행 같이 가실 분 모집합니다",
                 "함께 서울 여행할 동행자를 모집합니다. 편하게 신청해주세요.",
-                start, end, 3, end.minusDays(1),
+                start, endDate, 3, recruitDeadline,
                 Gender.U, true, null, null, null, "[]", CompanionType.FULL
         );
         ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.of(2026, 1, 10, 0, 0));
         return post;
     }
 }
