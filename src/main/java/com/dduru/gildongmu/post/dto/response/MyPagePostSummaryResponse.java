@@ -29,7 +29,7 @@ public record MyPagePostSummaryResponse(
                 post.getDestination().getCity(),
                 post.getStartDate(),
                 post.getEndDate(),
-                post.getCreatedAt() != null ? post.getCreatedAt().toLocalDate() : null,
+                post.getCreatedAt().toLocalDate(),
                 MyPagePostDisplayStatus.from(post, today)
         );
     }
