@@ -2,7 +2,9 @@ package com.dduru.gildongmu.user.controller;
 
 import com.dduru.gildongmu.common.annotation.CurrentUser;
 import com.dduru.gildongmu.common.dto.ApiResult;
+import com.dduru.gildongmu.post.dto.request.MyPageLikedPostListRequest;
 import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
+import com.dduru.gildongmu.post.dto.response.MyPageLikedPostListResponse;
 import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.post.service.PostQueryService;
 import com.dduru.gildongmu.recommendation.dto.request.TravelPreferenceUpdateRequest;
@@ -21,6 +23,15 @@ public class UserController implements UserApiDocs {
 
     private final PostQueryService postQueryService;
     private final TravelPreferenceService travelPreferenceService;
+
+    @Override
+    @GetMapping("/liked-posts")
+    public ResponseEntity<ApiResult<MyPageLikedPostListResponse>> retrieveMyLikedPosts(
+            @CurrentUser Long userId,
+            @Valid MyPageLikedPostListRequest request
+    ) {
+        return ResponseEntity.ok(ApiResult.ok(postQueryService.retrieveMyLikedPosts(userId, request)));
+    }
 
     @Override
     @GetMapping("/posts")

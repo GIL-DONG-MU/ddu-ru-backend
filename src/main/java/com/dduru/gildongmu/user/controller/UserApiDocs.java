@@ -3,7 +3,9 @@ package com.dduru.gildongmu.user.controller;
 import com.dduru.gildongmu.common.annotation.ApiErrorResponses;
 import com.dduru.gildongmu.common.dto.ApiResult;
 import com.dduru.gildongmu.common.exception.ErrorCode;
+import com.dduru.gildongmu.post.dto.request.MyPageLikedPostListRequest;
 import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
+import com.dduru.gildongmu.post.dto.response.MyPageLikedPostListResponse;
 import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.recommendation.dto.request.TravelPreferenceUpdateRequest;
 import com.dduru.gildongmu.recommendation.dto.response.TravelPreferenceResponse;
@@ -31,6 +33,20 @@ public interface UserApiDocs {
     ResponseEntity<ApiResult<MyPagePostListResponse>> retrieveMyPosts(
             @Parameter(hidden = true) Long userId,
             @Valid @ParameterObject MyPagePostListRequest request
+    );
+
+    @Operation(
+            summary = "찜한 여행 목록 조회",
+            description = "내가 찜한 여행글 목록을 커서 기반 페이지네이션으로 조회합니다. 삭제된 게시글은 제외됩니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiErrorResponses({
+            ErrorCode.UNAUTHORIZED
+    })
+    ResponseEntity<ApiResult<MyPageLikedPostListResponse>> retrieveMyLikedPosts(
+            @Parameter(hidden = true) Long userId,
+            @Valid @ParameterObject MyPageLikedPostListRequest request
     );
 
     @Operation(

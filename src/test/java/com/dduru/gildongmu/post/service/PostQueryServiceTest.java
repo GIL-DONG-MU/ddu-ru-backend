@@ -2,14 +2,17 @@ package com.dduru.gildongmu.post.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
+import com.dduru.gildongmu.like.domain.PostLike;
 import com.dduru.gildongmu.like.repository.PostLikeRepository;
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.MyPagePostFilter;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
+import com.dduru.gildongmu.post.dto.request.MyPageLikedPostListRequest;
 import com.dduru.gildongmu.post.dto.request.MyPagePostListRequest;
 import com.dduru.gildongmu.post.dto.request.PostListRequest;
+import com.dduru.gildongmu.post.dto.response.MyPageLikedPostListResponse;
 import com.dduru.gildongmu.post.dto.response.MyPagePostDisplayStatus;
 import com.dduru.gildongmu.post.dto.response.MyPagePostListResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
@@ -528,6 +531,92 @@ class PostQueryServiceTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // 찜한 여행 목록
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("찜한 여행 목록")
+    class MyLikedPosts {
+
+        @Test
+        @DisplayName("결과가 있으면 찜한 게시글 목록과 nextCursor를 반환한다")
+        void returnsLikedPostsWithNextCursor() {
+            Long userId = 1L;
+            PostLike like10 = createPostLike(10L, createPost(1L));
+            PostLike like5 = createPostLike(5L, createPost(2L));
+            PostLike like1 = createPostLike(1L, createPost(3L));
+            when(postLikeRepository.findLikedPostsByUserIdWithCursor(eq(userId), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(like10, like5, like1));
+
+            MyPageLikedPostListResponse response = postQueryService.retrieveMyLikedPosts(userId, likedPostRequest(null, 2));
+
+            assertThat(response.posts()).hasSize(2);
+            assertThat(response.hasNext()).isTrue();
+            assertThat(response.nextCursor()).isEqualTo(5L);
+        }
+
+        @Test
+        @DisplayName("결과가 없으면 빈 목록을 반환한다")
+        void returnsEmptyWhenNoLikedPosts() {
+            Long userId = 1L;
+            when(postLikeRepository.findLikedPostsByUserIdWithCursor(eq(userId), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of());
+
+            MyPageLikedPostListResponse response = postQueryService.retrieveMyLikedPosts(userId, likedPostRequest(null, 10));
+
+            assertThat(response.posts()).isEmpty();
+            assertThat(response.hasNext()).isFalse();
+            assertThat(response.nextCursor()).isNull();
+        }
+
+        @Test
+        @DisplayName("커서가 있으면 레포지토리에 커서를 전달한다")
+        void passesCursorToRepository() {
+            Long userId = 1L;
+            Long cursor = 50L;
+            when(postLikeRepository.findLikedPostsByUserIdWithCursor(eq(userId), eq(cursor), any(Pageable.class)))
+                    .thenReturn(List.of());
+
+            postQueryService.retrieveMyLikedPosts(userId, likedPostRequest(cursor, 10));
+
+            verify(postLikeRepository).findLikedPostsByUserIdWithCursor(eq(userId), eq(cursor), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("페이지 크기만큼만 반환하고 마지막 PostLike ID가 nextCursor다")
+        void returnsExactSizeAndCorrectNextCursor() {
+            Long userId = 1L;
+            PostLike like10 = createPostLike(10L, createPost(1L));
+            PostLike like5 = createPostLike(5L, createPost(2L));
+            PostLike like1 = createPostLike(1L, createPost(3L));
+            when(postLikeRepository.findLikedPostsByUserIdWithCursor(eq(userId), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(like10, like5, like1));
+
+            MyPageLikedPostListResponse response = postQueryService.retrieveMyLikedPosts(userId, likedPostRequest(null, 2));
+
+            assertThat(response.posts()).hasSize(2);
+            assertThat(response.nextCursor()).isEqualTo(5L);
+            assertThat(response.size()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("정확히 size개 결과이면 hasNext=false이고 nextCursor=null이다")
+        void returnsHasNextFalseWhenExactSize() {
+            Long userId = 1L;
+            PostLike like5 = createPostLike(5L, createPost(1L));
+            PostLike like3 = createPostLike(3L, createPost(2L));
+            when(postLikeRepository.findLikedPostsByUserIdWithCursor(eq(userId), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(like5, like3));
+
+            MyPageLikedPostListResponse response = postQueryService.retrieveMyLikedPosts(userId, likedPostRequest(null, 2));
+
+            assertThat(response.posts()).hasSize(2);
+            assertThat(response.hasNext()).isFalse();
+            assertThat(response.nextCursor()).isNull();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // 헬퍼
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -538,6 +627,16 @@ class PostQueryServiceTest {
 
     private MyPagePostListRequest myPageRequest(Long cursor, int size, MyPagePostFilter filter) {
         return new MyPagePostListRequest(cursor, size, filter);
+    }
+
+    private MyPageLikedPostListRequest likedPostRequest(Long cursor, int size) {
+        return new MyPageLikedPostListRequest(cursor, size);
+    }
+
+    private PostLike createPostLike(Long likeId, Post post) {
+        PostLike postLike = PostLike.createPostLike(null, post);
+        ReflectionTestUtils.setField(postLike, "id", likeId);
+        return postLike;
     }
 
     private PostListRequest listRequest(int size, Long cursor) {
