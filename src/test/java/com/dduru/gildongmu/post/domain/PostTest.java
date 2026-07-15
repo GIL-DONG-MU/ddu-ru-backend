@@ -16,12 +16,15 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Post 테스트")
 class PostTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
 
     @Nested
     @DisplayName("게시글 생성 검증")
@@ -123,7 +126,7 @@ class PostTest {
             Post post = createPost();
             Participation participation = createParticipation(post);
 
-            post.approveParticipation(participation);
+            post.approveParticipation(participation, NOW);
 
             assertThat(participation.isApproved()).isTrue();
             assertThat(post.getRecruitCount()).isEqualTo(2);
@@ -134,9 +137,9 @@ class PostTest {
         void contactingChangesStatusAndRecruitCount() {
             Post post = createPost();
             Participation participation = createParticipation(post);
-            participation.contact();
+            participation.contact(NOW);
 
-            post.approveParticipation(participation);
+            post.approveParticipation(participation, NOW);
 
             assertThat(participation.isApproved()).isTrue();
             assertThat(post.getRecruitCount()).isEqualTo(2);
@@ -147,9 +150,9 @@ class PostTest {
         void approvedThrowsAndKeepsRecruitCount() {
             Post post = createPost();
             Participation participation = createParticipation(post);
-            post.approveParticipation(participation);
+            post.approveParticipation(participation, NOW);
 
-            assertThatThrownBy(() -> post.approveParticipation(participation))
+            assertThatThrownBy(() -> post.approveParticipation(participation, NOW))
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.PARTICIPATION_APPROVAL_NOT_ALLOWED);
@@ -161,9 +164,9 @@ class PostTest {
         void rejectedThrowsAndKeepsRecruitCount() {
             Post post = createPost();
             Participation participation = createParticipation(post);
-            participation.reject();
+            participation.reject(NOW);
 
-            assertThatThrownBy(() -> post.approveParticipation(participation))
+            assertThatThrownBy(() -> post.approveParticipation(participation, NOW))
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.PARTICIPATION_APPROVAL_NOT_ALLOWED);
@@ -180,7 +183,7 @@ class PostTest {
         void approvedChangesStatusAndRecruitCount() {
             Post post = createPost();
             Participation participation = createParticipation(post);
-            post.approveParticipation(participation);
+            post.approveParticipation(participation, NOW);
 
             post.decrementRecruitCountIfApproved(participation);
 

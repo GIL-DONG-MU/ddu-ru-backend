@@ -14,12 +14,15 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Participation 상태 전이 테스트")
 class ParticipationTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
 
     @Nested
     @DisplayName("연락")
@@ -30,19 +33,19 @@ class ParticipationTest {
         void pendingChangesStatusAndTimestamp() {
             Participation participation = createParticipation();
 
-            participation.contact();
+            participation.contact(NOW);
 
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.CONTACTING);
-            assertThat(participation.getContactedAt()).isNotNull();
+            assertThat(participation.getContactedAt()).isEqualTo(NOW);
         }
 
         @Test
         @DisplayName("REJECTED 상태에서 연락하면 예외가 발생한다")
         void rejectedThrowsException() {
             Participation participation = createParticipation();
-            participation.reject();
+            participation.reject(NOW);
 
-            assertThatThrownBy(participation::contact)
+            assertThatThrownBy(() -> participation.contact(NOW))
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.PARTICIPATION_CONTACT_NOT_ALLOWED);
@@ -58,31 +61,31 @@ class ParticipationTest {
         void pendingChangesStatusAndTimestamp() {
             Participation participation = createParticipation();
 
-            participation.approve();
+            participation.approve(NOW);
 
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.APPROVED);
-            assertThat(participation.getApprovedAt()).isNotNull();
+            assertThat(participation.getApprovedAt()).isEqualTo(NOW);
         }
 
         @Test
         @DisplayName("CONTACTING 상태에서도 승인할 수 있다")
         void contactingChangesStatusAndTimestamp() {
             Participation participation = createParticipation();
-            participation.contact();
+            participation.contact(NOW);
 
-            participation.approve();
+            participation.approve(NOW);
 
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.APPROVED);
-            assertThat(participation.getApprovedAt()).isNotNull();
+            assertThat(participation.getApprovedAt()).isEqualTo(NOW);
         }
 
         @Test
         @DisplayName("APPROVED 상태에서 다시 승인하면 예외가 발생한다")
         void approvedThrowsException() {
             Participation participation = createParticipation();
-            participation.approve();
+            participation.approve(NOW);
 
-            assertThatThrownBy(participation::approve)
+            assertThatThrownBy(() -> participation.approve(NOW))
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.PARTICIPATION_APPROVAL_NOT_ALLOWED);
@@ -98,31 +101,31 @@ class ParticipationTest {
         void pendingChangesStatusAndTimestamp() {
             Participation participation = createParticipation();
 
-            participation.reject();
+            participation.reject(NOW);
 
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.REJECTED);
-            assertThat(participation.getRejectedAt()).isNotNull();
+            assertThat(participation.getRejectedAt()).isEqualTo(NOW);
         }
 
         @Test
         @DisplayName("CONTACTING 상태에서도 거절할 수 있다")
         void contactingChangesStatusAndTimestamp() {
             Participation participation = createParticipation();
-            participation.contact();
+            participation.contact(NOW);
 
-            participation.reject();
+            participation.reject(NOW);
 
             assertThat(participation.getStatus()).isEqualTo(ParticipationStatus.REJECTED);
-            assertThat(participation.getRejectedAt()).isNotNull();
+            assertThat(participation.getRejectedAt()).isEqualTo(NOW);
         }
 
         @Test
         @DisplayName("APPROVED 상태에서 거절하면 예외가 발생한다")
         void approvedThrowsException() {
             Participation participation = createParticipation();
-            participation.approve();
+            participation.approve(NOW);
 
-            assertThatThrownBy(participation::reject)
+            assertThatThrownBy(() -> participation.reject(NOW))
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.PARTICIPATION_REJECTION_NOT_ALLOWED);

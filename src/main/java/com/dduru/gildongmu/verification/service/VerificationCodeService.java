@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.verification.service;
 
 import com.dduru.gildongmu.common.exception.InternalServerException;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.verification.dto.VerificationData;
 import com.dduru.gildongmu.verification.exception.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,7 @@ public class VerificationCodeService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final TimeProvider timeProvider;
     
     private static final String REDIS_KEY_PREFIX = "sms:auth:";
     private static final String DAILY_LIMIT_KEY_PREFIX = "sms:daily:";
@@ -91,7 +93,7 @@ public class VerificationCodeService {
         VerificationData data = createVerificationData(phoneNumber, code);
         saveVerificationData(phoneNumber, data);
 
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
+        LocalDateTime expiresAt = timeProvider.now().plusMinutes(EXPIRATION_MINUTES);
         
         return new VerificationCreateResult(code, expiresAt);
     }

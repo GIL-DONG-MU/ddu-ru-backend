@@ -1,10 +1,12 @@
 package com.dduru.gildongmu.destination.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
 import com.dduru.gildongmu.destination.dto.DestinationPreferenceSearchResponse;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
 import com.dduru.gildongmu.recommendation.domain.enums.RecommendationDestinationPreferenceType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,11 +15,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,8 +29,13 @@ import static org.mockito.Mockito.when;
 @DisplayName("DestinationService 테스트")
 class DestinationServiceTest {
 
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
+
     @Mock
     private DestinationRepository destinationRepository;
+
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private DestinationService destinationService;
@@ -34,6 +43,11 @@ class DestinationServiceTest {
     private static final List<String> FALLBACK_CITY_NAMES = List.of(
             "제주도", "부산", "강릉", "후쿠오카", "오사카", "서울", "도쿄", "교토", "방콕", "다낭"
     );
+
+    @BeforeEach
+    void setUpTimeProvider() {
+        lenient().when(timeProvider.now()).thenReturn(NOW);
+    }
 
     @DisplayName("집계 데이터가 없으면 추천 여행지 10개 순서대로 반환한다")
     @Test

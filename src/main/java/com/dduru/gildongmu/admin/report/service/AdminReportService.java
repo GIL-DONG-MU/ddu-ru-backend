@@ -3,6 +3,7 @@ package com.dduru.gildongmu.admin.report.service;
 import com.dduru.gildongmu.admin.report.dto.request.AdminReportUpdateRequest;
 import com.dduru.gildongmu.admin.report.dto.response.AdminReportListResponse;
 import com.dduru.gildongmu.admin.report.dto.response.AdminReportResponse;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.report.domain.Report;
 import com.dduru.gildongmu.report.domain.enums.ReportStatus;
 import com.dduru.gildongmu.report.exception.ReportNotFoundException;
@@ -24,6 +25,7 @@ public class AdminReportService {
 
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final TimeProvider timeProvider;
 
     public AdminReportListResponse findAll(ReportStatus status, Pageable pageable) {
         Page<Report> page = reportRepository.findAllByStatusOptional(status, pageable);
@@ -35,7 +37,7 @@ public class AdminReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(ReportNotFoundException::new);
         User reviewer = userRepository.getByIdOrThrow(reviewerId);
-        report.updateByAdmin(request.status(), reviewer, request.reviewNote());
+        report.updateByAdmin(request.status(), reviewer, request.reviewNote(), timeProvider.now());
         log.info("신고 처리 완료 - reportId={}, status={}, reviewerId={}", reportId, request.status(), reviewerId);
         return AdminReportResponse.from(report);
     }

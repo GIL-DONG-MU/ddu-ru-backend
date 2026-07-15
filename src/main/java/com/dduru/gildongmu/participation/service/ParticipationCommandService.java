@@ -63,7 +63,7 @@ public class ParticipationCommandService {
 
         PrivateChatRoomCreateResponse room = privateChatRoomService.createOrGetRoomWithLockedPost(userId, lockedPost, participantUserId);
 
-        participation.contact();
+        participation.contact(timeProvider.now());
         loggingStatusChange(participation);
 
         return new ParticipationContactResponse(
@@ -82,7 +82,7 @@ public class ParticipationCommandService {
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
 
-        lockedPost.approveParticipation(participation);
+        lockedPost.approveParticipation(participation, timeProvider.now());
         Journey journey = journeyRepository.getByPostIdOrThrow(lockedPost.getId());
         // 신청 이력은 participations에, 협업 멤버는 journey_members에 남긴다.
         // REMOVED 상태 멤버가 있으면 재활성화하고, 없을 때만 새로 저장한다 (unique 제약 보장).
@@ -115,7 +115,7 @@ public class ParticipationCommandService {
         validatePostOwner(lockedPost, userId);
         lockedPost.validateIsOpen();
 
-        participation.reject();
+        participation.reject(timeProvider.now());
         loggingStatusChange(participation);
     }
 

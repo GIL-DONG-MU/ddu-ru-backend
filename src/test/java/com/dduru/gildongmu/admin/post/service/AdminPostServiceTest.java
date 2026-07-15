@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.admin.post.service;
 
 import com.dduru.gildongmu.admin.post.dto.response.AdminPostDetailResponse;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.post.domain.Post;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,11 +34,16 @@ import static org.mockito.Mockito.when;
 @DisplayName("AdminPostService 테스트")
 class AdminPostServiceTest {
 
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
+
     @Mock
     private PostRepository postRepository;
 
     @Mock
     private JsonConverter jsonConverter;
+
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private AdminPostService adminPostService;
@@ -89,6 +96,7 @@ class AdminPostServiceTest {
             Post post = createPost(postId, false);
 
             when(postRepository.getByIdOrThrow(postId)).thenReturn(post);
+            when(timeProvider.now()).thenReturn(NOW);
 
             adminPostService.delete(postId, adminUserId);
 
@@ -152,7 +160,7 @@ class AdminPostServiceTest {
         ReflectionTestUtils.setField(post, "id", postId);
 
         if (deleted) {
-            post.softDelete(55L);
+            post.softDelete(55L, NOW);
         }
 
         return post;
