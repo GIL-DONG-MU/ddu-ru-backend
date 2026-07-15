@@ -2,7 +2,9 @@ package com.dduru.gildongmu.destination.service;
 
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.destination.dto.DestinationInfo;
+import com.dduru.gildongmu.destination.dto.DestinationPreferenceSearchResponse;
 import com.dduru.gildongmu.destination.repository.DestinationRepository;
+import com.dduru.gildongmu.recommendation.domain.enums.RecommendationDestinationPreferenceType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -107,5 +110,58 @@ class DestinationServiceTest {
         destinationService.searchDestinations("  오사카  ");
 
         verify(destinationRepository).searchByKeyword("오사카");
+    }
+
+    @DisplayName("선호 여행지 검색은 국가 결과를 먼저 반환하고 도시 결과를 이어서 반환한다")
+    @Test
+    void searchPreferenceDestinations_returnsCountryFirstThenCities() {
+        Destination tokyo = destination("JP", "일본", "도쿄");
+        Destination osaka = destination("JP", "일본", "오사카");
+        when(destinationRepository.searchByKeyword("일본")).thenReturn(List.of(tokyo, osaka));
+
+        List<DestinationPreferenceSearchResponse> result = destinationService.searchPreferenceDestinations("일본");
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).type()).isEqualTo(RecommendationDestinationPreferenceType.COUNTRY);
+        assertThat(result.get(0).countryCode()).isEqualTo("JP");
+        assertThat(result.get(1).type()).isEqualTo(RecommendationDestinationPreferenceType.CITY);
+        assertThat(result.get(2).type()).isEqualTo(RecommendationDestinationPreferenceType.CITY);
+    }
+
+    @DisplayName("선호 여행지 검색은 국가 결과를 포함해 최대 20건만 반환한다")
+    @Test
+    void searchPreferenceDestinations_limitsTotalResultsToTwenty() {
+        List<Destination> destinations = IntStream.rangeClosed(1, 20)
+                .mapToObj(index -> destination("JP", "일본", "도시" + index))
+                .toList();
+        when(destinationRepository.searchByKeyword("일본")).thenReturn(destinations);
+
+        List<DestinationPreferenceSearchResponse> result = destinationService.searchPreferenceDestinations("일본");
+
+        assertThat(result).hasSize(20);
+        assertThat(result.get(0).type()).isEqualTo(RecommendationDestinationPreferenceType.COUNTRY);
+        assertThat(result)
+                .filteredOn(response -> response.type() == RecommendationDestinationPreferenceType.CITY)
+                .hasSize(19);
+    }
+
+    @DisplayName("선호 여행지 검색어가 도시명에만 매칭되면 국가 결과는 포함하지 않는다")
+    @Test
+    void searchPreferenceDestinations_cityKeywordDoesNotIncludeCountry() {
+        Destination busan = destination("KR", "대한민국", "부산");
+        when(destinationRepository.searchByKeyword("부산")).thenReturn(List.of(busan));
+
+        List<DestinationPreferenceSearchResponse> result = destinationService.searchPreferenceDestinations("부산");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).type()).isEqualTo(RecommendationDestinationPreferenceType.CITY);
+    }
+
+    private Destination destination(String countryCode, String countryName, String city) {
+        return Destination.builder()
+                .countryCode(countryCode)
+                .countryName(countryName)
+                .city(city)
+                .build();
     }
 }
