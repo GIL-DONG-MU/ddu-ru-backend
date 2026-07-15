@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class DestinationService {
 
     private static final int POPULAR_DAYS_LIMIT = 30;
+    private static final int PREFERENCE_SEARCH_LIMIT = 20;
 
     private static final List<String> FALLBACK_CITY_NAMES = List.of(
             "제주도", "부산", "강릉", "후쿠오카", "오사카",
@@ -73,21 +74,33 @@ public class DestinationService {
         List<Destination> matchedDestinations = destinationRepository.searchByKeyword(trimmedKeyword);
 
         List<DestinationPreferenceSearchResponse> searchResponses = new ArrayList<>();
+        searchResponses.addAll(extractCountryResponses(matchedDestinations, trimmedKeyword));
+        searchResponses.addAll(extractCityResponses(matchedDestinations));
 
+        return searchResponses.stream()
+                .limit(PREFERENCE_SEARCH_LIMIT)
+                .toList();
+    }
+
+    private List<DestinationPreferenceSearchResponse> extractCountryResponses(
+            List<Destination> destinations,
+            String keyword
+    ) {
         Map<String, Destination> countryDestinationByCode = new LinkedHashMap<>();
-        for (Destination destination : matchedDestinations) {
-            if (destination.getCountryName().contains(trimmedKeyword)) {
+        for (Destination destination : destinations) {
+            if (destination.getCountryName().contains(keyword)) {
                 countryDestinationByCode.putIfAbsent(destination.getCountryCode(), destination);
             }
         }
-        countryDestinationByCode.values().stream()
+
+        return countryDestinationByCode.values().stream()
                 .map(DestinationPreferenceSearchResponse::country)
-                .forEach(searchResponses::add);
+                .toList();
+    }
 
-        matchedDestinations.stream()
+    private List<DestinationPreferenceSearchResponse> extractCityResponses(List<Destination> destinations) {
+        return destinations.stream()
                 .map(DestinationPreferenceSearchResponse::city)
-                .forEach(searchResponses::add);
-
-        return searchResponses;
+                .toList();
     }
 }
