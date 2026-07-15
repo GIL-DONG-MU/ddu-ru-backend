@@ -122,6 +122,11 @@ public class TravelPreferenceService {
                 .filter(preferenceRequest -> preferenceRequest.type() == RecommendationDestinationPreferenceType.COUNTRY)
                 .toList();
 
+        validateCountryPreferences(countryPreferenceRequests);
+        validateCityPreferences(destinationPreferenceRequests, destinationById);
+    }
+
+    private void validateCountryPreferences(List<DestinationPreferenceRequest> countryPreferenceRequests) {
         boolean hasBlankCountryCode = countryPreferenceRequests.stream()
                 .anyMatch(preferenceRequest -> !StringUtils.hasText(preferenceRequest.countryCode()));
 
@@ -141,7 +146,12 @@ public class TravelPreferenceService {
                 throw new InvalidDestinationPreferenceException();
             }
         }
+    }
 
+    private void validateCityPreferences(
+            List<DestinationPreferenceRequest> destinationPreferenceRequests,
+            Map<Long, Destination> destinationById
+    ) {
         for (DestinationPreferenceRequest preferenceRequest : destinationPreferenceRequests) {
             if (preferenceRequest.type() == RecommendationDestinationPreferenceType.CITY) {
                 if (!destinationById.containsKey(preferenceRequest.destinationId())) {
