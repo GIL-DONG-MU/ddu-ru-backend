@@ -78,17 +78,17 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     }
 
     @Override
-    public int countTotalPostsByUserId(Long userId) {
+    public long countTotalPostsByUserId(Long userId) {
         Long count = queryFactory
                 .select(post.count())
                 .from(post)
                 .where(post.user.id.eq(userId), isNotDeleted())
                 .fetchOne();
-        return count == null ? 0 : count.intValue();
+        return count == null ? 0L : count;
     }
 
     private BooleanExpression myPageStatusFilter(MyPagePostFilter filter, LocalDate today) {
-        if (filter == null || filter == MyPagePostFilter.ALL) return null;
+        if (filter == MyPagePostFilter.ALL) return null;
         return switch (filter) {
             case RECRUITING -> post.endDate.goe(today)
                     .and(post.status.eq(PostStatus.OPEN))
