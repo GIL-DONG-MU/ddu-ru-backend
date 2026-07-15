@@ -7,11 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface DestinationRepository extends JpaRepository<Destination, Long>, DestinationRepositoryCustom {
 
     List<Destination> findByCityIn(List<String> cities);
+
+    List<Destination> findByCountryCodeIn(Collection<String> countryCodes);
 
     @Query(value = "SELECT p.destination_id FROM posts p " +
             "WHERE p.created_at >= :since AND p.is_deleted = false " +

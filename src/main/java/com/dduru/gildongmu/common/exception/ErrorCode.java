@@ -47,6 +47,7 @@ public enum ErrorCode {
     AVATAR_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "아바타 프로필을 찾을 수 없습니다."),
     SURVEY_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "설문조사가 이미 완료된 상태에서는 스킵할 수 없습니다."),
     SURVEY_ALREADY_SUBMITTED(HttpStatus.CONFLICT, "이미 제출된 설문이 존재합니다."),
+    SURVEY_REQUIRED(HttpStatus.FORBIDDEN, "설문 완료가 필요한 기능입니다."),
     INVALID_TRAVEL_TENDENCY_SCORE(HttpStatus.BAD_REQUEST, "여행 성향 점수는 0.0 이상 10.0 이하로 입력해야 합니다."),
 
     // 프로필 (PROFILE)
@@ -173,7 +174,12 @@ public enum ErrorCode {
 
     // 추천 (RECOMMENDATION)
     RECOMMENDATION_TENDENCY_MISSING(HttpStatus.INTERNAL_SERVER_ERROR, "설문 완료 사용자의 여행 성향 점수를 찾을 수 없습니다."),
-    MATE_RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 결과를 찾을 수 없습니다.");
+    MATE_RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 결과를 찾을 수 없습니다."),
+
+    // 여행 선호 설정 (TRAVEL_PREFERENCE)
+    INVALID_AVAILABLE_DATE(HttpStatus.BAD_REQUEST, "여행 가능 종료일은 시작일과 같거나 이후여야 합니다."),
+    DUPLICATE_AVAILABLE_DATE(HttpStatus.BAD_REQUEST, "중복된 여행 가능 날짜가 있습니다."),
+    INVALID_DESTINATION_PREFERENCE(HttpStatus.BAD_REQUEST, "잘못된 여행지 선호 입력입니다.");
 
     private final int status;
     private final String message;
