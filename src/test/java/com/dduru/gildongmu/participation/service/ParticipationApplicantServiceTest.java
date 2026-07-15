@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +41,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ParticipationApplicantService 테스트")
 class ParticipationApplicantServiceTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 11, 12, 0);
 
     @Mock
     private ParticipationRepository participationRepository;
@@ -156,9 +159,9 @@ class ParticipationApplicantServiceTest {
         switch (status) {
             case PENDING -> {
             }
-            case CONTACTING -> participation.contact();
-            case APPROVED -> participation.approve();
-            case REJECTED -> participation.reject();
+            case CONTACTING -> participation.contact(NOW);
+            case APPROVED -> participation.approve(NOW);
+            case REJECTED -> participation.reject(NOW);
         }
     }
 

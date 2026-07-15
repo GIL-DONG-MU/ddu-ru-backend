@@ -70,10 +70,10 @@ public class Report extends BaseTimeEntity {
                 .build();
     }
 
-    public void updateByAdmin(ReportStatus newStatus, User reviewer, String reviewNote) {
+    public void updateByAdmin(ReportStatus newStatus, User reviewer, String reviewNote, LocalDateTime now) {
         this.status = newStatus;
         this.reviewer = reviewer;
-        this.reviewedAt = LocalDateTime.now();
+        this.reviewedAt = now;
         this.reviewNote = reviewNote;
     }
 }

@@ -204,9 +204,9 @@ public class Post extends BaseTimeEntity {
         this.recruitDeadline = endDate.minusDays(1);
     }
 
-    public void softDelete(Long userId) {
+    public void softDelete(Long userId, LocalDateTime now) {
         this.isDeleted = true;
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = now;
         this.deletedBy = userId;
     }
 
@@ -214,8 +214,8 @@ public class Post extends BaseTimeEntity {
         this.status = newStatus;
     }
 
-    public void approveParticipation(Participation participation) {
-        participation.approve();
+    public void approveParticipation(Participation participation, LocalDateTime now) {
+        participation.approve(now);
         incrementRecruitCount();
     }
 

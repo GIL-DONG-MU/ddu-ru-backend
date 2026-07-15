@@ -62,6 +62,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PostRecommendationSelectionServiceTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 7, 4);
+    private static final LocalDateTime NOW = TODAY.atTime(12, 0);
 
     @Autowired
     private UserRepository userRepository;
@@ -434,13 +435,13 @@ class PostRecommendationSelectionServiceTest {
 
     private void applyStatus(Participation participation, ParticipationStatus status) {
         if (status == ParticipationStatus.CONTACTING) {
-            participation.contact();
+            participation.contact(NOW);
         }
         if (status == ParticipationStatus.APPROVED) {
-            participation.approve();
+            participation.approve(NOW);
         }
         if (status == ParticipationStatus.REJECTED) {
-            participation.reject();
+            participation.reject(NOW);
         }
     }
 

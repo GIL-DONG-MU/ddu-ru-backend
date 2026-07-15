@@ -98,8 +98,7 @@ class UserServiceTest {
         // then
         assertThat(response.nickname()).startsWith("뚜비");
         verify(nicknameGenerator, times(10)).generateBaseNickname();
-        verify(nicknameGenerator, times(10)).generateRandomNumber();
+        verify(nicknameGenerator, times(11)).generateRandomNumber();
         verify(profileRepository, times(10)).existsByNickname(eq(duplicatedNickname));
     }
 }
-

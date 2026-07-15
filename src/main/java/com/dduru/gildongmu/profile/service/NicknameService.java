@@ -21,7 +21,6 @@ public class NicknameService {
 
     private static final int NICKNAME_MAX_RETRY_ATTEMPTS = 10;
     private static final String FALLBACK_NICKNAME_PREFIX = "뚜비";
-    private static final int FALLBACK_RANDOM_BOUND = 10000;
 
     private final NicknameGenerator nicknameGenerator;
     private final ProfileRepository profileRepository;
@@ -64,7 +63,7 @@ public class NicknameService {
             }
         }
 
-        String fallbackNickname = FALLBACK_NICKNAME_PREFIX + (System.currentTimeMillis() % FALLBACK_RANDOM_BOUND);
+        String fallbackNickname = FALLBACK_NICKNAME_PREFIX + nicknameGenerator.generateRandomNumber();
         log.warn("유니크한 닉네임 생성에 {}회 실패하여 대체 닉네임 사용: {}", NICKNAME_MAX_RETRY_ATTEMPTS, fallbackNickname);
         return NicknameRandomResponse.of(fallbackNickname);
     }

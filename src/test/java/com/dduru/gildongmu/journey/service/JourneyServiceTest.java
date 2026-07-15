@@ -440,7 +440,7 @@ class JourneyServiceTest {
             User memberUser = createUser(memberUserId, "member");
             JourneyMember member = JourneyMember.createMember(journey, memberUser, LocalDateTime.now());
             Participation participation = Participation.createParticipation(post, memberUser, "같이 가고 싶어요.");
-            post.approveParticipation(participation);
+            post.approveParticipation(participation, LocalDateTime.of(2026, 5, 13, 16, 20));
             ChatRoom room = createGroupChatRoom(roomId, journey);
             ChatRoomMember chatRoomMember = ChatRoomMember.create(room, memberUser, ChatMemberRole.GUEST);
 
