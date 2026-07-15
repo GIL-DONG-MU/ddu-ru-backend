@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -391,7 +392,7 @@ class PostQueryServiceTest {
         void passesRecruitingFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.RECRUITING), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.RECRUITING));
 
@@ -403,7 +404,7 @@ class PostQueryServiceTest {
         void passesTravelEndedFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.TRAVEL_ENDED), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
 
@@ -415,7 +416,7 @@ class PostQueryServiceTest {
         void passesAllFilterToRepository() {
             when(postRepository.findPostsByUserId(eq(1L), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
 
             postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
@@ -435,7 +436,7 @@ class PostQueryServiceTest {
         @DisplayName("totalPostCount를 응답에 포함한다")
         void includesTotalPostCountInResponse() {
             when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
-            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(4);
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(4L);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
@@ -446,7 +447,7 @@ class PostQueryServiceTest {
         @DisplayName("필터와 무관하게 삭제되지 않은 전체 게시글 수를 조회한다")
         void totalCountIsIndependentOfFilter() {
             when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(List.of());
-            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(5);
+            when(postRepository.countTotalPostsByUserId(eq(1L))).thenReturn(5L);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(1L, myPageRequest(null, 10, MyPagePostFilter.TRAVEL_ENDED));
 
@@ -469,7 +470,7 @@ class PostQueryServiceTest {
             Long userId = 1L;
             when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of(createPost(10L), createPost(5L), createPost(1L)));
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3L);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
 
@@ -484,7 +485,7 @@ class PostQueryServiceTest {
             Long userId = 1L;
             when(postRepository.findPostsByUserId(eq(userId), eq(MyPagePostFilter.ALL), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 10, MyPagePostFilter.ALL));
 
@@ -500,7 +501,7 @@ class PostQueryServiceTest {
             Long cursor = 50L;
             when(postRepository.findPostsByUserId(eq(userId), any(), eq(cursor), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of());
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(0L);
 
             postQueryService.retrieveMyPosts(userId, myPageRequest(cursor, 10, MyPagePostFilter.ALL));
 
@@ -516,7 +517,7 @@ class PostQueryServiceTest {
             Post post1 = createPost(1L);
             when(postRepository.findPostsByUserId(eq(userId), any(), isNull(), any(Pageable.class), eq(TODAY)))
                     .thenReturn(List.of(post10, post5, post1));
-            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3);
+            lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(3L);
 
             MyPagePostListResponse response = postQueryService.retrieveMyPosts(userId, myPageRequest(null, 2, MyPagePostFilter.ALL));
 
@@ -532,7 +533,7 @@ class PostQueryServiceTest {
 
     private void stubMyPosts(List<Post> posts) {
         lenient().when(postRepository.findPostsByUserId(any(), any(), any(), any(), any())).thenReturn(posts);
-        lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn(posts.size());
+        lenient().when(postRepository.countTotalPostsByUserId(any())).thenReturn((long) posts.size());
     }
 
     private MyPagePostListRequest myPageRequest(Long cursor, int size, MyPagePostFilter filter) {
@@ -578,6 +579,7 @@ class PostQueryServiceTest {
                 Gender.U, true, null, null, null, "[]", CompanionType.FULL
         );
         ReflectionTestUtils.setField(post, "id", postId);
+        ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.of(2026, 1, 10, 0, 0));
         return post;
     }
 }
