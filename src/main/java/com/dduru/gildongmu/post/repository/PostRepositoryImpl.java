@@ -2,6 +2,7 @@ package com.dduru.gildongmu.post.repository;
 
 import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
+import com.dduru.gildongmu.post.domain.enums.MyPagePostFilter;
 import com.dduru.gildongmu.post.domain.enums.RecruitmentStatusFilter;
 import com.dduru.gildongmu.post.domain.enums.PostSortType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
@@ -57,6 +58,46 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
             case VIEW -> new OrderSpecifier[]{post.viewCount.desc(), post.id.desc()};
             case LIKE -> new OrderSpecifier[]{post.likeCount.desc(), post.id.desc()};
             default -> new OrderSpecifier[]{post.id.desc()};
+        };
+    }
+
+    @Override
+    public List<Post> findPostsByUserId(Long userId, MyPagePostFilter filter, Long cursor, Pageable pageable, LocalDate today) {
+        return queryFactory
+                .selectFrom(post)
+                .leftJoin(post.destination, destination).fetchJoin()
+                .where(
+                        post.user.id.eq(userId),
+                        isNotDeleted(),
+                        cursor != null ? post.id.lt(cursor) : null,
+                        myPageStatusFilter(filter, today)
+                )
+                .orderBy(post.id.desc())
+                .limit(pageable.getPageSize())
+                .fetch();
+    }
+
+    @Override
+    public long countTotalPostsByUserId(Long userId) {
+        Long count = queryFactory
+                .select(post.count())
+                .from(post)
+                .where(post.user.id.eq(userId), isNotDeleted())
+                .fetchOne();
+        return count == null ? 0L : count;
+    }
+
+    private BooleanExpression myPageStatusFilter(MyPagePostFilter filter, LocalDate today) {
+        if (filter == MyPagePostFilter.ALL) return null;
+        return switch (filter) {
+            case RECRUITING -> post.endDate.goe(today)
+                    .and(post.status.eq(PostStatus.OPEN))
+                    .and(post.recruitCount.lt(post.recruitCapacity));
+            case RECRUITMENT_CLOSED -> post.endDate.goe(today)
+                    .and(post.status.eq(PostStatus.CLOSED)
+                            .or(post.recruitCount.goe(post.recruitCapacity)));
+            case TRAVEL_ENDED -> post.endDate.lt(today);
+            default -> null;
         };
     }
 

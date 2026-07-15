@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostLikeController implements PostLikeApiDocs {
     private final PostLikeService postLikeService;
 
+    @Override
     @PostMapping("/{postId}/likes")
     public ResponseEntity<ApiResult<Void>> togglePostLike(@CurrentUser Long userId, @PathVariable Long postId) {
         postLikeService.togglePostLike(userId, postId);

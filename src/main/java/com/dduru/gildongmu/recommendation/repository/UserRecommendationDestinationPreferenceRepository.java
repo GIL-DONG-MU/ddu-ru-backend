@@ -3,12 +3,14 @@ package com.dduru.gildongmu.recommendation.repository;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationDestinationPreference;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface UserRecommendationDestinationPreferenceRepository extends JpaRepository<UserRecommendationDestinationPreference, Long> {
+    // 게시글 추천 필터링 전용 - 엔티티 로드 없이 3개 컬럼만 조회
     @Query("""
             SELECT new com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilterRow(
                 preference.preferenceType,
@@ -19,4 +21,16 @@ public interface UserRecommendationDestinationPreferenceRepository extends JpaRe
             WHERE preference.user.id = :userId
             """)
     List<DestinationPreferenceFilterRow> findFilterRowsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT p FROM UserRecommendationDestinationPreference p
+            LEFT JOIN FETCH p.destination
+            WHERE p.user.id = :userId
+            ORDER BY p.id ASC
+            """)
+    List<UserRecommendationDestinationPreference> findAllByUserIdWithDestination(@Param("userId") Long userId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM UserRecommendationDestinationPreference p WHERE p.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }
