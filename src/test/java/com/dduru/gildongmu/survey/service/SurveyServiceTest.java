@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.survey.service;
 
 import com.dduru.gildongmu.auth.exception.UserNotFoundException;
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
@@ -14,6 +15,7 @@ import com.dduru.gildongmu.survey.dto.request.SurveyRequest;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
 import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
+import com.dduru.gildongmu.survey.exception.SurveyRetakeLockedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
@@ -32,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +46,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("설문조사 서비스 테스트")
 class SurveyServiceTest {
+
+    private static final LocalDate TODAY = LocalDate.of(2026, 7, 1);
 
     @Mock
     private SurveyRepository surveyRepository;
@@ -66,6 +71,8 @@ class SurveyServiceTest {
     private UserRepository userRepository;
     @Mock
     private SuperHostService superHostService;
+    @Mock
+    private TimeProvider timeProvider;
 
     @InjectMocks
     private SurveyService surveyService;
@@ -111,6 +118,10 @@ class SurveyServiceTest {
                 RecordStyleQuestion.EYES_FIRST,
                 List.of(ActivityTag.SIGHTSEEING, ActivityTag.EXHIBITION, ActivityTag.NATURE)
         );
+        ReflectionTestUtils.setField(testSurvey, "createdAt", TODAY.minusDays(30).atStartOfDay());
+        ReflectionTestUtils.setField(testSurvey, "modifiedAt", TODAY.minusDays(30).atStartOfDay());
+
+        lenient().when(timeProvider.today()).thenReturn(TODAY);
     }
 
     @Test
@@ -188,6 +199,10 @@ class SurveyServiceTest {
         assertThat(response.avatarProfile().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
         assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
         assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
+        assertThat(response.lastTestedAt()).isEqualTo(TODAY);
+        assertThat(response.canRetake()).isFalse();
+        assertThat(response.nextRetakeAvailableDate()).isEqualTo(TODAY.plusDays(30));
+        assertThat(response.remainingRetakeDays()).isEqualTo(30);
 
         verify(surveyRepository).save(any(Survey.class));
         verify(travelTendencyRepository).save(any(TravelTendency.class));
@@ -256,6 +271,10 @@ class SurveyServiceTest {
         assertThat(response.avatarProfile().imageUrl()).isEqualTo("https://example.com/avatar-sweet.png");
         assertThat(response.recordStyleType()).isEqualTo(RecordStyleType.A);
         assertThat(response.avatarLabel()).isEqualTo("뚜르 스윗-A");
+        assertThat(response.lastTestedAt()).isEqualTo(TODAY.minusDays(30));
+        assertThat(response.canRetake()).isTrue();
+        assertThat(response.nextRetakeAvailableDate()).isEqualTo(TODAY);
+        assertThat(response.remainingRetakeDays()).isZero();
     }
 
     @Test
@@ -268,8 +287,8 @@ class SurveyServiceTest {
     }
 
     @Test
-    @DisplayName("마이페이지_여행선호설정_수정_성공_온보딩_보상_미호출")
-    void 마이페이지_여행선호설정_수정_성공_온보딩_보상_미호출() {
+    @DisplayName("마이페이지_성향테스트_수정_성공_온보딩_보상_미호출")
+    void 마이페이지_성향테스트_수정_성공_온보딩_보상_미호출() {
         ParsedSurveyData parsedData = new ParsedSurveyData(
                 RhythmQuestion1.PLANNED_ROUTE,
                 RhythmQuestion2.PACK_EARLY,
@@ -321,13 +340,32 @@ class SurveyServiceTest {
         SurveyResponse response = surveyService.update(1L, testRequest);
 
         assertThat(response.avatarType()).isEqualTo(AvatarType.TTUR_DASOM);
+        assertThat(response.lastTestedAt()).isEqualTo(TODAY);
+        assertThat(response.canRetake()).isFalse();
+        assertThat(response.nextRetakeAvailableDate()).isEqualTo(TODAY.plusDays(30));
+        assertThat(response.remainingRetakeDays()).isEqualTo(30);
         verify(onboardingService, never()).completeSurvey(any());
         verify(superHostService, never()).grantOnboardingRewardTicket(any());
     }
 
     @Test
-    @DisplayName("마이페이지_여행선호설정_수정_설문없으면_예외발생")
-    void 마이페이지_여행선호설정_수정_설문없으면_예외발생() {
+    @DisplayName("마이페이지_성향테스트_수정_30일_쿨다운_전이면_예외발생")
+    void 마이페이지_성향테스트_수정_30일_쿨다운_전이면_예외발생() {
+        ReflectionTestUtils.setField(testSurvey, "modifiedAt", TODAY.minusDays(10).atStartOfDay());
+        when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
+        when(surveyRepository.getByUserIdOrThrow(1L)).thenReturn(testSurvey);
+
+        assertThatThrownBy(() -> surveyService.update(1L, testRequest))
+                .isInstanceOf(SurveyRetakeLockedException.class);
+
+        verify(surveyConverter, never()).parseRequest(any());
+        verify(tendencyCalculator, never()).calculate(any());
+        verify(travelTendencyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("마이페이지_성향테스트_수정_설문없으면_예외발생")
+    void 마이페이지_성향테스트_수정_설문없으면_예외발생() {
         when(userRepository.getByIdOrThrow(1L)).thenReturn(testUser);
         when(surveyRepository.getByUserIdOrThrow(1L)).thenThrow(SurveyResultNotFoundException.class);
 
