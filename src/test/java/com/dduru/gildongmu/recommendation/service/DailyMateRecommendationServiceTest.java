@@ -10,11 +10,13 @@ import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.RecommendationBatchClaimResult;
 import com.dduru.gildongmu.recommendation.dto.result.ScoredPostRecommendation;
 import com.dduru.gildongmu.recommendation.support.TravelTendencyScores;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -150,8 +152,34 @@ class DailyMateRecommendationServiceTest {
     }
 
     @Test
-    @DisplayName("동시 생성 unique 충돌은 이미 생성된 묶음을 재사용한다")
-    void reusesBatchAfterUniqueConflict() {
+    @DisplayName("constraint 이름으로 동시 생성 unique 충돌을 판별해 기존 묶음을 재사용한다")
+    void reusesBatchAfterConstraintNameUniqueConflict() {
+        RecommendationApplicantContext context = context();
+        when(contextResolver.resolve(1L)).thenReturn(Optional.of(context));
+        when(claimService.claim(1L, context.today())).thenThrow(
+                new DataIntegrityViolationException(
+                        "could not execute statement",
+                        new ConstraintViolationException(
+                                "duplicate entry",
+                                new SQLException("duplicate key"),
+                                "uk_mate_recommendation_batches_user_date"
+                        )
+                )
+        );
+        when(claimService.findExisting(1L, context.today())).thenReturn(
+                RecommendationBatchClaimResult.existing(10L, MateRecommendationBatchStatus.CREATED)
+        );
+
+        DailyMateRecommendationResult result = service.getOrCreate(1L);
+
+        assertThat(result.batchId()).isEqualTo(10L);
+        assertThat(result.batchStatus()).isEqualTo(MateRecommendationBatchStatus.CREATED);
+        verifyNoInteractions(selectionService, completionService, failureService);
+    }
+
+    @Test
+    @DisplayName("constraint 이름을 얻을 수 없으면 예외 메시지로 unique 충돌을 판별한다")
+    void reusesBatchAfterMessageFallbackUniqueConflict() {
         RecommendationApplicantContext context = context();
         when(contextResolver.resolve(1L)).thenReturn(Optional.of(context));
         when(claimService.claim(1L, context.today())).thenThrow(
@@ -164,7 +192,26 @@ class DailyMateRecommendationServiceTest {
         DailyMateRecommendationResult result = service.getOrCreate(1L);
 
         assertThat(result.batchId()).isEqualTo(10L);
-        assertThat(result.batchStatus()).isEqualTo(MateRecommendationBatchStatus.CREATED);
+        verifyNoInteractions(selectionService, completionService, failureService);
+    }
+
+    @Test
+    @DisplayName("다른 constraint 위반은 기존 예외를 그대로 전파한다")
+    void rethrowsOtherConstraintViolation() {
+        RecommendationApplicantContext context = context();
+        DataIntegrityViolationException failure = new DataIntegrityViolationException(
+                "could not execute statement",
+                new ConstraintViolationException(
+                        "duplicate entry",
+                        new SQLException("duplicate key"),
+                        "uk_other_constraint"
+                )
+        );
+        when(contextResolver.resolve(1L)).thenReturn(Optional.of(context));
+        when(claimService.claim(1L, context.today())).thenThrow(failure);
+
+        assertThatThrownBy(() -> service.getOrCreate(1L)).isSameAs(failure);
+        verify(claimService, never()).findExisting(anyLong(), any(LocalDate.class));
         verifyNoInteractions(selectionService, completionService, failureService);
     }
 

@@ -7,9 +7,11 @@ import com.dduru.gildongmu.recommendation.dto.result.PostRecommendationResult;
 import com.dduru.gildongmu.recommendation.dto.result.RecommendationBatchClaimResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -75,11 +77,22 @@ public class DailyMateRecommendationService {
 
     private boolean isBatchUniqueViolation(DataIntegrityViolationException exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException constraintViolation
+                    && isBatchUniqueConstraint(constraintViolation.getConstraintName())) {
+                return true;
+            }
+        }
+
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             String message = cause.getMessage();
-            if (message != null && message.toLowerCase().contains(BATCH_UNIQUE_KEY)) {
+            if (message != null && message.toLowerCase(Locale.ROOT).contains(BATCH_UNIQUE_KEY)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isBatchUniqueConstraint(String constraintName) {
+        return constraintName != null && constraintName.equalsIgnoreCase(BATCH_UNIQUE_KEY);
     }
 }
