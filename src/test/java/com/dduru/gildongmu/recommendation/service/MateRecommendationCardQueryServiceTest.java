@@ -106,7 +106,7 @@ class MateRecommendationCardQueryServiceTest {
         closed.changeStatus(PostStatus.CLOSED);
         Post full = post(host("full"), jeju, TODAY.plusDays(3), TODAY.plusDays(5), Gender.U, CompanionType.FULL, 1);
         Post deleted = post(host("deleted"), jeju, TODAY.plusDays(4), TODAY.plusDays(6), Gender.U, CompanionType.FULL, 4);
-        deleted.softDelete(deleted.getUser().getId());
+        deleted.softDelete(deleted.getUser().getId(), TODAY.atStartOfDay());
         recommendation(batch, closed, 1, 90);
         recommendation(batch, full, 2, 89);
         recommendation(batch, deleted, 3, 88);
