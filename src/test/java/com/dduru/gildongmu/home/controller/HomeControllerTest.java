@@ -182,7 +182,7 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 메이트 추천 섹션을 조회할 수 있다")
     void retrieveMateRecommendations_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(true));
+        MockMvc mockMvc = mockMvcWithUser(20L, mock(UserOnboardingRepository.class));
 
         mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
                 .andExpect(status().isOk())
@@ -295,7 +295,7 @@ class HomeControllerTest {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         DailyMateRecommendationService dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
-        when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(dailyResult);
+        when(dailyMateRecommendationService.getOrCreate(userId)).thenReturn(dailyResult);
         MateRecommendationQueryService mateRecommendationQueryService = new MateRecommendationQueryService(
                 dailyMateRecommendationService,
                 mock(MateRecommendationCardQueryService.class)
