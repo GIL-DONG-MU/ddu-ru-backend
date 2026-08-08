@@ -154,6 +154,16 @@ class HomeQueryServiceTest {
         }
 
         @Test
+        @DisplayName("추천 생성 중 상태를 홈 응답으로 변환한다")
+        void generating() {
+            when(dailyMateRecommendationQueryService.retrieve(10L))
+                    .thenReturn(MateRecommendationQueryResult.generating());
+
+            assertThat(recommendationQueryService.retrieve(10L).availabilityStatus())
+                    .isEqualTo(MateRecommendationResponse.AvailabilityStatus.GENERATING);
+        }
+
+        @Test
         @DisplayName("추천 결과와 추천 이유를 홈 카드 응답으로 변환한다")
         void recommendationCard() {
             when(dailyMateRecommendationQueryService.retrieve(10L)).thenReturn(

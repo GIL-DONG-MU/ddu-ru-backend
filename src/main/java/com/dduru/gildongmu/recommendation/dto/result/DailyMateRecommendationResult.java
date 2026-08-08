@@ -32,6 +32,18 @@ public record DailyMateRecommendationResult(
         );
     }
 
+    public static DailyMateRecommendationResult generating(
+            Long batchId,
+            RecommendationApplicantContext applicantContext
+    ) {
+        return new DailyMateRecommendationResult(
+                RecommendationAvailabilityStatus.GENERATING,
+                batchId,
+                MateRecommendationBatchStatus.CREATED,
+                applicantContext
+        );
+    }
+
     public boolean hasCompletedRecommendations() {
         return batchStatus == MateRecommendationBatchStatus.COMPLETED;
     }

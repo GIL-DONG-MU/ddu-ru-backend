@@ -21,6 +21,9 @@ public class DailyMateRecommendationQueryService {
         if (dailyResult.availabilityStatus() == RecommendationAvailabilityStatus.SURVEY_REQUIRED) {
             return MateRecommendationQueryResult.surveyRequired();
         }
+        if (dailyResult.availabilityStatus() == RecommendationAvailabilityStatus.GENERATING) {
+            return MateRecommendationQueryResult.generating();
+        }
         if (!dailyResult.hasCompletedRecommendations()) {
             return MateRecommendationQueryResult.available(null, List.of());
         }

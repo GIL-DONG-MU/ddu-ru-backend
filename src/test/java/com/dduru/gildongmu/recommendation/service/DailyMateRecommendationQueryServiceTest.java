@@ -63,6 +63,20 @@ class DailyMateRecommendationQueryServiceTest {
     }
 
     @Test
+    @DisplayName("추천 묶음 생성 중에는 생성 중 상태를 반환한다")
+    void generatingBatch() {
+        when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(
+                DailyMateRecommendationResult.generating(1L, null)
+        );
+
+        MateRecommendationQueryResult result = queryService.retrieve(10L);
+
+        assertThat(result.availabilityStatus()).isEqualTo(RecommendationAvailabilityStatus.GENERATING);
+        assertThat(result.recommendations()).isEmpty();
+        verifyNoInteractions(visibleCardQueryService);
+    }
+
+    @Test
     @DisplayName("완료된 추천 묶음은 노출 가능한 카드를 조회한다")
     void completedBatch() {
         LocalDate today = LocalDate.of(2026, 5, 13);

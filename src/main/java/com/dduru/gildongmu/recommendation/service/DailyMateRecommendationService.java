@@ -37,6 +37,9 @@ public class DailyMateRecommendationService {
         RecommendationBatchClaimResult claim = claim(userId, context);
         if (!claim.claimed()) {
             log.info("일일 추천 묶음 재사용 - userId={}, batchId={}, status={}", userId, claim.batchId(), claim.status());
+            if (claim.status() == MateRecommendationBatchStatus.CREATED) {
+                return DailyMateRecommendationResult.generating(claim.batchId(), context);
+            }
             return DailyMateRecommendationResult.available(claim.batchId(), claim.status(), context);
         }
 

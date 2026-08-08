@@ -210,6 +210,23 @@ class HomeControllerTest {
     }
 
     @Test
+    @DisplayName("추천 생성 중인 회원은 메이트 추천 섹션에서 GENERATING 상태를 받는다")
+    void retrieveMateRecommendations_memberGenerating() throws Exception {
+        MockMvc mockMvc = mockMvcWithUser(
+                10L,
+                onboardingRepository(true),
+                DailyMateRecommendationResult.generating(1L, null)
+        );
+
+        mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.availabilityStatus").value("GENERATING"))
+                .andExpect(jsonPath("$.data.remainingFreeCount").value(0))
+                .andExpect(jsonPath("$.data.recommendations.length()").value(0));
+    }
+
+    @Test
     @DisplayName("비회원도 슈퍼호스트 섹션을 조회할 수 있다")
     void retrieveSuperHosts_guest() throws Exception {
         MockMvc mockMvc = mockMvcWithUser(null, mock(UserOnboardingRepository.class));

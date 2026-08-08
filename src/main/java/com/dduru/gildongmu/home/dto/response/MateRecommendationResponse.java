@@ -16,6 +16,14 @@ public record MateRecommendationResponse(
         );
     }
 
+    public static MateRecommendationResponse generating() {
+        return new MateRecommendationResponse(
+                AvailabilityStatus.GENERATING,
+                0,
+                List.of()
+        );
+    }
+
     public static MateRecommendationResponse available(List<Item> recommendations) {
         return new MateRecommendationResponse(
                 AvailabilityStatus.AVAILABLE,
@@ -26,6 +34,7 @@ public record MateRecommendationResponse(
 
     public enum AvailabilityStatus {
         AVAILABLE,
+        GENERATING,
         SURVEY_REQUIRED
     }
 

@@ -20,6 +20,14 @@ public record MateRecommendationQueryResult(
         );
     }
 
+    public static MateRecommendationQueryResult generating() {
+        return new MateRecommendationQueryResult(
+                RecommendationAvailabilityStatus.GENERATING,
+                null,
+                List.of()
+        );
+    }
+
     public static MateRecommendationQueryResult available(
             LocalDate referenceDate,
             List<MateRecommendationCardQueryResult> recommendations
@@ -33,5 +41,9 @@ public record MateRecommendationQueryResult(
 
     public boolean requiresSurvey() {
         return availabilityStatus == RecommendationAvailabilityStatus.SURVEY_REQUIRED;
+    }
+
+    public boolean isGenerating() {
+        return availabilityStatus == RecommendationAvailabilityStatus.GENERATING;
     }
 }

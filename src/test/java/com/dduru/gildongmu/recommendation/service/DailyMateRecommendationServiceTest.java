@@ -174,6 +174,7 @@ class DailyMateRecommendationServiceTest {
 
         assertThat(result.batchId()).isEqualTo(10L);
         assertThat(result.batchStatus()).isEqualTo(MateRecommendationBatchStatus.CREATED);
+        assertThat(result.availabilityStatus()).isEqualTo(RecommendationAvailabilityStatus.GENERATING);
         verifyNoInteractions(selectionService, completionService, failureService);
     }
 
@@ -192,6 +193,7 @@ class DailyMateRecommendationServiceTest {
         DailyMateRecommendationResult result = service.getOrCreate(1L);
 
         assertThat(result.batchId()).isEqualTo(10L);
+        assertThat(result.availabilityStatus()).isEqualTo(RecommendationAvailabilityStatus.GENERATING);
         verifyNoInteractions(selectionService, completionService, failureService);
     }
 

@@ -19,6 +19,9 @@ public class HomeRecommendationQueryService {
         if (result.requiresSurvey()) {
             return MateRecommendationResponse.surveyRequired();
         }
+        if (result.isGenerating()) {
+            return MateRecommendationResponse.generating();
+        }
 
         return MateRecommendationResponse.available(
                 result.recommendations().stream()
