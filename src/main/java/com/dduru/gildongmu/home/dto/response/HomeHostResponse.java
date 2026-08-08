@@ -1,28 +1,12 @@
 package com.dduru.gildongmu.home.dto.response;
 
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
+
 public record HomeHostResponse(
         String nickname,
-        ProfileImage profileImageInfo,
+        ProfileImageInfo profileImageInfo,
         int age,
         Gender gender
 ) {
-
-    public enum Gender {
-        M,
-        F,
-        U
-    }
-
-    public record ProfileImage(
-            ImageType type,
-            String url,
-            Long bgColorId
-    ) {
-    }
-
-    public enum ImageType {
-        AVATAR,
-        UPLOADED,
-        DEFAULT
-    }
 }

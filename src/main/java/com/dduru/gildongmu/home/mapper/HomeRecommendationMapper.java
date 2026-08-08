@@ -4,6 +4,7 @@ import com.dduru.gildongmu.common.util.JsonConverter;
 import com.dduru.gildongmu.home.dto.response.HomeHostResponse;
 import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.dto.query.MateRecommendationCardQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.RecommendationReason;
@@ -49,22 +50,17 @@ public class HomeRecommendationMapper {
         ProfileImageType imageType = card.hostProfileImageType() == null
                 ? ProfileImageType.DEFAULT
                 : card.hostProfileImageType();
-        String imageUrl = profileImageResolver.resolve(
-                imageType,
-                card.hostUploadedImageUrl(),
-                card.hostAvatarImageUrl()
-        );
-        Long bgColorId = imageType == ProfileImageType.AVATAR ? card.hostBgColorId() : null;
-
         return new HomeHostResponse(
                 card.hostNickname(),
-                new HomeHostResponse.ProfileImage(
-                        HomeHostResponse.ImageType.valueOf(imageType.name()),
-                        imageUrl,
-                        bgColorId
+                ProfileImageInfo.from(
+                        imageType,
+                        card.hostUploadedImageUrl(),
+                        card.hostAvatarImageUrl(),
+                        card.hostBgColorId(),
+                        profileImageResolver
                 ),
                 RecommendationAgeCalculator.calculate(card.hostBirthday(), today),
-                HomeHostResponse.Gender.valueOf(card.hostGender().name())
+                card.hostGender()
         );
     }
 

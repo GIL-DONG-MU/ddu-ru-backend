@@ -3,6 +3,9 @@ package com.dduru.gildongmu.home.service;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.dto.response.HomeHostResponse;
 import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
+import com.dduru.gildongmu.profile.domain.enums.Gender;
+import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
+import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,15 +25,15 @@ public class HomeSuperHostQueryService {
         // TODO: userId로 hasLiked 여부 조회 (실제 데이터 연동 시)
         return List.of(
                 superHost(501L, "제주 동쪽 일출 투어", "제주도 한라산", baseStartDate, baseStartDate.plusDays(3),
-                        3, 4, List.of("일출", "등산"), uploadedHost("여행자민지", 28, HomeHostResponse.Gender.F), 723),
+                        3, 4, List.of("일출", "등산"), uploadedHost("여행자민지", 28, Gender.F), 723),
                 superHost(502L, "부산 야경 맛집 산책", "부산 광안리", baseStartDate.plusDays(5), baseStartDate.plusDays(7),
-                        2, 5, List.of("맛집", "야경"), avatarHost("부산가이드", 34, HomeHostResponse.Gender.M, 3L), 681),
+                        2, 5, List.of("맛집", "야경"), avatarHost("부산가이드", 34, Gender.M, 3L), 681),
                 superHost(503L, "강릉 바다 감성 여행", "강원도 강릉", baseStartDate.plusDays(8), baseStartDate.plusDays(10),
-                        4, 6, List.of("바다", "사진"), uploadedHost("바다수집가", 29, HomeHostResponse.Gender.F), 598),
+                        4, 6, List.of("바다", "사진"), uploadedHost("바다수집가", 29, Gender.F), 598),
                 superHost(504L, "여수 밤바다 산책", "전남 여수", baseStartDate.plusDays(11), baseStartDate.plusDays(13),
-                        2, 4, List.of("산책", "야경"), avatarHost("여수러버", 32, HomeHostResponse.Gender.U, 4L), 512),
+                        2, 4, List.of("산책", "야경"), avatarHost("여수러버", 32, Gender.U, 4L), 512),
                 superHost(505L, "전주 한옥마을 먹방", "전주 한옥마을", baseStartDate.plusDays(14), baseStartDate.plusDays(15),
-                        3, 5, List.of("맛집", "한옥"), uploadedHost("먹방메이트", 27, HomeHostResponse.Gender.F), 476)
+                        3, 5, List.of("맛집", "한옥"), uploadedHost("먹방메이트", 27, Gender.F), 476)
         );
     }
 
@@ -63,11 +66,11 @@ public class HomeSuperHostQueryService {
         );
     }
 
-    private static HomeHostResponse uploadedHost(String nickname, int age, HomeHostResponse.Gender gender) {
+    private static HomeHostResponse uploadedHost(String nickname, int age, Gender gender) {
         return new HomeHostResponse(
                 nickname,
-                new HomeHostResponse.ProfileImage(
-                        HomeHostResponse.ImageType.UPLOADED,
+                new ProfileImageInfo(
+                        ProfileImageType.UPLOADED,
                         HomeMockData.PROFILE_IMAGE_URL,
                         null
                 ),
@@ -79,13 +82,13 @@ public class HomeSuperHostQueryService {
     private static HomeHostResponse avatarHost(
             String nickname,
             int age,
-            HomeHostResponse.Gender gender,
+            Gender gender,
             Long bgColorId
     ) {
         return new HomeHostResponse(
                 nickname,
-                new HomeHostResponse.ProfileImage(
-                        HomeHostResponse.ImageType.AVATAR,
+                new ProfileImageInfo(
+                        ProfileImageType.AVATAR,
                         HomeMockData.PROFILE_IMAGE_URL,
                         bgColorId
                 ),
