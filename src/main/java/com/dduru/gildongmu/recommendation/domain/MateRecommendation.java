@@ -2,6 +2,8 @@ package com.dduru.gildongmu.recommendation.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.post.domain.Post;
+import com.dduru.gildongmu.recommendation.exception.InvalidMateRecommendationMatchPercentageException;
+import com.dduru.gildongmu.recommendation.exception.InvalidMateRecommendationRankException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -51,14 +53,19 @@ public class MateRecommendation extends BaseTimeEntity {
             String matchReasons,
             String cautionPoints
     ) {
-        if (recommendationRank < 1 || recommendationRank > RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS) {
-            throw new IllegalArgumentException(
-                    "Recommendation rank must be between 1 and "
-                            + RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS
+        if (recommendationRank < RecommendationPolicy.MIN_RECOMMENDATION_RANK
+                || recommendationRank > RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS) {
+            throw new InvalidMateRecommendationRankException(
+                    RecommendationPolicy.MIN_RECOMMENDATION_RANK,
+                    RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS
             );
         }
-        if (matchPercentage < 0 || matchPercentage > 100) {
-            throw new IllegalArgumentException("Match percentage must be between 0 and 100");
+        if (matchPercentage < RecommendationPolicy.MIN_MATCH_PERCENTAGE
+                || matchPercentage > RecommendationPolicy.MAX_MATCH_PERCENTAGE) {
+            throw new InvalidMateRecommendationMatchPercentageException(
+                    RecommendationPolicy.MIN_MATCH_PERCENTAGE,
+                    RecommendationPolicy.MAX_MATCH_PERCENTAGE
+            );
         }
         this.batch = batch;
         this.post = post;
