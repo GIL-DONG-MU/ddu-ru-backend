@@ -16,7 +16,7 @@ public class RecommendationBatchFailureService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markFailed(Long batchId, Throwable throwable) {
-        MateRecommendationBatch batch = batchRepository.findByIdForUpdate(batchId).orElse(null);
+        MateRecommendationBatch batch = batchRepository.findByIdWithLock(batchId).orElse(null);
         if (batch == null || batch.getStatus() != MateRecommendationBatchStatus.CREATED) {
             return;
         }

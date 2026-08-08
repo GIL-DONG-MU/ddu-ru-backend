@@ -23,7 +23,7 @@ public interface MateRecommendationRepository extends JpaRepository<MateRecommen
             WHERE r.id = :recommendationId
               AND b.user.id = :userId
             """)
-    Optional<MateRecommendation> findOwnedByIdForUpdate(
+    Optional<MateRecommendation> findOwnedByIdWithLock(
             @Param("recommendationId") Long recommendationId,
             @Param("userId") Long userId
     );

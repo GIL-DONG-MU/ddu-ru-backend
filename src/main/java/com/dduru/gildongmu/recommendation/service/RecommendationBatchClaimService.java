@@ -24,7 +24,7 @@ public class RecommendationBatchClaimService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public RecommendationBatchClaimResult claim(Long userId, LocalDate recommendationDate) {
         Optional<MateRecommendationBatch> existing =
-                batchRepository.findByUserIdAndRecommendationDateForUpdate(userId, recommendationDate);
+                batchRepository.findByUserIdAndRecommendationDateWithLock(userId, recommendationDate);
 
         if (existing.isPresent()) {
             MateRecommendationBatch batch = existing.get();

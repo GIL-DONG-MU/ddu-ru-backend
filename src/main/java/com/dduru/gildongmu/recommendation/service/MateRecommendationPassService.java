@@ -21,10 +21,10 @@ public class MateRecommendationPassService {
 
     @Transactional
     public void pass(Long userId, Long recommendationId) {
-        userRepository.findByIdForUpdate(userId).orElseThrow(UserNotFoundException::new);
+        userRepository.findByIdWithLock(userId).orElseThrow(UserNotFoundException::new);
 
         MateRecommendation recommendation = recommendationRepository
-                .findOwnedByIdForUpdate(recommendationId, userId)
+                .findOwnedByIdWithLock(recommendationId, userId)
                 .orElseThrow(MateRecommendationNotFoundException::new);
 
         Long postId = recommendation.getPost().getId();

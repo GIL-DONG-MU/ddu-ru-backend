@@ -46,7 +46,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :id")
-    Optional<User> findByIdForUpdate(@Param("id") Long id);
+    Optional<User> findByIdWithLock(@Param("id") Long id);
 
     @Query("SELECT u.id FROM User u WHERE u.id IN :ids AND u.notificationEnabled = true")
     List<Long> findEnabledUserIds(@Param("ids") List<Long> ids);

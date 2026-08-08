@@ -31,7 +31,7 @@ public class RecommendationBatchCompletionService {
 
     @Transactional
     public void complete(Long batchId, PostRecommendationResult result) {
-        MateRecommendationBatch batch = batchRepository.findByIdForUpdate(batchId)
+        MateRecommendationBatch batch = batchRepository.findByIdWithLock(batchId)
                 .orElseThrow(() -> new IllegalStateException("Recommendation batch not found: " + batchId));
 
         if (result.status() == PostRecommendationResultStatus.NO_CANDIDATES) {

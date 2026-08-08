@@ -21,12 +21,12 @@ public interface MateRecommendationBatchRepository extends JpaRepository<MateRec
             WHERE b.user.id = :userId
               AND b.recommendationDate = :recommendationDate
             """)
-    Optional<MateRecommendationBatch> findByUserIdAndRecommendationDateForUpdate(
+    Optional<MateRecommendationBatch> findByUserIdAndRecommendationDateWithLock(
             @Param("userId") Long userId,
             @Param("recommendationDate") LocalDate recommendationDate
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM MateRecommendationBatch b WHERE b.id = :id")
-    Optional<MateRecommendationBatch> findByIdForUpdate(@Param("id") Long id);
+    Optional<MateRecommendationBatch> findByIdWithLock(@Param("id") Long id);
 }
