@@ -52,7 +52,10 @@ public class MateRecommendation extends BaseTimeEntity {
             String cautionPoints
     ) {
         if (recommendationRank < 1 || recommendationRank > RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS) {
-            throw new IllegalArgumentException("Recommendation rank must be between 1 and 3");
+            throw new IllegalArgumentException(
+                    "Recommendation rank must be between 1 and "
+                            + RecommendationPolicy.MAX_DAILY_RECOMMENDATIONS
+            );
         }
         if (matchPercentage < 0 || matchPercentage > 100) {
             throw new IllegalArgumentException("Match percentage must be between 0 and 100");
