@@ -1,11 +1,11 @@
-package com.dduru.gildongmu.recommendation.support;
+package com.dduru.gildongmu.profile.utils;
 
 import java.time.LocalDate;
 import java.time.Period;
 
-public final class RecommendationAgeCalculator {
+public final class AgeCalculator {
 
-    private RecommendationAgeCalculator() {
+    private AgeCalculator() {
     }
 
     public static Integer calculate(LocalDate birthday, LocalDate today) {

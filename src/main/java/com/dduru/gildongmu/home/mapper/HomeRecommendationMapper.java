@@ -5,10 +5,10 @@ import com.dduru.gildongmu.home.dto.response.HomeHostResponse;
 import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.dto.response.ProfileImageInfo;
+import com.dduru.gildongmu.profile.utils.AgeCalculator;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.dto.query.MateRecommendationCardQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.RecommendationReason;
-import com.dduru.gildongmu.recommendation.support.RecommendationAgeCalculator;
 import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -59,7 +59,7 @@ public class HomeRecommendationMapper {
                         card.hostBgColorId(),
                         profileImageResolver
                 ),
-                RecommendationAgeCalculator.calculate(card.hostBirthday(), today),
+                AgeCalculator.calculate(card.hostBirthday(), today),
                 card.hostGender()
         );
     }

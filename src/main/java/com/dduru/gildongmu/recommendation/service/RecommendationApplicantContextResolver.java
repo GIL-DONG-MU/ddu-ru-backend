@@ -2,6 +2,7 @@ package com.dduru.gildongmu.recommendation.service;
 
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.profile.exception.ProfileNotFoundException;
+import com.dduru.gildongmu.profile.utils.AgeCalculator;
 import com.dduru.gildongmu.recommendation.domain.UserRecommendationAvailableDate;
 import com.dduru.gildongmu.recommendation.dto.query.ApplicantRecommendationQueryResult;
 import com.dduru.gildongmu.recommendation.dto.query.DestinationPreferenceFilter;
@@ -12,7 +13,6 @@ import com.dduru.gildongmu.recommendation.repository.ApplicantRecommendationQuer
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationAvailableDateRepository;
 import com.dduru.gildongmu.recommendation.repository.UserRecommendationDestinationPreferenceRepository;
 import com.dduru.gildongmu.recommendation.support.AvailableDateRange;
-import com.dduru.gildongmu.recommendation.support.RecommendationAgeCalculator;
 import com.dduru.gildongmu.recommendation.support.TravelTendencyScores;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -53,7 +53,7 @@ public class RecommendationApplicantContextResolver {
         return Optional.of(new RecommendationApplicantContext(
                 today,
                 applicant.gender(),
-                RecommendationAgeCalculator.calculate(applicant.birthday(), today),
+                AgeCalculator.calculate(applicant.birthday(), today),
                 destinationPreferenceFilter(userId),
                 availableDateRanges(userId),
                 applicantScores(applicant)
