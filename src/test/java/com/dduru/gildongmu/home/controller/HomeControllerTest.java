@@ -8,16 +8,22 @@ import com.dduru.gildongmu.common.exception.GlobalExceptionHandler;
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
-import com.dduru.gildongmu.home.HomeEndpoints;
-import com.dduru.gildongmu.home.service.HomeService;
+import com.dduru.gildongmu.home.mapper.HomeRecommendationMapper;
+import com.dduru.gildongmu.home.service.HomeOverviewQueryService;
+import com.dduru.gildongmu.home.service.HomePopularDestinationQueryService;
+import com.dduru.gildongmu.home.service.HomeRecommendationQueryService;
+import com.dduru.gildongmu.home.service.HomeSuperHostQueryService;
+import com.dduru.gildongmu.home.service.HomeTripQueryService;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
+import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.domain.enums.MateRecommendationBatchStatus;
 import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
 import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationService;
 import com.dduru.gildongmu.recommendation.service.MateRecommendationCardQueryService;
+import com.dduru.gildongmu.recommendation.service.MateRecommendationQueryService;
 import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -287,19 +293,26 @@ class HomeControllerTest {
         ObjectMapper objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         DailyMateRecommendationService dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
         when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(dailyResult);
-        HomeService homeService = new HomeService(
-                timeProvider,
-                userOnboardingRepository,
+        MateRecommendationQueryService mateRecommendationQueryService = new MateRecommendationQueryService(
                 dailyMateRecommendationService,
-                mock(MateRecommendationCardQueryService.class),
+                mock(MateRecommendationCardQueryService.class)
+        );
+        HomeRecommendationMapper recommendationMapper = new HomeRecommendationMapper(
                 new RecommendationReasonJsonConverter(objectMapper),
                 mock(ProfileImageResolver.class),
                 new JsonConverter(objectMapper)
         );
 
-        return standaloneSetup(new HomeController(homeService))
+        return standaloneSetup(new HomeController(
+                new HomeOverviewQueryService(onboardingService),
+                new HomeTripQueryService(timeProvider, onboardingService),
+                new HomePopularDestinationQueryService(timeProvider),
+                new HomeRecommendationQueryService(mateRecommendationQueryService, recommendationMapper),
+                new HomeSuperHostQueryService(timeProvider)
+        ))
                 .setCustomArgumentResolvers(new FixedCurrentUserArgumentResolver(userId))
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())

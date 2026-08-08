@@ -4,7 +4,7 @@ import com.dduru.gildongmu.common.jwt.JwtAuthenticationEntryPoint;
 import com.dduru.gildongmu.common.jwt.JwtAuthenticationFilter;
 import com.dduru.gildongmu.common.jwt.JwtAccessDeniedHandler;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
-import com.dduru.gildongmu.home.HomeEndpoints;
+import com.dduru.gildongmu.home.controller.HomeEndpoints;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
