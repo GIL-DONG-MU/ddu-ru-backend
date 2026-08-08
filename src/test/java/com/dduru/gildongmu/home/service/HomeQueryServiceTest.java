@@ -18,7 +18,7 @@ import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.dto.query.MateRecommendationCardQueryResult;
 import com.dduru.gildongmu.recommendation.dto.result.MateRecommendationQueryResult;
-import com.dduru.gildongmu.recommendation.service.MateRecommendationQueryService;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationQueryService;
 import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -45,7 +45,7 @@ class HomeQueryServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 13, 12, 30);
 
     private UserOnboardingRepository userOnboardingRepository;
-    private MateRecommendationQueryService mateRecommendationQueryService;
+    private DailyMateRecommendationQueryService dailyMateRecommendationQueryService;
     private HomeOverviewQueryService overviewQueryService;
     private HomePopularDestinationQueryService popularDestinationQueryService;
     private HomeTripQueryService tripQueryService;
@@ -60,14 +60,14 @@ class HomeQueryServiceTest {
         ));
         userOnboardingRepository = mock(UserOnboardingRepository.class);
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
-        mateRecommendationQueryService = mock(MateRecommendationQueryService.class);
+        dailyMateRecommendationQueryService = mock(DailyMateRecommendationQueryService.class);
         ObjectMapper objectMapper = new ObjectMapper();
 
         overviewQueryService = new HomeOverviewQueryService(onboardingService);
         popularDestinationQueryService = new HomePopularDestinationQueryService(timeProvider);
         tripQueryService = new HomeTripQueryService(timeProvider, onboardingService);
         recommendationQueryService = new HomeRecommendationQueryService(
-                mateRecommendationQueryService,
+                dailyMateRecommendationQueryService,
                 new HomeRecommendationMapper(
                         new RecommendationReasonJsonConverter(objectMapper),
                         mock(ProfileImageResolver.class),
@@ -146,7 +146,7 @@ class HomeQueryServiceTest {
         @Test
         @DisplayName("설문 미완료 상태를 홈 응답으로 변환한다")
         void surveyRequired() {
-            when(mateRecommendationQueryService.retrieve(10L))
+            when(dailyMateRecommendationQueryService.retrieve(10L))
                     .thenReturn(MateRecommendationQueryResult.surveyRequired());
 
             assertThat(recommendationQueryService.retrieve(10L).availabilityStatus())
@@ -156,7 +156,7 @@ class HomeQueryServiceTest {
         @Test
         @DisplayName("추천 결과와 추천 이유를 홈 카드 응답으로 변환한다")
         void recommendationCard() {
-            when(mateRecommendationQueryService.retrieve(10L)).thenReturn(
+            when(dailyMateRecommendationQueryService.retrieve(10L)).thenReturn(
                     MateRecommendationQueryResult.available(NOW.toLocalDate(), List.of(sampleRecommendationCard()))
             );
 

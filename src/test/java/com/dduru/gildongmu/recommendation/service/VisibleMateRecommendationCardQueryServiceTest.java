@@ -46,8 +46,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import({QueryDslConfig.class, MateRecommendationCardQueryRepository.class})
-@DisplayName("홈 추천 카드 현재 조건 재검증 테스트")
-class MateRecommendationCardQueryServiceTest {
+@DisplayName("노출 가능한 메이트 추천 카드 조회 테스트")
+class VisibleMateRecommendationCardQueryServiceTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 7, 15);
 
@@ -62,7 +62,7 @@ class MateRecommendationCardQueryServiceTest {
     @Autowired private MateRecommendationPassRepository passRepository;
     @Autowired private MateRecommendationCardQueryRepository cardQueryRepository;
 
-    private MateRecommendationCardQueryService queryService;
+    private VisibleMateRecommendationCardQueryService queryService;
     private User applicant;
     private Destination jeju;
     private Destination busan;
@@ -70,7 +70,7 @@ class MateRecommendationCardQueryServiceTest {
 
     @BeforeEach
     void setUp() {
-        queryService = new MateRecommendationCardQueryService(
+        queryService = new VisibleMateRecommendationCardQueryService(
                 cardQueryRepository,
                 new RecommendationAvailableDateMatcher()
         );

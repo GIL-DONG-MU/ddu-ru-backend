@@ -21,9 +21,9 @@ import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.domain.enums.MateRecommendationBatchStatus;
 import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationQueryService;
 import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationService;
-import com.dduru.gildongmu.recommendation.service.MateRecommendationCardQueryService;
-import com.dduru.gildongmu.recommendation.service.MateRecommendationQueryService;
+import com.dduru.gildongmu.recommendation.service.VisibleMateRecommendationCardQueryService;
 import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -296,9 +296,9 @@ class HomeControllerTest {
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         DailyMateRecommendationService dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
         when(dailyMateRecommendationService.getOrCreate(userId)).thenReturn(dailyResult);
-        MateRecommendationQueryService mateRecommendationQueryService = new MateRecommendationQueryService(
+        DailyMateRecommendationQueryService dailyMateRecommendationQueryService = new DailyMateRecommendationQueryService(
                 dailyMateRecommendationService,
-                mock(MateRecommendationCardQueryService.class)
+                mock(VisibleMateRecommendationCardQueryService.class)
         );
         HomeRecommendationMapper recommendationMapper = new HomeRecommendationMapper(
                 new RecommendationReasonJsonConverter(objectMapper),
@@ -310,7 +310,7 @@ class HomeControllerTest {
                 new HomeOverviewQueryService(onboardingService),
                 new HomeTripQueryService(timeProvider, onboardingService),
                 new HomePopularDestinationQueryService(timeProvider),
-                new HomeRecommendationQueryService(mateRecommendationQueryService, recommendationMapper),
+                new HomeRecommendationQueryService(dailyMateRecommendationQueryService, recommendationMapper),
                 new HomeSuperHostQueryService(timeProvider)
         ))
                 .setCustomArgumentResolvers(new FixedCurrentUserArgumentResolver(userId))

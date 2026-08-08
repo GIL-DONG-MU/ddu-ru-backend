@@ -21,18 +21,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@DisplayName("MateRecommendationQueryService 테스트")
-class MateRecommendationQueryServiceTest {
+@DisplayName("DailyMateRecommendationQueryService 테스트")
+class DailyMateRecommendationQueryServiceTest {
 
     private DailyMateRecommendationService dailyMateRecommendationService;
-    private MateRecommendationCardQueryService cardQueryService;
-    private MateRecommendationQueryService queryService;
+    private VisibleMateRecommendationCardQueryService visibleCardQueryService;
+    private DailyMateRecommendationQueryService queryService;
 
     @BeforeEach
     void setUp() {
         dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
-        cardQueryService = mock(MateRecommendationCardQueryService.class);
-        queryService = new MateRecommendationQueryService(dailyMateRecommendationService, cardQueryService);
+        visibleCardQueryService = mock(VisibleMateRecommendationCardQueryService.class);
+        queryService = new DailyMateRecommendationQueryService(dailyMateRecommendationService, visibleCardQueryService);
     }
 
     @Test
@@ -45,7 +45,7 @@ class MateRecommendationQueryServiceTest {
 
         assertThat(result.availabilityStatus()).isEqualTo(RecommendationAvailabilityStatus.SURVEY_REQUIRED);
         assertThat(result.recommendations()).isEmpty();
-        verifyNoInteractions(cardQueryService);
+        verifyNoInteractions(visibleCardQueryService);
     }
 
     @Test
@@ -59,7 +59,7 @@ class MateRecommendationQueryServiceTest {
 
         assertThat(result.availabilityStatus()).isEqualTo(RecommendationAvailabilityStatus.AVAILABLE);
         assertThat(result.recommendations()).isEmpty();
-        verifyNoInteractions(cardQueryService);
+        verifyNoInteractions(visibleCardQueryService);
     }
 
     @Test
@@ -77,7 +77,7 @@ class MateRecommendationQueryServiceTest {
         when(dailyMateRecommendationService.getOrCreate(10L)).thenReturn(
                 DailyMateRecommendationResult.available(1L, MateRecommendationBatchStatus.COMPLETED, context)
         );
-        when(cardQueryService.findVisibleCards(1L, 10L, context)).thenReturn(List.of());
+        when(visibleCardQueryService.findVisibleCards(1L, 10L, context)).thenReturn(List.of());
 
         MateRecommendationQueryResult result = queryService.retrieve(10L);
 

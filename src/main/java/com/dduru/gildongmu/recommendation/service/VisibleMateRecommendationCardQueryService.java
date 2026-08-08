@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MateRecommendationCardQueryService {
+public class VisibleMateRecommendationCardQueryService {
 
     private final MateRecommendationCardQueryRepository cardQueryRepository;
     private final RecommendationAvailableDateMatcher availableDateMatcher;

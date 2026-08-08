@@ -11,10 +11,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MateRecommendationQueryService {
+public class DailyMateRecommendationQueryService {
 
     private final DailyMateRecommendationService dailyMateRecommendationService;
-    private final MateRecommendationCardQueryService recommendationCardQueryService;
+    private final VisibleMateRecommendationCardQueryService visibleCardQueryService;
 
     public MateRecommendationQueryResult retrieve(Long userId) {
         DailyMateRecommendationResult dailyResult = dailyMateRecommendationService.getOrCreate(userId);
@@ -25,7 +25,7 @@ public class MateRecommendationQueryService {
             return MateRecommendationQueryResult.available(null, List.of());
         }
 
-        List<MateRecommendationCardQueryResult> recommendations = recommendationCardQueryService.findVisibleCards(
+        List<MateRecommendationCardQueryResult> recommendations = visibleCardQueryService.findVisibleCards(
                 dailyResult.batchId(),
                 userId,
                 dailyResult.applicantContext()
