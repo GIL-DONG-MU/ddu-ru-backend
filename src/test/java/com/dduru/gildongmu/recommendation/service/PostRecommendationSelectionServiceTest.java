@@ -112,11 +112,14 @@ class PostRecommendationSelectionServiceTest {
                 LocalDateTime.of(2026, 7, 4, 12, 0).atZone(KoreaTime.ZONE_ID).toInstant(),
                 KoreaTime.ZONE_ID
         ));
-        recommendationSelectionService = new PostRecommendationSelectionService(
+        RecommendationApplicantContextResolver contextResolver = new RecommendationApplicantContextResolver(
                 timeProvider,
                 applicantRecommendationQueryRepository,
                 destinationPreferenceRepository,
-                availableDateRepository,
+                availableDateRepository
+        );
+        recommendationSelectionService = new PostRecommendationSelectionService(
+                contextResolver,
                 recommendablePostQueryRepository,
                 new RecommendationAvailableDateMatcher(),
                 new RecommendationScoreCalculator()

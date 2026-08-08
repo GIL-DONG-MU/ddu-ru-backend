@@ -53,12 +53,15 @@ public interface HomeApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     ResponseEntity<ApiResult<HomePopularDestinationResponse>> retrievePopularDestinations();
 
-    @Operation(summary = "홈 메이트 추천 섹션 조회", description = "홈 메이트 추천 섹션 데이터를 조회합니다.")
+    @Operation(
+            summary = "홈 메이트 추천 섹션 조회",
+            description = "당일 추천 묶음을 생성하거나 재사용하고, 현재 신청 가능한 추천 여행방을 조회합니다. 추천 생성 중에는 availabilityStatus=GENERATING, 설문 미완료는 availabilityStatus=SURVEY_REQUIRED로 응답합니다."
+    )
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_ONBOARDING_NOT_FOUND,
-            ErrorCode.SURVEY_REQUIRED
+            ErrorCode.PROFILE_NOT_FOUND,
+            ErrorCode.RECOMMENDATION_TENDENCY_MISSING
     })
     ResponseEntity<ApiResult<MateRecommendationResponse>> retrieveMateRecommendations(
             @Parameter(hidden = true) Long userId

@@ -7,11 +7,24 @@ import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.exception.GlobalExceptionHandler;
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
-import com.dduru.gildongmu.home.HomeEndpoints;
-import com.dduru.gildongmu.home.service.HomeService;
+import com.dduru.gildongmu.common.util.JsonConverter;
+import com.dduru.gildongmu.home.mapper.HomeRecommendationMapper;
+import com.dduru.gildongmu.home.service.HomeOverviewQueryService;
+import com.dduru.gildongmu.home.service.HomePopularDestinationQueryService;
+import com.dduru.gildongmu.home.service.HomeRecommendationQueryService;
+import com.dduru.gildongmu.home.service.HomeSuperHostQueryService;
+import com.dduru.gildongmu.home.service.HomeTripQueryService;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
+import com.dduru.gildongmu.onboarding.service.OnboardingService;
+import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
+import com.dduru.gildongmu.recommendation.domain.enums.MateRecommendationBatchStatus;
+import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationQueryService;
+import com.dduru.gildongmu.recommendation.service.DailyMateRecommendationService;
+import com.dduru.gildongmu.recommendation.service.VisibleMateRecommendationCardQueryService;
+import com.dduru.gildongmu.recommendation.support.RecommendationReasonJsonConverter;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -169,26 +182,48 @@ class HomeControllerTest {
     @Test
     @DisplayName("회원은 메이트 추천 섹션을 조회할 수 있다")
     void retrieveMateRecommendations_member() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(true));
+        MockMvc mockMvc = mockMvcWithUser(20L, mock(UserOnboardingRepository.class));
 
         mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.data.isAvailable").value(true))
-                .andExpect(jsonPath("$.data.remainingFreeCount").value(3))
-                .andExpect(jsonPath("$.data.recommendations[0].recommendationId").value(5001))
-                .andExpect(jsonPath("$.data.recommendations[0].host.gender").value("F"));
+                .andExpect(jsonPath("$.data.availabilityStatus").value("AVAILABLE"))
+                .andExpect(jsonPath("$.data.remainingFreeCount").value(0))
+                .andExpect(jsonPath("$.data.recommendations.length()").value(0));
     }
 
     @Test
-    @DisplayName("설문 미완료 회원은 메이트 추천 섹션을 직접 조회할 수 없다")
+    @DisplayName("설문 미완료 회원은 메이트 추천 섹션에서 SURVEY_REQUIRED 상태를 받는다")
     void retrieveMateRecommendations_memberSurveyRequired() throws Exception {
-        MockMvc mockMvc = mockMvcWithUser(10L, onboardingRepository(false));
+        MockMvc mockMvc = mockMvcWithUser(
+                10L,
+                onboardingRepository(false),
+                DailyMateRecommendationResult.surveyRequired()
+        );
 
         mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403))
-                .andExpect(jsonPath("$.data.errorCode").value(ErrorCode.SURVEY_REQUIRED.name()));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.availabilityStatus").value("SURVEY_REQUIRED"))
+                .andExpect(jsonPath("$.data.remainingFreeCount").value(0))
+                .andExpect(jsonPath("$.data.recommendations.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("추천 생성 중인 회원은 메이트 추천 섹션에서 GENERATING 상태를 받는다")
+    void retrieveMateRecommendations_memberGenerating() throws Exception {
+        MockMvc mockMvc = mockMvcWithUser(
+                10L,
+                onboardingRepository(true),
+                DailyMateRecommendationResult.generating(1L, null)
+        );
+
+        mockMvc.perform(get(HomeEndpoints.MATE_RECOMMENDATIONS))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.availabilityStatus").value("GENERATING"))
+                .andExpect(jsonPath("$.data.remainingFreeCount").value(0))
+                .andExpect(jsonPath("$.data.recommendations.length()").value(0));
     }
 
     @Test
@@ -254,6 +289,18 @@ class HomeControllerTest {
     }
 
     private MockMvc mockMvcWithUser(Long userId, UserOnboardingRepository userOnboardingRepository) {
+        return mockMvcWithUser(
+                userId,
+                userOnboardingRepository,
+                DailyMateRecommendationResult.available(1L, MateRecommendationBatchStatus.EMPTY, null)
+        );
+    }
+
+    private MockMvc mockMvcWithUser(
+            Long userId,
+            UserOnboardingRepository userOnboardingRepository,
+            DailyMateRecommendationResult dailyResult
+    ) {
         TimeProvider timeProvider = new TimeProvider(Clock.fixed(
                 LocalDateTime.of(2026, 5, 13, 12, 30)
                         .atZone(KoreaTime.ZONE_ID)
@@ -263,12 +310,26 @@ class HomeControllerTest {
         ObjectMapper objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        HomeService homeService = new HomeService(
-                timeProvider,
-                userOnboardingRepository
+        OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
+        DailyMateRecommendationService dailyMateRecommendationService = mock(DailyMateRecommendationService.class);
+        when(dailyMateRecommendationService.getOrCreate(userId)).thenReturn(dailyResult);
+        DailyMateRecommendationQueryService dailyMateRecommendationQueryService = new DailyMateRecommendationQueryService(
+                dailyMateRecommendationService,
+                mock(VisibleMateRecommendationCardQueryService.class)
+        );
+        HomeRecommendationMapper recommendationMapper = new HomeRecommendationMapper(
+                new RecommendationReasonJsonConverter(objectMapper),
+                mock(ProfileImageResolver.class),
+                new JsonConverter(objectMapper)
         );
 
-        return standaloneSetup(new HomeController(homeService))
+        return standaloneSetup(new HomeController(
+                new HomeOverviewQueryService(onboardingService),
+                new HomeTripQueryService(timeProvider, onboardingService),
+                new HomePopularDestinationQueryService(timeProvider),
+                new HomeRecommendationQueryService(dailyMateRecommendationQueryService, recommendationMapper),
+                new HomeSuperHostQueryService(timeProvider)
+        ))
                 .setCustomArgumentResolvers(new FixedCurrentUserArgumentResolver(userId))
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
                 .setControllerAdvice(new GlobalExceptionHandler())

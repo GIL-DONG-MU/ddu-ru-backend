@@ -174,6 +174,9 @@ public enum ErrorCode {
 
     // 추천 (RECOMMENDATION)
     RECOMMENDATION_TENDENCY_MISSING(HttpStatus.INTERNAL_SERVER_ERROR, "설문 완료 사용자의 여행 성향 점수를 찾을 수 없습니다."),
+    MATE_RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 결과를 찾을 수 없습니다."),
+    INVALID_MATE_RECOMMENDATION_RANK(HttpStatus.BAD_REQUEST, "추천 순위가 허용 범위를 벗어났습니다."),
+    INVALID_MATE_RECOMMENDATION_MATCH_PERCENTAGE(HttpStatus.BAD_REQUEST, "추천 일치율이 허용 범위를 벗어났습니다."),
 
     // 여행 선호 설정 (TRAVEL_PREFERENCE)
     INVALID_AVAILABLE_DATE(HttpStatus.BAD_REQUEST, "여행 가능 종료일은 시작일과 같거나 이후여야 합니다."),

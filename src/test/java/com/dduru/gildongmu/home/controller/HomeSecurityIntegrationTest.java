@@ -4,7 +4,6 @@ import com.dduru.gildongmu.common.config.SecurityConfig;
 import com.dduru.gildongmu.common.jwt.JwtAccessDeniedHandler;
 import com.dduru.gildongmu.common.jwt.JwtAuthenticationEntryPoint;
 import com.dduru.gildongmu.common.jwt.JwtTokenProvider;
-import com.dduru.gildongmu.home.HomeEndpoints;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

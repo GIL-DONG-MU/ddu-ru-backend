@@ -1,13 +1,11 @@
 package com.dduru.gildongmu.home.dto.response;
 
-import com.dduru.gildongmu.post.domain.enums.PostStatus;
-
 import java.time.LocalDate;
 import java.util.List;
 
 public record HomeSuperHostResponse(
         Long postId,
-        PostStatus status,
+        Status status,
         String title,
         String location,
         LocalDate startDate,
@@ -15,9 +13,14 @@ public record HomeSuperHostResponse(
         int currentMemberCount,
         int maxMemberCount,
         List<String> tags,
-        HostResponse host,
+        HomeHostResponse host,
         int viewCount,
         String thumbnailUrl,
         boolean hasLiked
 ) {
+
+    public enum Status {
+        OPEN,
+        CLOSED
+    }
 }

@@ -1,4 +1,4 @@
-package com.dduru.gildongmu.home;
+package com.dduru.gildongmu.home.controller;
 
 public final class HomeEndpoints {
 

@@ -3,6 +3,7 @@ package com.dduru.gildongmu.recommendation.domain;
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
 import com.dduru.gildongmu.destination.domain.Destination;
 import com.dduru.gildongmu.recommendation.domain.enums.RecommendationDestinationPreferenceType;
+import com.dduru.gildongmu.recommendation.exception.InvalidDestinationPreferenceException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,6 +21,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserRecommendationDestinationPreference extends BaseTimeEntity {
+
+    private static final int COUNTRY_CODE_LENGTH = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +49,7 @@ public class UserRecommendationDestinationPreference extends BaseTimeEntity {
             String countryCode,
             Destination destination
     ) {
+        validatePreferenceValue(preferenceType, countryCode, destination);
         this.user = user;
         this.preferenceType = preferenceType;
         this.countryCode = countryCode;
@@ -68,5 +72,26 @@ public class UserRecommendationDestinationPreference extends BaseTimeEntity {
                 null,
                 destination
         );
+    }
+
+    private static void validatePreferenceValue(
+            RecommendationDestinationPreferenceType preferenceType,
+            String countryCode,
+            Destination destination
+    ) {
+        if (preferenceType == null) {
+            throw new InvalidDestinationPreferenceException();
+        }
+        if (preferenceType == RecommendationDestinationPreferenceType.COUNTRY
+                && (countryCode == null
+                || countryCode.isBlank()
+                || countryCode.length() != COUNTRY_CODE_LENGTH
+                || destination != null)) {
+            throw new InvalidDestinationPreferenceException();
+        }
+        if (preferenceType == RecommendationDestinationPreferenceType.CITY
+                && (countryCode != null || destination == null)) {
+            throw new InvalidDestinationPreferenceException();
+        }
     }
 }

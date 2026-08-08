@@ -1,6 +1,7 @@
 package com.dduru.gildongmu.recommendation.domain;
 
 import com.dduru.gildongmu.common.entity.BaseTimeEntity;
+import com.dduru.gildongmu.recommendation.exception.InvalidAvailableDateException;
 import com.dduru.gildongmu.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -36,6 +37,7 @@ public class UserRecommendationAvailableDate extends BaseTimeEntity {
     private LocalDate endDate;
 
     private UserRecommendationAvailableDate(User user, LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
         this.user = user;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -43,5 +45,11 @@ public class UserRecommendationAvailableDate extends BaseTimeEntity {
 
     public static UserRecommendationAvailableDate of(User user, LocalDate startDate, LocalDate endDate) {
         return new UserRecommendationAvailableDate(user, startDate, endDate);
+    }
+
+    private static void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
+            throw new InvalidAvailableDateException();
+        }
     }
 }

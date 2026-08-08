@@ -1,15 +1,14 @@
 package com.dduru.gildongmu.profile.utils;
 
 import java.time.LocalDate;
-import java.time.Period;
 
 public class AgeGroupCalculator {
 
     private AgeGroupCalculator() {}
 
     public static String toAgeGroup(LocalDate birthday, LocalDate today) {
-        if (birthday == null) return null;
-        int age = Math.max(0, Period.between(birthday, today).getYears());
+        Integer age = AgeCalculator.calculate(birthday, today);
+        if (age == null) return null;
         return (age / 10) * 10 + "대";
     }
 }

@@ -105,7 +105,7 @@ public class JourneyService {
         }
 
         Post post = getPostForMemberRemoval(journeyId);
-        JourneyMember member = getActiveMemberForUpdate(journeyId, memberUserId);
+        JourneyMember member = getActiveMemberWithLock(journeyId, memberUserId);
         validateRemovableMember(member);
 
         Long postId = post.getId();
@@ -136,7 +136,7 @@ public class JourneyService {
         return postRepository.getActiveByIdWithLockOrThrow(postId);
     }
 
-    private JourneyMember getActiveMemberForUpdate(Long journeyId, Long memberUserId) {
+    private JourneyMember getActiveMemberWithLock(Long journeyId, Long memberUserId) {
         return journeyMemberRepository.findActiveMemberWithLock(journeyId, memberUserId)
                 .orElseThrow(JourneyAccessDeniedException::new);
     }
