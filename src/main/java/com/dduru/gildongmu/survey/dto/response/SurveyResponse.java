@@ -5,18 +5,28 @@ import com.dduru.gildongmu.survey.domain.enums.AvatarType;
 import com.dduru.gildongmu.survey.domain.enums.RecordStyleType;
 import com.dduru.gildongmu.survey.service.AvatarProfileService;
 
+import java.time.LocalDate;
+
 public record SurveyResponse(
         TendencyScoreResponse tendencyScores,
         Integer avatarCode,
         AvatarType avatarType,
         RecordStyleType recordStyleType,
         String avatarLabel,
-        AvatarProfileResponse avatarProfile
+        AvatarProfileResponse avatarProfile,
+        LocalDate lastTestedAt,
+        boolean canRetake,
+        LocalDate nextRetakeAvailableDate,
+        long remainingRetakeDays
 ) {
     public static SurveyResponse from(
             TravelTendency travelTendency,
             RecordStyleType recordStyleType,
-            AvatarProfileService avatarProfileService
+            AvatarProfileService avatarProfileService,
+            LocalDate lastTestedAt,
+            boolean canRetake,
+            LocalDate nextRetakeAvailableDate,
+            long remainingRetakeDays
     ) {
         AvatarType avatarType = travelTendency.getAvatarType();
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
@@ -34,7 +44,11 @@ public record SurveyResponse(
                 avatarType,
                 recordStyleType,
                 avatarLabel(avatarProfile, recordStyleType),
-                avatarProfile
+                avatarProfile,
+                lastTestedAt,
+                canRetake,
+                nextRetakeAvailableDate,
+                remainingRetakeDays
         );
     }
 
@@ -42,7 +56,11 @@ public record SurveyResponse(
             TendencyScoreResponse scores,
             AvatarType avatarType,
             RecordStyleType recordStyleType,
-            AvatarProfileResponse avatarProfile
+            AvatarProfileResponse avatarProfile,
+            LocalDate lastTestedAt,
+            boolean canRetake,
+            LocalDate nextRetakeAvailableDate,
+            long remainingRetakeDays
     ) {
         return new SurveyResponse(
                 scores,
@@ -50,7 +68,11 @@ public record SurveyResponse(
                 avatarType,
                 recordStyleType,
                 avatarLabel(avatarProfile, recordStyleType),
-                avatarProfile
+                avatarProfile,
+                lastTestedAt,
+                canRetake,
+                nextRetakeAvailableDate,
+                remainingRetakeDays
         );
     }
 

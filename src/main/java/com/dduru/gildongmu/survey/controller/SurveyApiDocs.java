@@ -36,7 +36,7 @@ public interface SurveyApiDocs {
 
     @Operation(
             summary = "내 설문 결과 조회",
-            description = "현재 사용자의 설문 결과 및 매칭된 아바타를 조회합니다.",
+            description = "현재 사용자의 설문 결과, 매칭된 아바타, 최근 테스트일, 다시 테스트 가능 여부를 조회합니다.",
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -54,15 +54,16 @@ public interface SurveyApiDocs {
     ResponseEntity<ApiResult<SurveyQuestionListResponse>> getSurveyQuestions();
 
     @Operation(
-            summary = "여행선호설정 수정",
-            description = "마이페이지에서 기존 설문 응답을 수정합니다. 온보딩 완료 처리 및 보상 지급은 실행되지 않습니다.",
+            summary = "설문 결과 수정",
+            description = "마이페이지에서 기존 설문 응답을 다시 제출합니다. 최근 테스트일 기준 30일 이후에만 수정할 수 있으며, 온보딩 완료 처리 및 보상 지급은 실행되지 않습니다.",
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @ApiErrorResponses({
             ErrorCode.INVALID_INPUT_VALUE,
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.SURVEY_RESULT_NOT_FOUND
+            ErrorCode.SURVEY_RESULT_NOT_FOUND,
+            ErrorCode.SURVEY_RETAKE_LOCKED
     })
     ResponseEntity<ApiResult<SurveyResponse>> updateSurvey(@Parameter(hidden = true) Long userId, @Valid SurveyRequest request);
 

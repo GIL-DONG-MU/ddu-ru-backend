@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.survey.service;
 
+import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.profile.service.ProfileManagementService;
 import com.dduru.gildongmu.survey.converter.SurveyConverter;
@@ -12,10 +13,12 @@ import com.dduru.gildongmu.survey.dto.response.AvatarProfileResponse;
 import com.dduru.gildongmu.survey.dto.response.SurveyResponse;
 import com.dduru.gildongmu.survey.dto.response.TendencyScoreResponse;
 import com.dduru.gildongmu.survey.exception.SurveyAlreadySubmittedException;
+import com.dduru.gildongmu.survey.exception.SurveyRetakeLockedException;
 import com.dduru.gildongmu.survey.exception.SurveyResultNotFoundException;
 import com.dduru.gildongmu.survey.repository.AvatarProfileRepository;
 import com.dduru.gildongmu.survey.repository.SurveyRepository;
 import com.dduru.gildongmu.survey.repository.TravelTendencyRepository;
+import com.dduru.gildongmu.survey.support.SurveyRetakeAvailability;
 import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
@@ -26,12 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class SurveyService {
+
+    private static final int RETAKE_COOLDOWN_DAYS = 30;
 
     private final SurveyRepository surveyRepository;
     private final TravelTendencyRepository travelTendencyRepository;
@@ -44,6 +50,7 @@ public class SurveyService {
     private final UserRepository userRepository;
     private final OnboardingService onboardingService;
     private final SuperHostService superHostService;
+    private final TimeProvider timeProvider;
 
     public SurveyResponse create(Long userId, SurveyRequest request) {
         if (surveyRepository.existsByUserId(userId)) {
@@ -63,7 +70,18 @@ public class SurveyService {
 
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
         log.info("설문조사 제출 완료 - userId: {}, avatarType: {}", userId, avatarType);
-        return SurveyResponse.of(scores, avatarType, survey.getRecordStyle().getStyleType(), avatarProfile);
+        LocalDate lastTestedAt = timeProvider.today();
+        SurveyRetakeAvailability retakeAvailability = getRetakeAvailability(lastTestedAt);
+        return SurveyResponse.of(
+                scores,
+                avatarType,
+                survey.getRecordStyle().getStyleType(),
+                avatarProfile,
+                lastTestedAt,
+                retakeAvailability.canRetake(),
+                retakeAvailability.nextRetakeAvailableDate(),
+                retakeAvailability.remainingRetakeDays()
+        );
     }
 
     public void skipSurvey(Long userId) {
@@ -76,12 +94,23 @@ public class SurveyService {
         TravelTendency travelTendency = travelTendencyRepository.findByUserId(userId)
                 .orElseThrow(SurveyResultNotFoundException::new);
         Survey survey = surveyRepository.getByUserIdOrThrow(userId);
-        return SurveyResponse.from(travelTendency, survey.getRecordStyle().getStyleType(), avatarProfileService);
+        LocalDate lastTestedAt = getLastTestedAt(survey);
+        SurveyRetakeAvailability retakeAvailability = getRetakeAvailability(lastTestedAt);
+        return SurveyResponse.from(
+                travelTendency,
+                survey.getRecordStyle().getStyleType(),
+                avatarProfileService,
+                lastTestedAt,
+                retakeAvailability.canRetake(),
+                retakeAvailability.nextRetakeAvailableDate(),
+                retakeAvailability.remainingRetakeDays()
+        );
     }
 
     public SurveyResponse update(Long userId, SurveyRequest request) {
         User user = userRepository.getByIdOrThrow(userId);
         Survey survey = surveyRepository.getByUserIdOrThrow(userId);
+        validateRetakeAvailable(survey);
 
         ParsedSurveyData parsed = surveyConverter.parseRequest(request);
         updateSurvey(survey, parsed);
@@ -93,7 +122,18 @@ public class SurveyService {
         updateProfileAvatar(userId, avatarType);
 
         AvatarProfileResponse avatarProfile = avatarProfileService.getProfile(avatarType);
-        return SurveyResponse.of(scores, avatarType, survey.getRecordStyle().getStyleType(), avatarProfile);
+        LocalDate lastTestedAt = timeProvider.today();
+        SurveyRetakeAvailability retakeAvailability = getRetakeAvailability(lastTestedAt);
+        return SurveyResponse.of(
+                scores,
+                avatarType,
+                survey.getRecordStyle().getStyleType(),
+                avatarProfile,
+                lastTestedAt,
+                retakeAvailability.canRetake(),
+                retakeAvailability.nextRetakeAvailableDate(),
+                retakeAvailability.remainingRetakeDays()
+        );
     }
 
     private Survey createSurvey(User user, ParsedSurveyData parsed) {
@@ -154,5 +194,19 @@ public class SurveyService {
 
     private BigDecimal toBigDecimal(double value) {
         return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP);
+    }
+
+    private void validateRetakeAvailable(Survey survey) {
+        if (!getRetakeAvailability(getLastTestedAt(survey)).canRetake()) {
+            throw new SurveyRetakeLockedException();
+        }
+    }
+
+    private LocalDate getLastTestedAt(Survey survey) {
+        return survey.getModifiedAt().toLocalDate();
+    }
+
+    private SurveyRetakeAvailability getRetakeAvailability(LocalDate lastTestedAt) {
+        return SurveyRetakeAvailability.of(lastTestedAt, timeProvider.today(), RETAKE_COOLDOWN_DAYS);
     }
 }
