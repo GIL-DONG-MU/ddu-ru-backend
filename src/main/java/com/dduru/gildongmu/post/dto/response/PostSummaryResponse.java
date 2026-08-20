@@ -4,7 +4,6 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
-import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -39,12 +38,10 @@ public record PostSummaryResponse(
         @Schema(description = "현재 사용자의 좋아요 여부", example = "true")
         boolean hasLiked,
         @Schema(description = "작성자 정보")
-        PostAuthorInfo author
+        PostSummaryAuthorInfo author
 ) {
     public static PostSummaryResponse from(
             Post post,
-            ProfileImageResolver profileImageResolver,
-            LocalDate today,
             boolean isSuperHost,
             boolean hasLiked
     ) {
@@ -63,7 +60,7 @@ public record PostSummaryResponse(
                 post.getPhotoUrl(),
                 post.getLikeCount(),
                 hasLiked,
-                PostAuthorInfo.from(post.getUser(), isSuperHost, profileImageResolver, today)
+                PostSummaryAuthorInfo.from(post.getUser(), isSuperHost)
         );
     }
 }
