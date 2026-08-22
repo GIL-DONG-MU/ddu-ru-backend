@@ -5,7 +5,6 @@ import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.PostStatus;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.superhost.domain.SuperHostExposure;
 import com.dduru.gildongmu.superhost.domain.SuperHostTicket;
 import com.dduru.gildongmu.superhost.domain.enums.SuperHostExposureStatus;
@@ -23,18 +22,16 @@ import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,7 +47,6 @@ public class SuperHostService {
     private final PostRepository postRepository;
     private final SuperHostTicketRepository superHostTicketRepository;
     private final SuperHostExposureRepository superHostExposureRepository;
-    private final ProfileImageResolver profileImageResolver;
     private final TimeProvider timeProvider;
 
     public void grantOnboardingRewardTicket(Long userId) {
@@ -89,14 +85,11 @@ public class SuperHostService {
     public SuperHostPostListResponse retrieveSuperHostPosts(Integer size) {
         int requestSize = normalizeRequestSize(size);
         LocalDateTime now = timeProvider.now();
-        LocalDate today = timeProvider.today();
         List<PostSummaryResponse> responses = superHostExposureRepository
                 .findVisibleExposures(SuperHostExposureStatus.ACTIVE, now, PageRequest.of(0, requestSize))
                 .stream()
                 .map(exposure -> PostSummaryResponse.from(
                         exposure.getPost(),
-                        profileImageResolver,
-                        today,
                         true,
                         false))
                 .toList();

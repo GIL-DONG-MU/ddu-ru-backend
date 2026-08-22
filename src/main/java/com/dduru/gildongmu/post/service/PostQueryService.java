@@ -16,7 +16,6 @@ import com.dduru.gildongmu.post.dto.response.MyPagePostSummaryResponse;
 import com.dduru.gildongmu.post.dto.response.PostListResponse;
 import com.dduru.gildongmu.post.dto.response.PostSummaryResponse;
 import com.dduru.gildongmu.post.repository.PostRepository;
-import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.superhost.service.SuperHostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +37,6 @@ import java.util.Set;
 public class PostQueryService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
-    private final ProfileImageResolver profileImageResolver;
     private final SuperHostService superHostService;
     private final TimeProvider timeProvider;
 
@@ -64,7 +62,7 @@ public class PostQueryService {
 
         List<PostSummaryResponse> summaries = posts.stream()
                 .map(post -> PostSummaryResponse.from(
-                        post, profileImageResolver, today,
+                        post,
                         superHostExposures.containsKey(post.getId()),
                         likedPostIds.contains(post.getId())
                 ))

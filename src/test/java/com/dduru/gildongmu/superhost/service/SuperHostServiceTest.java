@@ -9,7 +9,6 @@ import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
-import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.superhost.domain.SuperHostExposure;
 import com.dduru.gildongmu.superhost.domain.SuperHostTicket;
 import com.dduru.gildongmu.superhost.domain.enums.SuperHostExposureStatus;
@@ -66,8 +65,6 @@ class SuperHostServiceTest {
     private SuperHostTicketRepository superHostTicketRepository;
     @Mock
     private SuperHostExposureRepository superHostExposureRepository;
-    @Mock
-    private ProfileImageResolver profileImageResolver;
 
     @Mock
     private TimeProvider timeProvider;
@@ -212,7 +209,6 @@ class SuperHostServiceTest {
             SuperHostExposure exposure = SuperHostExposure.create(ticket, user, post, NOW, endsAt);
 
             when(superHostExposureRepository.findVisibleExposures(any(), any(), any(Pageable.class))).thenReturn(List.of(exposure));
-            when(profileImageResolver.resolve(any(Profile.class))).thenReturn("https://example.com/profile.png");
 
             SuperHostPostListResponse response = superHostService.retrieveSuperHostPosts(5);
 

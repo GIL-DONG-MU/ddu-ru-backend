@@ -20,7 +20,6 @@ import com.dduru.gildongmu.post.repository.PostRepository;
 import com.dduru.gildongmu.profile.domain.Profile;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
-import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.superhost.service.SuperHostService;
 import com.dduru.gildongmu.user.domain.User;
 import com.dduru.gildongmu.user.domain.enums.OauthType;
@@ -58,7 +57,6 @@ class PostQueryServiceTest {
 
     @Mock private PostRepository postRepository;
     @Mock private PostLikeRepository postLikeRepository;
-    @Mock private ProfileImageResolver profileImageResolver;
     @Mock private SuperHostService superHostService;
     @Mock private TimeProvider timeProvider;
 
@@ -68,7 +66,6 @@ class PostQueryServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(timeProvider.today()).thenReturn(TODAY);
-        lenient().when(profileImageResolver.resolve(any(Profile.class))).thenReturn(null);
         lenient().when(superHostService.findActiveSuperHostExposures(any())).thenReturn(Map.of());
     }
 
@@ -129,6 +126,28 @@ class PostQueryServiceTest {
 
             verify(postLikeRepository, never()).findLikedPostIdsByUserId(any(), any());
             verify(superHostService, never()).findActiveSuperHostExposures(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("목록 작성자 정보")
+    class SummaryAuthor {
+
+        @Test
+        @DisplayName("게시글 목록은 작성자 닉네임과 슈퍼호스트 여부를 반환한다")
+        void returnsSummaryAuthorInfo() {
+            Post post = createPost(1L);
+            PostListRequest request = listRequest(5, null);
+
+            when(postRepository.findPostsWithFilters(any(), any(LocalDate.class), isNull(), any(Pageable.class)))
+                    .thenReturn(List.of(post));
+            when(superHostService.findActiveSuperHostExposures(List.of(1L)))
+                    .thenReturn(Map.of(1L, LocalDateTime.of(2026, 5, 6, 0, 0)));
+
+            PostListResponse response = postQueryService.retrieveAllWithFilter(request, null);
+
+            assertThat(response.posts().get(0).author().nickname()).isEqualTo("닉네임1");
+            assertThat(response.posts().get(0).author().isSuperHost()).isTrue();
         }
     }
 
