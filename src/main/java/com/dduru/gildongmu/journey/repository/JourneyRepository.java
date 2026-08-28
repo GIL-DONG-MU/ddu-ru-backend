@@ -5,11 +5,14 @@ import com.dduru.gildongmu.journey.domain.enums.JourneyMemberRole;
 import com.dduru.gildongmu.journey.domain.enums.JourneyMemberStatus;
 import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface JourneyRepository extends JpaRepository<Journey, Long> {
@@ -55,6 +58,23 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
             WHERE j.id = :journeyId
             """)
     Optional<Journey> findByIdWithPostContext(@Param("journeyId") Long journeyId);
+
+    @Query("""
+            SELECT j
+            FROM JourneyMember jm
+            JOIN jm.journey j
+            JOIN FETCH j.post p
+            WHERE jm.user.id = :userId
+              AND jm.status = 'ACTIVE'
+              AND p.isDeleted = false
+              AND p.endDate >= :today
+            ORDER BY p.startDate ASC, j.id ASC
+            """)
+    List<Journey> findCurrentAndUpcomingJourneys(
+            @Param("userId") Long userId,
+            @Param("today") LocalDate today,
+            Pageable pageable
+    );
 
     default Journey getByIdOrThrow(Long journeyId) {
         return findById(journeyId).orElseThrow(JourneyNotFoundException::new);

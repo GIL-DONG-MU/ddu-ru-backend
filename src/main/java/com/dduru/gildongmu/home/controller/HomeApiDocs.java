@@ -36,11 +36,11 @@ public interface HomeApiDocs {
             @Parameter(hidden = true) Long userId
     );
 
-    @Operation(summary = "홈 예정 여행 섹션 조회", description = "홈 예정 여행 섹션 데이터를 조회합니다.")
+    @Operation(summary = "홈 진행·예정 여행 섹션 조회", description = "홈에서 진행 중이거나 가장 가까운 예정 여행을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.USER_ONBOARDING_NOT_FOUND
+            ErrorCode.JOURNEY_NOT_FOUND
     })
     ResponseEntity<ApiResult<UpcomingTripResponse>> retrieveUpcomingTrip(
             @Parameter(hidden = true) Long userId

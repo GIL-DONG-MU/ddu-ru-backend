@@ -4,8 +4,13 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
 import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
 import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
+import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
+import com.dduru.gildongmu.post.domain.Post;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,21 +24,27 @@ public class HomeTripQueryService {
 
     private final TimeProvider timeProvider;
     private final OnboardingService onboardingService;
+    private final JourneyRepository journeyRepository;
 
     @Transactional(readOnly = true)
     public UpcomingTripResponse retrieveUpcomingTrip(Long userId) {
-        requireOnboarding(userId);
         LocalDate today = timeProvider.today();
-        LocalDate startDate = today.plusDays(12);
+        Journey journey = journeyRepository
+                .findCurrentAndUpcomingJourneys(userId, today, Pageable.ofSize(1))
+                .stream()
+                .findFirst()
+                .orElseThrow(JourneyNotFoundException::new);
+        Post post = journey.getPost();
+
         return new UpcomingTripResponse(
-                102L,
-                "제주도 힐링 여행",
-                (int) ChronoUnit.DAYS.between(today, startDate),
-                startDate,
-                startDate.plusDays(3),
-                3,
-                4,
-                1
+                journey.getId(),
+                journey.getTitle(),
+                Math.max(0, (int) ChronoUnit.DAYS.between(today, post.getStartDate())),
+                post.getStartDate(),
+                post.getEndDate(),
+                post.getRecruitCount(),
+                post.getRecruitCapacity(),
+                0 // TODO: 여정 할 일 기능 연동 후 실제 미완료 개수를 조회한다.
         );
     }
 
