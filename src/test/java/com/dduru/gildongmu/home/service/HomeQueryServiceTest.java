@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.home.service;
 
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
@@ -9,7 +10,7 @@ import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
 import com.dduru.gildongmu.home.enums.UserAccessStatus;
 import com.dduru.gildongmu.home.mapper.HomeRecommendationMapper;
 import com.dduru.gildongmu.journey.domain.Journey;
-import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
+import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
@@ -138,7 +139,8 @@ class HomeQueryServiceTest {
             )).thenReturn(List.of());
 
             assertThatThrownBy(() -> tripQueryService.retrieveUpcomingTrip(10L))
-                    .isInstanceOf(JourneyNotFoundException.class);
+                    .isInstanceOf(CurrentOrUpcomingJourneyNotFoundException.class)
+                    .hasMessage(ErrorCode.CURRENT_OR_UPCOMING_JOURNEY_NOT_FOUND.getMessage());
         }
 
         @Test

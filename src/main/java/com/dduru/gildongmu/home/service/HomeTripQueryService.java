@@ -5,7 +5,7 @@ import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
 import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
 import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
 import com.dduru.gildongmu.journey.domain.Journey;
-import com.dduru.gildongmu.journey.exception.JourneyNotFoundException;
+import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import com.dduru.gildongmu.post.domain.Post;
@@ -33,7 +33,7 @@ public class HomeTripQueryService {
                 .findCurrentAndUpcomingJourneys(userId, today, Pageable.ofSize(1))
                 .stream()
                 .findFirst()
-                .orElseThrow(JourneyNotFoundException::new);
+                .orElseThrow(CurrentOrUpcomingJourneyNotFoundException::new);
         Post post = journey.getPost();
 
         return new UpcomingTripResponse(

@@ -40,7 +40,7 @@ public interface HomeApiDocs {
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @ApiErrorResponses({
             ErrorCode.UNAUTHORIZED,
-            ErrorCode.JOURNEY_NOT_FOUND
+            ErrorCode.CURRENT_OR_UPCOMING_JOURNEY_NOT_FOUND
     })
     ResponseEntity<ApiResult<UpcomingTripResponse>> retrieveUpcomingTrip(
             @Parameter(hidden = true) Long userId
