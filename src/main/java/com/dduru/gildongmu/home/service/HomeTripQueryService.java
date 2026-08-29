@@ -7,6 +7,7 @@ import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class HomeTripQueryService {
 
     private final TimeProvider timeProvider;
     private final OnboardingService onboardingService;
+    private final JourneyScheduleRepository journeyScheduleRepository;
     private final JourneyRepository journeyRepository;
 
     @Transactional(readOnly = true)
@@ -30,8 +32,8 @@ public class HomeTripQueryService {
                 .findNearestCurrentOrUpcomingJourney(userId, today)
                 .orElseThrow(CurrentOrUpcomingJourneyNotFoundException::new);
 
-        // TODO: 여정 할 일 기능 연동 후 실제 미완료 개수를 조회한다.
-        return UpcomingTripResponse.from(journey, today, 0);
+        int scheduleCount = journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(journey.getId());
+        return UpcomingTripResponse.from(journey, today, scheduleCount);
     }
 
     @Transactional(readOnly = true)

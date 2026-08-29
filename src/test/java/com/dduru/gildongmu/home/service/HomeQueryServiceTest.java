@@ -12,6 +12,7 @@ import com.dduru.gildongmu.home.mapper.HomeRecommendationMapper;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
@@ -56,6 +57,7 @@ class HomeQueryServiceTest {
 
     private UserOnboardingRepository userOnboardingRepository;
     private JourneyRepository journeyRepository;
+    private JourneyScheduleRepository journeyScheduleRepository;
     private DailyMateRecommendationQueryService dailyMateRecommendationQueryService;
     private HomeOverviewQueryService overviewQueryService;
     private HomePopularDestinationQueryService popularDestinationQueryService;
@@ -71,13 +73,19 @@ class HomeQueryServiceTest {
         ));
         userOnboardingRepository = mock(UserOnboardingRepository.class);
         journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
+        journeyScheduleRepository = mock(JourneyScheduleRepository.class);
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         dailyMateRecommendationQueryService = mock(DailyMateRecommendationQueryService.class);
         ObjectMapper objectMapper = new ObjectMapper();
 
         overviewQueryService = new HomeOverviewQueryService(onboardingService);
         popularDestinationQueryService = new HomePopularDestinationQueryService(timeProvider);
-        tripQueryService = new HomeTripQueryService(timeProvider, onboardingService, journeyRepository);
+        tripQueryService = new HomeTripQueryService(
+                timeProvider,
+                onboardingService,
+                journeyScheduleRepository,
+                journeyRepository
+        );
         recommendationQueryService = new HomeRecommendationQueryService(
                 dailyMateRecommendationQueryService,
                 new HomeRecommendationMapper(
@@ -142,6 +150,7 @@ class HomeQueryServiceTest {
             assertThatThrownBy(() -> tripQueryService.retrieveUpcomingTrip(10L))
                     .isInstanceOf(CurrentOrUpcomingJourneyNotFoundException.class)
                     .hasMessage(ErrorCode.CURRENT_OR_UPCOMING_JOURNEY_NOT_FOUND.getMessage());
+            verifyNoInteractions(journeyScheduleRepository);
         }
 
         @Test
@@ -158,6 +167,7 @@ class HomeQueryServiceTest {
             when(post.getEndDate()).thenReturn(endDate);
             when(post.getRecruitCount()).thenReturn(3);
             when(post.getRecruitCapacity()).thenReturn(4);
+            when(journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(102L)).thenReturn(3);
             when(journeyRepository.findCurrentAndUpcomingJourneys(
                     eq(10L), eq(NOW.toLocalDate()), org.mockito.ArgumentMatchers.any(Pageable.class)
             )).thenReturn(List.of(journey));
@@ -168,6 +178,7 @@ class HomeQueryServiceTest {
             assertThat(response.dDay()).isZero();
             assertThat(response.startDate()).isEqualTo(startDate);
             assertThat(response.endDate()).isEqualTo(endDate);
+            assertThat(response.scheduleCount()).isEqualTo(3);
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             verify(journeyRepository).findCurrentAndUpcomingJourneys(
@@ -175,6 +186,7 @@ class HomeQueryServiceTest {
             );
             assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
             assertThat(pageableCaptor.getValue().getPageSize()).isOne();
+            verify(journeyScheduleRepository).countByJourneyIdAndIsDeletedFalse(102L);
         }
 
         @Test

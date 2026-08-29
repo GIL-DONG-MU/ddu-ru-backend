@@ -16,6 +16,7 @@ import com.dduru.gildongmu.home.service.HomeSuperHostQueryService;
 import com.dduru.gildongmu.home.service.HomeTripQueryService;
 import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
@@ -171,7 +172,7 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.journeyId").value(102))
                 .andExpect(jsonPath("$.data.dDay").value(12))
                 .andExpect(jsonPath("$.data.startDate").value("2026-05-25"))
-                .andExpect(jsonPath("$.data.pendingTaskCount").value(0));
+                .andExpect(jsonPath("$.data.scheduleCount").value(3));
     }
 
     @Test
@@ -330,6 +331,7 @@ class HomeControllerTest {
                 new JsonConverter(objectMapper)
         );
         JourneyRepository journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
+        JourneyScheduleRepository journeyScheduleRepository = mock(JourneyScheduleRepository.class);
         Journey journey = mock(Journey.class);
         Post post = mock(Post.class);
         LocalDate startDate = LocalDate.of(2026, 5, 25);
@@ -340,6 +342,7 @@ class HomeControllerTest {
         when(post.getEndDate()).thenReturn(startDate.plusDays(3));
         when(post.getRecruitCount()).thenReturn(3);
         when(post.getRecruitCapacity()).thenReturn(4);
+        when(journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(102L)).thenReturn(3);
         when(journeyRepository.findCurrentAndUpcomingJourneys(
                 userId,
                 LocalDate.of(2026, 5, 13),
@@ -348,7 +351,12 @@ class HomeControllerTest {
 
         return standaloneSetup(new HomeController(
                 new HomeOverviewQueryService(onboardingService),
-                new HomeTripQueryService(timeProvider, onboardingService, journeyRepository),
+                new HomeTripQueryService(
+                        timeProvider,
+                        onboardingService,
+                        journeyScheduleRepository,
+                        journeyRepository
+                ),
                 new HomePopularDestinationQueryService(timeProvider),
                 new HomeRecommendationQueryService(dailyMateRecommendationQueryService, recommendationMapper),
                 new HomeSuperHostQueryService(timeProvider)
