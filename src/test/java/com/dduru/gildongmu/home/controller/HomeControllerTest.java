@@ -50,6 +50,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -328,7 +329,7 @@ class HomeControllerTest {
                 mock(ProfileImageResolver.class),
                 new JsonConverter(objectMapper)
         );
-        JourneyRepository journeyRepository = mock(JourneyRepository.class);
+        JourneyRepository journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
         Journey journey = mock(Journey.class);
         Post post = mock(Post.class);
         LocalDate startDate = LocalDate.of(2026, 5, 25);

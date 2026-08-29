@@ -8,14 +8,11 @@ import com.dduru.gildongmu.journey.domain.Journey;
 import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
 import com.dduru.gildongmu.journey.repository.JourneyRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
-import com.dduru.gildongmu.post.domain.Post;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -30,22 +27,11 @@ public class HomeTripQueryService {
     public UpcomingTripResponse retrieveUpcomingTrip(Long userId) {
         LocalDate today = timeProvider.today();
         Journey journey = journeyRepository
-                .findCurrentAndUpcomingJourneys(userId, today, Pageable.ofSize(1))
-                .stream()
-                .findFirst()
+                .findNearestCurrentOrUpcomingJourney(userId, today)
                 .orElseThrow(CurrentOrUpcomingJourneyNotFoundException::new);
-        Post post = journey.getPost();
 
-        return new UpcomingTripResponse(
-                journey.getId(),
-                journey.getTitle(),
-                Math.max(0, (int) ChronoUnit.DAYS.between(today, post.getStartDate())),
-                post.getStartDate(),
-                post.getEndDate(),
-                post.getRecruitCount(),
-                post.getRecruitCapacity(),
-                0 // TODO: 여정 할 일 기능 연동 후 실제 미완료 개수를 조회한다.
-        );
+        // TODO: 여정 할 일 기능 연동 후 실제 미완료 개수를 조회한다.
+        return UpcomingTripResponse.from(journey, today, 0);
     }
 
     @Transactional(readOnly = true)

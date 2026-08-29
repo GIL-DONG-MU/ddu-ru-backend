@@ -42,6 +42,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
@@ -69,7 +70,7 @@ class HomeQueryServiceTest {
                 KoreaTime.ZONE_ID
         ));
         userOnboardingRepository = mock(UserOnboardingRepository.class);
-        journeyRepository = mock(JourneyRepository.class);
+        journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         dailyMateRecommendationQueryService = mock(DailyMateRecommendationQueryService.class);
         ObjectMapper objectMapper = new ObjectMapper();

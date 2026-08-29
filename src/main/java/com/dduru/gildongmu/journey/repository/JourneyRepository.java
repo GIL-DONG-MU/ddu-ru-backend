@@ -76,6 +76,12 @@ public interface JourneyRepository extends JpaRepository<Journey, Long> {
             Pageable pageable
     );
 
+    default Optional<Journey> findNearestCurrentOrUpcomingJourney(Long userId, LocalDate today) {
+        return findCurrentAndUpcomingJourneys(userId, today, Pageable.ofSize(1))
+                .stream()
+                .findFirst();
+    }
+
     default Journey getByIdOrThrow(Long journeyId) {
         return findById(journeyId).orElseThrow(JourneyNotFoundException::new);
     }
