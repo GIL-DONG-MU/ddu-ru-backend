@@ -48,4 +48,6 @@ public interface JourneyScheduleRepository extends JpaRepository<JourneySchedule
             @Param("journeyId") Long journeyId,
             @Param("dayOffset") int dayOffset
     );
+
+    int countByJourneyIdAndIsDeletedFalse(Long journeyId);
 }

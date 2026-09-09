@@ -14,10 +14,14 @@ import com.dduru.gildongmu.home.service.HomePopularDestinationQueryService;
 import com.dduru.gildongmu.home.service.HomeRecommendationQueryService;
 import com.dduru.gildongmu.home.service.HomeSuperHostQueryService;
 import com.dduru.gildongmu.home.service.HomeTripQueryService;
+import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
 import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
+import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.profile.utils.ProfileImageResolver;
 import com.dduru.gildongmu.recommendation.domain.enums.MateRecommendationBatchStatus;
 import com.dduru.gildongmu.recommendation.dto.result.DailyMateRecommendationResult;
@@ -33,6 +37,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -41,9 +46,12 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -164,7 +172,7 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.journeyId").value(102))
                 .andExpect(jsonPath("$.data.dDay").value(12))
                 .andExpect(jsonPath("$.data.startDate").value("2026-05-25"))
-                .andExpect(jsonPath("$.data.pendingTaskCount").value(1));
+                .andExpect(jsonPath("$.data.scheduleCount").value(3));
     }
 
     @Test
@@ -322,10 +330,33 @@ class HomeControllerTest {
                 mock(ProfileImageResolver.class),
                 new JsonConverter(objectMapper)
         );
+        JourneyRepository journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
+        JourneyScheduleRepository journeyScheduleRepository = mock(JourneyScheduleRepository.class);
+        Journey journey = mock(Journey.class);
+        Post post = mock(Post.class);
+        LocalDate startDate = LocalDate.of(2026, 5, 25);
+        when(journey.getId()).thenReturn(102L);
+        when(journey.getTitle()).thenReturn("제주도 힐링 여행");
+        when(journey.getPost()).thenReturn(post);
+        when(post.getStartDate()).thenReturn(startDate);
+        when(post.getEndDate()).thenReturn(startDate.plusDays(3));
+        when(post.getRecruitCount()).thenReturn(3);
+        when(post.getRecruitCapacity()).thenReturn(4);
+        when(journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(102L)).thenReturn(3);
+        when(journeyRepository.findCurrentAndUpcomingJourneys(
+                userId,
+                LocalDate.of(2026, 5, 13),
+                Pageable.ofSize(1)
+        )).thenReturn(List.of(journey));
 
         return standaloneSetup(new HomeController(
                 new HomeOverviewQueryService(onboardingService),
-                new HomeTripQueryService(timeProvider, onboardingService),
+                new HomeTripQueryService(
+                        timeProvider,
+                        onboardingService,
+                        journeyScheduleRepository,
+                        journeyRepository
+                ),
                 new HomePopularDestinationQueryService(timeProvider),
                 new HomeRecommendationQueryService(dailyMateRecommendationQueryService, recommendationMapper),
                 new HomeSuperHostQueryService(timeProvider)

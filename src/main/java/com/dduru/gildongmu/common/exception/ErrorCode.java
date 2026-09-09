@@ -93,6 +93,7 @@ public enum ErrorCode {
 
     // 나의 여정 (JOURNEY)
     JOURNEY_NOT_FOUND(HttpStatus.NOT_FOUND, "나의 여정을 찾을 수 없습니다."),
+    CURRENT_OR_UPCOMING_JOURNEY_NOT_FOUND(HttpStatus.NOT_FOUND, "진행 중이거나 예정된 나의 여정이 없습니다."),
     JOURNEY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "나의 여정에 접근할 권한이 없습니다."),
     JOURNEY_HOST_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "나의 여정 호스트 정보를 찾을 수 없습니다."),
     JOURNEY_EMPTY_PATCH(HttpStatus.BAD_REQUEST, "수정할 항목을 하나 이상 입력해야 합니다."),

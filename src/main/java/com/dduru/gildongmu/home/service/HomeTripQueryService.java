@@ -4,13 +4,16 @@ import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.home.dto.response.SameAgeTripResponse;
 import com.dduru.gildongmu.home.dto.response.SameDestinationTripResponse;
 import com.dduru.gildongmu.home.dto.response.UpcomingTripResponse;
+import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -19,22 +22,18 @@ public class HomeTripQueryService {
 
     private final TimeProvider timeProvider;
     private final OnboardingService onboardingService;
+    private final JourneyScheduleRepository journeyScheduleRepository;
+    private final JourneyRepository journeyRepository;
 
     @Transactional(readOnly = true)
     public UpcomingTripResponse retrieveUpcomingTrip(Long userId) {
-        requireOnboarding(userId);
         LocalDate today = timeProvider.today();
-        LocalDate startDate = today.plusDays(12);
-        return new UpcomingTripResponse(
-                102L,
-                "제주도 힐링 여행",
-                (int) ChronoUnit.DAYS.between(today, startDate),
-                startDate,
-                startDate.plusDays(3),
-                3,
-                4,
-                1
-        );
+        Journey journey = journeyRepository
+                .findNearestCurrentOrUpcomingJourney(userId, today)
+                .orElseThrow(CurrentOrUpcomingJourneyNotFoundException::new);
+
+        int scheduleCount = journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(journey.getId());
+        return UpcomingTripResponse.from(journey, today, scheduleCount);
     }
 
     @Transactional(readOnly = true)

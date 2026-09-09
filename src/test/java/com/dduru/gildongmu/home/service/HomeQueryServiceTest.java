@@ -1,5 +1,6 @@
 package com.dduru.gildongmu.home.service;
 
+import com.dduru.gildongmu.common.exception.ErrorCode;
 import com.dduru.gildongmu.common.time.KoreaTime;
 import com.dduru.gildongmu.common.time.TimeProvider;
 import com.dduru.gildongmu.common.util.JsonConverter;
@@ -8,10 +9,14 @@ import com.dduru.gildongmu.home.dto.response.HomeSuperHostResponse;
 import com.dduru.gildongmu.home.dto.response.MateRecommendationResponse;
 import com.dduru.gildongmu.home.enums.UserAccessStatus;
 import com.dduru.gildongmu.home.mapper.HomeRecommendationMapper;
+import com.dduru.gildongmu.journey.domain.Journey;
+import com.dduru.gildongmu.journey.exception.CurrentOrUpcomingJourneyNotFoundException;
+import com.dduru.gildongmu.journey.repository.JourneyRepository;
+import com.dduru.gildongmu.journey.repository.JourneyScheduleRepository;
 import com.dduru.gildongmu.onboarding.domain.UserOnboarding;
-import com.dduru.gildongmu.onboarding.exception.UserOnboardingNotFoundException;
 import com.dduru.gildongmu.onboarding.repository.UserOnboardingRepository;
 import com.dduru.gildongmu.onboarding.service.OnboardingService;
+import com.dduru.gildongmu.post.domain.Post;
 import com.dduru.gildongmu.post.domain.enums.CompanionType;
 import com.dduru.gildongmu.profile.domain.enums.Gender;
 import com.dduru.gildongmu.profile.domain.enums.ProfileImageType;
@@ -27,15 +32,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +56,8 @@ class HomeQueryServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 13, 12, 30);
 
     private UserOnboardingRepository userOnboardingRepository;
+    private JourneyRepository journeyRepository;
+    private JourneyScheduleRepository journeyScheduleRepository;
     private DailyMateRecommendationQueryService dailyMateRecommendationQueryService;
     private HomeOverviewQueryService overviewQueryService;
     private HomePopularDestinationQueryService popularDestinationQueryService;
@@ -59,13 +72,20 @@ class HomeQueryServiceTest {
                 KoreaTime.ZONE_ID
         ));
         userOnboardingRepository = mock(UserOnboardingRepository.class);
+        journeyRepository = mock(JourneyRepository.class, CALLS_REAL_METHODS);
+        journeyScheduleRepository = mock(JourneyScheduleRepository.class);
         OnboardingService onboardingService = new OnboardingService(userOnboardingRepository);
         dailyMateRecommendationQueryService = mock(DailyMateRecommendationQueryService.class);
         ObjectMapper objectMapper = new ObjectMapper();
 
         overviewQueryService = new HomeOverviewQueryService(onboardingService);
         popularDestinationQueryService = new HomePopularDestinationQueryService(timeProvider);
-        tripQueryService = new HomeTripQueryService(timeProvider, onboardingService);
+        tripQueryService = new HomeTripQueryService(
+                timeProvider,
+                onboardingService,
+                journeyScheduleRepository,
+                journeyRepository
+        );
         recommendationQueryService = new HomeRecommendationQueryService(
                 dailyMateRecommendationQueryService,
                 new HomeRecommendationMapper(
@@ -121,13 +141,52 @@ class HomeQueryServiceTest {
     class MemberTrips {
 
         @Test
-        @DisplayName("온보딩 정보가 없으면 예정 여행을 조회할 수 없다")
-        void onboardingRequired() {
-            when(userOnboardingRepository.getByUserIdOrThrow(10L))
-                    .thenThrow(new UserOnboardingNotFoundException());
+        @DisplayName("진행 중이거나 예정된 나의 여정이 없으면 조회할 수 없다")
+        void journeyRequired() {
+            when(journeyRepository.findCurrentAndUpcomingJourneys(
+                    eq(10L), eq(NOW.toLocalDate()), org.mockito.ArgumentMatchers.any(Pageable.class)
+            )).thenReturn(List.of());
 
             assertThatThrownBy(() -> tripQueryService.retrieveUpcomingTrip(10L))
-                    .isInstanceOf(UserOnboardingNotFoundException.class);
+                    .isInstanceOf(CurrentOrUpcomingJourneyNotFoundException.class)
+                    .hasMessage(ErrorCode.CURRENT_OR_UPCOMING_JOURNEY_NOT_FOUND.getMessage());
+            verifyNoInteractions(journeyScheduleRepository);
+        }
+
+        @Test
+        @DisplayName("진행 중이거나 예정된 여정 중 시작일이 가장 빠른 한 건을 조회한다")
+        void nearestCurrentOrUpcomingJourney() {
+            LocalDate startDate = NOW.toLocalDate().minusDays(1);
+            LocalDate endDate = NOW.toLocalDate().plusDays(2);
+            Journey journey = mock(Journey.class);
+            Post post = mock(Post.class);
+            when(journey.getId()).thenReturn(102L);
+            when(journey.getTitle()).thenReturn("제주도 힐링 여행");
+            when(journey.getPost()).thenReturn(post);
+            when(post.getStartDate()).thenReturn(startDate);
+            when(post.getEndDate()).thenReturn(endDate);
+            when(post.getRecruitCount()).thenReturn(3);
+            when(post.getRecruitCapacity()).thenReturn(4);
+            when(journeyScheduleRepository.countByJourneyIdAndIsDeletedFalse(102L)).thenReturn(3);
+            when(journeyRepository.findCurrentAndUpcomingJourneys(
+                    eq(10L), eq(NOW.toLocalDate()), org.mockito.ArgumentMatchers.any(Pageable.class)
+            )).thenReturn(List.of(journey));
+
+            var response = tripQueryService.retrieveUpcomingTrip(10L);
+
+            assertThat(response.journeyId()).isEqualTo(102L);
+            assertThat(response.dDay()).isZero();
+            assertThat(response.startDate()).isEqualTo(startDate);
+            assertThat(response.endDate()).isEqualTo(endDate);
+            assertThat(response.scheduleCount()).isEqualTo(3);
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(journeyRepository).findCurrentAndUpcomingJourneys(
+                    eq(10L), eq(NOW.toLocalDate()), pageableCaptor.capture()
+            );
+            assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
+            assertThat(pageableCaptor.getValue().getPageSize()).isOne();
+            verify(journeyScheduleRepository).countByJourneyIdAndIsDeletedFalse(102L);
         }
 
         @Test
