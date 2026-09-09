@@ -209,6 +209,7 @@ class MateRecommendationFlowIntegrationTest {
                 .containsExactly(firstPost.getId(), secondPost.getId());
         MateRecommendationResponse.Item original = first.recommendations().get(0);
         assertThat(original.location()).isEqualTo("대한민국 제주");
+        assertThat(original.thumbnailUrl()).isEqualTo(firstPost.getPhotoUrl());
         assertThat(original.tags()).containsExactly("힐링", "맛집");
         assertThat(original.host().age()).isEqualTo(31);
         assertThat(original.host().profileImageInfo().url()).isNotBlank();
@@ -217,7 +218,7 @@ class MateRecommendationFlowIntegrationTest {
 
         firstPost.updatePost(jeju, "수정된 여행", "수정된 여행방 본문으로 현재 카드 내용 반영을 검증합니다.",
                 TODAY.plusDays(6), TODAY.plusDays(8), 5, TODAY.plusDays(4), Gender.U,
-                true, null, null, null, "[\"산책\"]", CompanionType.FULL, TODAY);
+                true, null, null, "https://example.com/updated.jpg", "[\"산책\"]", CompanionType.FULL, TODAY);
         postRepository.saveAndFlush(firstPost);
         Profile profile = profileRepository.getByUserIdOrThrow(firstHost.getId());
         profile.updateNickname("새닉네임");
@@ -228,6 +229,7 @@ class MateRecommendationFlowIntegrationTest {
 
         MateRecommendationResponse.Item updated = homeService.retrieve(applicant.getId()).recommendations().get(0);
         assertThat(updated.title()).isEqualTo("수정된 여행");
+        assertThat(updated.thumbnailUrl()).isEqualTo("https://example.com/updated.jpg");
         assertThat(updated.description()).isEqualTo("수정된 여행방 본문으로 현재 카드 내용 반영을 검증합니다.");
         assertThat(updated.startDate()).isEqualTo(TODAY.plusDays(6));
         assertThat(updated.endDate()).isEqualTo(TODAY.plusDays(8));
@@ -237,6 +239,13 @@ class MateRecommendationFlowIntegrationTest {
         assertThat(updated.matchPercentage()).isEqualTo(original.matchPercentage());
         assertThat(updated.matchReasons()).isEqualTo(original.matchReasons());
         assertThat(updated.cautionPoints()).isEqualTo(original.cautionPoints());
+
+        firstPost.updatePost(jeju, null, null, null, null, 5, null, Gender.U,
+                true, null, null, null, null, CompanionType.FULL, TODAY);
+        postRepository.saveAndFlush(firstPost);
+        MateRecommendationResponse withoutPhoto = homeService.retrieve(applicant.getId());
+        assertThat(withoutPhoto.recommendations()).hasSize(2);
+        assertThat(withoutPhoto.recommendations().get(0).thumbnailUrl()).isNull();
 
         post(host("replacement", "추가호스트", 5, 5, 5, 5), jeju,
                 "추가 후보", TODAY.plusDays(5), TODAY.plusDays(7));

@@ -48,6 +48,9 @@ public record MateRecommendationResponse(
             Long postId,
             int matchPercentage,
             String title,
+            @Schema(description = "현재 게시글의 대표 사진 URL. 사진이 없으면 null", nullable = true,
+                    example = "https://example.com/trips/jeju.jpg")
+            String thumbnailUrl,
             String location,
             LocalDate startDate,
             LocalDate endDate,

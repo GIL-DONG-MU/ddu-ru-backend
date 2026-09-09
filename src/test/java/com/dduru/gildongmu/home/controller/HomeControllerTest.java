@@ -324,6 +324,7 @@ class HomeControllerTest {
                 .andExpect(jsonPath("$.data.recommendations[0].postId").value(102))
                 .andExpect(jsonPath("$.data.recommendations[0].matchPercentage").value(90))
                 .andExpect(jsonPath("$.data.recommendations[0].title").value("제주 여행"))
+                .andExpect(jsonPath("$.data.recommendations[0].thumbnailUrl").value("https://example.com/trips/jeju.jpg"))
                 .andExpect(jsonPath("$.data.recommendations[0].location").value("대한민국 제주"))
                 .andExpect(jsonPath("$.data.recommendations[0].startDate").value("2026-05-20"))
                 .andExpect(jsonPath("$.data.recommendations[0].endDate").value("2026-05-22"))
@@ -380,7 +381,7 @@ class HomeControllerTest {
         return new MateRecommendationCardQueryResult(recommendationId, postId, rank, 90,
                 "[{\"code\":\"RHYTHM_MATCH\",\"message\":\"생활 리듬이 비슷해요\"}]",
                 "[{\"code\":\"ENERGY_DIFFERENCE\",\"message\":\"활동량이 달라요\"}]",
-                "제주 여행", "대한민국", "제주", LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 22),
+                "제주 여행", "https://example.com/trips/jeju.jpg", "대한민국", "제주", LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 22),
                 CompanionType.FULL, 1, 4, "여행 설명", "[\"힐링\"]", "호스트",
                 ProfileImageType.DEFAULT, null, null, null, LocalDate.of(2000, 5, 13), Gender.F);
     }
