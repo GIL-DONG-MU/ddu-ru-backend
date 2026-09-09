@@ -74,7 +74,7 @@ public interface HomeApiDocs {
                     @ExampleObject(name = "AVAILABLE", summary = "추천 완료", value = """
                             {"status":200,"message":"OK","data":{"availabilityStatus":"AVAILABLE","remainingFreeCount":0,
                             "recommendations":[{"recommendationId":22,"postId":102,"matchPercentage":90,
-                            "title":"제주 여행","location":"대한민국 제주","startDate":"2026-09-15","endDate":"2026-09-17",
+                            "title":"제주 여행","thumbnailUrl":"https://example.com/trips/jeju.jpg","location":"대한민국 제주","startDate":"2026-09-15","endDate":"2026-09-17",
                             "host":{"nickname":"호스트","profileImageInfo":{"type":"DEFAULT","url":"https://example.com/default.png","bgColorId":null},"age":26,"gender":"F"},
                             "currentMemberCount":1,"maxMemberCount":4,"description":"제주에서 함께 산책해요","tags":["힐링"],
                             "matchReasons":[{"code":"RHYTHM_MATCH","message":"생활 리듬이 비슷해요"}],"cautionPoints":[]}]}}
